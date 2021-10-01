@@ -558,9 +558,9 @@ class Meltdown(ChainFeature):
 		if difficulty == 'easy':
 			self.shots_required_for_completion = 3
 		elif difficulty == 'medium':
-			self.shots_required_for_completion = 5
+			self.shots_required_for_completion = 4
 		else:
-			self.shots_required_for_completion = 7
+			self.shots_required_for_completion = 5
 
 		full_voice_path = voice_path + 'meltdown/'
 		for i in range(1,5):
@@ -568,7 +568,7 @@ class Meltdown(ChainFeature):
 			self.game.sound.register_sound('meltdown ' + str(i), full_voice_path+filename)
 
 		filename = 'all reactors stabilized.wav'
-		self.game.sound.register_sound('meltdown 5', full_voice_path+filename)
+		self.game.sound.register_sound('meltdown all', full_voice_path+filename)
 
 		filename = 'power towers going critical.wav'
 		self.game.sound.register_sound('meltdown intro', full_voice_path+filename)
@@ -608,19 +608,17 @@ class Meltdown(ChainFeature):
 	def check_for_completion(self):
 		self.update_status()
 
+		for m in ['1','2','3','4','all']:
+			self.game.sound.stop('meltdown ' + m)	
 
-		for i in range(1,6):
-			self.game.sound.stop('meltdown ' + str(i))	
-
-		if self.shots <= 5:
-			self.game.sound.play_voice('meltdown ' + str(self.shots))
-		else:
-			self.game.sound.play_voice('meltdown 5')
 		if self.shots >= self.shots_required_for_completion:
+			self.game.sound.play_voice('meltdown all')
 			self.completed = True
 			self.game.score(50000)
 			print "% 10.3f Meltdown calling callback" % (time.time())
 			self.callback()
+		elif self.shots <= 4:
+			self.game.sound.play_voice('meltdown ' + str(self.shots))
 
 	def get_instruction_layers(self):
 		font = self.game.fonts['jazz18']
