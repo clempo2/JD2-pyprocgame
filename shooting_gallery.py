@@ -1,6 +1,4 @@
-import sys
 import os
-sys.path.append(sys.path[0]+'/../..') # Set the path so we can find procgame.  We are assuming (stupidly?) that the first member is our directory.
 import pinproc
 import procgame
 from procgame import *
@@ -71,7 +69,7 @@ class ShootingGallery(game.Mode):
 		self.instruction_layer_22 = dmd.TextLayer(128/2, 17, self.game.fonts['07x5'], "center").set_text("Fire buttons shoot")
 		self.intro_layer_2 = dmd.GroupedLayer(128, 32, [self.instruction_layer_21, self.instruction_layer_22])
 
-		anim = dmd.Animation().load("games/jd/dmd/gun_powerup.dmd")
+		anim = dmd.Animation().load(curr_file_path + "/dmd/gun_powerup.dmd")
 		self.anim_layer = dmd.AnimatedLayer(frames=anim.frames, frame_time=5)
 		self.anim_layer.composite_op = 'blacksrc'
 

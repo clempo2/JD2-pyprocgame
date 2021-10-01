@@ -5,8 +5,9 @@ from procgame import *
 import os.path
 import random
 
-sound_path = "./games/jd/sound/FX/"
-voice_path = "./games/jd/sound/Voice/boring/"
+curr_file_path = os.path.dirname(os.path.abspath( __file__ ))
+sound_path = curr_file_path + "/sound/FX/"
+voice_path = curr_file_path + "/sound/Voice/boring/"
 
 class Boring(game.Mode):
 	"""docstring for AttractMode"""

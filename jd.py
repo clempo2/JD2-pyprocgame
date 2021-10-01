@@ -1,5 +1,3 @@
-import sys
-sys.path.append(sys.path[0]+'/../..') # Set the path so we can find procgame.  We are assuming (stupidly?) that the first member is our directory.
 import procgame
 import pinproc
 from deadworld import *
@@ -21,9 +19,7 @@ import logging
 logging.basicConfig(level=logging.ERROR, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
 
 locale.setlocale(locale.LC_ALL, "") # Used to put commas in the score.
-#curr_file_path = os.path.dirname(os.path.abspath(sys.argv[0]))
 curr_file_path = os.path.dirname(os.path.abspath( __file__ ))
-#print os.getcwd()
 settings_path = curr_file_path + "/config/settings.yaml"
 game_data_path = curr_file_path + "/config/game_data.yaml"
 game_data_template_path = curr_file_path + "/config/game_data_template.yaml"

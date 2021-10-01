@@ -1,7 +1,9 @@
 import procgame
 from procgame import *
+import os.path
 
-voice_path = "./games/jd/sound/Voice/"
+curr_file_path = os.path.dirname(os.path.abspath( __file__ ))
+voice_path = curr_file_path + "/sound/Voice/"
 
 class Bonus(game.Mode):
 	"""docstring for Bonus"""

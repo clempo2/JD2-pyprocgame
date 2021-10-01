@@ -1,8 +1,10 @@
 import procgame
 from procgame import *
+import os.path
 
-voice_path = "./games/jd/sound/Voice/"
-sfx_path = "./games/jd/sound/FX/"
+curr_file_path = os.path.dirname(os.path.abspath( __file__ ))
+voice_path = curr_file_path + "/sound/Voice/"
+sfx_path = curr_file_path + "/sound/FX/"
 
 class Tilt(game.Mode):
 	"""docstring for Bonus"""

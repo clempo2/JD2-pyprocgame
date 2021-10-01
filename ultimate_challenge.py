@@ -42,7 +42,7 @@ class UltimateChallenge(modes.Scoring_Mode):
 		self.game.sound.register_music('mode', music_path+"40 Second guitar solo.aif")
 		self.game.sound.register_music('mode', music_path+"55 second loopable -- Sonya.aif")
 		self.game.sound.register_music('mode', music_path+"105 second loopable -- Sisyphus.aif")
-		self.game.lampctrl.register_show('shot_hit', "./games/jd/lamps/flashers_only.lampshow")
+		self.game.lampctrl.register_show('shot_hit', curr_file_path + "/lamps/flashers_only.lampshow")
 
 	def mode_started(self):
 		self.game.coils.resetDropTarget.pulse(40)
