@@ -319,11 +319,11 @@ class Blackout(ChainFeature):
 		super(Blackout, self).__init__(game, priority, 'Blackout')
 		difficulty = self.game.user_settings['Gameplay']['Chain feature difficulty']
 		if difficulty == 'easy':
-			self.shots_required_for_completion = 1
-		elif difficulty == 'medium':
-			self.shots_required_for_completion = 1
-		else:
 			self.shots_required_for_completion = 2
+		elif difficulty == 'medium':
+			self.shots_required_for_completion = 2
+		else:
+			self.shots_required_for_completion = 3
 
 	def mode_started(self):
 		self.shots = 0
@@ -337,7 +337,6 @@ class Blackout(ChainFeature):
 	def update_status(self):
 		status = 'Shots made: ' + str(self.shots) + '/' + str(self.shots_required_for_completion)
 		self.status_layer.set_text(status)
-		
 
 	def mode_stopped(self):
 		self.game.lamps.blackoutJackpot.disable()
@@ -355,18 +354,20 @@ class Blackout(ChainFeature):
 		self.game.lamps.blackoutJackpot.schedule(schedule=0x000F000F, cycle_seconds=0, now=True)
 
 	def sw_centerRampExit_active(self, sw):
-		self.completed = True
-		self.game.coils.flasherBlackout.schedule(schedule=0x000F000F, cycle_seconds=0, now=True)
 		self.shots += 1
 		self.game.score(10000)
-		print "% 10.3f Blackout calling callback" % (time.time())
 		self.check_for_completion()
 
 	def check_for_completion(self):
 		self.update_status()
-		if self.shots == self.shots_required_for_completion:
-			self.completed = True
+		if self.shots == self.shots_required_for_completion - 1:
+			self.game.coils.flasherBlackout.schedule(schedule=0x000F000F, cycle_seconds=0, now=True)
 			self.game.score(50000)
+		elif self.shots == self.shots_required_for_completion:
+			self.completed = True
+			self.game.score(110000)
+			print "% 10.3f Blackout calling callback" % (time.time())
+			self.callback()
 
 	def get_instruction_layers(self):
 		font = self.game.fonts['jazz18']
