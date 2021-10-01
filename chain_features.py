@@ -382,13 +382,20 @@ class Sniper(ChainFeature):
 	"""docstring for AttractMode"""
 	def __init__(self, game, priority):
 		super(Sniper, self).__init__(game, priority, 'Sniper')
-		filename = curr_file_path + "/dmd/scope.dmd"
+		difficulty = self.game.user_settings['Gameplay']['Chain feature difficulty']
+		if difficulty == 'easy':
+			self.shots_required_for_completion = 2
+		elif difficulty == 'medium':
+			self.shots_required_for_completion = 2
+		else:
+			self.shots_required_for_completion = 3
 
 		self.countdown_layer = dmd.TextLayer(127, 1, self.game.fonts['tiny7'], "right")
 		self.name_layer = dmd.TextLayer(1, 1, self.game.fonts['tiny7'], "left").set_text("Sniper")
 		self.score_layer = dmd.TextLayer(127, 10, self.game.fonts['num_14x10'], "right")
 		self.status_layer = dmd.TextLayer(127, 26, self.game.fonts['tiny7'], "right")
 
+		filename = curr_file_path + "/dmd/scope.dmd"
 		if os.path.isfile(filename):
 			anim = dmd.Animation().load(filename)
 			self.anim_layer = dmd.AnimatedLayer(frames=anim.frames, repeat=True, frame_time=8)
@@ -409,26 +416,26 @@ class Sniper(ChainFeature):
 		self.game.sound.register_sound('sniper - hit', full_voice_path+filename)
 		filename = 'gunshot.wav'
 		self.game.sound.register_sound('sniper - shot', full_voice_path+filename)
-		time = random.randint(2,7)
-		self.delay(name='gunshot', event_type=None, delay=time, handler=self.gunshot)
-	def gunshot(self):
-		time = random.randint(2,7)
-		self.delay(name='gunshot', event_type=None, delay=time, handler=self.gunshot)
-		self.game.sound.play_voice('sniper - shot')
-
 
 	def mode_started(self):
 		self.shots = 0
 		self.update_status()
 		self.update_lamps()
+		time = random.randint(2,7)
+		self.delay(name='gunshot', event_type=None, delay=time, handler=self.gunshot)
+
+	def gunshot(self):
+		self.game.sound.play_voice('sniper - shot')
+		time = random.randint(2,7)
+		self.delay(name='gunshot', event_type=None, delay=time, handler=self.gunshot)
 
 	def update_status(self):
-		status = 'Shots made: ' + str(self.shots) + '/' + str(2)
+		status = 'Shots made: ' + str(self.shots) + '/' + str(self.shots_required_for_completion)
 		self.status_layer.set_text(status)
 
 	def mode_stopped(self):
 		self.game.lamps.awardSniper.disable()
-		self.cancel_delayed('sniper - gunshot')
+		self.cancel_delayed('gunshot')
 
 	def update_lamps(self):
 		self.game.lamps.awardSniper.schedule(schedule=0x00FF00FF, cycle_seconds=0, now=True)
@@ -444,7 +451,7 @@ class Sniper(ChainFeature):
 
 	def check_for_completion(self):
 		self.update_status()
-		if self.shots == 2:
+		if self.shots == self.shots_required_for_completion:
 			self.game.sound.play_voice('sniper - hit')
 			self.completed = True
 			self.game.score(50000)
