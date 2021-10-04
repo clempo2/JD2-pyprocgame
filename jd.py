@@ -37,12 +37,13 @@ font_07x5 = dmd.font_named("Font07x5.dmd")
 font_09Bx7 = dmd.font_named("Font09Bx7.dmd")
 splash = curr_file_path + "/dmd/Splash.dmd"
 
-lampshow_files = [curr_file_path + "/lamps/attract_show_horiz.lampshow", \
-                  curr_file_path + "/lamps/attract_show_vert.lampshow" \
-                 ]
+lampshow_files = [
+	curr_file_path + "/lamps/attract_show_horiz.lampshow",
+	curr_file_path + "/lamps/attract_show_vert.lampshow"
+]
 
 class Attract(game.Mode):
-	"""docstring for AttractMode"""
+	"""Attract mode and start buttons"""
 	def __init__(self, game):
 		super(Attract, self).__init__(game, 1)
 		self.display_order = [0,1,2,3,4,5,6,7,8,9]
@@ -58,9 +59,6 @@ class Attract(game.Mode):
 		self.game.sound.register_sound('attract', voice_path+'judge death - the sentence is death.wav')
 		self.game.sound.register_sound('attract', voice_path+'judge fire - for you the party is over.wav')
 		self.game.sound.register_sound('attract', voice_path+'judge fire - let the flames of justice cleanse you.wav')
-
-	def mode_topmost(self):
-		pass
 
 	def mode_started(self):
 		self.play_super_game = False
@@ -95,7 +93,6 @@ class Attract(game.Mode):
 		self.jd_layer = dmd.TextLayer(128/2, 7, font_jazz18, "center", opaque=True).set_text("Judge Dredd")
 		self.jd_layer.transition = dmd.PushTransition(direction='south')
 
-
 		self.proc_splash_layer = dmd.FrameLayer(opaque=True, frame=dmd.Animation().load(splash).frames[0])
 		self.proc_splash_layer.transition = dmd.PushTransition(direction='south')
 		self.pyprocgame_layer = dmd.TextLayer(128/2, 7, font_jazz18, "center", opaque=True).set_text("pyprocgame")
@@ -124,9 +121,7 @@ class Attract(game.Mode):
 [Travis Highrise]
 
 [P.ROC:]
-[www.]
-[pinballcontrollers.]
-[com]
+[www.multimorphic.com]
 
 [pyprocgame:]
 [pyprocgame.pindev.org]
@@ -156,17 +151,19 @@ class Attract(game.Mode):
 			anim = dmd.Animation().load(filename)
 			self.longwalk_layer = dmd.AnimatedLayer(frames=anim.frames, repeat=False, frame_time=7)
 		else:
-			self.longwalk_layer = dmd.TextLayer(128/2, 7, font_jazz18, "center", opaque=True).set_text("Game Over")
+			self.longwalk_layer = dmd.TextLayer(128/2, 7, font_jazz18, "center", opaque=True).set_text("JDGame Over")
 
 		self.pre_game_display()
 
 	def pre_game_display(self):
-		script = [{'seconds':3.0, 'layer':self.jd_layer},
-		          {'seconds':4.0, 'layer':self.cityscape_layer},
-			  {'seconds':3.0, 'layer':self.proc_splash_layer},
-			  {'seconds':3.0, 'layer':self.pyprocgame_layer},
-			  {'seconds':3.0, 'layer':self.press_start_layer},
-			  {'seconds':3.0, 'layer':self.scores_layer}]
+		script = [
+			{'seconds':3.0, 'layer':self.jd_layer},
+			{'seconds':4.0, 'layer':self.cityscape_layer},
+			{'seconds':3.0, 'layer':self.proc_splash_layer},
+			{'seconds':3.0, 'layer':self.pyprocgame_layer},
+			{'seconds':3.0, 'layer':self.press_start_layer},
+			{'seconds':3.0, 'layer':self.scores_layer}
+		]
 
 		for frame in highscore.generate_highscore_frames(self.game.highscore_categories):
 			new_layer = dmd.FrameLayer(frame=frame)
@@ -191,7 +188,7 @@ class Attract(game.Mode):
 		script.append({'seconds':4.0, 'layer':self.cityscape_layer})
 		script.append({'seconds':3.0, 'layer':None})
 
-                script.append({'seconds':3.0, 'layer':self.scores_layer})
+		script.append({'seconds':3.0, 'layer':self.scores_layer})
 		for frame in highscore.generate_highscore_frames(self.game.highscore_categories):
 			new_layer = dmd.FrameLayer(frame=frame)
 			new_layer.transition = dmd.PushTransition(direction='north')
@@ -212,12 +209,6 @@ class Attract(game.Mode):
 
 		self.layer = dmd.ScriptedLayer(width=128, height=32, script=script)
 		self.layer.on_complete = self.post_game_display
-
-	def mode_stopped(self):
-		pass
-		
-	def mode_tick(self):
-		pass
 
 	def change_lampshow(self):
 		shuffle(self.game.lampshow_keys)
@@ -247,8 +238,6 @@ class Attract(game.Mode):
 			ret_val = self.setup_judges_display()
 		return ret_val
 
-
-
 	# Eject any balls that get stuck before returning to the trough.
 	def sw_popperL_active_for_500ms(self, sw): # opto!
 		self.game.coils.popperL.pulse(40)
@@ -276,22 +265,21 @@ class Attract(game.Mode):
 		self.game.modes.add(self.game.service_mode)
 		#self.game.proc.driver_group_disable(5)
 		#pinproc.driver_state_pulse(32, 30)
-		return True
+		return procgame.game.SwitchStop
 
 	def sw_exit_active(self, sw):
-		return True
+		return procgame.game.SwitchStop
 
 	# Outside of the service mode, up/down control audio volume.
 	def sw_down_active(self, sw):
 		volume = self.game.sound.volume_down()
 		self.game.set_status("Volume Down : " + str(volume))
-		return True
+		return procgame.game.SwitchStop
 
 	def sw_up_active(self, sw):
 		volume = self.game.sound.volume_up()
 		self.game.set_status("Volume Up : " + str(volume))
-		return True
-
+		return procgame.game.SwitchStop
 
 	# Start button starts a game if the trough is full.  Otherwise it
 	# initiates a ball search.
@@ -317,7 +305,7 @@ class Attract(game.Mode):
 				self.game.set_status("Ball Search!")
 				self.game.ball_search.perform_search(5)
 				self.game.deadworld.perform_ball_search()
-		return True
+		return procgame.game.SwitchStop
 
 	def sw_superGame_active(self, sw):
 		if self.game.trough.is_full():
@@ -339,7 +327,7 @@ class Attract(game.Mode):
 				self.game.set_status("Ball Search!")
 				self.game.ball_search.perform_search(5)
 				self.game.deadworld.perform_ball_search()
-		return True
+		return procgame.game.SwitchStop
 
 	def check_deadworld_empty(self):
 		if self.game.deadworld.num_balls_locked > 0:
@@ -354,7 +342,7 @@ class Attract(game.Mode):
 # if the buttons are released immediately after that, the deactivation
 # would be missed without this workaround.
 class FlipperWorkaroundMode(game.Mode):
-	"""docstring for AttractMode"""
+	"""Workaround to deal with latency of flipper rule programming"""
 	def __init__(self, game):
 		super(FlipperWorkaroundMode, self).__init__(game, 2)
 		self.flipper_enable_workaround_active = False
@@ -409,7 +397,7 @@ class FlipperWorkaroundMode(game.Mode):
 
 
 class BaseGameMode(game.Mode):
-	"""docstring for AttractMode"""
+	"""Game play when no playable mode is active"""
 	def __init__(self, game):
 		super(BaseGameMode, self).__init__(game, 2)
 		self.tilt = Tilt(self.game, 1000, font_jazz18, font_tiny7, 'tilt', 'slamTilt')
@@ -490,7 +478,7 @@ class BaseGameMode(game.Mode):
 
 	def ball_drained_callback(self):
 		if self.game.trough.num_balls_in_play == 0:
-			# Give jd_modes a chance to do any any of ball processing
+			# Give jd_modes a chance to do any ball processing
 			self.jd_modes.ball_drained()
 			# End the ball
 			if self.tilt_status:
@@ -546,12 +534,6 @@ class BaseGameMode(game.Mode):
 		# (to end player's turn or shoot again)
 		self.game.end_ball()
 
-		# Start the next ball - I think this is redundant as the ball should launch when
-		# base_game_mode is restarted.
-		#if self.game.switches.trough6.is_active() and \
-                #   self.game.switches.shooterR.is_inactive() and self.game.ball != 0:
-			#self.game.coils.trough.pulse(20)
-		#	self.launch_balls(1)
 		# TODO: What if the ball doesn't make it into the shooter lane?
 		#       We should check for it on a later mode_tick() and possibly re-pulse.
 
@@ -571,29 +553,29 @@ class BaseGameMode(game.Mode):
 			# is already in play, the game can restart without plunging another ball.
 			# It would skip the skill shot too (if one exists). 
 
-			# Currently just reset the game.  This forces the ball(s) to drain and
-			# the game goes to AttractMode.  This makes it painfully slow to restart,
+			# Currently just reset the game. This forces the ball(s) to drain and
+			# the game goes to attrack mode. This makes it painfully slow to restart,
 			# but it's better than nothing.
 			self.game.reset()
-			return True
+			return procgame.game.SwitchStop
 
 	# Allow service mode to be entered during a game.
 	def sw_enter_active(self, sw):
 		del self.game.service_mode
 		self.game.service_mode = procgame.service.ServiceMode(self.game,100,font_tiny7,[self.game.deadworld_test])
 		self.game.modes.add(self.game.service_mode)
-		return True
+		return procgame.game.SwitchStop
 
 	# Outside of the service mode, up/down control audio volume.
 	def sw_down_active(self, sw):
 		volume = self.game.sound.volume_down()
 		self.game.set_status("Volume Down : " + str(volume))
-		return True
+		return procgame.game.SwitchStop
 
 	def sw_up_active(self, sw):
 		volume = self.game.sound.volume_up()
 		self.game.set_status("Volume Up : " + str(volume))
-		return True
+		return procgame.game.SwitchStop
 
 
 	# Reset game on slam tilt
@@ -640,13 +622,12 @@ class BaseGameMode(game.Mode):
 	
 	def sw_slingL_active(self, sw):
 		self.game.score(100)
-		return False
+
 	def sw_slingR_active(self, sw):
 		self.game.score(100)
-		return False
 
 class JDPlayer(game.Player):
-
+	"""JDGame specific implementation of a Player"""
 	inner_loops = 0
 	outer_loops = 0
 	crimescenes = 0
@@ -655,10 +636,10 @@ class JDPlayer(game.Player):
 		super(JDPlayer, self).__init__(name)
 		self.info_record = {}
 
-class Game(game.BasicGame):
-	"""docstring for Game"""
+class JDGame(game.BasicGame):
+	"""Judge Dredd pinball game"""
 	def __init__(self):
-		super(Game, self).__init__(pinproc.MachineTypeWPC)
+		super(JDGame, self).__init__(pinproc.MachineTypeWPC)
 		self.sound = procgame.sound.SoundController(self)
 		self.lampctrl = procgame.lamps.LampController(self)
 		self.logging_enabled = False
@@ -672,10 +653,9 @@ class Game(game.BasicGame):
 		self.save_settings(settings_path)
 
 	def save_game_data(self):
-		super(Game, self).save_game_data(game_data_path)
+		super(JDGame, self).save_game_data(game_data_path)
 		
 	def setup(self):
-		"""docstring for setup"""
 		self.load_config('JD.yaml')
 		self.load_settings(settings_template_path, settings_path)
 		self.sound.music_volume_offset = self.user_settings['Machine']['Music volume offset']
@@ -797,7 +777,6 @@ class Game(game.BasicGame):
 		
 		for category in self.highscore_categories:
 			category.load_from_game(self)
-		
 
 		# Instead of resetting everything here as well as when a user
 		# initiated reset occurs, do everything in self.reset() and call it
@@ -806,7 +785,7 @@ class Game(game.BasicGame):
 
 	def reset(self):
 		# Reset the entire game framework
-		super(Game, self).reset()
+		super(JDGame, self).reset()
 
 		# Add the basic modes to the mode queue
 		self.modes.add(self.attract_mode)
@@ -829,18 +808,18 @@ class Game(game.BasicGame):
 	def drain_callback(self):
 		pass
 
-	# Override to create a flag singaling extra ball.
+	# Override to create a flag signaling extra ball.
 	def shoot_again(self):
-		super(Game, self).shoot_again()
+		super(JDGame, self).shoot_again()
 		self.shooting_again = True
 
 	def ball_starting(self):
-		super(Game, self).ball_starting()
+		super(JDGame, self).ball_starting()
 		self.modes.add(self.base_game_mode)
 
 	def end_ball(self):
 		self.shooting_again = False
-		super(Game, self).end_ball()
+		super(JDGame, self).end_ball()
 
 		self.game_data['Audits']['Avg Ball Time'] = self.calc_time_average_string(self.game_data['Audits']['Balls Played'], self.game_data['Audits']['Avg Ball Time'], self.ball_time)
 		self.game_data['Audits']['Balls Played'] += 1
@@ -863,14 +842,14 @@ class Game(game.BasicGame):
 		
 	def ball_ended(self):
 		self.modes.remove(self.base_game_mode)
-		super(Game, self).ball_ended()
+		super(JDGame, self).ball_ended()
 
 	def start_game(self):
-		super(Game, self).start_game()
+		super(JDGame, self).start_game()
 		self.game_data['Audits']['Games Started'] += 1
 		
 	def game_ended(self):
-		super(Game, self).game_ended()
+		super(JDGame, self).game_ended()
 		# Make sure nothing unexpected happens if a ball drains
 		# after a game ends (due possibly to a ball search).
 		self.trough.drain_callback = self.drain_callback
@@ -917,7 +896,7 @@ class Game(game.BasicGame):
 		# Also handle game stats.
 		for i in range(0,len(self.players)):
 			game_time = self.get_game_time(i)
-			self.game_data['Audits']['Avg Game Time'] = self.calc_time_average_string( self.game_data['Audits']['Games Played'], self.game_data['Audits']['Avg Game Time'], game_time)
+			self.game_data['Audits']['Avg JDGame Time'] = self.calc_time_average_string( self.game_data['Audits']['Games Played'], self.game_data['Audits']['Avg JDGame Time'], game_time)
 			self.game_data['Audits']['Games Played'] += 1
 
 		for i in range(0,len(self.players)):
@@ -953,19 +932,19 @@ class Game(game.BasicGame):
 		# onto the ring rather than entering through the feeder.)
 		special_handler_modes = []
 		self.ball_search = procgame.modes.BallSearch(self, priority=100, \
-                                     countdown_time=10, coils=self.ballsearch_coils, \
-                                     reset_switches=self.ballsearch_resetSwitches, \
-                                     stop_switches=self.ballsearch_stopSwitches, \
-                                     special_handler_modes=special_handler_modes)
+    				 countdown_time=10, coils=self.ballsearch_coils, \
+				     reset_switches=self.ballsearch_resetSwitches, \
+				     stop_switches=self.ballsearch_stopSwitches, \
+				     special_handler_modes=special_handler_modes)
 
 	def enable_flippers(self, enable=True):
-		super(Game, self).enable_flippers(enable)
+		super(JDGame, self).enable_flippers(enable)
 		self.flipper_workaround_mode.enable_flippers(enable)
 		
 def main():
 	game = None
 	try:
-	 	game = Game()
+	 	game = JDGame()
 		game.run_loop()
 	finally:
 		del game

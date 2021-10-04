@@ -9,41 +9,47 @@ sound_path = curr_file_path + "/sound/FX/"
 voice_path = curr_file_path + "/sound/Voice/crimescenes/"
 
 class Crimescenes(modes.Scoring_Mode):
-	"""docstring for AttractMode"""
+	"""Crime scenes mode"""
 	def __init__(self, game, priority):
 		super(Crimescenes, self).__init__(game, priority)
 		self.target_award_order = [1,3,0,2,4]
 		self.lamp_colors = ['G', 'Y', 'R', 'W']
 		difficulty = self.game.user_settings['Gameplay']['Crimescene shot difficulty']
 		if difficulty == 'easy':
-			self.level_templates = [ [2,4], [2,4], 
-                                                 [2,4], [2,4], 
-                                                 [0,2,4], [0,2,4], 
-                                                 [0,2,4], [0,2,4], 
-                                                 [0,2,4], [0,2,4], 
-                                                 [0,2,3,4], [0,2,3,4], 
-                                                 [0,2,3,4], [0,2,3,4], 
-                                                 [0,1,2,3,4], [0,1,2,3,4] ]
+			self.level_templates = [
+				[2,4], [2,4], 
+				[2,4], [2,4], 
+				[0,2,4], [0,2,4], 
+				[0,2,4], [0,2,4], 
+				[0,2,4], [0,2,4], 
+				[0,2,3,4], [0,2,3,4], 
+				[0,2,3,4], [0,2,3,4], 
+				[0,1,2,3,4], [0,1,2,3,4]
+			]
 			self.level_nums = [ 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 5 ]
 		elif difficulty == 'medium':
-			self.level_templates = [ [2,4], [2,4], 
-                                                 [2,4], [2,4], 
-                                                 [0,2,4], [0,2,4], 
-                                                 [0,2,4], [0,2,4], 
-                                                 [0,2,3,4], [0,2,3,4], 
-                                                 [0,2,3,4], [0,2,3,4], 
-                                                 [0,1,2,3,4], [0,1,2,3,4], 
-                                                 [0,1,2,3,4], [0,1,2,3,4] ]
+			self.level_templates = [
+				[2,4], [2,4], 
+				[2,4], [2,4], 
+				[0,2,4], [0,2,4], 
+				[0,2,4], [0,2,4], 
+				[0,2,3,4], [0,2,3,4], 
+				[0,2,3,4], [0,2,3,4], 
+				[0,1,2,3,4], [0,1,2,3,4], 
+				[0,1,2,3,4], [0,1,2,3,4]
+			]
 			self.level_nums = [ 1, 1, 2, 2, 2, 3, 3, 3, 3, 3, 4, 4, 4, 4, 5, 5 ]
 		else:
-			self.level_templates = [ [0,2,4], [0,2,4], 
-                                                 [0,2,4], [0,2,4], 
-                                                 [0,1,2,3,4], [0,1,2,3,4], 
-                                                 [0,1,2,3,4], [0,1,2,3,4], 
-                                                 [0,1,2,3,4], [0,1,2,3,4], 
-                                                 [0,1,2,3,4], [0,1,2,3,4], 
-                                                 [0,1,2,3,4], [0,1,2,3,4], 
-                                                 [0,1,2,3,4], [0,1,2,3,4] ]
+			self.level_templates = [
+				[0,2,4], [0,2,4], 
+				[0,2,4], [0,2,4], 
+				[0,1,2,3,4], [0,1,2,3,4], 
+				[0,1,2,3,4], [0,1,2,3,4], 
+				[0,1,2,3,4], [0,1,2,3,4], 
+				[0,1,2,3,4], [0,1,2,3,4], 
+				[0,1,2,3,4], [0,1,2,3,4], 
+				[0,1,2,3,4], [0,1,2,3,4]
+			]
 			self.level_nums = [ 1, 1, 2, 2, 2, 3, 3, 3, 3, 3, 4, 4, 4, 4, 5, 5 ]
 		self.game.lampctrl.register_show('advance_level', curr_file_path + "/lamps/crimescene_advance_level.lampshow")
 		self.block_war = BlockWar(game, priority+5)
@@ -132,9 +138,9 @@ class Crimescenes(modes.Scoring_Mode):
 		return bonus_base_elements
 
 
-        ####################################################
+	####################################################
 	# Lamps
-        ####################################################
+	####################################################
 	def update_lamps(self):
 		if self.mode == 'block_war':
 			self.update_block_war_lamps()
@@ -180,7 +186,6 @@ class Crimescenes(modes.Scoring_Mode):
 					self.drive_mode_lamp(lampname, 'off')
 	
 		self.update_center_lamps()
-		
 
 	def update_crimescenes_complete_lamps(self):
 		for i in range(0,5):
@@ -228,13 +233,13 @@ class Crimescenes(modes.Scoring_Mode):
 			self.game.lamps[lampname].disable()
 
 
-        ####################################################
+	####################################################
 	# End Lamps
-        ####################################################
+	####################################################
 
-        ####################################################
+	####################################################
 	# Switch Handlers
-        ####################################################
+	####################################################
 
 	def sw_threeBankTargets_active(self, sw):
 		if self.mode == 'levels':
@@ -272,9 +277,9 @@ class Crimescenes(modes.Scoring_Mode):
 	def sw_rightRampExit_active(self, sw):
 		self.switch_hit(4)
 
-        ####################################################
+	####################################################
 	# End Switch Handlers
-        ####################################################
+	####################################################
 
 	def award_hit(self):
 		for i in range(0,5):
@@ -341,6 +346,7 @@ class Crimescenes(modes.Scoring_Mode):
 		self.delay(name='bonus_target', event_type=None, delay=3, handler=self.bonus_target)
 		self.game.sound.play_voice('jackpot is lit')
 		self.update_lamps()
+
 	def finish_level_complete(self):
 		self.game.score(10000)
 		self.game.lampctrl.play_show('advance_level', False, self.game.update_lamps)
@@ -385,12 +391,8 @@ class Crimescenes(modes.Scoring_Mode):
 		self.level_layer = dmd.TextLayer(128/2, 14, self.game.fonts['07x5'], "center").set_text("Level " + str(level + 1) + " complete", 1.5);
 		self.award_layer = dmd.TextLayer(128/2, 21, self.game.fonts['07x5'], "center").set_text("Award: " + locale.format("%d",points,True) + " points", 1.5);
 		self.layer = dmd.GroupedLayer(128, 32, [self.title_layer, self.level_layer, self.award_layer])
-		
 
 	def is_mb_active(self):
-		print "Crimescenes: is_mb_active()"
-		print self.mode == 'blockwar' or self.mode == 'bonus'
-		print "mode is " + self.mode
 		return self.mode == 'block_war' or self.mode == 'bonus'
 
 	def block_war_start_callback(self):
@@ -452,9 +454,8 @@ class Crimescenes(modes.Scoring_Mode):
 
 		return [self.layer_0]
 		
-
 class BlockWar(game.Mode):
-	"""docstring for AttractMode"""
+	"""Multiball activated by crime scenes"""
 	def __init__(self, game, priority):
 		super(BlockWar, self).__init__(game, priority)
 		self.countdown_layer = dmd.TextLayer(128/2, 7, self.game.fonts['jazz18'], "center")

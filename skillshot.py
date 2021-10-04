@@ -7,14 +7,13 @@ curr_file_path = os.path.dirname(os.path.abspath( __file__ ))
 voice_path = curr_file_path + "/sound/Voice/skillshot/"
 
 class SkillShot(game.Mode):
-	"""docstring for AttractMode"""
+	"""Skillshot when the ball starts"""
 	def __init__(self, game, priority):
 		super(SkillShot, self).__init__(game, priority)
 		self.text_layer = dmd.TextLayer(128/2, 7, self.game.fonts['07x5'], "center")
 		self.award_layer = dmd.TextLayer(128/2, 17, self.game.fonts['num_14x10'], "center")
 		self.layer = dmd.GroupedLayer(128, 32, [self.text_layer, self.award_layer])
 		self.time = 0
-		self.awards = ['award1','award2']
 
 		self.game.sound.register_sound('good shot', voice_path+'great shot.wav')
 		self.game.sound.register_sound('good shot', voice_path+'incredible shot.wav')
@@ -62,4 +61,3 @@ class SkillShot(game.Mode):
 		#See if ball came around right loop
 		if self.game.switches.topRightOpto.time_since_change() < 1:
 			self.award()
-

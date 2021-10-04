@@ -2,10 +2,10 @@ import procgame
 from procgame import *
 from random import *
 
-class Missile_Award_Mode(game.Mode):
+class MissileAwardMode(game.Mode):
 	"""Choose an award while the ball sits in the left shooter lane"""
 	def __init__(self, game, priority, font):
-		super(Missile_Award_Mode, self).__init__(game, priority)
+		super(MissileAwardMode, self).__init__(game, priority)
 		self.font = font
 		self.title_layer = dmd.TextLayer(128/2, 7, font, "center")
 		self.element_layer = dmd.TextLayer(128/2, 15, font, "center")

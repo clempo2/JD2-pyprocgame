@@ -10,7 +10,7 @@ sound_path = curr_file_path + "/sound/FX/"
 voice_path = curr_file_path + "/sound/Voice/boring/"
 
 class Boring(game.Mode):
-	"""docstring for AttractMode"""
+	"""Taunt player if nothing happens for a while"""
 	def __init__(self, game, priority):
 		super(Boring, self).__init__(game, priority)
 		#filename = 'jd - its way too quiet.wav'
@@ -25,6 +25,7 @@ class Boring(game.Mode):
 	
 	def mode_started(self):
 		self.delay(name='timer', event_type=None, delay=20, handler=self.timer_expired)
+		
 	def mode_stopped(self):
 		self.cancel_delayed('timer')
 
@@ -74,9 +75,6 @@ class Boring(game.Mode):
 		if (self.enable_reset):
 			self.reset()
 			self.enable_reset = False
-
-	def sw_shooterR_active(self, sw):
-		self.pause()
 
 	def sw_shooterR_active(self, sw):
 		self.pause()

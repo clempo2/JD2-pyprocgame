@@ -18,7 +18,7 @@ music_path = curr_file_path + "/sound/"
 sfx_path = curr_file_path + "/sound/FX/"
 
 class JD_Modes(modes.Scoring_Mode):
-	"""docstring for JD_Modes"""
+	"""The collection of playable modes"""
 	def __init__(self, game, priority, font_small, font_big):
 		super(JD_Modes, self).__init__(game, priority)
 
@@ -49,7 +49,7 @@ class JD_Modes(modes.Scoring_Mode):
 		self.crimescenes.crimescenes_completed = self.crimescenes_completed
 		self.crimescenes.mb_start_callback = self.multiball_started
 		self.crimescenes.mb_end_callback = self.multiball_ended
-		self.missile_award_mode = Missile_Award_Mode(game, priority+10, font_small)
+		self.missile_award_mode = MissileAwardMode(game, priority+10, font_small)
 		self.missile_award_mode.callback = self.award_missile_award
 		self.mode_completed_hurryup = ModeCompletedHurryup(game, priority+1)
 		self.mode_completed_hurryup.collected = self.hurryup_collected
@@ -229,7 +229,7 @@ class JD_Modes(modes.Scoring_Mode):
 		self.game.modes.remove(self.high_priority_animation)
 		if self.mode_active:
 			this_mode = self.mode_list[self.mode]
-			self.game.modes.remove(self.mode_list[self.mode])
+			self.game.modes.remove(this_mode)
 		self.game.modes.remove(self.mode_completed_hurryup)
 
 		# Disable all flashers.
@@ -499,9 +499,9 @@ class JD_Modes(modes.Scoring_Mode):
 		elif style == 'off':
 			self.game.lamps[lamp_name].disable()
 
-        ####################################################
+	####################################################
 	# Info - Information for Instant Info Screens.
-        ####################################################
+	####################################################
 
 	def start_info(self):
 		self.info_on = True
@@ -513,12 +513,10 @@ class JD_Modes(modes.Scoring_Mode):
 	def get_info_layers(self):
 		self.title_layer_0 = dmd.TextLayer(128/2, 9, self.game.fonts['tiny7'], "center").set_text('Extra Balls:')
 		self.value_0_layer = dmd.TextLayer(128/2, 19, self.game.fonts['tiny7'], "center").set_text(str(self.game.current_player().extra_balls))
-
 		self.layer_0 = dmd.GroupedLayer(128, 32, [self.title_layer_0, self.value_0_layer])
+
 		self.title_layer_1a = dmd.TextLayer(128/2, 9, self.game.fonts['tiny7'], "center").set_text('Modes attempted: ' + str(len(self.modes_attempted)) + '/' + str(len(self.modes_attempted) + len(self.modes_not_attempted)))
-
 		self.title_layer_1b = dmd.TextLayer(128/2, 19, self.game.fonts['tiny7'], "center").set_text('Modes completed: ' + str(len(self.modes_completed)) + '/' + str(len(self.modes_attempted)))
-
 		self.layer_1 = dmd.GroupedLayer(128, 32, [self.title_layer_1a, self.title_layer_1b])
 
 		return [self.layer_0, self.layer_1]
@@ -527,13 +525,13 @@ class JD_Modes(modes.Scoring_Mode):
 		self.game.modes.remove(self.info)
 		self.info_on = False
 
-        ####################################################
+	####################################################
 	# End Info
-        ####################################################
+	####################################################
 
-        ####################################################
+	####################################################
 	# Switch Handlers
-        ####################################################
+	####################################################
 
 	def sw_flipperLwL_active_for_6s(self,sw):
 		if not self.any_mb_active() and not self.info_on:
@@ -734,7 +732,7 @@ class JD_Modes(modes.Scoring_Mode):
 			if self.state == 'idle':
 				self.mode = self.modes_not_attempted[self.modes_not_attempted_ptr]
 				intro_instruction_layers = self.mode_list[self.mode].get_instruction_layers()
-				self.play_intro.setup(self.modes_not_attempted[self.modes_not_attempted_ptr], self.activate_mode, self.modes_not_attempted[0], intro_instruction_layers)
+				self.play_intro.setup(self.mode, self.activate_mode, self.mode, intro_instruction_layers)
 				self.game.modes.add(self.play_intro)
 				self.intro_playing = True
 				self.game.lamps.rightStartFeature.disable()
@@ -821,9 +819,9 @@ class JD_Modes(modes.Scoring_Mode):
 		if (self.auto_plunge):
 			self.game.coils.shooterR.pulse(50)
 
-        ####################################################
+	####################################################
 	# End Switch Handlers
-        ####################################################
+	####################################################
 
 	def welcome(self):
 		if self.game.ball == 1 or self.game.shooting_again:
@@ -1074,8 +1072,8 @@ class JD_Modes(modes.Scoring_Mode):
 	def is_ultimate_challenge_ready(self):
 			# 3 Criteria for finale: jackpot, crimescenes, all modes attempted.
 		return self.multiball.jackpot_collected and \
-                       self.crimescenes.complete and \
-                       len(self.modes_not_attempted) == 0
+				self.crimescenes.complete and \
+				len(self.modes_not_attempted) == 0
 
 	def get_num_modes_completed(self):
 		return self.num_modes_completed
@@ -1129,10 +1127,9 @@ class JD_Modes(modes.Scoring_Mode):
 		self.game.coils.shooterL.pulse()
 		if success:
 			self.light_extra_ball()
-		
 	
 class ModesDisplay(game.Mode):
-	"""docstring for AttractMode"""
+	"""Display some text when the ball is active"""
 	def __init__(self, game, priority):
 		super(ModesDisplay, self).__init__(game, priority)
 		self.big_text_layer = dmd.TextLayer(128/2, 7, self.game.fonts['jazz18'], "center")
@@ -1153,21 +1150,15 @@ class ModesDisplay(game.Mode):
 			self.layer = dmd.GroupedLayer(128, 32, [self.score_layer])
 
 class ModesAnimation(game.Mode):
-	"""docstring for AttractMode"""
+	"""Play an animation when the ball is active"""
 	def __init__(self, game, priority):
 		super(ModesAnimation, self).__init__(game, priority)
 	
 	def play(self, anim, repeat=False, hold=False, frame_time=1):
 		self.layer = dmd.AnimatedLayer(frames=anim.frames, repeat=repeat, hold=hold, frame_time=frame_time)
 
-		#filename = curr_file_path + "/dmd/train1.dmd"
-		#train_anim = dmd.Animation().load(filename)
-		#obs_frame = train_anim.frames[0]
-		#self.layer.transition = dmd.ObscuredWipeTransition(obscuring_frame=obs_frame, composite_op='blacksrc', direction='east')
-		#self.layer.transition.progress_per_frame=1.0/100.0
-
 class GameIntro(game.Mode):
-	"""docstring for AttractMode"""
+	"""Welcome on first ball or shoot again"""
 	def __init__(self, game, priority):
 		super(GameIntro, self).__init__(game, priority)
 		self.game.sound.register_sound('welcome', voice_path+"welcome.wav")
@@ -1199,8 +1190,8 @@ class GameIntro(game.Mode):
 		self.game.sound.play_voice('welcome')
 		gen = dmd.MarkupFrameGenerator()
 		if self.game.attract_mode.play_super_game:
-			self.delay(name='finish', event_type=None, delay=8.0, handler=self.finish )
-                	instructions = gen.frame_for_markup("""
+			self.delay(name='finish', event_type=None, delay=8.0, handler=self.finish)
+			instructions = gen.frame_for_markup("""
 
 #INSTRUCTIONS#
 
@@ -1210,8 +1201,8 @@ You have started the SuperGame.  Ultimate Challenge is lit.  Shoot the sniper to
 """)
 
 		else:
-			self.delay(name='finish', event_type=None, delay=25.0, handler=self.finish )
-                	instructions = gen.frame_for_markup("""
+			self.delay(name='finish', event_type=None, delay=25.0, handler=self.finish)
+			instructions = gen.frame_for_markup("""
 
 
 #INSTRUCTIONS#

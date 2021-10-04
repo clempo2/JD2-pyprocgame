@@ -1,8 +1,9 @@
 import procgame
+import procgame.game
+from procgame import *
 import locale
 import time
 import os
-from procgame import *
 from random import *
 
 curr_file_path = os.path.dirname(os.path.abspath( __file__ ))
@@ -10,7 +11,7 @@ music_path = curr_file_path + "/sound/"
 voice_path = curr_file_path + "/sound/Voice/ultimate_challenge/"
 
 class UltimateChallenge(modes.Scoring_Mode):
-	"""docstring for AttractMode"""
+	"""Wizard mode"""
 	def __init__(self, game, priority):
 		super(UltimateChallenge, self).__init__(game, priority)
 		self.completed = False
@@ -92,7 +93,7 @@ class UltimateChallenge(modes.Scoring_Mode):
 
 	def sw_shooterL_active_for_200ms(self, sw):
 		self.game.coils.shooterL.pulse()
-		return True	
+		return procgame.game.SwitchStop	
 
 	def level_complete_callback(self):
 		self.game.ball_save.disable()
@@ -138,15 +139,13 @@ class UltimateChallenge(modes.Scoring_Mode):
 
 
 class UltimateIntro(game.Mode):
-	"""docstring for AttractMode"""
+	"""Display wizard mode instructions"""
 	def __init__(self, game, priority):
 		super(UltimateIntro, self).__init__(game, priority)
 		self.gen = dmd.MarkupFrameGenerator()
 		self.delay_time = 5
 		self.exit_function = None
-               	self.instructions = self.gen.frame_for_markup("""
-Empty
-""")
+		self.instructions = self.gen.frame_for_markup("") # empty
 
 	def mode_started(self):
 		self.game.sound.stop_music()
@@ -174,7 +173,6 @@ Empty
 		if self.exit_function:
 			self.exit_function()
 
-
 	def mode_stopped(self):
 		self.cancel_delayed('intro')
 		# Leave GI off for Ultimate Challenge
@@ -188,7 +186,7 @@ Empty
 
 		if stage == 'fire':
 			self.delay_time = 15
-                	self.instructions = self.gen.frame_for_markup("""
+			self.instructions = self.gen.frame_for_markup("""
 
 #ULTIMATE#
 #CHALLENGE#
@@ -206,7 +204,7 @@ Extinguish fires and banish Judge Fire by shooting the lit crimescene shots.
 
 		elif stage == 'mortis':
 			self.delay_time = 11.5
-                	self.instructions = self.gen.frame_for_markup("""
+			self.instructions = self.gen.frame_for_markup("""
 
 #ULTIMATE#
 #CHALLENGE#
@@ -222,7 +220,7 @@ Banish him by shooting each the lit shot twice.
 
 		elif stage == 'fear':
 			self.delay_time = 13
-                	self.instructions = self.gen.frame_for_markup("""
+			self.instructions = self.gen.frame_for_markup("""
 
 #ULTIMATE#
 #CHALLENGE#
@@ -238,7 +236,7 @@ Banish him by shooting the lit ramp shots and then the subway before time runs o
 
 		elif stage == 'death':
 			self.delay_time = 13
-                	self.instructions = self.gen.frame_for_markup("""
+			self.instructions = self.gen.frame_for_markup("""
 
 #ULTIMATE#
 #CHALLENGE#
@@ -254,7 +252,7 @@ Banish him by shooting the lit crimescene shots before time expires.  Shots slow
 
 		else:
 			self.delay_time = 8
-                	self.instructions = self.gen.frame_for_markup("""
+			self.instructions = self.gen.frame_for_markup("""
 
 #CONGRATS#
 
@@ -273,7 +271,6 @@ Normal play resumes when only 1 ball remains.
 		if self.game.switches.flipperLwL.is_active():
 			self.finish()
 
-
 	def update_gi(self, on, num):
 		for i in range(1,5):
 			if num == 'all' or num == i:
@@ -284,7 +281,7 @@ Normal play resumes when only 1 ball remains.
 
 
 class Fire(modes.Scoring_Mode):
-	"""docstring for AttractMode"""
+	"""Dark judge Fire wizard mode"""
 	def __init__(self, game, priority):
 		super(Fire, self).__init__(game, priority)
 		self.complete = False
@@ -374,11 +371,11 @@ class Fire(modes.Scoring_Mode):
 			self.mystery_lit = False
 			self.game.set_status('Add 2 balls!')
 			self.game.trough.launch_balls(2, self.launch_callback)
-		return True
+		return procgame.game.SwitchStop
 
 	def sw_leftRampToLock_active(self, sw):
 		self.game.deadworld.eject_balls(1)
-		return True
+		return procgame.game.SwitchStop
 
 
 	def sw_topRightOpto_active(self, sw):
@@ -390,28 +387,28 @@ class Fire(modes.Scoring_Mode):
 		elif self.game.switches.topCenterRollover.time_since_change() < 1:
 			self.switch_hit(1)
 
-		return True
+		return procgame.game.SwitchStop
 
 	def sw_popperR_active_for_300ms(self, sw):
 		self.switch_hit(2)
-		return True
+		return procgame.game.SwitchStop
 
 	def sw_leftRollover_active(self, sw):
 		#See if ball came around right loop
 		if self.game.switches.topRightOpto.time_since_change() < 1.5:
 			self.switch_hit(3)
-		return True
+		return procgame.game.SwitchStop
 
 	def sw_topCenterRollover_active(self, sw):
 		#See if ball came around right loop 
 		#Give it 2 seconds as ball trickles this way.  Might need to adjust.
 		if self.game.switches.topRightOpto.time_since_change() < 2:
 			self.switch_hit(3)
-		return True
+		return procgame.game.SwitchStop
 
 	def sw_rightRampExit_active(self, sw):
 		self.switch_hit(4)
-		return True
+		return procgame.game.SwitchStop
 
 	def switch_hit(self, num):
 		if self.targets[num]:
@@ -465,8 +462,9 @@ class Fire(modes.Scoring_Mode):
 		# transition when all balls drain.  It should keep track of 
 		# original callback so it can replace it while modes are active.
 
+
 class Fear(modes.Scoring_Mode):
-	"""docstring for AttractMode"""
+	"""Dark judge Fear wizard mode"""
 	def __init__(self, game, priority):
 		super(Fear, self).__init__(game, priority)
 		self.complete = False
@@ -547,7 +545,6 @@ class Fear(modes.Scoring_Mode):
 			self.game.lamps.multiballJackpot.schedule(schedule=0x0f0f0f0f, cycle_seconds=0, now=True)
 			
 		return True
-
 			
 	def drive_mode_lamp(self, lampname, style='on'):
 		if style == 'slow':
@@ -566,30 +563,28 @@ class Fear(modes.Scoring_Mode):
 		if self.mystery_lit:
 			self.timer = 20
 			self.mystery_lit = False
-		return True
+		return procgame.game.SwitchStop
 
 	def sw_leftRampToLock_active(self, sw):
 		self.game.deadworld.eject_balls(1)
-		return True
-
+		return procgame.game.SwitchStop
 
 	def sw_leftRampExit_active(self, sw):
 		if self.state == 'ramps':
 			if self.active_ramp == 'left':
 				self.ramp_shots_hit += 1
 				self.ramp_shot_hit()
-
-		return True
+		return procgame.game.SwitchStop
 
 	def sw_rightRampExit_active(self, sw):
 		if self.state == 'ramps':
 			if self.active_ramp == 'right':
 				self.ramp_shots_hit += 1
 				self.ramp_shot_hit()
-		return True
+		return procgame.game.SwitchStop
 
 	def sw_popperR_active_for_300ms(self, sw):
-		return True
+		return procgame.game.SwitchStop
 
 	def ramp_shot_hit(self):
 		if self.ramp_shots_hit == self.ramp_shots_required:
@@ -641,7 +636,7 @@ class Fear(modes.Scoring_Mode):
 			self.finish()
 			self.cancel_delayed(['grace', 'countdown'])
 			self.already_collected = True
-		return True
+		return procgame.game.SwitchStop
 	
 	# Ball might jump over first switch.  Use 2nd switch as a catchall.
 	def sw_subwayEnter2_closed(self, sw):
@@ -651,8 +646,7 @@ class Fear(modes.Scoring_Mode):
 			self.banner_layer.set_text('Well Done!')
 			self.finish()
 			self.cancel_delayed(['grace', 'countdown'])
-		return True
-	
+		return procgame.game.SwitchStop
 
 	def finish(self, success = True):
 		self.cancel_delayed('taunt')
@@ -687,8 +681,9 @@ class Fear(modes.Scoring_Mode):
 		else:
 			self.finish(False)
 
+
 class Mortis(modes.Scoring_Mode):
-	"""docstring for AttractMode"""
+	"""Dark judge Mortis wizard mode"""
 	def __init__(self, game, priority):
 		super(Mortis, self).__init__(game, priority)
 		self.complete = False
@@ -753,8 +748,6 @@ class Mortis(modes.Scoring_Mode):
 		else:
 			self.game.lamps[lampname].disable()
 			
-
-			
 	def drive_mode_lamp(self, lampname, style='on'):
 		if style == 'slow':
 			self.game.lamps[lampname].schedule(schedule=0x00ff00ff, cycle_seconds=0, now=True)
@@ -769,30 +762,29 @@ class Mortis(modes.Scoring_Mode):
 
 	def sw_mystery_active(self, sw):
 		self.switch_hit(0)
-		return True
+		return procgame.game.SwitchStop
 
 	def sw_topRightOpto_active(self, sw):
 		#See if ball came around outer left loop
 		if self.game.switches.leftRollover.time_since_change() < 1:
 			self.switch_hit(1)
-		return True
+		return procgame.game.SwitchStop
 
 	def sw_popperR_active_for_300ms(self, sw):
 		self.switch_hit(2)
-		return True
+		return procgame.game.SwitchStop
 
 	def sw_rightRampExit_active(self, sw):
 		self.switch_hit(3)
-		return True
+		return procgame.game.SwitchStop
 
 	def sw_captiveBall3_active(self, sw):
 		self.switch_hit(4)
-		return True
+		return procgame.game.SwitchStop
 
 	def sw_leftRampToLock_active(self, sw):
 		self.game.deadworld.eject_balls(1)
-		return True
-
+		return procgame.game.SwitchStop
 
 	def switch_hit(self, index):
 		if self.shots_required[index] > 0:
@@ -859,8 +851,9 @@ class Mortis(modes.Scoring_Mode):
 		# transition when all balls drain.  It should keep track of 
 		# original callback so it can replace it while modes are active.
 
+
 class Death(modes.Scoring_Mode):
-	"""docstring for AttractMode"""
+	"""Dark judge Death wizard mode"""
 	def __init__(self, game, priority):
 		super(Death, self).__init__(game, priority)
 		self.complete = False
@@ -941,9 +934,7 @@ class Death(modes.Scoring_Mode):
 			self.game.lamps[lampname].schedule(schedule=0x0f0f0f0f, cycle_seconds=0, now=True)
 		else:
 			self.game.lamps[lampname].disable()
-			
 
-			
 	def drive_mode_lamp(self, lampname, style='on'):
 		if style == 'slow':
 			self.game.lamps[lampname].schedule(schedule=0x00ff00ff, cycle_seconds=0, now=True)
@@ -958,7 +949,7 @@ class Death(modes.Scoring_Mode):
 
 	def sw_mystery_active(self, sw):
 		self.switch_hit(0)
-		return True
+		return procgame.game.SwitchStop
 
 	def sw_topRightOpto_active(self, sw):
 		#See if ball came around outer left loop
@@ -969,11 +960,11 @@ class Death(modes.Scoring_Mode):
 		elif self.game.switches.topCenterRollover.time_since_change() < 1.5:
 			self.switch_hit(1)
 
-		return True
+		return procgame.game.SwitchStop
 
 	def sw_popperR_active_for_300ms(self, sw):
 		self.switch_hit(2)
-		return True
+		return procgame.game.SwitchStop
 
 	def sw_leftRollover_active(self, sw):
 		#See if ball came around right loop
@@ -982,12 +973,11 @@ class Death(modes.Scoring_Mode):
 
 	def sw_rightRampExit_active(self, sw):
 		self.switch_hit(4)
-		return True
+		return procgame.game.SwitchStop
 
 	def sw_leftRampToLock_active(self, sw):
 		self.game.deadworld.eject_balls(1)
-		return True
-
+		return procgame.game.SwitchStop
 
 	def switch_hit(self, index):
 		if self.active_shots[index]:
@@ -1082,8 +1072,9 @@ class Death(modes.Scoring_Mode):
 			self.timer = 10
 			self.delay(name='countdown', event_type=None, delay=1, handler=self.decrement_timer)
 
+
 class Celebration(modes.Scoring_Mode):
-	"""docstring for AttractMode"""
+	"""Final multiball wizard mode after all dark judges have been defeated"""
 	def __init__(self, game, priority):
 		super(Celebration, self).__init__(game, priority)
 		#self.layer = dmd.TextLayer(128/2, 13, self.game.fonts['tiny7'], "center", False)
@@ -1136,9 +1127,9 @@ class Celebration(modes.Scoring_Mode):
 		i = 0
 		for lamp in self.game.lamps:
 			if lamp.name.find('gi0', 0) == -1 and \
-                           lamp.name != 'startButton' and lamp.name != 'buyIn' and \
-                           lamp.name != 'drainShield' and lamp.name != 'superGame' and \
-                           lamp.name != 'judgeAgain': 
+					lamp.name != 'startButton' and lamp.name != 'buyIn' and \
+					lamp.name != 'drainShield' and lamp.name != 'superGame' and \
+					lamp.name != 'judgeAgain': 
 				lamp.schedule(schedule=lamp_schedules[i%32], cycle_seconds=0, now=False)
 				i += 1
 
@@ -1158,7 +1149,7 @@ class Celebration(modes.Scoring_Mode):
 
 	def sw_mystery_active(self, sw):
 		self.game.score(5000)
-		return True
+		return procgame.game.SwitchStop
 
 	def sw_topRightOpto_active(self, sw):
 		#See if ball came around outer left loop
@@ -1169,11 +1160,11 @@ class Celebration(modes.Scoring_Mode):
 		elif self.game.switches.topCenterRollover.time_since_change() < 1.5:
 			self.game.score(5000)
 
-		return True
+		return procgame.game.SwitchStop
 
 	def sw_popperR_active_for_300ms(self, sw):
 		self.game.score(1000)
-		return True
+		return procgame.game.SwitchStop
 
 	def sw_leftRollover_active(self, sw):
 		#See if ball came around right loop
@@ -1182,11 +1173,11 @@ class Celebration(modes.Scoring_Mode):
 
 	def sw_rightRampExit_active(self, sw):
 		self.game.score(1000)
-		return True
+		return procgame.game.SwitchStop
 
 	def sw_leftRampToLock_active(self, sw):
 		self.game.deadworld.eject_balls(1)
-		return True
+		return procgame.game.SwitchStop
 
 	def sw_dropTargetJ_active_for_250ms(self,sw):
 		return self.drop_targets()

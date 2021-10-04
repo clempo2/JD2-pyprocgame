@@ -10,7 +10,7 @@ sound_path = curr_file_path + "/sound/FX/"
 voice_path = curr_file_path + "/sound/Voice/"
 
 class ModeCompletedHurryup(game.Mode):
-	"""docstring for AttractMode"""
+	"""Hurry up after a mode is successfully completed"""
 	def __init__(self, game, priority):
 		super(ModeCompletedHurryup, self).__init__(game, priority)
 		self.countdown_layer = dmd.TextLayer(128/2, 7, self.game.fonts['jazz18'], "center")
@@ -86,7 +86,7 @@ class ModeCompletedHurryup(game.Mode):
 		self.expired()
 
 class ModeTimer(game.Mode):
-	"""docstring for AttractMode"""
+	"""timer for a timed mode"""
 	def __init__(self, game, priority):
 		super(ModeTimer, self).__init__(game, priority)
 		self.timer = 0;
@@ -130,7 +130,7 @@ class ModeTimer(game.Mode):
 		pass
 
 class PlayIntro(game.Mode):
-	"""docstring for AttractMode"""
+	"""Displays the mode instructions when a mode starts"""
 	def __init__(self, game, priority):
 		super(PlayIntro, self).__init__(game, priority)
 		self.frame_counter = 0
@@ -183,7 +183,7 @@ class PlayIntro(game.Mode):
 
 
 class ChainFeature(modes.Scoring_Mode, ModeTimer):
-	"""docstring for AttractMode"""
+	"""Base class for the chain modes"""
 	def __init__(self, game, priority, name):
 		super(ChainFeature, self).__init__(game, priority)
 		self.completed = False
@@ -193,7 +193,6 @@ class ChainFeature(modes.Scoring_Mode, ModeTimer):
 		self.score_layer = dmd.TextLayer(128/2, 10, self.game.fonts['num_14x10'], "center")
 		self.status_layer = dmd.TextLayer(128/2, 26, self.game.fonts['tiny7'], "center")
 		self.layer = dmd.GroupedLayer(128, 32, [self.countdown_layer, self.name_layer, self.score_layer, self.status_layer])
-		
 
 	def register_callback_function(self, function):
 		self.callback = function
@@ -219,7 +218,7 @@ class ChainFeature(modes.Scoring_Mode, ModeTimer):
 		self.countdown_layer.set_text(str(timer))
 
 class Pursuit(ChainFeature):
-	"""docstring for AttractMode"""
+	"""Pursuit chain mode"""
 	def __init__(self, game, priority):
 		super(Pursuit, self).__init__(game, priority, 'Pursuit')
 		difficulty = self.game.user_settings['Gameplay']['Chain feature difficulty']
@@ -265,7 +264,6 @@ class Pursuit(ChainFeature):
 	def update_status(self):
 		status = 'Shots made: ' + str(self.shots) + '/' + str(self.shots_required_for_completion)
 		self.status_layer.set_text(status)
-		
 
 	def mode_stopped(self):
 		self.game.coils.flasherPursuitL.disable()
@@ -302,7 +300,6 @@ class Pursuit(ChainFeature):
 
 	def failed(self):
 		self.game.sound.play_voice('failed')
-			
 
 	def get_instruction_layers(self):
 		font = self.game.fonts['jazz18']
@@ -314,7 +311,7 @@ class Pursuit(ChainFeature):
 		return instruction_layers
 	
 class Blackout(ChainFeature):
-	"""docstring for AttractMode"""
+	"""Blackout chain mode"""
 	def __init__(self, game, priority):
 		super(Blackout, self).__init__(game, priority, 'Blackout')
 		difficulty = self.game.user_settings['Gameplay']['Chain feature difficulty']
@@ -379,7 +376,7 @@ class Blackout(ChainFeature):
 		return instruction_layers
 
 class Sniper(ChainFeature):
-	"""docstring for AttractMode"""
+	"""Sniper chain mode"""
 	def __init__(self, game, priority):
 		super(Sniper, self).__init__(game, priority, 'Sniper')
 		difficulty = self.game.user_settings['Gameplay']['Chain feature difficulty']
@@ -471,7 +468,7 @@ class Sniper(ChainFeature):
 
 
 class BattleTank(ChainFeature):
-	"""docstring for AttractMode"""
+	"""Battle tank chain mode"""
 	def __init__(self, game, priority):
 		super(BattleTank, self).__init__(game, priority, 'Battle Tank')
 
@@ -559,7 +556,7 @@ class BattleTank(ChainFeature):
 
 
 class Meltdown(ChainFeature):
-	"""docstring for AttractMode"""
+	"""Meltdown chain mode"""
 	def __init__(self, game, priority):
 		super(Meltdown, self).__init__(game, priority, 'Meltdown')
 		difficulty = self.game.user_settings['Gameplay']['Chain feature difficulty']
@@ -639,7 +636,7 @@ class Meltdown(ChainFeature):
 
 
 class Impersonator(ChainFeature):
-	"""docstring for AttractMode"""
+	"""Bad impersonator chain mode"""
 	def __init__(self, game, priority):
 		super(Impersonator, self).__init__(game, priority, 'Impersonator')
 		difficulty = self.game.user_settings['Gameplay']['Chain feature difficulty']
@@ -779,7 +776,7 @@ class Impersonator(ChainFeature):
 		self.game.coils.resetDropTarget.pulse(40)
 
 	def moving_target(self):
-		#self.timer += 1
+		# ModeTimer is continuously updating self.timer
 		self.game.lamps.dropTargetJ.disable()
 		self.game.lamps.dropTargetU.disable()
 		self.game.lamps.dropTargetD.disable()
@@ -811,7 +808,7 @@ class Impersonator(ChainFeature):
 		
 
 class Safecracker(ChainFeature):
-	"""docstring for AttractMode"""
+	"""Safecracker chain mode"""
 	def __init__(self, game, priority):
 		super(Safecracker, self).__init__(game, priority, 'Safe Cracker')
 		difficulty = self.game.user_settings['Gameplay']['Chain feature difficulty']
@@ -854,13 +851,9 @@ class Safecracker(ChainFeature):
 		self.update_status()
 		self.update_lamps()
 
-	def update_lamps(self):
-		self.game.lamps.awardSafecracker.schedule(schedule=0x00FF00FF, cycle_seconds=0, now=True)
-
 	def update_status(self):
 		status = 'Shots made: ' + str(self.shots) + '/' + str(self.shots_required_for_completion)
 		self.status_layer.set_text(status)
-		
 
 	def mode_stopped(self):
 		self.cancel_delayed('trip_check')
@@ -907,7 +900,7 @@ class Safecracker(ChainFeature):
 
 
 class ManhuntMillions(ChainFeature):
-	"""docstring for AttractMode"""
+	"""ManhuntMillions chain mode"""
 	def __init__(self, game, priority):
 		super(ManhuntMillions, self).__init__(game, priority, 'Manhunt')
 		difficulty = self.game.user_settings['Gameplay']['Chain feature difficulty']
@@ -982,7 +975,7 @@ class ManhuntMillions(ChainFeature):
 
 
 class Stakeout(ChainFeature):
-	"""docstring for AttractMode"""
+	"""Stakeout chain mode"""
 	def __init__(self, game, priority):
 		super(Stakeout, self).__init__(game, priority, 'Stakeout')
 		difficulty = self.game.user_settings['Gameplay']['Chain feature difficulty']

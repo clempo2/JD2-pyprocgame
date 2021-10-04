@@ -6,7 +6,7 @@ curr_file_path = os.path.dirname(os.path.abspath( __file__ ))
 voice_path = curr_file_path + "/sound/Voice/multiball/"
 
 class Multiball(modes.Scoring_Mode):
-	"""docstring for AttractMode"""
+	"""Multiball activated by locking balls in the Deadworld planet"""
 	def __init__(self, game, priority, deadworld_mod_installed, font):
 		super(Multiball, self).__init__(game, priority)
 		self.deadworld_mod_installed = deadworld_mod_installed

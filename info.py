@@ -2,7 +2,7 @@ import procgame
 from procgame import *
 
 class Info(game.Mode):
-	"""docstring for AttractMode"""
+	"""Display status report"""
 	def __init__(self, game, priority):
 		super(Info, self).__init__(game, priority)
 		#self.title_layer = dmd.TextLayer(1, 7, self.game.fonts['tiny7'], "left").set_text('Game Info')

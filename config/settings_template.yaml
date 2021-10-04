@@ -12,12 +12,12 @@ Machine:
     options: [true, false]
     default: true
   'Initial volume':
-    options: [0.1,1.0]
-    increments: 0.1
+    options: [1,10]
+    increments: 1
     default: 0.5
   'Music volume offset':
-    options: [-0.4,0.4]
-    increments: 0.1
+    options: [-4,4]
+    increments: 1
     default: 0
 Display:
   'Left side score justify':

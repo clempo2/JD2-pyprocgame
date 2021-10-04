@@ -1,7 +1,7 @@
 from procgame import *
 
 class AirRade(game.Mode):
-	"""docstring for AttractMode"""
+	"""Pick a prize between 2 choices"""
 	def __init__(self, game, priority):
 		super(AirRade, self).__init__(game, priority)
 		self.banner_layer = dmd.TextLayer(128/2, 7, self.game.fonts['jazz18'], "center")
@@ -71,7 +71,6 @@ class AirRade(game.Mode):
 
 	def selector_enabler(self):
 		self.selection_enabled = True
-			
 
 	def finish_award(self, choice):
 		self.state = 'finish'
@@ -82,8 +81,5 @@ class AirRade(game.Mode):
 		self.layer = dmd.GroupedLayer(128, 32, [self.instruction_layer_1, self.instruction_layer_2])
 		self.cancel_delayed('selector_timer')
 
-
 	def exit(self):
 		self.callback(self.awards[self.selection])
-
-	
