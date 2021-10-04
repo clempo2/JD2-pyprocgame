@@ -5,22 +5,18 @@ from procgame import *
 import os.path
 import random
 
-curr_file_path = os.path.dirname(os.path.abspath( __file__ ))
-sound_path = curr_file_path + "/sound/FX/"
-voice_path = curr_file_path + "/sound/Voice/boring/"
-
 class Boring(game.Mode):
 	"""Taunt player if nothing happens for a while"""
 	def __init__(self, game, priority):
 		super(Boring, self).__init__(game, priority)
-		#filename = 'jd - its way too quiet.wav'
-		#self.game.sound.register_sound('boring', voice_path+filename)
-		filename = 'jd - this is boring.wav'
-		self.game.sound.register_sound('boring', voice_path+filename)
-		#filename = 'lets order a pizza.wav'
-		#self.game.sound.register_sound('boring', voice_path+filename)
-		filename = 'wake me when something happens.wav'
-		self.game.sound.register_sound('boring', voice_path+filename)
+		#filename = '/boring/jd - its way too quiet.wav'
+		#self.game.sound.register_sound('boring', self.game.voice_path + filename)
+		filename = '/boring/jd - this is boring.wav'
+		self.game.sound.register_sound('boring', self.game.voice_path + filename)
+		#filename = '/boring/lets order a pizza.wav'
+		#self.game.sound.register_sound('boring', self.game.voice_path + filename)
+		filename = '/boring/wake me when something happens.wav'
+		self.game.sound.register_sound('boring', self.game.voice_path + filename)
 		self.enable_reset = False
 	
 	def mode_started(self):

@@ -2,10 +2,6 @@ import procgame
 from procgame import *
 import os.path
 
-curr_file_path = os.path.dirname(os.path.abspath( __file__ ))
-voice_path = curr_file_path + "/sound/Voice/"
-sfx_path = curr_file_path + "/sound/FX/"
-
 class Tilt(game.Mode):
 	"""docstring for Bonus"""
 	def __init__(self, game, priority, font_big, font_small, tilt_sw=None, slam_tilt_sw=None):
@@ -18,9 +14,9 @@ class Tilt(game.Mode):
 		if slam_tilt_sw:
 			self.add_switch_handler(name=slam_tilt_sw, event_type='inactive', delay=None, handler=self.slam_tilt_handler)
 		self.num_tilt_warnings = 0
-		self.game.sound.register_sound('tilt warning', voice_path+"warning.wav")
-		self.game.sound.register_sound('tilt warning', voice_path+"jd - im warning you.wav")
-		self.game.sound.register_sound('tilt', voice_path+"jd - put down your weapons.wav")
+		self.game.sound.register_sound('tilt warning', self.game.voice_path + "/warning.wav")
+		self.game.sound.register_sound('tilt warning', self.game.voice_path + "/jd - im warning you.wav")
+		self.game.sound.register_sound('tilt', self.game.voice_path + "/jd - put down your weapons.wav")
 		self.tilted = False
 
 	def mode_started(self):

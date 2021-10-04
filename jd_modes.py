@@ -12,11 +12,6 @@ from missile_award import *
 from shooting_gallery import *
 import os.path
 
-curr_file_path = os.path.dirname(os.path.abspath( __file__ ))
-voice_path = curr_file_path + "/sound/Voice/"
-music_path = curr_file_path + "/sound/"
-sfx_path = curr_file_path + "/sound/FX/"
-
 class JD_Modes(modes.Scoring_Mode):
 	"""The collection of playable modes"""
 	def __init__(self, game, priority, font_small, font_big):
@@ -65,53 +60,53 @@ class JD_Modes(modes.Scoring_Mode):
 		self.low_priority_animation = ModesAnimation(self.game, priority)
 		self.mid_priority_animation = ModesAnimation(self.game, priority + 4)
 		self.high_priority_animation = ModesAnimation(self.game, priority + 210)
-		self.video_mode = ShootingGallery(self.game, priority+11, curr_file_path + "/dmd/jdpeople.dmd", curr_file_path + "/dmd/cows.dmd", curr_file_path + "/dmd/scopeandshot.dmd", self.cow_video_mode_lit)
+		self.video_mode = ShootingGallery(self.game, priority+11, self.game.dmd_path + "/jdpeople.dmd", self.game.dmd_path + "/cows.dmd", self.game.dmd_path + "/scopeandshot.dmd", self.cow_video_mode_lit)
 		self.video_mode.on_complete = self.video_mode_complete	
 
-		#self.game.sound.register_music('background', music_path+"mainSongLoop.mp3")
-		#self.game.sound.register_music('background', music_path+"mainSongDarkerSlower.mp3")
-		#self.game.sound.register_music('background', music_path+"mainSongDarkerFaster.mp3")
-		#self.game.sound.register_music('background', music_path+"mainSongDarkerEvenFaster.mp3")
-		#self.game.sound.register_music('background', music_path+"mainSongDarker(161)LessSynthesizedLead.mp3")
-		#self.game.sound.register_music('background', music_path+"mainSongDarker(161)DarkerMelody.mp3")
-		self.game.sound.register_music('background', music_path+"brainsDarkMelody(161).aif")
-		#self.game.sound.register_music('background', music_path+"mainSongDarker(161)QuieterMelody.mp3")
-		#self.game.sound.register_music('ball_launch', music_path+"darkerintro loop.mp3")
-		self.game.sound.register_music('ball_launch', music_path+"introloop(161).aif")
-		#self.game.sound.register_sound('ball_launch', music_path+"darkerintro loop.mp3")
-		self.game.sound.register_sound('outlane', sfx_path+"Outlane.wav")
-		self.game.sound.register_sound('inlane', sfx_path+"Inlane.wav")
-		self.game.sound.register_sound('meltdown', sfx_path+"CaptiveBall.wav")
-		self.game.sound.register_sound('ball_launch', sfx_path+"BallLaunchMotorcycle.wav")
-		self.game.sound.register_sound('drop_target', sfx_path+"DropTarget.wav")
-		self.game.sound.register_sound('extra_ball_target', sfx_path+"ExtraBallTargetLower.wav")
-		self.game.sound.register_sound('shooterL_launch', sfx_path+"LeftKickBack.wav")
-		self.game.sound.register_sound('outer_loop', sfx_path+"BallLaunchMotorcycle.wav")
-		self.game.sound.register_sound('inner_loop', sfx_path+"BallLaunchMotorcycle.wav")
-		self.game.sound.register_sound('mystery', sfx_path+"Question Mark.wav")
-		self.game.sound.register_sound('right_ramp', sfx_path+"rightrampflyby.ogg")
-		self.game.sound.register_sound('left_ramp', sfx_path+"LoopFlyBy.wav")
-		self.game.sound.register_sound('slingshot', sfx_path+"Slingshot.wav")
+		#self.game.sound.register_music('background', self.game.music_path + "/mainSongLoop.mp3")
+		#self.game.sound.register_music('background', self.game.music_path + "/mainSongDarkerSlower.mp3")
+		#self.game.sound.register_music('background', self.game.music_path + "/mainSongDarkerFaster.mp3")
+		#self.game.sound.register_music('background', self.game.music_path + "/mainSongDarkerEvenFaster.mp3")
+		#self.game.sound.register_music('background', self.game.music_path + "/mainSongDarker(161)LessSynthesizedLead.mp3")
+		#self.game.sound.register_music('background', self.game.music_path + "/mainSongDarker(161)DarkerMelody.mp3")
+		self.game.sound.register_music('background', self.game.music_path + "/brainsDarkMelody(161).aif")
+		#self.game.sound.register_music('background', self.game.music_path + "/mainSongDarker(161)QuieterMelody.mp3")
+		#self.game.sound.register_music('ball_launch', self.game.music_path + "/darkerintro loop.mp3")
+		self.game.sound.register_music('ball_launch', self.game.music_path + "/introloop(161).aif")
+		#self.game.sound.register_sound('ball_launch', self.game.music_path + "/darkerintro loop.mp3")
+		self.game.sound.register_sound('outlane', self.game.sound_path + "/Outlane.wav")
+		self.game.sound.register_sound('inlane', self.game.sound_path + "/Inlane.wav")
+		self.game.sound.register_sound('meltdown', self.game.sound_path + "/CaptiveBall.wav")
+		self.game.sound.register_sound('ball_launch', self.game.sound_path + "/BallLaunchMotorcycle.wav")
+		self.game.sound.register_sound('drop_target', self.game.sound_path + "/DropTarget.wav")
+		self.game.sound.register_sound('extra_ball_target', self.game.sound_path + "/ExtraBallTargetLower.wav")
+		self.game.sound.register_sound('shooterL_launch', self.game.sound_path + "/LeftKickBack.wav")
+		self.game.sound.register_sound('outer_loop', self.game.sound_path + "/BallLaunchMotorcycle.wav")
+		self.game.sound.register_sound('inner_loop', self.game.sound_path + "/BallLaunchMotorcycle.wav")
+		self.game.sound.register_sound('mystery', self.game.sound_path + "/Question Mark.wav")
+		self.game.sound.register_sound('right_ramp', self.game.sound_path + "/rightrampflyby.ogg")
+		self.game.sound.register_sound('left_ramp', self.game.sound_path + "/LoopFlyBy.wav")
+		self.game.sound.register_sound('slingshot', self.game.sound_path + "/Slingshot.wav")
 
-		self.game.sound.register_sound('ball saved', voice_path+"pity ball.wav")
-		self.game.sound.register_sound('ball saved', voice_path+"cant you do better than that.wav")
-		self.game.sound.register_sound('ball saved', voice_path+"who told you to stop.wav")
-		self.game.sound.register_sound('ball saved', voice_path+"you may judge again.wav")
-		self.game.sound.register_sound('ball saved', voice_path+"you may judge again 2.wav")
-		self.game.sound.register_sound('ball saved', voice_path+"jd - never do that again.wav")
+		self.game.sound.register_sound('ball saved', self.game.voice_path + "/pity ball.wav")
+		self.game.sound.register_sound('ball saved', self.game.voice_path + "/cant you do better than that.wav")
+		self.game.sound.register_sound('ball saved', self.game.voice_path + "/who told you to stop.wav")
+		self.game.sound.register_sound('ball saved', self.game.voice_path + "/you may judge again.wav")
+		self.game.sound.register_sound('ball saved', self.game.voice_path + "/you may judge again 2.wav")
+		self.game.sound.register_sound('ball saved', self.game.voice_path + "/jd - never do that again.wav")
 		keyname = 'curse'
 		for i in range(1,12):
-			filename = 'jd - curse ' + str(i) + '.wav'
-			self.game.sound.register_sound(keyname, voice_path+filename)
-		#self.game.sound.register_sound('outlane', sfx_path+"darkerintro loop.mp3")
-		self.game.sound.register_music('mode', music_path+"Heroes and Angels -- Loopable.aif")
-		self.game.sound.register_music('mode', music_path+"40 Second guitar solo.aif")
-		self.game.sound.register_music('mode', music_path+"55 second loopable -- Sonya.aif")
-		self.game.sound.register_music('mode', music_path+"105 second loopable -- Sisyphus.aif")
-		self.game.sound.register_music('multiball', music_path+"Heroes and Angels -- Loopable.aif")
-		self.game.sound.register_music('multiball', music_path+"40 Second guitar solo.aif")
-		self.game.sound.register_music('multiball', music_path+"55 second loopable -- Sonya.aif")
-		self.game.sound.register_music('multiball', music_path+"105 second loopable -- Sisyphus.aif")
+			filename = '/jd - curse ' + str(i) + '.wav'
+			self.game.sound.register_sound(keyname, self.game.voice_path + filename)
+		#self.game.sound.register_sound('outlane', self.game.sound_path + "/darkerintro loop.mp3")
+		self.game.sound.register_music('mode', self.game.music_path + "/Heroes and Angels -- Loopable.aif")
+		self.game.sound.register_music('mode', self.game.music_path + "/40 Second guitar solo.aif")
+		self.game.sound.register_music('mode', self.game.music_path + "/55 second loopable -- Sonya.aif")
+		self.game.sound.register_music('mode', self.game.music_path + "/105 second loopable -- Sisyphus.aif")
+		self.game.sound.register_music('multiball', self.game.music_path + "/Heroes and Angels -- Loopable.aif")
+		self.game.sound.register_music('multiball', self.game.music_path + "/40 Second guitar solo.aif")
+		self.game.sound.register_music('multiball', self.game.music_path + "/55 second loopable -- Sonya.aif")
+		self.game.sound.register_music('multiball', self.game.music_path + "/105 second loopable -- Sisyphus.aif")
 
 	def reset(self):
 		#self.state = 'pre_ultimate_challenge'
@@ -543,7 +538,7 @@ class JD_Modes(modes.Scoring_Mode):
 
 	def sw_subwayEnter2_active(self, sw):
 		self.game.score(500)
-		#filename = curr_file_path + "/dmd/subway.dmd"
+		#filename = self.game.dmd_path + "/subway.dmd"
 		#if os.path.isfile(filename):
 		#	anim = dmd.Animation().load(filename)
 		#	self.play_animation(anim, 'low', repeat=False, hold=False, frame_time=1)
@@ -561,7 +556,7 @@ class JD_Modes(modes.Scoring_Mode):
 			self.cancel_delayed('inner_loop')
 			self.delay(name='inner_loop', event_type=None, delay=3.0, handler=self.inner_loop_combo_handler )
 			self.show_on_display('inner loop: ' + str(self.inner_loop_combos), score, 'mid')
-			filename = curr_file_path + "/dmd/bike_across_screen.dmd"
+			filename = self.game.dmd_path + "/bike_across_screen.dmd"
 			if os.path.isfile(filename):
 				anim = dmd.Animation().load(filename)
 				self.play_animation(anim, 'mid', repeat=False, hold=False, frame_time=3)
@@ -582,7 +577,7 @@ class JD_Modes(modes.Scoring_Mode):
 			self.delay(name='outer_loop', event_type=None, delay=3.0, handler=self.outer_loop_combo_handler )
 			self.show_on_display('outer loop: ' + str(self.outer_loop_combos), score, 'mid')
 			self.outer_loop_active = True
-			filename = curr_file_path + "/dmd/bike_across_screen.dmd"
+			filename = self.game.dmd_path + "/bike_across_screen.dmd"
 			if os.path.isfile(filename):
 				anim = dmd.Animation().load(filename)
 				self.play_animation(anim, 'high', repeat=False, hold=False, frame_time=3)
@@ -779,7 +774,7 @@ class JD_Modes(modes.Scoring_Mode):
 	# Enable auto-plunge as soon as the new ball is launched (by the player).
 	def sw_shooterR_inactive_for_300ms(self,sw):
 		self.game.sound.play('ball_launch')
-		filename = curr_file_path + "/dmd/bikeacrosscity.dmd"
+		filename = self.game.dmd_path + "/bikeacrosscity.dmd"
 
 		if self.ball_starting:
 			self.game.ball_save.callback = self.ball_save_callback
@@ -857,7 +852,7 @@ class JD_Modes(modes.Scoring_Mode):
 		self.show_on_display("Extra Ball!", None,'high')
 		#Remove show_on_display call when animations are working.
 		#self.show_on_display("Extra Ball!", None, 'high')
-		filename = curr_file_path + "/../../../shared/dmd/EBAnim.dmd"
+		filename = self.game.curr_file_path + "/../../../shared/dmd/EBAnim.dmd"
 		if os.path.isfile(filename):
 			anim = dmd.Animation().load(filename)
 			self.play_animation(anim, 'high', repeat=False, hold=False)
@@ -1161,16 +1156,16 @@ class GameIntro(game.Mode):
 	"""Welcome on first ball or shoot again"""
 	def __init__(self, game, priority):
 		super(GameIntro, self).__init__(game, priority)
-		self.game.sound.register_sound('welcome', voice_path+"welcome.wav")
-		self.game.sound.register_sound('welcome', voice_path+"jd - reporting for duty.wav")
-		self.game.sound.register_sound('welcome', voice_path+"judge death - i have come to bring law to the city my law.wav")
-		self.game.sound.register_sound('welcome', voice_path+"judge death - i have come to stop this world again.wav")
-		self.game.sound.register_sound('welcome', voice_path+"judge death - i have come to stop this world again.wav")
+		self.game.sound.register_sound('welcome', self.game.voice_path + "/welcome.wav")
+		self.game.sound.register_sound('welcome', self.game.voice_path + "/jd - reporting for duty.wav")
+		self.game.sound.register_sound('welcome', self.game.voice_path + "/judge death - i have come to bring law to the city my law.wav")
+		self.game.sound.register_sound('welcome', self.game.voice_path + "/judge death - i have come to stop this world again.wav")
+		self.game.sound.register_sound('welcome', self.game.voice_path + "/judge death - i have come to stop this world again.wav")
 
 		for i in range(1,5):
 			keyname = 'shoot again ' + str(i)
-			filename = 'shoot again player ' + str(i) + '.wav'
-			self.game.sound.register_sound(keyname, voice_path+filename)
+			filename = '/shoot again player ' + str(i) + '.wav'
+			self.game.sound.register_sound(keyname, self.game.voice_path + filename)
 
 	def mode_started(self):
 		self.delay(name='start', event_type=None, delay=1.0, handler=self.start )

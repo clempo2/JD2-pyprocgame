@@ -4,10 +4,6 @@ from random import *
 import locale
 import os.path
 
-curr_file_path = os.path.dirname(os.path.abspath( __file__ ))
-sound_path = curr_file_path + "/sound/FX/"
-voice_path = curr_file_path + "/sound/Voice/crimescenes/"
-
 class Crimescenes(modes.Scoring_Mode):
 	"""Crime scenes mode"""
 	def __init__(self, game, priority):
@@ -51,32 +47,32 @@ class Crimescenes(modes.Scoring_Mode):
 				[0,1,2,3,4], [0,1,2,3,4]
 			]
 			self.level_nums = [ 1, 1, 2, 2, 2, 3, 3, 3, 3, 3, 4, 4, 4, 4, 5, 5 ]
-		self.game.lampctrl.register_show('advance_level', curr_file_path + "/lamps/crimescene_advance_level.lampshow")
+		self.game.lampctrl.register_show('advance_level', self.game.lamps_path + "/crimescene_advance_level.lampshow")
 		self.block_war = BlockWar(game, priority+5)
 		self.get_block_war_multiplier = None
 		self.total_levels = 0
 
 		for i in range(1,17):
 			keyname = 'block complete ' + str(i)
-			filename = 'block ' + str(i) + ' neutralized.wav'
-			self.game.sound.register_sound(keyname, voice_path+filename)
-			filename = 'block ' + str(i) + ' pacified.wav'
-			self.game.sound.register_sound(keyname, voice_path+filename)
-			filename = 'block ' + str(i) + ' secured.wav'
-			self.game.sound.register_sound(keyname, voice_path+filename)
+			filename = '/crimescenes/block ' + str(i) + ' neutralized.wav'
+			self.game.sound.register_sound(keyname, self.game.voice_path + filename)
+			filename = '/crimescenes/block ' + str(i) + ' pacified.wav'
+			self.game.sound.register_sound(keyname, self.game.voice_path + filename)
+			filename = '/crimescenes/block ' + str(i) + ' secured.wav'
+			self.game.sound.register_sound(keyname, self.game.voice_path + filename)
 			
 		keyname = 'crime'
 		for i in range(1,17):
-			filename = 'crime ' + str(i) + '.wav'
-			self.game.sound.register_sound(keyname, voice_path+filename)
+			filename = '/crimescenes/crime ' + str(i) + '.wav'
+			self.game.sound.register_sound(keyname, self.game.voice_path + filename)
 
-		self.game.sound.register_sound('jackpot is lit', voice_path + 'jackpot is lit.wav')
-		self.game.sound.register_sound('jackpot', voice_path + 'jackpot - excited.wav')
-		self.game.sound.register_sound('jackpot', voice_path + 'jaackpott.wav')
-		self.game.sound.register_sound('good shot', voice_path+'great shot.wav')
-		self.game.sound.register_sound('good shot', voice_path+'incredible shot.wav')
-		self.game.sound.register_sound('good shot', voice_path+'wow thats awesome.wav')
-		self.game.sound.register_sound('good shot', voice_path+'jd - excellent.wav')
+		self.game.sound.register_sound('jackpot is lit', self.game.voice_path + '/crimescenes/jackpot is lit.wav')
+		self.game.sound.register_sound('jackpot', self.game.voice_path + '/crimescenes/jackpot - excited.wav')
+		self.game.sound.register_sound('jackpot', self.game.voice_path + '/crimescenes/jaackpott.wav')
+		self.game.sound.register_sound('good shot', self.game.voice_path + '/crimescenes/great shot.wav')
+		self.game.sound.register_sound('good shot', self.game.voice_path + '/crimescenes/incredible shot.wav')
+		self.game.sound.register_sound('good shot', self.game.voice_path + '/crimescenes/wow thats awesome.wav')
+		self.game.sound.register_sound('good shot', self.game.voice_path + '/crimescenes/jd - excellent.wav')
 
 	def reset(self):
 		self.bonus_num = 1
@@ -462,20 +458,20 @@ class BlockWar(game.Mode):
 		self.banner_layer = dmd.TextLayer(128/2, 7, self.game.fonts['jazz18'], "center")
 		self.score_reason_layer = dmd.TextLayer(128/2, 7, self.game.fonts['07x5'], "center")
 		self.score_value_layer = dmd.TextLayer(128/2, 17, self.game.fonts['07x5'], "center")
-		filename = curr_file_path + "/dmd/blockwars.dmd"
+		filename = self.game.dmd_path + "/blockwars.dmd"
 		if os.path.isfile(filename):
 			anim = dmd.Animation().load(filename)
 			self.anim_layer = dmd.AnimatedLayer(frames=anim.frames, repeat=True, frame_time=3)
 			self.layer = dmd.GroupedLayer(128, 32, [self.anim_layer, self.countdown_layer, self.banner_layer, self.score_reason_layer, self.score_value_layer])
 		else:
 			self.layer = dmd.GroupedLayer(128, 32, [self.countdown_layer, self.banner_layer, self.score_reason_layer, self.score_value_layer])
-		self.game.sound.register_sound('block_war_target', sound_path+'DropTarget.wav')
-		self.game.sound.register_sound('block war start', voice_path+'riot in sector 13.wav')
-		self.game.sound.register_sound('block war start', voice_path+'rioting reported.wav')
+		self.game.sound.register_sound('block_war_target', self.game.sound_path + '/DropTarget.wav')
+		self.game.sound.register_sound('block war start', self.game.voice_path + '/crimescenes/riot in sector 13.wav')
+		self.game.sound.register_sound('block war start', self.game.voice_path + '/crimescenes/rioting reported.wav')
 		keyname = 'block war start'
 		for i in range(1,5):
-			filename = 'war ' + str(i) + '.wav'
-			self.game.sound.register_sound(keyname, voice_path+filename)
+			filename = '/crimescenes/war ' + str(i) + '.wav'
+			self.game.sound.register_sound(keyname, self.game.voice_path + filename)
 	
 	def mode_started(self):
 		self.banner_layer.set_text("Block War!", 3)

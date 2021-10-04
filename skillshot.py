@@ -3,9 +3,6 @@ import procgame
 from procgame import *
 import os.path
 	
-curr_file_path = os.path.dirname(os.path.abspath( __file__ ))
-voice_path = curr_file_path + "/sound/Voice/skillshot/"
-
 class SkillShot(game.Mode):
 	"""Skillshot when the ball starts"""
 	def __init__(self, game, priority):
@@ -15,11 +12,12 @@ class SkillShot(game.Mode):
 		self.layer = dmd.GroupedLayer(128, 32, [self.text_layer, self.award_layer])
 		self.time = 0
 
-		self.game.sound.register_sound('good shot', voice_path+'great shot.wav')
-		self.game.sound.register_sound('good shot', voice_path+'incredible shot.wav')
-		self.game.sound.register_sound('good shot', voice_path+'wow thats awesome.wav')
-		self.game.sound.register_sound('good shot', voice_path+'jd - do it again.wav')
-		self.game.sound.register_sound('good shot', voice_path+'jd - excellent.wav')
+		full_voice_path = self.game.voice_path + '/skillshot'
+		self.game.sound.register_sound('good shot', full_voice_path + '/great shot.wav')
+		self.game.sound.register_sound('good shot', full_voice_path + '/incredible shot.wav')
+		self.game.sound.register_sound('good shot', full_voice_path + '/wow thats awesome.wav')
+		self.game.sound.register_sound('good shot', full_voice_path + '/jd - do it again.wav')
+		self.game.sound.register_sound('good shot', full_voice_path + '/jd - excellent.wav')
 	
 	def mode_started(self):
 		self.shots_hit = 0

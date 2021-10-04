@@ -6,9 +6,6 @@ import time
 import yaml
 import random
 
-curr_file_path = os.path.dirname(os.path.abspath( __file__ ))
-voice_path = curr_file_path + "/sound/Voice/shooting_gallery/"
-
 class ShootingGallery(game.Mode):
 	def __init__(self, game, priority, gallery_filename, cows_filename, scope_filename, cow_mode):
 		super(ShootingGallery, self).__init__(game, priority)
@@ -22,15 +19,16 @@ class ShootingGallery(game.Mode):
 		self.scope_and_shot_anim = dmd.Animation().load(scope_filename)
 		self.on_complete = None
 
+		full_voice_path = self.game.voice_path + '/shooting_gallery'
 		keyname = 'bad guy shot'
 		for i in range(1,6):
-			filename = 'man shot ' + str(i) + '.wav'
-			self.game.sound.register_sound(keyname, voice_path+filename)
+			filename = '/man shot ' + str(i) + '.wav'
+			self.game.sound.register_sound(keyname, full_voice_path + filename)
 
 		keyname = 'good guy shot'
 		for i in range(1,3):
-			filename = 'mother ' + str(i) + '.wav'
-			self.game.sound.register_sound(keyname, voice_path+filename)
+			filename = '/mother ' + str(i) + '.wav'
+			self.game.sound.register_sound(keyname, full_voice_path + filename)
 
 	def mode_started(self):
 		self.gallery_index = 0
@@ -69,7 +67,7 @@ class ShootingGallery(game.Mode):
 		self.instruction_layer_22 = dmd.TextLayer(128/2, 17, self.game.fonts['07x5'], "center").set_text("Fire buttons shoot")
 		self.intro_layer_2 = dmd.GroupedLayer(128, 32, [self.instruction_layer_21, self.instruction_layer_22])
 
-		anim = dmd.Animation().load(curr_file_path + "/dmd/gun_powerup.dmd")
+		anim = dmd.Animation().load(self.game.dmd_path + "/gun_powerup.dmd")
 		self.anim_layer = dmd.AnimatedLayer(frames=anim.frames, frame_time=5)
 		self.anim_layer.composite_op = 'blacksrc'
 

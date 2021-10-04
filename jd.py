@@ -19,15 +19,13 @@ import logging
 logging.basicConfig(level=logging.ERROR, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
 
 locale.setlocale(locale.LC_ALL, "") # Used to put commas in the score.
+
 curr_file_path = os.path.dirname(os.path.abspath( __file__ ))
 settings_path = curr_file_path + "/config/settings.yaml"
 game_data_path = curr_file_path + "/config/game_data.yaml"
 game_data_template_path = curr_file_path + "/config/game_data_template.yaml"
 settings_template_path = curr_file_path + "/config/settings_template.yaml"
-voice_path = curr_file_path + "/sound/Voice/attract/"
-voice_high_score_path = curr_file_path + "/sound/Voice/"
-sound_path = curr_file_path + "/sound/FX/"
-music_path = curr_file_path + "/sound/"
+
 font_tiny7 = dmd.font_named('04B-03-7px.dmd')
 font_jazz18 = dmd.font_named("Jazz18-18px.dmd")
 font_14x10 = dmd.font_named("Font14x10.dmd")
@@ -35,12 +33,6 @@ font_18x12 = dmd.font_named("Font18x12.dmd")
 font_07x4 = dmd.font_named("Font07x4.dmd")
 font_07x5 = dmd.font_named("Font07x5.dmd")
 font_09Bx7 = dmd.font_named("Font09Bx7.dmd")
-splash = curr_file_path + "/dmd/Splash.dmd"
-
-lampshow_files = [
-	curr_file_path + "/lamps/attract_show_horiz.lampshow",
-	curr_file_path + "/lamps/attract_show_vert.lampshow"
-]
 
 class Attract(game.Mode):
 	"""Attract mode and start buttons"""
@@ -48,17 +40,17 @@ class Attract(game.Mode):
 		super(Attract, self).__init__(game, 1)
 		self.display_order = [0,1,2,3,4,5,6,7,8,9]
 		self.display_index = 0
-		self.game.sound.register_sound('attract', voice_path+'jd - dont do drugs.wav')
-		self.game.sound.register_sound('attract', voice_path+'jd - gaze into the fist of dredd.wav')
-		self.game.sound.register_sound('attract', voice_path+'jd - i am the law.wav')
-		self.game.sound.register_sound('attract', voice_path+'judge death - i have come to bring law to the city my law.wav')
-		self.game.sound.register_sound('attract', voice_path+'judge death - i have come to bring you the law of death.wav')
-		self.game.sound.register_sound('attract', voice_path+'judge death - i have come to stop this world again.wav')
-		self.game.sound.register_sound('attract', voice_path+'judge death - my name is death i have come to judge you.wav')
-		self.game.sound.register_sound('attract', voice_path+'judge death - the crime is life.wav')
-		self.game.sound.register_sound('attract', voice_path+'judge death - the sentence is death.wav')
-		self.game.sound.register_sound('attract', voice_path+'judge fire - for you the party is over.wav')
-		self.game.sound.register_sound('attract', voice_path+'judge fire - let the flames of justice cleanse you.wav')
+		self.game.sound.register_sound('attract', game.voice_path + '/attract/jd - dont do drugs.wav')
+		self.game.sound.register_sound('attract', game.voice_path + '/attract/jd - gaze into the fist of dredd.wav')
+		self.game.sound.register_sound('attract', game.voice_path + '/attract/jd - i am the law.wav')
+		self.game.sound.register_sound('attract', game.voice_path + '/attract/judge death - i have come to bring law to the city my law.wav')
+		self.game.sound.register_sound('attract', game.voice_path + '/attract/judge death - i have come to bring you the law of death.wav')
+		self.game.sound.register_sound('attract', game.voice_path + '/attract/judge death - i have come to stop this world again.wav')
+		self.game.sound.register_sound('attract', game.voice_path + '/attract/judge death - my name is death i have come to judge you.wav')
+		self.game.sound.register_sound('attract', game.voice_path + '/attract/judge death - the crime is life.wav')
+		self.game.sound.register_sound('attract', game.voice_path + '/attract/judge death - the sentence is death.wav')
+		self.game.sound.register_sound('attract', game.voice_path + '/attract/judge fire - for you the party is over.wav')
+		self.game.sound.register_sound('attract', game.voice_path + '/attract/judge fire - let the flames of justice cleanse you.wav')
 
 	def mode_started(self):
 		self.play_super_game = False
@@ -83,7 +75,7 @@ class Attract(game.Mode):
 
 		self.change_lampshow()
 
-		filename = curr_file_path + "/dmd/cityscape.dmd"
+		filename = self.game.dmd_path + "/cityscape.dmd"
 		if os.path.isfile(filename):
 			anim = dmd.Animation().load(filename)
 			self.cityscape_layer = dmd.AnimatedLayer(frames=anim.frames, repeat=True, frame_time=1)
@@ -93,6 +85,7 @@ class Attract(game.Mode):
 		self.jd_layer = dmd.TextLayer(128/2, 7, font_jazz18, "center", opaque=True).set_text("Judge Dredd")
 		self.jd_layer.transition = dmd.PushTransition(direction='south')
 
+		splash = self.game.dmd_path + "/Splash.dmd"
 		self.proc_splash_layer = dmd.FrameLayer(opaque=True, frame=dmd.Animation().load(splash).frames[0])
 		self.proc_splash_layer.transition = dmd.PushTransition(direction='south')
 		self.pyprocgame_layer = dmd.TextLayer(128/2, 7, font_jazz18, "center", opaque=True).set_text("pyprocgame")
@@ -132,26 +125,26 @@ class Attract(game.Mode):
 
 		self.credits_layer = dmd.PanningLayer(width=128, height=32, frame=credits_frame, origin=(0,0), translate=(0,1), bounce=False)
 
-		filename = curr_file_path + "/dmd/guntech.dmd"
+		filename = self.game.dmd_path + "/guntech.dmd"
 		if os.path.isfile(filename):
 			anim = dmd.Animation().load(filename)
 			self.guntech_layer = dmd.AnimatedLayer(frames=anim.frames, repeat=False, frame_time=4)
 		else:
 			self.guntech_layer = dmd.TextLayer(128/2, 7, font_jazz18, "center", opaque=True).set_text("GunTech")
 
-		filename = curr_file_path + "/dmd/darkjudges_no_bg.dmd"
+		filename = self.game.dmd_path + "/darkjudges_no_bg.dmd"
 		if os.path.isfile(filename):
 			anim = dmd.Animation().load(filename)
 			self.judges_layer = dmd.AnimatedLayer(frames=anim.frames, repeat=True, frame_time=4)
 		else:
 			self.judges_layer = dmd.TextLayer(128/2, 7, font_jazz18, "center", opaque=True).set_text("Judges")
 
-		filename = curr_file_path + "/dmd/longwalk.dmd"
+		filename = self.game.dmd_path + "/longwalk.dmd"
 		if os.path.isfile(filename):
 			anim = dmd.Animation().load(filename)
 			self.longwalk_layer = dmd.AnimatedLayer(frames=anim.frames, repeat=False, frame_time=7)
 		else:
-			self.longwalk_layer = dmd.TextLayer(128/2, 7, font_jazz18, "center", opaque=True).set_text("JDGame Over")
+			self.longwalk_layer = dmd.TextLayer(128/2, 7, font_jazz18, "center", opaque=True).set_text("Game Over")
 
 		self.pre_game_display()
 
@@ -259,12 +252,9 @@ class Attract(game.Mode):
 		self.game.lampctrl.stop_show()
 		for lamp in self.game.lamps:
 			lamp.disable()
-		#self.game.load_settings(settings_template_path, settings_path)
 		del self.game.service_mode
 		self.game.service_mode = procgame.service.ServiceMode(self.game,100,font_tiny7,[self.game.deadworld_test])
 		self.game.modes.add(self.game.service_mode)
-		#self.game.proc.driver_group_disable(5)
-		#pinproc.driver_state_pulse(32, 30)
 		return procgame.game.SwitchStop
 
 	def sw_exit_active(self, sw):
@@ -644,6 +634,15 @@ class JDGame(game.BasicGame):
 		self.lampctrl = procgame.lamps.LampController(self)
 		self.logging_enabled = False
 		self.shooting_again = False
+		
+		# make paths available to modes
+		self.curr_file_path = curr_file_path
+		self.voice_path = curr_file_path + "/sound/Voice"
+		self.sound_path = curr_file_path + "/sound/FX"
+		self.music_path = curr_file_path + "/sound"
+		self.dmd_path = curr_file_path + "/dmd"
+		self.lamps_path = curr_file_path + "/lamps"
+		
 		self.setup()
 	
 	def create_player(self, name):
@@ -661,6 +660,7 @@ class JDGame(game.BasicGame):
 		self.sound.music_volume_offset = self.user_settings['Machine']['Music volume offset']
 		self.sound.set_volume(self.user_settings['Machine']['Initial volume'])
 		self.load_game_data(game_data_template_path, game_data_path)
+		
 		logging.info("Stats:")
 		logging.info(self.game_data)
 		logging.info("Settings:")
@@ -710,9 +710,9 @@ class JDGame(game.BasicGame):
 		
 		#self.sound.register_sound('bonus', shared_sound_path+'coin.wav') # Used as bonus is counting up.
 		#self.sound.register_sound('bonus', shared_sound_path+'exp_smoother.wav') # Used as bonus is counting up.
-		self.sound.register_sound('bonus', sound_path+'DropTarget.wav') # Used as bonus is counting up.
-		#self.sound.register_sound('high score', voice_high_score_path+'promoted.wav')
-		self.sound.register_sound('high score', voice_high_score_path+'congratulations.wav')
+		self.sound.register_sound('bonus', self.sound_path + '/DropTarget.wav') # Used as bonus is counting up.
+		#self.sound.register_sound('high score', self.voice_path + '/promoted.wav')
+		self.sound.register_sound('high score', self.voice_path + '/congratulations.wav')
 		
 		# Setup fonts
 		self.fonts = {}
@@ -725,6 +725,11 @@ class JDGame(game.BasicGame):
 		self.fonts['num_09Bx7'] = font_09Bx7
 
 		# Register lampshow files
+		lampshow_files = [
+			self.lamps_path + "/attract_show_horiz.lampshow",
+			self.lamps_path + "/attract_show_vert.lampshow"
+		]
+
 		self.lampshow_keys = []
 		key_ctr = 0
 		for file in lampshow_files:
@@ -896,7 +901,7 @@ class JDGame(game.BasicGame):
 		# Also handle game stats.
 		for i in range(0,len(self.players)):
 			game_time = self.get_game_time(i)
-			self.game_data['Audits']['Avg JDGame Time'] = self.calc_time_average_string( self.game_data['Audits']['Games Played'], self.game_data['Audits']['Avg JDGame Time'], game_time)
+			self.game_data['Audits']['Avg Game Time'] = self.calc_time_average_string( self.game_data['Audits']['Games Played'], self.game_data['Audits']['Avg Game Time'], game_time)
 			self.game_data['Audits']['Games Played'] += 1
 
 		for i in range(0,len(self.players)):

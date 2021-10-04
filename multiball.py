@@ -2,9 +2,6 @@ import os
 import procgame
 from procgame import *
 
-curr_file_path = os.path.dirname(os.path.abspath( __file__ ))
-voice_path = curr_file_path + "/sound/Voice/multiball/"
-
 class Multiball(modes.Scoring_Mode):
 	"""Multiball activated by locking balls in the Deadworld planet"""
 	def __init__(self, game, priority, deadworld_mod_installed, font):
@@ -26,18 +23,19 @@ class Multiball(modes.Scoring_Mode):
 		self.lock_level = 1
 		self.drops = procgame.modes.BasicDropTargetBank(self.game, priority=priority+1, prefix='dropTarget', letters='JUDGE')
 		self.jackpot_collected = False
-		self.game.lampctrl.register_show('jackpot', curr_file_path + "/lamps/jackpot.lampshow")
-		self.game.sound.register_sound('jackpot is lit', voice_path + 'jackpot is lit.wav')
-		self.game.sound.register_sound('jackpot', voice_path + 'jackpot - excited.wav')
-		self.game.sound.register_sound('jackpot', voice_path + 'jaackpott.wav')
-		self.game.sound.register_sound('shoot the left ramp', voice_path + 'shoot the left ramp.wav')
-		self.game.sound.register_sound('shoot the left ramp', voice_path + 'jd - shoot the left ramp.wav')
-		self.game.sound.register_sound('again', voice_path + 'again.wav')
-		self.game.sound.register_sound('locks lit', voice_path + 'jd - lets lock em up.wav')
-		self.game.sound.register_sound('ball 1 locked', voice_path + 'jd - ball 1 captured.wav')
-		self.game.sound.register_sound('ball 2 locked', voice_path + 'jd - ball 2 locked.wav')
-		self.game.sound.register_sound('multiball', voice_path + 'calling all units the gang has escaped.wav')
-		self.game.sound.register_sound('multiball', voice_path + 'escape from detention block aa23.wav')
+		full_voice_path = self.game.voice_path + "/multiball"
+		self.game.lampctrl.register_show('jackpot', self.game.lamps_path + "/jackpot.lampshow")
+		self.game.sound.register_sound('jackpot is lit', full_voice_path + '/jackpot is lit.wav')
+		self.game.sound.register_sound('jackpot', full_voice_path + '/jackpot - excited.wav')
+		self.game.sound.register_sound('jackpot', full_voice_path + '/jaackpott.wav')
+		self.game.sound.register_sound('shoot the left ramp', full_voice_path + '/shoot the left ramp.wav')
+		self.game.sound.register_sound('shoot the left ramp', full_voice_path + '/jd - shoot the left ramp.wav')
+		self.game.sound.register_sound('again', full_voice_path + '/again.wav')
+		self.game.sound.register_sound('locks lit', full_voice_path + '/jd - lets lock em up.wav')
+		self.game.sound.register_sound('ball 1 locked', full_voice_path + '/jd - ball 1 captured.wav')
+		self.game.sound.register_sound('ball 2 locked', full_voice_path + '/jd - ball 2 locked.wav')
+		self.game.sound.register_sound('multiball', full_voice_path + '/calling all units the gang has escaped.wav')
+		self.game.sound.register_sound('multiball', full_voice_path + '/escape from detention block aa23.wav')
 		self.delay(name='voice instructions', event_type=None, delay=10, handler=self.voice_instructions)
 
 	def voice_instructions(self):

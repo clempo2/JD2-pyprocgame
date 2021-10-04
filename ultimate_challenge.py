@@ -6,10 +6,6 @@ import time
 import os
 from random import *
 
-curr_file_path = os.path.dirname(os.path.abspath( __file__ ))
-music_path = curr_file_path + "/sound/"
-voice_path = curr_file_path + "/sound/Voice/ultimate_challenge/"
-
 class UltimateChallenge(modes.Scoring_Mode):
 	"""Wizard mode"""
 	def __init__(self, game, priority):
@@ -39,11 +35,11 @@ class UltimateChallenge(modes.Scoring_Mode):
 		self.play_ult_intro = UltimateIntro(self.game, self.priority+1)
 		self.active = False
 
-		self.game.sound.register_music('mode', music_path+"Heroes and Angels -- Loopable.aif")
-		self.game.sound.register_music('mode', music_path+"40 Second guitar solo.aif")
-		self.game.sound.register_music('mode', music_path+"55 second loopable -- Sonya.aif")
-		self.game.sound.register_music('mode', music_path+"105 second loopable -- Sisyphus.aif")
-		self.game.lampctrl.register_show('shot_hit', curr_file_path + "/lamps/flashers_only.lampshow")
+		self.game.sound.register_music('mode', self.game.music_path + "/Heroes and Angels -- Loopable.aif")
+		self.game.sound.register_music('mode', self.game.music_path + "/40 Second guitar solo.aif")
+		self.game.sound.register_music('mode', self.game.music_path + "/55 second loopable -- Sonya.aif")
+		self.game.sound.register_music('mode', self.game.music_path + "/105 second loopable -- Sisyphus.aif")
+		self.game.lampctrl.register_show('shot_hit', self.game.lamps_path + "/flashers_only.lampshow")
 
 	def mode_started(self):
 		self.game.coils.resetDropTarget.pulse(40)
@@ -286,10 +282,10 @@ class Fire(modes.Scoring_Mode):
 		super(Fire, self).__init__(game, priority)
 		self.complete = False
 		self.mystery_lit = True
-		filename = 'judge fire - for you the party is over.wav'
-		self.game.sound.register_sound('fire - taunt', voice_path+filename)
-		filename = 'judge fire - let the flames of justice cleanse you.wav'
-		self.game.sound.register_sound('fire - taunt', voice_path+filename)
+		filename = '/ultimate_challenge/judge fire - for you the party is over.wav'
+		self.game.sound.register_sound('fire - taunt', self.game.voice_path + filename)
+		filename = '/ultimate_challenge/judge fire - let the flames of justice cleanse you.wav'
+		self.game.sound.register_sound('fire - taunt', self.game.voice_path + filename)
 
 	def mode_started(self):
 		self.mystery_lit = True
@@ -474,14 +470,14 @@ class Fear(modes.Scoring_Mode):
 		self.score_layer = dmd.TextLayer(128/2, 10, self.game.fonts['num_14x10'], "center")
 		self.status_layer = dmd.TextLayer(128/2, 26, self.game.fonts['tiny7'], "center")
 		self.layer = dmd.GroupedLayer(128, 32, [self.countdown_layer, self.name_layer, self.score_layer, self.status_layer])
-		filename = 'judge fear - all must die.wav'
-		self.game.sound.register_sound('fear - taunt', voice_path+filename)
-		filename = 'judge fear - gaze into the face of fear.wav'
-		self.game.sound.register_sound('fear - taunt', voice_path+filename)
-		filename = 'judge fear - justice must be done.wav'
-		self.game.sound.register_sound('fear - taunt', voice_path+filename)
-		filename = 'judge fear - there is no escape from justice.wav'
-		self.game.sound.register_sound('fear - taunt', voice_path+filename)
+		filename = '/ultimate_challenge/judge fear - all must die.wav'
+		self.game.sound.register_sound('fear - taunt', self.game.voice_path + filename)
+		filename = '/ultimate_challenge/judge fear - gaze into the face of fear.wav'
+		self.game.sound.register_sound('fear - taunt', self.game.voice_path + filename)
+		filename = '/ultimate_challenge/judge fear - justice must be done.wav'
+		self.game.sound.register_sound('fear - taunt', self.game.voice_path + filename)
+		filename = '/ultimate_challenge/judge fear - there is no escape from justice.wav'
+		self.game.sound.register_sound('fear - taunt', self.game.voice_path + filename)
 
 	def mode_started(self):
 		self.state = 'ramps'
@@ -687,14 +683,14 @@ class Mortis(modes.Scoring_Mode):
 	def __init__(self, game, priority):
 		super(Mortis, self).__init__(game, priority)
 		self.complete = False
-		filename = 'judge mortis - decay in peace.wav'
-		self.game.sound.register_sound('mortis - taunt', voice_path+filename)
-		filename = 'judge mortis - rejoice.wav'
-		self.game.sound.register_sound('mortis - taunt', voice_path+filename)
-		filename = 'judge mortis - this city is guilty.wav'
-		self.game.sound.register_sound('mortis - taunt', voice_path+filename)
-		filename = 'judge mortis - you cannot hurt us now.wav'
-		self.game.sound.register_sound('mortis - taunt', voice_path+filename)
+		filename = '/ultimate_challenge/judge mortis - decay in peace.wav'
+		self.game.sound.register_sound('mortis - taunt', self.game.voice_path + filename)
+		filename = '/ultimate_challenge/judge mortis - rejoice.wav'
+		self.game.sound.register_sound('mortis - taunt', self.game.voice_path + filename)
+		filename = '/ultimate_challenge/judge mortis - this city is guilty.wav'
+		self.game.sound.register_sound('mortis - taunt', self.game.voice_path + filename)
+		filename = '/ultimate_challenge/judge mortis - you cannot hurt us now.wav'
+		self.game.sound.register_sound('mortis - taunt', self.game.voice_path + filename)
 
 	def mode_started(self):
 		self.state = 'ramps'
@@ -862,20 +858,20 @@ class Death(modes.Scoring_Mode):
 		self.score_layer = dmd.TextLayer(128/2, 10, self.game.fonts['num_14x10'], "center")
 		self.status_layer = dmd.TextLayer(128/2, 26, self.game.fonts['tiny7'], "center")
 		self.layer = dmd.GroupedLayer(128, 32, [self.countdown_layer, self.name_layer, self.score_layer, self.status_layer])
-		filename = 'judge death - i have come to bring law to the city my law.wav'
-		self.game.sound.register_sound('death - taunt', voice_path+filename)
-		filename = 'judge death - i have come to bring you law the law of death.wav'
-		self.game.sound.register_sound('death - taunt', voice_path+filename)
-		filename = 'judge death - i have come to stop this world again.wav'
-		self.game.sound.register_sound('death - taunt', voice_path+filename)
-		filename = 'judge death - my name is death i have come to judge you.wav'
-		self.game.sound.register_sound('death - taunt', voice_path+filename)
-		filename = 'judge death - the crime is life.wav'
-		self.game.sound.register_sound('death - taunt', voice_path+filename)
-		filename = 'judge death - the sentence is death.wav'
-		self.game.sound.register_sound('death - taunt', voice_path+filename)
-		filename = 'judge death - you cannot kill what does not live.wav'
-		self.game.sound.register_sound('death - taunt', voice_path+filename)
+		filename = '/ultimate_challenge/judge death - i have come to bring law to the city my law.wav'
+		self.game.sound.register_sound('death - taunt', self.game.voice_path + filename)
+		filename = '/ultimate_challenge/judge death - i have come to bring you law the law of death.wav'
+		self.game.sound.register_sound('death - taunt', self.game.voice_path + filename)
+		filename = '/ultimate_challenge/judge death - i have come to stop this world again.wav'
+		self.game.sound.register_sound('death - taunt', self.game.voice_path + filename)
+		filename = '/ultimate_challenge/judge death - my name is death i have come to judge you.wav'
+		self.game.sound.register_sound('death - taunt', self.game.voice_path + filename)
+		filename = '/ultimate_challenge/judge death - the crime is life.wav'
+		self.game.sound.register_sound('death - taunt', self.game.voice_path + filename)
+		filename = '/ultimate_challenge/judge death - the sentence is death.wav'
+		self.game.sound.register_sound('death - taunt', self.game.voice_path + filename)
+		filename = '/ultimate_challenge/judge death - you cannot kill what does not live.wav'
+		self.game.sound.register_sound('death - taunt', self.game.voice_path + filename)
 
 	def mode_started(self):
 		self.current_shot_index = 0

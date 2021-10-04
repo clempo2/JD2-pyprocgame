@@ -5,10 +5,6 @@ from procgame import *
 import os.path
 import random
 
-curr_file_path = os.path.dirname(os.path.abspath( __file__ ))
-sound_path = curr_file_path + "/sound/FX/"
-voice_path = curr_file_path + "/sound/Voice/"
-
 class ModeCompletedHurryup(game.Mode):
 	"""Hurry up after a mode is successfully completed"""
 	def __init__(self, game, priority):
@@ -16,7 +12,7 @@ class ModeCompletedHurryup(game.Mode):
 		self.countdown_layer = dmd.TextLayer(128/2, 7, self.game.fonts['jazz18'], "center")
 		self.banner_layer = dmd.TextLayer(128/2, 7, self.game.fonts['jazz18'], "center")
 		self.layer = dmd.GroupedLayer(128, 32, [self.countdown_layer, self.banner_layer])
-		full_voice_path = voice_path + 'hurryup/'
+		full_voice_path = self.game.voice_path + '/hurryup/'
 		filename = 'wow thats awesome.wav'
 		self.game.sound.register_sound('collected', full_voice_path+filename)
 		filename = 'great shot.wav'
@@ -229,7 +225,7 @@ class Pursuit(ChainFeature):
 		else:
 			self.shots_required_for_completion = 5
 
-		full_voice_path = voice_path + 'pursuit/'
+		full_voice_path = self.game.voice_path + '/pursuit/'
 		filename = 'bank robbery suspects fleeing.wav'
 		self.game.sound.register_sound('pursuit intro', full_voice_path+filename)
 		filename = 'great shot.wav'
@@ -325,7 +321,7 @@ class Blackout(ChainFeature):
 	def mode_started(self):
 		self.shots = 0
 		self.update_status()
-		filename = curr_file_path + "/dmd/blackout.dmd"
+		filename = self.game.dmd_path + "/blackout.dmd"
 		if os.path.isfile(filename):
 			anim = dmd.Animation().load(filename)
 			self.game.base_game_mode.jd_modes.play_animation(anim, 'high', repeat=False, hold=False, frame_time=3)
@@ -392,7 +388,7 @@ class Sniper(ChainFeature):
 		self.score_layer = dmd.TextLayer(127, 10, self.game.fonts['num_14x10'], "right")
 		self.status_layer = dmd.TextLayer(127, 26, self.game.fonts['tiny7'], "right")
 
-		filename = curr_file_path + "/dmd/scope.dmd"
+		filename = self.game.dmd_path + "/scope.dmd"
 		if os.path.isfile(filename):
 			anim = dmd.Animation().load(filename)
 			self.anim_layer = dmd.AnimatedLayer(frames=anim.frames, repeat=True, frame_time=8)
@@ -400,7 +396,7 @@ class Sniper(ChainFeature):
 		else:
 			self.layer = dmd.GroupedLayer(128, 32, [self.countdown_layer, self.name_layer, self.score_layer, self.status_layer])
 
-		full_voice_path = voice_path + 'sniper/'
+		full_voice_path = self.game.voice_path + '/sniper/'
 		filename = 'jd - missed him.wav'
 		self.game.sound.register_sound('sniper - miss', full_voice_path+filename)
 		filename = 'jd - drokk.wav'
@@ -440,7 +436,7 @@ class Sniper(ChainFeature):
 	def sw_popperR_active_for_300ms(self, sw):
 		self.shots += 1
 		self.game.score(10000)
-		filename = curr_file_path + "/dmd/dredd_shoot_at_sniper.dmd"
+		filename = self.game.dmd_path + "/dredd_shoot_at_sniper.dmd"
 		if os.path.isfile(filename):
 			anim = dmd.Animation().load(filename)
 			self.game.base_game_mode.jd_modes.play_animation(anim, 'high', repeat=False, hold=False, frame_time=5)
@@ -473,7 +469,7 @@ class BattleTank(ChainFeature):
 		super(BattleTank, self).__init__(game, priority, 'Battle Tank')
 
 		self.num_shots = 0
-		full_voice_path = voice_path + 'battle_tank/'
+		full_voice_path = self.game.voice_path + '/battle_tank/'
 		for i in range(1,11):
 			filename = 'unknown tank block ' + str(i) + '.wav'
 			self.game.sound.register_sound('tank intro', full_voice_path+filename)
@@ -567,7 +563,7 @@ class Meltdown(ChainFeature):
 		else:
 			self.shots_required_for_completion = 5
 
-		full_voice_path = voice_path + 'meltdown/'
+		full_voice_path = self.game.voice_path + '/meltdown/'
 		for i in range(1,5):
 			filename = 'reactor ' + str(i) + ' stabilized.wav'
 			self.game.sound.register_sound('meltdown ' + str(i), full_voice_path+filename)
@@ -647,7 +643,7 @@ class Impersonator(ChainFeature):
 		else:
 			self.shots_required_for_completion = 7
 
-		full_voice_path = voice_path + 'bad_impersonator/'
+		full_voice_path = self.game.voice_path + '/bad_impersonator/'
 
 		for i in range(1,6):
 			filename = 'ouch ' + str(i) + '.wav'
@@ -819,7 +815,7 @@ class Safecracker(ChainFeature):
 		else:
 			self.shots_required_for_completion = 4
 
-		full_voice_path = voice_path + 'safecracker/'
+		full_voice_path = self.game.voice_path + '/safecracker/'
 		filename = 'hurry up.wav'
 		self.game.sound.register_sound('bad guys', full_voice_path+filename)
 		filename = 'running out of time.wav'
@@ -911,7 +907,7 @@ class ManhuntMillions(ChainFeature):
 		else:
 			self.shots_required_for_completion = 4
 
-		full_voice_path = voice_path + 'manhunt/'
+		full_voice_path = self.game.voice_path + '/manhunt/'
 		filename = 'bank robbers trying to escape judgement.wav'
 		self.game.sound.register_sound('mm - intro', full_voice_path+filename)
 		filename = 'aahh.wav'
@@ -986,7 +982,7 @@ class Stakeout(ChainFeature):
 		else:
 			self.shots_required_for_completion = 5
 
-		full_voice_path = voice_path + 'stakeout/'
+		full_voice_path = self.game.voice_path + '/stakeout/'
 
 		filename = 'jd - over there 1.wav'
 		self.game.sound.register_sound('so - over there', full_voice_path+filename)
