@@ -3,7 +3,7 @@ from procgame import *
 from random import *
 
 class Missile_Award_Mode(game.Mode):
-	"""docstring for Bonus"""
+	"""Choose an award while the ball sits in the left shooter lane"""
 	def __init__(self, game, priority, font):
 		super(Missile_Award_Mode, self).__init__(game, priority)
 		self.font = font
@@ -32,7 +32,7 @@ class Missile_Award_Mode(game.Mode):
 		if len(info_record) > 0:
 			self.awards_remaining = info_record['awards_remaining']
 		else:
-			self.swards_remaining = self.awards
+			self.awards_remaining = self.awards[:]
 
 	def get_info_record(self):
 		info_record = {}
