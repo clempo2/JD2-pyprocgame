@@ -1,9 +1,9 @@
 from procgame import *
 
-class AirRade(game.Mode):
+class AirRaid(game.Mode):
 	"""Pick a prize between 2 choices"""
 	def __init__(self, game, priority):
-		super(AirRade, self).__init__(game, priority)
+		super(AirRaid, self).__init__(game, priority)
 		self.banner_layer = dmd.TextLayer(128/2, 7, self.game.fonts['jazz18'], "center")
 		self.instruction_layer_1 = dmd.TextLayer(128/2, 7, self.game.fonts['tiny7'], "center")
 		self.instruction_layer_2 = dmd.TextLayer(128/2, 20, self.game.fonts['tiny7'], "center")

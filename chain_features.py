@@ -5,10 +5,10 @@ from procgame import *
 import os.path
 import random
 
-class ModeCompletedHurryup(game.Mode):
+class ModeCompletedHurryUp(game.Mode):
 	"""Hurry up after a mode is successfully completed"""
 	def __init__(self, game, priority):
-		super(ModeCompletedHurryup, self).__init__(game, priority)
+		super(ModeCompletedHurryUp, self).__init__(game, priority)
 		self.countdown_layer = dmd.TextLayer(128/2, 7, self.game.fonts['jazz18'], "center")
 		self.banner_layer = dmd.TextLayer(128/2, 7, self.game.fonts['jazz18'], "center")
 		self.layer = dmd.GroupedLayer(128, 32, [self.countdown_layer, self.banner_layer])
@@ -44,28 +44,24 @@ class ModeCompletedHurryup(game.Mode):
 		self.game.lamps.pickAPrize.schedule(schedule=0x33333333, cycle_seconds=0, now=True)
 
 	def mode_stopped(self):
-		#self.drop_target_mode.animated_reset(1.0)
 		self.game.lamps.pickAPrize.disable()
 		self.cancel_delayed(['grace', 'countdown', 'trip_check'])
-		#if self.game.switches.popperL.is_open():
-		#	self.game.coils.popperL.pulse(40)
-		self
 	
 	def sw_subwayEnter1_closed(self, sw):
+		self.collect_hurry_up()
+	
+	# Ball might jump over first switch.  Use 2nd switch as a catchall.
+	def sw_subwayEnter2_closed(self, sw):
+		if not self.already_collected:
+			self.collect_hurry_up()
+			
+	def collect_hurry_up(self):
 		self.collected()
 		self.game.sound.play_voice('collected')
 		self.cancel_delayed(['grace', 'countdown', 'trip_check'])
 		self.already_collected = True
 		self.banner_layer.set_text('Well Done!')
 		self.layer = dmd.GroupedLayer(128, 32, [self.banner_layer])
-	
-	# Ball might jump over first switch.  Use 2nd switch as a catchall.
-	def sw_subwayEnter2_closed(self, sw):
-		if not self.already_collected:
-			self.banner_layer.set_text('Well Done!')
-			self.layer = dmd.GroupedLayer(128, 32, [self.banner_layer])
-			self.collected()
-			self.cancel_delayed(['grace', 'countdown', 'trip_check'])
 	
 	def update_and_delay(self):
 		self.countdown_layer.set_text("%d seconds" % (self.seconds_remaining))
@@ -80,6 +76,7 @@ class ModeCompletedHurryup(game.Mode):
 			
 	def delayed_removal(self):
 		self.expired()
+
 
 class ModeTimer(game.Mode):
 	"""timer for a timed mode"""
@@ -124,6 +121,7 @@ class ModeTimer(game.Mode):
 
 	def timer_update(self, time):
 		pass
+
 
 class PlayIntro(game.Mode):
 	"""Displays the mode instructions when a mode starts"""
@@ -479,7 +477,6 @@ class BattleTank(ChainFeature):
 	def update_status(self):
 		status = 'Shots made: ' + str(self.num_shots) + '/' + str(len(self.shots))
 		self.status_layer.set_text(status)
-		
 
 	def mode_stopped(self):
 		self.game.lamps.tankCenter.disable()
@@ -566,7 +563,6 @@ class Meltdown(ChainFeature):
 	def update_status(self):
 		status = 'Shots made: ' + str(self.shots) + '/' + str(self.shots_required_for_completion)
 		self.status_layer.set_text(status)
-		
 
 	def mode_stopped(self):
 		self.game.lamps.stopMeltdown.disable()
@@ -678,7 +674,6 @@ class Impersonator(ChainFeature):
 		else:
 			status = 'Shots made: ' + str(self.shots) + '/' + str(self.shots_required_for_completion)
 		self.status_layer.set_text(status)
-		
 
 	def mode_stopped(self):
 		self.game.lamps.awardBadImpersonator.disable()
@@ -777,7 +772,6 @@ class Impersonator(ChainFeature):
 		layer22 = dmd.TextLayer(128/2, 24, font_small, "center").set_text("Shoot " + str(self.shots_required_for_completion) + " lit drop targets")
 		instruction_layers = [[layer1], [layer21, layer22]]
 		return instruction_layers
-
 		
 
 class Safecracker(ChainFeature):
@@ -897,7 +891,6 @@ class ManhuntMillions(ChainFeature):
 		status = 'Shots made: ' + str(self.shots) + '/' + str(self.shots_required_for_completion)
 		self.status_layer.set_text(status)
 		
-
 	def mode_stopped(self):
 		self.game.coils.flasherPursuitL.disable()
 
@@ -978,7 +971,6 @@ class Stakeout(ChainFeature):
 	def update_status(self):
 		status = 'Shots made: ' + str(self.shots) + '/' + str(self.shots_required_for_completion)
 		self.status_layer.set_text(status)
-		
 
 	def mode_stopped(self):
 		self.cancel_delayed('boring')
@@ -1003,7 +995,6 @@ class Stakeout(ChainFeature):
 			self.game.sound.play_voice('so - surrounded')
 		elif self.shots == 3:
 			self.game.sound.play_voice('so - move in')
-	
 
 	def get_instruction_layers(self):
 		font = self.game.fonts['jazz18']
@@ -1013,5 +1004,3 @@ class Stakeout(ChainFeature):
 		layer22 = dmd.TextLayer(128/2, 24, font_small, "center").set_text("Shoot the right ramp " + str(self.shots_required_for_completion) + " times")
 		instruction_layers = [[layer1], [layer21, layer22]]
 		return instruction_layers
-
-	

@@ -5,7 +5,7 @@ from ultimate_challenge import *
 from multiball import *
 from crimescenes import *
 from boring import *
-from airrade import *
+from air_raid import *
 from skillshot import *
 from info import *
 from missile_award import *
@@ -46,10 +46,10 @@ class JD_Modes(modes.Scoring_Mode):
 		self.crimescenes.mb_end_callback = self.multiball_ended
 		self.missile_award_mode = MissileAwardMode(game, priority+10, font_small)
 		self.missile_award_mode.callback = self.award_missile_award
-		self.mode_completed_hurryup = ModeCompletedHurryup(game, priority+1)
+		self.mode_completed_hurryup = ModeCompletedHurryUp(game, priority+1)
 		self.mode_completed_hurryup.collected = self.hurryup_collected
 		self.mode_completed_hurryup.expired = self.hurryup_expired
-		self.award_selection = AirRade(game, priority+1)
+		self.award_selection = AirRaid(game, priority+1)
 		self.multiball = Multiball(self.game, priority + 1, self.game.user_settings['Machine']['Deadworld mod installed'], font_big)
 		self.multiball.start_callback = self.multiball_started
 		self.multiball.end_callback = self.multiball_ended
@@ -432,9 +432,9 @@ class JD_Modes(modes.Scoring_Mode):
 			self.drive_mode_lamp('mystery', 'off')
 
 		if self.missile_award_lit:
-			self.drive_mode_lamp('airRade', 'medium')
+			self.drive_mode_lamp('airRaid', 'medium')
 		else:
-			self.drive_mode_lamp('airRade', 'off')
+			self.drive_mode_lamp('airRaid', 'off')
 
 		if self.extra_balls_lit > 0:
 			self.enable_extra_ball_lamp()
@@ -643,14 +643,14 @@ class JD_Modes(modes.Scoring_Mode):
 				self.game.ball_save.start(num_balls_to_save=1, time=10, now=True, allow_multiple_saves=True)
 				self.game.set_status('+10 second ball saver')
 				self.missile_award_lit = True
-				self.drive_mode_lamp('airRade', 'medium')
+				self.drive_mode_lamp('airRaid', 'medium')
 
 	def sw_shooterL_active_for_500ms(self, sw):
 		if self.any_mb_active() or self.state == 'mode':
 			self.game.coils.shooterL.pulse()
 		elif self.missile_award_lit:
 			self.game.sound.stop_music()
-			self.drive_mode_lamp('airRade', 'off')
+			self.drive_mode_lamp('airRaid', 'off')
 			self.missile_award_lit = False
 			#if self.state == 'mode':
 			#	self.mode_list[self.mode].pause(True)
@@ -663,7 +663,7 @@ class JD_Modes(modes.Scoring_Mode):
 		#elif self.game.switches.topRampExit.time_since_change() < 5:
 		else:
 			self.missile_award_lit = True
-			self.drive_mode_lamp('airRade', 'medium')
+			self.drive_mode_lamp('airRaid', 'medium')
 			self.game.coils.shooterL.pulse()
 		#else:
 		#	self.game.coils.shooterL.pulse()
@@ -928,7 +928,7 @@ class JD_Modes(modes.Scoring_Mode):
 
 			# Disable missile award but save it for later if lit.
 			if self.missile_award_lit:
-				self.drive_mode_lamp('airRade', 'off')
+				self.drive_mode_lamp('airRaid', 'off')
 				self.missile_award_lit_save = True
 				self.missile_award_lit = False
 
@@ -942,7 +942,7 @@ class JD_Modes(modes.Scoring_Mode):
 			if self.missile_award_lit:
 				#self.missile_award_lit_save = True
 				self.missile_award_lit = False
-				self.drive_mode_lamp('airRade', 'off')
+				self.drive_mode_lamp('airRaid', 'off')
 		
 			# Change state to indicate ultimate challenge is active
 			self.state = 'ultimate_challenge'
@@ -981,7 +981,7 @@ class JD_Modes(modes.Scoring_Mode):
 			self.mystery_lit = True
 			# Disable missile award but save it for later if lit.
 			if self.missile_award_lit:
-				self.drive_mode_lamp('airRade', 'off')
+				self.drive_mode_lamp('airRaid', 'off')
 				self.missile_award_lit_save = True
 				self.missile_award_lit = False
 
@@ -1002,7 +1002,7 @@ class JD_Modes(modes.Scoring_Mode):
 			# Re-enable missile_award if it was lit before multiball started
 			if self.missile_award_lit_save:
 				self.missile_award_lit = True
-				self.drive_mode_lamp('airRade', 'medium')
+				self.drive_mode_lamp('airRaid', 'medium')
 
 	def mode_over(self):
 		if not self.multiball.is_active() and not self.crimescenes.is_mb_active():
@@ -1012,7 +1012,7 @@ class JD_Modes(modes.Scoring_Mode):
 			# Re-enable missile_award if it was lit before multiball started
 			if self.missile_award_lit_save:
 				self.missile_award_lit = True
-				self.drive_mode_lamp('airRade', 'medium')
+				self.drive_mode_lamp('airRaid', 'medium')
 
 		if self.state == 'ultimate_challenge':
 			self.ultimate_challenge_complete()	
