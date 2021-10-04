@@ -190,6 +190,13 @@ class ChainFeature(modes.Scoring_Mode, ModeTimer):
 		self.status_layer = dmd.TextLayer(128/2, 26, self.game.fonts['tiny7'], "center")
 		self.layer = dmd.GroupedLayer(128, 32, [self.countdown_layer, self.name_layer, self.score_layer, self.status_layer])
 
+	def get_difficulty(self, options):
+		"""Return the number of required shots depending on the settings and the options for the mode"""
+		difficulty = self.game.user_settings['Gameplay']['Chain feature difficulty']
+		if not difficulty in ['easy', 'medium', 'hard']:
+			difficulty = 'medium'
+		return options[difficulty]
+
 	def register_callback_function(self, function):
 		self.callback = function
 
@@ -217,13 +224,7 @@ class Pursuit(ChainFeature):
 	"""Pursuit chain mode"""
 	def __init__(self, game, priority):
 		super(Pursuit, self).__init__(game, priority, 'Pursuit')
-		difficulty = self.game.user_settings['Gameplay']['Chain feature difficulty']
-		if difficulty == 'easy':
-			self.shots_required_for_completion = 3
-		elif difficulty == 'medium':
-			self.shots_required_for_completion = 4
-		else:
-			self.shots_required_for_completion = 5
+		self.shots_required_for_completion = self.get_difficulty({'easy':3, 'medium':4, 'hard':5})
 
 		full_voice_path = self.game.voice_path + '/pursuit/'
 		filename = 'bank robbery suspects fleeing.wav'
@@ -310,13 +311,7 @@ class Blackout(ChainFeature):
 	"""Blackout chain mode"""
 	def __init__(self, game, priority):
 		super(Blackout, self).__init__(game, priority, 'Blackout')
-		difficulty = self.game.user_settings['Gameplay']['Chain feature difficulty']
-		if difficulty == 'easy':
-			self.shots_required_for_completion = 2
-		elif difficulty == 'medium':
-			self.shots_required_for_completion = 2
-		else:
-			self.shots_required_for_completion = 3
+		self.shots_required_for_completion = self.get_difficulty({'easy':2, 'medium':2, 'hard':3})
 
 	def mode_started(self):
 		self.shots = 0
@@ -375,13 +370,7 @@ class Sniper(ChainFeature):
 	"""Sniper chain mode"""
 	def __init__(self, game, priority):
 		super(Sniper, self).__init__(game, priority, 'Sniper')
-		difficulty = self.game.user_settings['Gameplay']['Chain feature difficulty']
-		if difficulty == 'easy':
-			self.shots_required_for_completion = 2
-		elif difficulty == 'medium':
-			self.shots_required_for_completion = 2
-		else:
-			self.shots_required_for_completion = 3
+		self.shots_required_for_completion = self.get_difficulty({'easy':2, 'medium':2, 'hard':3})
 
 		self.countdown_layer = dmd.TextLayer(127, 1, self.game.fonts['tiny7'], "right")
 		self.name_layer = dmd.TextLayer(1, 1, self.game.fonts['tiny7'], "left").set_text("Sniper")
@@ -555,13 +544,7 @@ class Meltdown(ChainFeature):
 	"""Meltdown chain mode"""
 	def __init__(self, game, priority):
 		super(Meltdown, self).__init__(game, priority, 'Meltdown')
-		difficulty = self.game.user_settings['Gameplay']['Chain feature difficulty']
-		if difficulty == 'easy':
-			self.shots_required_for_completion = 3
-		elif difficulty == 'medium':
-			self.shots_required_for_completion = 4
-		else:
-			self.shots_required_for_completion = 5
+		self.shots_required_for_completion = self.get_difficulty({'easy':3, 'medium':4, 'hard':5})
 
 		full_voice_path = self.game.voice_path + '/meltdown/'
 		for i in range(1,5):
@@ -635,13 +618,7 @@ class Impersonator(ChainFeature):
 	"""Bad impersonator chain mode"""
 	def __init__(self, game, priority):
 		super(Impersonator, self).__init__(game, priority, 'Impersonator')
-		difficulty = self.game.user_settings['Gameplay']['Chain feature difficulty']
-		if difficulty == 'easy':
-			self.shots_required_for_completion = 3
-		elif difficulty == 'medium':
-			self.shots_required_for_completion = 5
-		else:
-			self.shots_required_for_completion = 7
+		self.shots_required_for_completion = self.get_difficulty({'easy':3, 'medium':5, 'hard':7})
 
 		full_voice_path = self.game.voice_path + '/bad_impersonator/'
 
@@ -807,13 +784,7 @@ class Safecracker(ChainFeature):
 	"""Safecracker chain mode"""
 	def __init__(self, game, priority):
 		super(Safecracker, self).__init__(game, priority, 'Safe Cracker')
-		difficulty = self.game.user_settings['Gameplay']['Chain feature difficulty']
-		if difficulty == 'easy':
-			self.shots_required_for_completion = 2
-		elif difficulty == 'medium':
-			self.shots_required_for_completion = 3
-		else:
-			self.shots_required_for_completion = 4
+		self.shots_required_for_completion = self.get_difficulty({'easy':2, 'medium':3, 'hard':4})
 
 		full_voice_path = self.game.voice_path + '/safecracker/'
 		filename = 'hurry up.wav'
@@ -899,13 +870,7 @@ class ManhuntMillions(ChainFeature):
 	"""ManhuntMillions chain mode"""
 	def __init__(self, game, priority):
 		super(ManhuntMillions, self).__init__(game, priority, 'Manhunt')
-		difficulty = self.game.user_settings['Gameplay']['Chain feature difficulty']
-		if difficulty == 'easy':
-			self.shots_required_for_completion = 2
-		elif difficulty == 'medium':
-			self.shots_required_for_completion = 3
-		else:
-			self.shots_required_for_completion = 4
+		self.shots_required_for_completion = self.get_difficulty({'easy':2, 'medium':3, 'hard':4})
 
 		full_voice_path = self.game.voice_path + '/manhunt/'
 		filename = 'bank robbers trying to escape judgement.wav'
@@ -974,13 +939,7 @@ class Stakeout(ChainFeature):
 	"""Stakeout chain mode"""
 	def __init__(self, game, priority):
 		super(Stakeout, self).__init__(game, priority, 'Stakeout')
-		difficulty = self.game.user_settings['Gameplay']['Chain feature difficulty']
-		if difficulty == 'easy':
-			self.shots_required_for_completion = 3
-		elif difficulty == 'medium':
-			self.shots_required_for_completion = 4
-		else:
-			self.shots_required_for_completion = 5
+		self.shots_required_for_completion = self.get_difficulty({'easy':3, 'medium':4, 'hard':5})
 
 		full_voice_path = self.game.voice_path + '/stakeout/'
 
