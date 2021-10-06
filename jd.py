@@ -890,7 +890,6 @@ class BaseGameMode(game.Mode):
 
 			# Make sure ball won't be saved when it drains.
 			self.game.ball_save.disable()
-			#self.game.modes.remove(self.ball_save)
 
 			# Make sure the ball search won't run while ball is draining.
 			self.game.ball_search.disable()
@@ -1064,7 +1063,6 @@ class JDGame(game.BasicGame):
 		self.modes.add(self.ball_save)
 		self.modes.add(self.trough)
 		self.modes.add(self.flipper_workaround_mode)
-
 
 		self.ball_search.disable()
 		self.ball_save.disable()

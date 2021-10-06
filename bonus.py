@@ -1,7 +1,7 @@
 from procgame import *
 
 class Bonus(game.Mode):
-	"""docstring for Bonus"""
+	"""Display end of ball bonus"""
 	def __init__(self, game, priority, font_big, font_small):
 		super(Bonus, self).__init__(game, priority)
 		self.font_big = font_big

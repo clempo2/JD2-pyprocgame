@@ -2,7 +2,7 @@ import procgame
 from procgame import *
 
 class Tilt(game.Mode):
-	"""docstring for Bonus"""
+	"""Enforce tilt warnings and slam tilt"""
 	def __init__(self, game, priority, font_big, font_small, tilt_sw=None, slam_tilt_sw=None):
 		super(Tilt, self).__init__(game, priority)
 		self.font_big = font_big
