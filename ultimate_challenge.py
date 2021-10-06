@@ -1,10 +1,10 @@
-import procgame
-import procgame.game
-from procgame import *
 import locale
-import time
+import logging
 import os
-from random import *
+import random
+import time
+import procgame
+from procgame import *
 
 class UltimateChallenge(modes.Scoring_Mode):
 	"""Wizard mode"""
@@ -167,7 +167,6 @@ class UltimateIntro(game.Mode):
 		self.cancel_delayed('intro')
 		# Leave GI off for Ultimate Challenge
 		# self.update_gi(True, 'all')
-		# Enable the flippers
 		self.game.enable_flippers(enable=True)
 
 	def setup(self, stage, exit_function):
@@ -314,7 +313,7 @@ class Fire(modes.Scoring_Mode):
 		if self.shots == self.shots_required_for_completion:
 			self.completed = True
 			self.game.score(50000)
-			print "% 10.3f Pursuit calling callback" % (time.time())
+			logging.info("% 10.3f Pursuit calling callback" % (time.time()))
 			self.cancel_delayed('taunt')
 			self.callback()
 
@@ -323,10 +322,8 @@ class Fire(modes.Scoring_Mode):
 			for j in range(0,4):
 				lampname = 'perp' + str(i+1) + self.lamp_colors[j]
 				if self.targets[i]:
-					print lampname + 'on'
 					self.drive_mode_lamp(lampname, 'medium')
 				else:
-					print lampname + 'off'
 					self.drive_mode_lamp(lampname, 'off')
 		if self.complete:
 			self.game.coils.flasherFire.disable()
@@ -1077,9 +1074,8 @@ class Celebration(modes.Scoring_Mode):
 			lamp_schedules.append(0xffff0000 >> i)
 			if i > 16:
 				lamp_schedules[i] = (lamp_schedules[i] | (0xffff << (32-(i-16)))) & 0xffffffff
-			#print("schedule %08x" % (lamp_schedules[i]))
 
-		shuffle(lamp_schedules)
+		random.shuffle(lamp_schedules)
 		i = 0
 		for lamp in self.game.lamps:
 			if lamp.name.find('gi0', 0) == -1 and \

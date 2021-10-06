@@ -866,7 +866,6 @@ class BaseGameMode(game.Mode):
 		self.game.set_status("Volume Up : " + str(volume))
 		return procgame.game.SwitchStop
 
-
 	# Reset game on slam tilt
 	def slam_tilt_callback(self):
 		self.game.sound.fadeout_music()
@@ -1176,7 +1175,6 @@ class JDGame(game.BasicGame):
 
 	def set_status(self, text):
 		self.dmd.set_message(text, 3)
-		print(text)
 	
 	def extra_ball(self):
 		p = self.current_player()

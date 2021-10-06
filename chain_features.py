@@ -1,5 +1,6 @@
 from procgame import *
 import locale
+import logging
 import random
 import time
 
@@ -101,7 +102,7 @@ class ModeTimer(game.Mode):
 			self.delay(name='decrement timer', event_type=None, delay=1, handler=self.decrement_timer)
 			self.timer_update(self.timer)
 		else:
-			print "% 10.3f Timer calling callback" % (time.time())
+			logging.info("% 10.3f Timer calling callback" % (time.time()))
 			self.failed()
 			self.callback()
 
@@ -259,7 +260,7 @@ class Pursuit(ChainFeature):
 			self.game.sound.play_voice('complete')
 			self.completed = True
 			self.game.score(50000)
-			print "% 10.3f Pursuit calling callback" % (time.time())
+			logging.info("% 10.3f Pursuit calling callback" % (time.time()))
 			self.callback()
 		else:
 			self.game.sound.play_voice('good shot')
@@ -321,7 +322,7 @@ class Blackout(ChainFeature):
 		elif self.shots == self.shots_required_for_completion:
 			self.completed = True
 			self.game.score(110000)
-			print "% 10.3f Blackout calling callback" % (time.time())
+			logging.info("% 10.3f Blackout calling callback" % (time.time()))
 			self.callback()
 
 	def get_instruction_layers(self):
@@ -382,7 +383,7 @@ class Sniper(ChainFeature):
 			self.game.sound.play_voice('sniper - hit')
 			self.completed = True
 			self.game.score(50000)
-			print "% 10.3f Sniper calling callback" % (time.time())
+			logging.info("% 10.3f Sniper calling callback" % (time.time()))
 			self.callback()
 		else:
 			self.game.sound.play_voice('sniper - miss')
@@ -460,7 +461,7 @@ class BattleTank(ChainFeature):
 		if self.shots['right'] and self.shots['left'] and self.shots['center']:
 			self.completed = True
 			self.game.score(50000)
-			print "% 10.3f BattleTank calling callback" % (time.time())
+			logging.info("% 10.3f BattleTank calling callback" % (time.time()))
 			self.callback()
 
 	def get_instruction_layers(self):
@@ -520,7 +521,7 @@ class Meltdown(ChainFeature):
 			self.game.sound.play_voice('meltdown all')
 			self.completed = True
 			self.game.score(50000)
-			print "% 10.3f Meltdown calling callback" % (time.time())
+			logging.info("% 10.3f Meltdown calling callback" % (time.time()))
 			self.callback()
 		elif self.shots <= 4:
 			self.game.sound.play_voice('meltdown ' + str(self.shots))
@@ -726,7 +727,7 @@ class Safecracker(ChainFeature):
 			self.game.sound.play_voice('complete')
 			self.completed = True
 			self.game.score(50000)
-			print "% 10.3f Safecracker calling callback" % (time.time())
+			logging.info("% 10.3f Safecracker calling callback" % (time.time()))
 			self.callback()
 		else:
 			self.game.sound.play_voice('shot')
@@ -787,7 +788,7 @@ class ManhuntMillions(ChainFeature):
 			self.game.sound.play_voice('mm - done')
 			self.completed = True
 			self.game.score(50000)
-			print "% 10.3f Manhunt calling callback" % (time.time())
+			logging.info("% 10.3f Manhunt calling callback" % (time.time()))
 			self.callback()
 		else:
 			self.game.sound.play_voice('mm - shot')
