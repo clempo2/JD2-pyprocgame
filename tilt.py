@@ -1,6 +1,5 @@
 import procgame
 from procgame import *
-import os.path
 
 class Tilt(game.Mode):
 	"""docstring for Bonus"""

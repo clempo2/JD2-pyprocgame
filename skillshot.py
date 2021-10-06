@@ -1,7 +1,5 @@
 import locale
-import procgame
 from procgame import *
-import os.path
 	
 class SkillShot(game.Mode):
 	"""Skillshot when the ball starts"""

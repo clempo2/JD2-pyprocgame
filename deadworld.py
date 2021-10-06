@@ -1,6 +1,5 @@
-import procgame
-import procgame.game
 from procgame import *
+import procgame.game
 
 class Deadworld(game.Mode):
 	"""Controls the dead world planet"""

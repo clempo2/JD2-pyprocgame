@@ -1,6 +1,4 @@
-import procgame
 from procgame import *
-import os.path
 
 class Bonus(game.Mode):
 	"""docstring for Bonus"""

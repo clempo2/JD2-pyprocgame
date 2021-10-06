@@ -1,8 +1,5 @@
-import procgame
 from procgame import *
-from random import *
 import locale
-import os.path
 
 class Crimescenes(modes.Scoring_Mode):
 	"""Crime scenes mode"""

@@ -1,17 +1,15 @@
 from procgame import *
 import locale
-from air_raid import *
+from air_raid import AirRaid
 from chain_features import *
-from ultimate_challenge import *
-from multiball import *
-from crimescenes import *
-from boring import *
-from air_raid import *
-from skillshot import *
-from info import *
-from missile_award import *
-from shooting_gallery import *
-import os.path
+from ultimate_challenge import UltimateChallenge, UltimateIntro
+from multiball import Multiball
+from crimescenes import Crimescenes
+from boring import Boring
+from skillshot import SkillShot
+from info import Info
+from missile_award import MissileAwardMode
+from shooting_gallery import ShootingGallery
 
 class JD_Modes(modes.Scoring_Mode):
 	"""The collection of playable modes"""

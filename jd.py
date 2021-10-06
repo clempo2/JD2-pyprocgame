@@ -1,19 +1,14 @@
 import procgame
-import pinproc
-from deadworld import *
-from info import *
-from bonus import *
-from tilt import *
-from jd_modes import *
 from procgame import *
-from threading import Thread
-from random import *
-import string
-import time
 import locale
-import math
-import copy
-import yaml
+import os
+import pinproc
+import random
+from deadworld import Deadworld, DeadworldTest
+from info import Info
+from bonus import Bonus
+from tilt import Tilt
+from jd_modes import *
 
 import logging
 logging.basicConfig(level=logging.ERROR, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
@@ -508,7 +503,7 @@ class Attract(game.Mode):
 		self.layer.on_complete = self.post_game_display
 
 	def change_lampshow(self):
-		shuffle(self.game.lampshow_keys)
+		random.shuffle(self.game.lampshow_keys)
 		self.game.lampctrl.play_show(self.game.lampshow_keys[0], repeat=True)
 		self.delay(name='lampshow', event_type=None, delay=10, handler=self.change_lampshow)
 

@@ -1,9 +1,4 @@
-import os
-import pinproc
-import procgame
 from procgame import *
-import time
-import yaml
 import random
 
 class ShootingGallery(game.Mode):

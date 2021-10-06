@@ -1,6 +1,4 @@
-import procgame
 from procgame import *
-from random import *
 
 class MissileAwardMode(game.Mode):
 	"""Choose an award while the ball sits in the left shooter lane"""

@@ -1,9 +1,7 @@
-import procgame
-import locale
-import time
 from procgame import *
-import os.path
+import locale
 import random
+import time
 
 class ModeCompletedHurryUp(game.Mode):
 	"""Hurry up after a mode is successfully completed"""

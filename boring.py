@@ -1,9 +1,4 @@
-import procgame
-import locale
-import time
 from procgame import *
-import os.path
-import random
 
 class Boring(game.Mode):
 	"""Taunt player if nothing happens for a while"""

@@ -1,4 +1,3 @@
-import procgame
 from procgame import *
 
 class Info(game.Mode):

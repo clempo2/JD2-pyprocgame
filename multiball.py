@@ -1,4 +1,3 @@
-import os
 import procgame
 from procgame import *
 
