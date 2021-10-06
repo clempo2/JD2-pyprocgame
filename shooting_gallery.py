@@ -7,28 +7,17 @@ import yaml
 import random
 
 class ShootingGallery(game.Mode):
-	def __init__(self, game, priority, gallery_filename, cows_filename, scope_filename, cow_mode):
+	def __init__(self, game, priority, cow_mode):
 		super(ShootingGallery, self).__init__(game, priority)
-		self.gallery_images_anim = dmd.Animation().load(gallery_filename)
-		self.cow_images_anim = dmd.Animation().load(cows_filename)
-		#self.image_frames = dmd.GroupedFrameToList( self.gallery_images_anim.frames[0], 6, 2 )
 		self.cow_mode = cow_mode
-		self.image_frames = self.gallery_images_anim.frames[0].create_frames_from_grid( 6, 2 )
-		self.cow_image_frames = self.cow_images_anim.frames[0].create_frames_from_grid( 4, 1 )
+		
+		gallery_anim = self.game.animations['jdpeople']
+		self.image_frames = gallery_anim.frames[0].create_frames_from_grid(6, 2)
+		cows_anim = self.game.animations['cows']
+		self.cow_image_frames = cows_anim.frames[0].create_frames_from_grid(4, 1)
+		self.scopeandshot_anim = self.game.animations['scopeandshot'].frames
 
-		self.scope_and_shot_anim = dmd.Animation().load(scope_filename)
 		self.on_complete = None
-
-		full_voice_path = self.game.voice_path + '/shooting_gallery'
-		keyname = 'bad guy shot'
-		for i in range(1,6):
-			filename = '/man shot ' + str(i) + '.wav'
-			self.game.sound.register_sound(keyname, full_voice_path + filename)
-
-		keyname = 'good guy shot'
-		for i in range(1,3):
-			filename = '/mother ' + str(i) + '.wav'
-			self.game.sound.register_sound(keyname, full_voice_path + filename)
 
 	def mode_started(self):
 		self.gallery_index = 0
@@ -48,7 +37,6 @@ class ShootingGallery(game.Mode):
 	def intro(self):
 		self.game.enable_flippers(enable=False)
 		self.status_layer = dmd.TextLayer(128/2, 7, self.game.fonts['jazz18'], "center", opaque=False).set_text("Video Mode")
-#		self.status_layer.composite_op = 'blacksrc'
 		self.intro_layer_0 = dmd.GroupedLayer(128, 32, [self.status_layer])
 
 		if self.cow_mode:
@@ -61,15 +49,12 @@ class ShootingGallery(game.Mode):
 		self.instruction_layer_1 = dmd.TextLayer(128/2, 7, self.game.fonts['07x5'], "center").set_text(enemy_text)
 		self.instruction_layer_2 = dmd.TextLayer(128/2, 17, self.game.fonts['07x5'], "center").set_text(friend_text)
 		self.intro_layer_1 = dmd.GroupedLayer(128, 32, [self.instruction_layer_1, self.instruction_layer_2])
-		
 
 		self.instruction_layer_21 = dmd.TextLayer(128/2, 7, self.game.fonts['07x5'], "center").set_text("Flipper buttons aim")
 		self.instruction_layer_22 = dmd.TextLayer(128/2, 17, self.game.fonts['07x5'], "center").set_text("Fire buttons shoot")
 		self.intro_layer_2 = dmd.GroupedLayer(128, 32, [self.instruction_layer_21, self.instruction_layer_22])
 
-		anim = dmd.Animation().load(self.game.dmd_path + "/gun_powerup.dmd")
-		self.anim_layer = dmd.AnimatedLayer(frames=anim.frames, frame_time=5)
-		self.anim_layer.composite_op = 'blacksrc'
+		self.anim_layer = self.game.animations['gun_powerup']
 
 		self.intro_layer_4 = dmd.TextLayer(128/2, 7, self.game.fonts['jazz18'], "center", opaque=False).set_text("Video Mode").set_text("Ready...")
 

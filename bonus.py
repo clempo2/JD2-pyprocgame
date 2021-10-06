@@ -14,7 +14,6 @@ class Bonus(game.Mode):
 		self.layer = dmd.GroupedLayer(128, 32, [self.title_layer,self.element_layer, self.value_layer])
 		self.timer = 0
 		self.delay_time = 1
-		self.game.sound.register_sound('drain', self.game.voice_path + "/drain/jd - prepare to be judged.wav")
 
 	def mode_started(self):
 		# Disable the flippers

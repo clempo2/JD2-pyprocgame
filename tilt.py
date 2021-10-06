@@ -14,9 +14,6 @@ class Tilt(game.Mode):
 		if slam_tilt_sw:
 			self.add_switch_handler(name=slam_tilt_sw, event_type='inactive', delay=None, handler=self.slam_tilt_handler)
 		self.num_tilt_warnings = 0
-		self.game.sound.register_sound('tilt warning', self.game.voice_path + "/warning.wav")
-		self.game.sound.register_sound('tilt warning', self.game.voice_path + "/jd - im warning you.wav")
-		self.game.sound.register_sound('tilt', self.game.voice_path + "/jd - put down your weapons.wav")
 		self.tilted = False
 
 	def mode_started(self):

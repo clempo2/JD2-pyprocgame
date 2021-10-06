@@ -9,14 +9,6 @@ class Boring(game.Mode):
 	"""Taunt player if nothing happens for a while"""
 	def __init__(self, game, priority):
 		super(Boring, self).__init__(game, priority)
-		#filename = '/boring/jd - its way too quiet.wav'
-		#self.game.sound.register_sound('boring', self.game.voice_path + filename)
-		filename = '/boring/jd - this is boring.wav'
-		self.game.sound.register_sound('boring', self.game.voice_path + filename)
-		#filename = '/boring/lets order a pizza.wav'
-		#self.game.sound.register_sound('boring', self.game.voice_path + filename)
-		filename = '/boring/wake me when something happens.wav'
-		self.game.sound.register_sound('boring', self.game.voice_path + filename)
 		self.enable_reset = False
 	
 	def mode_started(self):

@@ -12,15 +12,6 @@ class ModeCompletedHurryUp(game.Mode):
 		self.countdown_layer = dmd.TextLayer(128/2, 7, self.game.fonts['jazz18'], "center")
 		self.banner_layer = dmd.TextLayer(128/2, 7, self.game.fonts['jazz18'], "center")
 		self.layer = dmd.GroupedLayer(128, 32, [self.countdown_layer, self.banner_layer])
-		full_voice_path = self.game.voice_path + '/hurryup/'
-		filename = 'wow thats awesome.wav'
-		self.game.sound.register_sound('collected', full_voice_path+filename)
-		filename = 'great shot.wav'
-		self.game.sound.register_sound('collected', full_voice_path+filename)
-		filename = 'incredible shot.wav'
-		self.game.sound.register_sound('collected', full_voice_path+filename)
-		filename = 'jd - excellent.wav'
-		self.game.sound.register_sound('collected', full_voice_path+filename)
 	
 	def mode_started(self):
 		self.banner_layer.set_text("HURRY-UP!", 3)
@@ -224,24 +215,6 @@ class Pursuit(ChainFeature):
 		super(Pursuit, self).__init__(game, priority, 'Pursuit')
 		self.shots_required_for_completion = self.get_difficulty({'easy':3, 'medium':4, 'hard':5})
 
-		full_voice_path = self.game.voice_path + '/pursuit/'
-		filename = 'bank robbery suspects fleeing.wav'
-		self.game.sound.register_sound('pursuit intro', full_voice_path+filename)
-		filename = 'great shot.wav'
-		self.game.sound.register_sound('good shot', full_voice_path+filename)
-		filename = 'incredible shot.wav'
-		self.game.sound.register_sound('good shot', full_voice_path+filename)
-		filename = 'jd - excellent.wav'
-		self.game.sound.register_sound('good shot', full_voice_path+filename)
-		filename = 'jd - in pursuit 1.wav'
-		self.game.sound.register_sound('in pursuit', full_voice_path+filename)
-		filename = 'jd - in pursuit 2.wav'
-		self.game.sound.register_sound('in pursuit', full_voice_path+filename)
-		filename = 'suspects apprehended.wav'
-		self.game.sound.register_sound('complete', full_voice_path+filename)
-		filename = 'suspects got away.wav'
-		self.game.sound.register_sound('failed', full_voice_path+filename)
-
 	def mode_started(self):
 		self.shots = 0
 		self.update_status()
@@ -314,10 +287,8 @@ class Blackout(ChainFeature):
 	def mode_started(self):
 		self.shots = 0
 		self.update_status()
-		filename = self.game.dmd_path + "/blackout.dmd"
-		if os.path.isfile(filename):
-			anim = dmd.Animation().load(filename)
-			self.game.base_game_mode.jd_modes.play_animation(anim, 'high', repeat=False, hold=False, frame_time=3)
+		anim = self.game.animations['blackout'].frames
+		self.game.base_game_mode.jd_modes.play_animation(anim, 'high', repeat=False, hold=False, frame_time=3)
 		self.update_lamps()
 
 	def update_status(self):
@@ -374,28 +345,8 @@ class Sniper(ChainFeature):
 		self.name_layer = dmd.TextLayer(1, 1, self.game.fonts['tiny7'], "left").set_text("Sniper")
 		self.score_layer = dmd.TextLayer(127, 10, self.game.fonts['num_14x10'], "right")
 		self.status_layer = dmd.TextLayer(127, 26, self.game.fonts['tiny7'], "right")
-
-		filename = self.game.dmd_path + "/scope.dmd"
-		if os.path.isfile(filename):
-			anim = dmd.Animation().load(filename)
-			self.anim_layer = dmd.AnimatedLayer(frames=anim.frames, repeat=True, frame_time=8)
-			self.layer = dmd.GroupedLayer(128, 32, [self.anim_layer,self.countdown_layer, self.name_layer, self.score_layer, self.status_layer])
-		else:
-			self.layer = dmd.GroupedLayer(128, 32, [self.countdown_layer, self.name_layer, self.score_layer, self.status_layer])
-
-		full_voice_path = self.game.voice_path + '/sniper/'
-		filename = 'jd - missed him.wav'
-		self.game.sound.register_sound('sniper - miss', full_voice_path+filename)
-		filename = 'jd - drokk.wav'
-		self.game.sound.register_sound('sniper - miss', full_voice_path+filename)
-		filename = 'jd - grud.wav'
-		self.game.sound.register_sound('sniper - miss', full_voice_path+filename)
-		filename = 'jd - sniper neutralized.wav'
-		self.game.sound.register_sound('sniper - hit', full_voice_path+filename)
-		filename = 'jd - take that punk.wav'
-		self.game.sound.register_sound('sniper - hit', full_voice_path+filename)
-		filename = 'gunshot.wav'
-		self.game.sound.register_sound('sniper - shot', full_voice_path+filename)
+		self.anim_layer = self.game.animations['scope']
+		self.layer = dmd.GroupedLayer(128, 32, [self.anim_layer,self.countdown_layer, self.name_layer, self.score_layer, self.status_layer])
 
 	def mode_started(self):
 		self.shots = 0
@@ -423,10 +374,8 @@ class Sniper(ChainFeature):
 	def sw_popperR_active_for_300ms(self, sw):
 		self.shots += 1
 		self.game.score(10000)
-		filename = self.game.dmd_path + "/dredd_shoot_at_sniper.dmd"
-		if os.path.isfile(filename):
-			anim = dmd.Animation().load(filename)
-			self.game.base_game_mode.jd_modes.play_animation(anim, 'high', repeat=False, hold=False, frame_time=5)
+		anim = self.game.animations['dredd_shoot_at_sniper'].fames
+		self.game.base_game_mode.jd_modes.play_animation(anim, 'high', repeat=False, hold=False, frame_time=5)
 		self.check_for_completion()
 
 	def check_for_completion(self):
@@ -456,17 +405,6 @@ class BattleTank(ChainFeature):
 		super(BattleTank, self).__init__(game, priority, 'Battle Tank')
 
 		self.num_shots = 0
-		full_voice_path = self.game.voice_path + '/battle_tank/'
-		for i in range(1,11):
-			filename = 'unknown tank block ' + str(i) + '.wav'
-			self.game.sound.register_sound('tank intro', full_voice_path+filename)
-
-		filename = 'its damaged but still going.wav'
-		self.game.sound.register_sound('tank hit 1', full_voice_path+filename)
-		filename = 'tank hit 1 more shot.wav'
-		self.game.sound.register_sound('tank hit 2', full_voice_path+filename)
-		filename = 'tank down.wav'
-		self.game.sound.register_sound('tank hit 3', full_voice_path+filename)
 
 	def mode_started(self):
 		self.shots = {'left':False,'center':False,'right':False}
@@ -543,17 +481,6 @@ class Meltdown(ChainFeature):
 		super(Meltdown, self).__init__(game, priority, 'Meltdown')
 		self.shots_required_for_completion = self.get_difficulty({'easy':3, 'medium':4, 'hard':5})
 
-		full_voice_path = self.game.voice_path + '/meltdown/'
-		for i in range(1,5):
-			filename = 'reactor ' + str(i) + ' stabilized.wav'
-			self.game.sound.register_sound('meltdown ' + str(i), full_voice_path+filename)
-
-		filename = 'all reactors stabilized.wav'
-		self.game.sound.register_sound('meltdown all', full_voice_path+filename)
-
-		filename = 'power towers going critical.wav'
-		self.game.sound.register_sound('meltdown intro', full_voice_path+filename)
-
 	def mode_started(self):
 		self.shots = 0
 		self.update_status()
@@ -615,28 +542,6 @@ class Impersonator(ChainFeature):
 	def __init__(self, game, priority):
 		super(Impersonator, self).__init__(game, priority, 'Impersonator')
 		self.shots_required_for_completion = self.get_difficulty({'easy':3, 'medium':5, 'hard':7})
-
-		full_voice_path = self.game.voice_path + '/bad_impersonator/'
-
-		for i in range(1,6):
-			filename = 'ouch ' + str(i) + '.wav'
-			self.game.sound.register_sound('bi - ouch', full_voice_path+filename)
-
-		for i in range(1,6):
-			filename = 'song ' + str(i) + '.wav'
-			self.game.sound.register_sound('bi - song', full_voice_path+filename)
-
-		for i in range(1,6):
-			filename = 'boo ' + str(i) + '.wav'
-			self.game.sound.register_sound('bi - boo', full_voice_path+filename)
-
-		for i in range(1,5):
-			filename = 'Shut Up ' + str(i) + '.aif'
-			self.game.sound.register_sound('bi - shutup', full_voice_path+filename)
-
-		filename = 'bad impersonation in progress.wav'
-		self.game.sound.register_sound('bad impersonator', full_voice_path+filename)
-
 		self.sound_active = False
 
 	def play_music(self):
@@ -779,25 +684,8 @@ class Safecracker(ChainFeature):
 	def __init__(self, game, priority):
 		super(Safecracker, self).__init__(game, priority, 'Safe Cracker')
 		self.shots_required_for_completion = self.get_difficulty({'easy':2, 'medium':3, 'hard':4})
-
-		full_voice_path = self.game.voice_path + '/safecracker/'
-		filename = 'hurry up.wav'
-		self.game.sound.register_sound('bad guys', full_voice_path+filename)
-		filename = 'running out of time.wav'
-		self.game.sound.register_sound('bad guys', full_voice_path+filename)
 		time = random.randint(10,20)
 		self.delay(name='bad guys', event_type=None, delay=time, handler=self.bad_guys)
-
-		filename = 'jd - youre done.wav'
-		self.game.sound.register_sound('complete', full_voice_path+filename)
-		filename = 'surrounded.wav'
-		self.game.sound.register_sound('shot', full_voice_path+filename)
-		filename = 'great shot.wav'
-		self.game.sound.register_sound('shot', full_voice_path+filename)
-		filename = 'jd - excellent.wav'
-		self.game.sound.register_sound('shot', full_voice_path+filename)
-		filename = 'jd - do it again.wav'
-		self.game.sound.register_sound('shot', full_voice_path+filename)
 
 	def bad_guys(self):
 		time = random.randint(5,10)
@@ -866,18 +754,6 @@ class ManhuntMillions(ChainFeature):
 		super(ManhuntMillions, self).__init__(game, priority, 'Manhunt')
 		self.shots_required_for_completion = self.get_difficulty({'easy':2, 'medium':3, 'hard':4})
 
-		full_voice_path = self.game.voice_path + '/manhunt/'
-		filename = 'bank robbers trying to escape judgement.wav'
-		self.game.sound.register_sound('mm - intro', full_voice_path+filename)
-		filename = 'aahh.wav'
-		self.game.sound.register_sound('mm - shot', full_voice_path+filename)
-		filename = 'jd - i got one.wav'
-		self.game.sound.register_sound('mm - shot', full_voice_path+filename)
-		filename = 'jd - that will stop him.wav'
-		self.game.sound.register_sound('mm - shot', full_voice_path+filename)
-		filename = 'jd - fugutives captured.wav'
-		self.game.sound.register_sound('mm - done', full_voice_path+filename)
-
 	def mode_started(self):
 		self.shots = 0
 		self.update_status()
@@ -933,27 +809,6 @@ class Stakeout(ChainFeature):
 	def __init__(self, game, priority):
 		super(Stakeout, self).__init__(game, priority, 'Stakeout')
 		self.shots_required_for_completion = self.get_difficulty({'easy':3, 'medium':4, 'hard':5})
-
-		full_voice_path = self.game.voice_path + '/stakeout/'
-
-		filename = 'jd - over there 1.wav'
-		self.game.sound.register_sound('so - over there', full_voice_path+filename)
-		filename = 'jd - over there 2.wav'
-		self.game.sound.register_sound('so - over there', full_voice_path+filename)
-		filename = 'jd - we have you surrounded.wav'
-		self.game.sound.register_sound('so - surrounded', full_voice_path+filename)
-		filename = 'jd - move in now.wav'
-		self.game.sound.register_sound('so - move in', full_voice_path+filename)
-		filename = 'jd - thats it take em down.wav'
-		self.game.sound.register_sound('so - move in', full_voice_path+filename)
-		filename = 'jd - are we sure we have the right place.wav'
-		self.game.sound.register_sound('so - boring', full_voice_path+filename)
-		filename = 'jd - this is boring.wav'
-		self.game.sound.register_sound('so - boring', full_voice_path+filename)
-		filename = 'most boring stakeout ever.wav'
-		self.game.sound.register_sound('so - boring', full_voice_path+filename)
-		filename = 'wake me when something happens.wav'
-		self.game.sound.register_sound('so - boring', full_voice_path+filename)
 
 	def mode_started(self):
 		self.shots = 0
