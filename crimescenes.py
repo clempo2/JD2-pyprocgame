@@ -1,5 +1,6 @@
 from procgame import *
 import locale
+import random
 
 class Crimescenes(modes.Scoring_Mode):
 	"""Crime scenes mode"""
@@ -92,7 +93,7 @@ class Crimescenes(modes.Scoring_Mode):
 		self.total_levels = p.getState('total_levels', 0)
 		self.level = p.getState('level', 0)
 		self.mode = p.getState('mode', 'idle')
-		self.targets = p.getState('targets')
+		self.targets = p.getState('targets', [1,0,0,0,0])
 		self.complete = p.getState('complete', False)
 
 		if self.mode == 'idle':
@@ -397,7 +398,7 @@ class Crimescenes(modes.Scoring_Mode):
 		else:
 			self.mode = 'levels'
 			level_template = self.level_templates[level]
-			shuffle(level_template)
+			random.shuffle(level_template)
 			# First initialize targets (redundant?)
 			for i in range(0,5):
 				self.targets[i] = 0
