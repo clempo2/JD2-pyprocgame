@@ -2,6 +2,7 @@ from procgame import *
 
 class MissileAwardMode(game.Mode):
 	"""Choose an award while the ball sits in the left shooter lane"""
+	
 	def __init__(self, game, priority, font):
 		super(MissileAwardMode, self).__init__(game, priority)
 		self.font = font
@@ -9,7 +10,8 @@ class MissileAwardMode(game.Mode):
 		self.element_layer = dmd.TextLayer(128/2, 15, font, "center")
 		self.value_layer = dmd.TextLayer(128/2, 22, font, "center")
 		self.layer = dmd.GroupedLayer(128, 32, [self.title_layer,self.element_layer, self.value_layer])
-		self.awards = ['Light Extra Ball', 'Advance Crimescenes', '30000 Points', 'Bonus X+1', 'Hold Bonus X']
+		self.all_awards = ['Light Extra Ball', 'Advance Crimescenes', '30000 Points', 'Bonus +1X', 'Hold Bonus X']
+		self.awards = self.all_awards
 		self.awards_allow_repeat = [False, True, True, True, False]
 		self.awards_remaining = self.awards[:]
 		self.delay_time = 0.200
@@ -24,19 +26,12 @@ class MissileAwardMode(game.Mode):
 		self.delay(name='update', event_type=None, delay=self.delay_time, handler=self.update)
 		self.timer = 70
 		self.active = False
-		
 
-	def update_info_record(self, info_record):
-		if len(info_record) > 0:
-			self.awards_remaining = info_record['awards_remaining']
-		else:
-			self.awards_remaining = self.awards[:]
+	def restore_player_state(self):
+		self.awards_remaining = self.game.getPlayerState('awards_remaining', self.all_awards[:])
 
-	def get_info_record(self):
-		info_record = {}
-		info_record['awards_remaining'] = self.awards_remaining
-		return info_record
-
+	def save_player_state(self):
+		self.game.setPlayerState('awards_remaining', self.awards_remaining[:])
 
 	def sw_fireL_active(self, sw):
 		self.timer = 3
@@ -67,4 +62,3 @@ class MissileAwardMode(game.Mode):
 		self.award_ptr_adj = self.award_ptr% len(self.awards_remaining)
 		self.current_award = self.awards_remaining[self.award_ptr_adj]
 		self.value_layer.set_text(self.current_award)
-		

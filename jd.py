@@ -687,13 +687,13 @@ class FlipperWorkaroundMode(game.Mode):
 
 class BaseGameMode(game.Mode):
 	"""Game play when no playable mode is active"""
+	
 	def __init__(self, game):
 		super(BaseGameMode, self).__init__(game, 2)
 		self.tilt = Tilt(self.game, 1000, font_jazz18, font_tiny7, 'tilt', 'slamTilt')
 		self.flipper_enable_workaround_active = False
 
 	def mode_started(self):
-
 		# Disable any previously active lamp
 		for lamp in self.game.lamps:
 			lamp.disable()
@@ -720,7 +720,6 @@ class BaseGameMode(game.Mode):
 		self.replay.replay_callback = self.jd_modes.replay_callback
 		self.jd_modes.replay = self.replay
 
-
 		# Start modes
 		self.game.modes.add(self.jd_modes)
 		self.tilt.tilt_callback = self.tilt_callback
@@ -730,7 +729,7 @@ class BaseGameMode(game.Mode):
 
 		# Load the player data saved from the previous ball.
 		# It will be empty if this is the first ball.
-		self.jd_modes.update_info_record(self.game.get_player_record('JD_MODES'))
+		self.jd_modes.restore_player_state()
 		if self.game.attract_mode.play_super_game:
 			self.jd_modes.multiball.jackpot_collected = True
 			self.jd_modes.crimescenes.complete = True
@@ -757,7 +756,6 @@ class BaseGameMode(game.Mode):
 		pass
 
 	def mode_stopped(self):
-		
 		# Ensure flippers are disabled
 		self.game.enable_flippers(enable=False)
 
@@ -787,9 +785,7 @@ class BaseGameMode(game.Mode):
 		else:
 			self.finish_ball()
 
-
 	def finish_ball(self):
-
 		self.game.sound.fadeout_music()
 
 		# Make sure the motor isn't spinning between balls.
@@ -799,9 +795,8 @@ class BaseGameMode(game.Mode):
 		self.game.modes.remove(self.jd_modes)
 		self.game.modes.remove(self.tilt)
 
-		# Get and save the player's data
-		jd_modes_info_record = self.jd_modes.get_info_record()
-		self.game.update_player_record('JD_MODES', jd_modes_info_record)
+		# save the player's data
+		self.jd_modes.save_player_state()
 
 		# Create the bonus mode so bonus can be calculated.
 		self.bonus = Bonus(self.game, 8, font_jazz18, font_tiny7)
@@ -914,17 +909,27 @@ class BaseGameMode(game.Mode):
 		self.game.score(100)
 
 class JDPlayer(game.Player):
-	"""JDGame specific implementation of a Player"""
+	"""Keeps the progress of one player to allow the player
+	   to resume where he left off in a multi-player game"""
+	
 	inner_loops = 0
 	outer_loops = 0
 	crimescenes = 0
 
 	def __init__(self, name):
 		super(JDPlayer, self).__init__(name)
-		self.info_record = {}
+		self.state_tracking = {}
+
+	def setState(self, key, val):
+		self.state_tracking[key] = val
+
+	def getState(self, key, default = None):
+		return self.state_tracking.get(key,default)
+
 
 class JDGame(game.BasicGame):
 	"""Judge Dredd pinball game"""
+	
 	def __init__(self):
 		super(JDGame, self).__init__(pinproc.MachineTypeWPC)
 		self.sound = procgame.sound.SoundController(self)
@@ -1178,16 +1183,13 @@ class JDGame(game.BasicGame):
 		p = self.current_player()
 		p.extra_balls += 1
 
-	def update_player_record(self, key, record):
+	def getPlayerState(self, key, default = None):
 		p = self.current_player()
-		p.info_record[key] = record
+		return p.getState(key, default)
 
-	def get_player_record(self, key):
+	def setPlayerState(self, key, val):
 		p = self.current_player()
-		if key in p.info_record:
-			return p.info_record[key]
-		else:
-			return []
+		p.setState(key, val)
 
 	def setup_ball_search(self):
 
@@ -1199,10 +1201,10 @@ class JDGame(game.BasicGame):
 		# onto the ring rather than entering through the feeder.)
 		special_handler_modes = []
 		self.ball_search = procgame.modes.BallSearch(self, priority=100, \
-    				 countdown_time=10, coils=self.ballsearch_coils, \
-				     reset_switches=self.ballsearch_resetSwitches, \
-				     stop_switches=self.ballsearch_stopSwitches, \
-				     special_handler_modes=special_handler_modes)
+					 countdown_time=10, coils=self.ballsearch_coils, \
+					 reset_switches=self.ballsearch_resetSwitches, \
+					 stop_switches=self.ballsearch_stopSwitches, \
+					 special_handler_modes=special_handler_modes)
 
 	def enable_flippers(self, enable=True):
 		super(JDGame, self).enable_flippers(enable)

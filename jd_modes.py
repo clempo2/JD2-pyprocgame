@@ -13,10 +13,13 @@ from shooting_gallery import ShootingGallery
 
 class JD_Modes(modes.Scoring_Mode):
 	"""The collection of playable modes"""
+	
 	def __init__(self, game, priority, font_small, font_big):
 		super(JD_Modes, self).__init__(game, priority)
 
 		self.font = font_small
+		self.all_chain_modes = ['pursuit', 'blackout', 'sniper', 'battleTank', 'impersonator', 'meltdown', 'safecracker', 'manhunt', 'stakeout']
+		self.all_judge_modes = ['Fear', 'Mortis', 'Death', 'Fire']
 
 		# Reset member variables
 		self.reset()
@@ -63,36 +66,42 @@ class JD_Modes(modes.Scoring_Mode):
 		self.video_mode.on_complete = self.video_mode_complete	
 
 	def reset(self):
-		#self.state = 'pre_ultimate_challenge'
-		self.intro_playing = False
 		self.state = 'idle'
-		self.judges_attempted = []
-		self.judges_not_attempted = ['Fear', 'Mortis', 'Death', 'Fire']
-		self.modes_attempted = []
-		self.modes_not_attempted = ['pursuit', 'blackout', 'sniper', 'battleTank', 'impersonator', 'meltdown', 'safecracker', 'manhunt', 'stakeout']
-		self.modes_just_attempted = []
-		self.active_mode_pointer = 0
-		self.modes_not_attempted_ptr = 0
-		self.mode_active = False
-		self.mode_list = {}
 		self.mode = 0
+		self.num_modes_completed = 0
+		self.modes_completed = []
+		self.modes_attempted = []
+		self.modes_just_attempted = []
+		self.modes_not_attempted = self.all_chain_modes
+		self.modes_not_attempted_ptr = 0
+		self.judges_attempted = []
+		self.judges_not_attempted = self.all_judge_modes
+		self.video_mode_lit = True
+		self.cow_video_mode_lit = False
 		self.extra_balls_lit = 0
 		self.total_extra_balls_lit = 0
+		self.num_extra_mode_balls = 0
+		self.num_hurryups_collected = 0
 		self.mystery_lit = False
 		self.missile_award_lit = False
 		self.missile_award_lit_save = False
-		self.num_modes_completed = 0
-		self.modes_completed = []
-		self.hold_bonus_x = 0
-		self.num_hurryups_collected = 0
-		self.num_extra_mode_balls = 0
+		self.inner_loops_hit = 0
+		self.outer_loops_hit = 0
+		self.hold_bonus_x = False
+		
+		self.bonus_x = 1
+		self.inner_loop_combos = 0
+		self.outer_loop_combos = 0
+		self.active_mode_pointer = 0
+		self.mode_active = False
+		self.mode_list = {}
+		
 		for mode in self.modes_not_attempted:
 			self.drive_mode_lamp(mode, 'off')
 		self.drive_mode_lamp('mystery', 'off')
+		
 		for judge in self.judges_not_attempted:
 			self.game.coils['flasher' + judge].disable()
-		self.video_mode_lit = True
-		self.cow_video_mode_lit = False
 
 		# disable auto-plunging for the start of ball - Force player to hit the
 		# right Fire button.
@@ -100,16 +109,13 @@ class JD_Modes(modes.Scoring_Mode):
 		self.tilt = False
 		self.info_on = False
 		self.skill_shot_added = False
-		self.inner_loops_hit = 0
-		self.outer_loops_hit = 0
-		self.inner_loop_combos = 0
-		self.outer_loop_combos = 0
 		self.outer_loop_active = False
 		self.inner_loop_active = False
+		self.intro_playing = False
 
 	def reset_modes(self):
 		self.modes_attempted = []
-		self.modes_not_attempted = ['pursuit', 'blackout', 'sniper', 'battleTank', 'impersonator', 'meltdown', 'safecracker', 'manhunt', 'stakeout']
+		self.modes_not_attempted = self.all_chain_modes
 		self.modes_just_attempted = []
 		self.active_mode_pointer = 0
 		self.game.update_lamps()
@@ -187,70 +193,63 @@ class JD_Modes(modes.Scoring_Mode):
 		self.cancel_delayed('inner_loop')
 		self.cancel_delayed('outer_loop')
 
-	def get_info_record(self):
-		info_record = {}
-		info_record['state'] = self.state
-		info_record['judges_attempted'] = self.judges_attempted
-		info_record['judges_not_attempted'] = self.judges_not_attempted
-		info_record['mode'] = self.mode
-		info_record['modes_attempted'] = self.modes_attempted
-		info_record['modes_completed'] = self.modes_completed
-		info_record['modes_just_attempted'] = self.modes_just_attempted
-		info_record['modes_not_attempted'] = self.modes_not_attempted
-		info_record['modes_not_attempted_ptr'] = self.modes_not_attempted_ptr
-		info_record['extra_balls_lit'] = self.extra_balls_lit
-		info_record['total_extra_balls_lit'] = self.total_extra_balls_lit
-		info_record['mystery_lit'] = self.mystery_lit
-		info_record['inner_loops'] = self.inner_loops_hit
-		info_record['outer_loops'] = self.outer_loops_hit
-		info_record['missile_award_lit'] = self.missile_award_lit or self.missile_award_lit_save
-		info_record['num_modes_completed'] = self.num_modes_completed
-		info_record['crimescenes'] = self.crimescenes.get_info_record()
-		info_record['missile_award_mode'] = self.missile_award_mode.get_info_record()
-		info_record['multiball'] = self.multiball.get_info_record()
-		info_record['ultimate_challenge'] = self.ultimate_challenge.get_info_record()
-		info_record['num_hurryups_collected'] = self.num_hurryups_collected
-		info_record['num_extra_mode_balls'] = self.num_extra_mode_balls
-		info_record['video_mode_lit'] = self.video_mode_lit
-		info_record['cow_video_mode_lit'] = self.cow_video_mode_lit
-		if self.hold_bonus_x:
-			info_record['bonus_x'] = self.bonus_x
-		else:
-			info_record['bonus_x'] = 1
-		return info_record
+	def save_player_state(self):
+		p = self.game.current_player()
+		p.setState('state', self.state)
+		p.setState('mode', self.mode)
+		p.setState('num_modes_completed', self.num_modes_completed)
+		p.setState('modes_completed', self.modes_completed)
+		p.setState('modes_attempted', self.modes_attempted)
+		p.setState('modes_just_attempted', self.modes_just_attempted)
+		p.setState('modes_not_attempted', self.modes_not_attempted)
+		p.setState('modes_not_attempted_ptr', self.modes_not_attempted_ptr)
+		p.setState('judges_attempted', self.judges_attempted)
+		p.setState('judges_not_attempted', self.judges_not_attempted)
+		p.setState('video_mode_lit', self.video_mode_lit)
+		p.setState('cow_video_mode_lit', self.cow_video_mode_lit)
+		p.setState('extra_balls_lit', self.extra_balls_lit)
+		p.setState('total_extra_balls_lit', self.total_extra_balls_lit)
+		p.setState('num_extra_mode_balls', self.num_extra_mode_balls)
+		p.setState('num_hurryups_collected', self.num_hurryups_collected)
+		p.setState('mystery_lit', self.mystery_lit)
+		p.setState('missile_award_lit', self.missile_award_lit or self.missile_award_lit_save)
+		p.setState('inner_loops', self.inner_loops_hit)
+		p.setState('outer_loops', self.outer_loops_hit)
+		p.setState('bonus_x', self.bonus_x if self.hold_bonus_x else 1)
+		
+		self.crimescenes.save_player_state()
+		self.missile_award_mode.save_player_state()
+		self.multiball.save_player_state()
+		self.ultimate_challenge.save_player_state()
 
-	def update_info_record(self, info_record):
-		if len(info_record) > 0:
-			self.state = info_record['state']
-			self.mode= info_record['mode']
-			self.cow_video_mode_lit = info_record['cow_video_mode_lit']
-			self.video_mode_lit = info_record['video_mode_lit']
-			self.modes_attempted = info_record['modes_attempted']
-			self.modes_completed = info_record['modes_completed']
-			self.modes_just_attempted = info_record['modes_just_attempted']
-			self.modes_not_attempted = info_record['modes_not_attempted']
-			self.modes_not_attempted_ptr = info_record['modes_not_attempted_ptr']
-			self.judges_attempted = info_record['judges_attempted']
-			self.judges_not_attempted = info_record['judges_not_attempted']
-			self.extra_balls_lit = info_record['extra_balls_lit']
-			self.total_extra_balls_lit = info_record['total_extra_balls_lit']
-			self.mystery_lit = info_record['mystery_lit']
-			self.missile_award_lit = info_record['missile_award_lit']
-			self.inner_loops_hit = info_record['inner_loops']
-			self.outer_loops_hit = info_record['outer_loops']
-			self.num_modes_completed = info_record['num_modes_completed']
-			self.crimescenes.update_info_record(info_record['crimescenes'])
-			self.ultimate_challenge.update_info_record(info_record['ultimate_challenge'])
-			self.missile_award_mode.update_info_record(info_record['missile_award_mode'])
-			self.multiball.update_info_record(info_record['multiball'])
-			self.bonus_x = info_record['bonus_x']
-			self.num_hurryups_collected = info_record['num_hurryups_collected']
-			self.num_extra_mode_balls = info_record['num_extra_mode_balls']
-		else:	
-			self.crimescenes.update_info_record({})
-			self.missile_award_mode.update_info_record({})
-			self.video_mode_lit = True
-			self.cow_video_mode_lit = False
+	def restore_player_state(self):
+		p = self.game.current_player()
+		self.state = p.getState('state', 'idle')
+		self.mode = p.getState('mode', 0)
+		self.num_modes_completed = p.getState('num_modes_completed', 0)
+		self.modes_completed = p.getState('modes_completed', [])
+		self.modes_attempted = p.getState('modes_attempted', [])
+		self.modes_just_attempted = p.getState('modes_just_attempted', [])
+		self.modes_not_attempted = p.getState('modes_not_attempted', self.all_chain_modes)
+		self.modes_not_attempted_ptr = p.getState('modes_not_attempted_ptr', 0)
+		self.judges_attempted = p.getState('judges_attempted', [])
+		self.judges_not_attempted = p.getState('judges_not_attempted', self.all_judge_modes)
+		self.video_mode_lit = p.getState('video_mode_lit', True)
+		self.cow_video_mode_lit = p.getState('cow_video_mode_lit', False)
+		self.extra_balls_lit = p.getState('extra_balls_lit', 0)
+		self.total_extra_balls_lit = p.getState('total_extra_balls_lit', 0)
+		self.num_extra_mode_balls = p.getState('num_extra_mode_balls', 0)
+		self.num_hurryups_collected = p.getState('num_hurryups_collected', 0)
+		self.mystery_lit = p.getState('mystery_lit', False)
+		self.missile_award_lit = p.getState('missile_award_lit', False)
+		self.inner_loops_hit = p.getState('inner_loops', 0)
+		self.outer_loops_hit = p.getState('outer_loops', 0)
+		self.bonus_x = p.getState('bonus_x', 1)
+
+		self.crimescenes.restore_player_state()
+		self.ultimate_challenge.restore_player_state()
+		self.missile_award_mode.restore_player_state()
+		self.multiball.restore_player_state()
 
 	def ball_drained(self):
 		# Called as a result of a ball draining into the trough.
@@ -280,7 +279,7 @@ class JD_Modes(modes.Scoring_Mode):
 		elif award == 'Advance Crimescenes':
 			self.crimescenes.level_complete()
 			self.show_on_display('Crimes Adv', None, 'mid')
-		elif award == 'Bonus X+1':
+		elif award == 'Bonus +1X':
 			self.inc_bonus_x()
 		elif award == 'Hold Bonus X':
 			self.hold_bonus_x = True
@@ -314,6 +313,7 @@ class JD_Modes(modes.Scoring_Mode):
 		return self.bonus_x
 
 	def begin_processing(self):
+		self.hold_bonus_x = False
 		self.mystery_lit = True
 		self.game.update_lamps()
 		if self.is_ultimate_challenge_ready():
@@ -1055,6 +1055,7 @@ class JD_Modes(modes.Scoring_Mode):
 		if success:
 			self.light_extra_ball()
 
+
 class ModesDisplay(game.Mode):
 	"""Display some text when the ball is active"""
 	def __init__(self, game, priority):
@@ -1076,6 +1077,7 @@ class ModesDisplay(game.Mode):
 		else:
 			self.layer = dmd.GroupedLayer(128, 32, [self.score_layer])
 
+
 class ModesAnimation(game.Mode):
 	"""Play an animation when the ball is active"""
 	def __init__(self, game, priority):
@@ -1083,6 +1085,7 @@ class ModesAnimation(game.Mode):
 
 	def play(self, anim, repeat=False, hold=False, frame_time=1):
 		self.layer = dmd.AnimatedLayer(frames=anim.frames, repeat=repeat, hold=hold, frame_time=frame_time)
+
 
 class GameIntro(game.Mode):
 	"""Welcome on first ball or shoot again"""

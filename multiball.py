@@ -3,6 +3,7 @@ from procgame import *
 
 class Multiball(modes.Scoring_Mode):
 	"""Multiball activated by locking balls in the Deadworld planet"""
+	
 	def __init__(self, game, priority, deadworld_mod_installed, font):
 		super(Multiball, self).__init__(game, priority)
 		self.deadworld_mod_installed = deadworld_mod_installed
@@ -114,14 +115,14 @@ class Multiball(modes.Scoring_Mode):
 	def display_text(self, text):
 		self.banner_layer.set_text(text, 3)
 
-	def update_info_record(self, info_record):
-		if len(info_record) > 0:
-			self.state = info_record['state']
-			self.num_balls_locked = info_record['num_balls_locked']
-			self.num_locks_lit = info_record['num_locks_lit']
-			self.num_times_played = info_record['num_times_played']
-			self.lock_level = info_record['lock_level']
-			self.jackpot_collected = info_record['jackpot_collected']
+	def restore_player_state(self):
+		p = self.game.current_player()
+		self.state = p.getState('multiball_state', 'load')
+		self.num_balls_locked = p.getState('multiball_num_balls_locked', 0)
+		self.num_locks_lit = p.getState('multiball_num_locks_lit', 0)
+		self.num_times_played = p.getState('multiball_num_times_played', 0)
+		self.lock_level = p.getState('multiball_lock_level', 1)
+		self.jackpot_collected = p.getState('multiball_jackpot_collected', False)
 
 		# Virtual locks are needed when there are more balls physically locked 
 		# than the player has locked through play.  This happens when
@@ -149,15 +150,14 @@ class Multiball(modes.Scoring_Mode):
 			
 		self.update_lamps()
 
-	def get_info_record(self):
-		info_record = {}
-		info_record['state'] = self.state
-		info_record['num_balls_locked'] = self.num_balls_locked
-		info_record['num_locks_lit'] = self.num_locks_lit
-		info_record['num_times_played'] = self.num_times_played
-		info_record['lock_level'] = self.lock_level
-		info_record['jackpot_collected'] = self.jackpot_collected
-		return info_record
+	def save_player_state(self):
+		p = self.game.current_player()
+		p.setState('multiball_state',  self.state)
+		p.setState('multiball_num_balls_locked',  self.num_balls_locked)
+		p.setState('multiball_num_locks_lit',  self.num_locks_lit)
+		p.setState('multiball_num_times_played',  self.num_times_played)
+		p.setState('multiball_lock_level',  self.lock_level)
+		p.setState('multiball_jackpot_collected',  self.jackpot_collected)
 
 	def pause(self):
 		self.paused = 1

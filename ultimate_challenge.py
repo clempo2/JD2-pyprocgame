@@ -8,6 +8,7 @@ from procgame import *
 
 class UltimateChallenge(modes.Scoring_Mode):
 	"""Wizard mode"""
+	
 	def __init__(self, game, priority):
 		super(UltimateChallenge, self).__init__(game, priority)
 		self.completed = False
@@ -49,14 +50,11 @@ class UltimateChallenge(modes.Scoring_Mode):
 	def is_active(self):
 		return self.active
 
-	def get_info_record(self):
-		info_record = {}
-		info_record['active_mode'] = self.active_mode
-		return info_record
+	def save_player_state(self):
+		self.game.setPlayerState('challenge_active_mode', self.active_mode)
 
-	def update_info_record(self, info_record):
-		if len(info_record) > 0:
-			self.active_mode = info_record['active_mode']
+	def restore_player_state(self):
+		self.active_mode = self.game.getPlayerState('challenge_active_mode', 'fire')
 
 	def begin(self):
 		self.game.modes.add(self.mode_list[self.active_mode])

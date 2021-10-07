@@ -3,6 +3,7 @@ import locale
 
 class Crimescenes(modes.Scoring_Mode):
 	"""Crime scenes mode"""
+	
 	def __init__(self, game, priority):
 		super(Crimescenes, self).__init__(game, priority)
 		self.target_award_order = [1,3,0,2,4]
@@ -46,19 +47,20 @@ class Crimescenes(modes.Scoring_Mode):
 			self.level_nums = [ 1, 1, 2, 2, 2, 3, 3, 3, 3, 3, 4, 4, 4, 4, 5, 5 ]
 		self.block_war = BlockWar(game, priority+5)
 		self.get_block_war_multiplier = None
-		self.total_levels = 0
 
 	def reset(self):
+		self.total_levels = 0
+		self.level = 0
+		self.mode = 'idle'
+		self.targets = [1,0,0,0,0]
+		self.complete = False
+		
 		self.bonus_num = 1
 		self.extra_ball_levels = 4
-		self.complete = False
 		self.bw_shots = 1
 		self.bw_shots_required = [1,1,1,1,1]
 		self.num_advance_hits = 0
 		self.mb_active = False
-		self.level = 0
-		self.mode = 'idle'
-		self.targets = [1,0,0,0,0]
 		self.update_lamps()
 
 	def mode_started(self):
@@ -77,22 +79,21 @@ class Crimescenes(modes.Scoring_Mode):
 			lampname = 'crimeLevel' + str(i)
 			self.drive_mode_lamp(lampname, 'off')
 
-	def get_info_record(self):
-		info_record = {}
-		info_record['level'] = self.level
-		info_record['total_levels'] = self.total_levels
-		info_record['mode'] = self.mode
-		info_record['targets'] = self.targets
-		info_record['complete'] = self.complete
-		return info_record
+	def save_player_state(self):
+		p = self.game.current_player()
+		p.setState('level', self.level)
+		p.setState('total_levels', self.total_levels)
+		p.setState('mode', self.mode)
+		p.setState('targets', self.targets)
+		p.setState('complete', self.complete)
 
-	def update_info_record(self, info_record):
-		if len(info_record) > 0:
-			self.total_levels = info_record['total_levels']
-			self.level = info_record['level']
-			self.mode = info_record['mode']
-			self.targets = info_record['targets']
-			self.complete = info_record['complete']
+	def restore_player_state(self):
+		p = self.game.current_player()
+		self.total_levels = p.getState('total_levels', 0)
+		self.level = p.getState('level', 0)
+		self.mode = p.getState('mode', 'idle')
+		self.targets = p.getState('targets')
+		self.complete = p.getState('complete', False)
 
 		if self.mode == 'idle':
 			self.init_level(0)
@@ -107,10 +108,10 @@ class Crimescenes(modes.Scoring_Mode):
 		bonus_base_elements[num_levels_str] = self.total_levels*2000
 		return bonus_base_elements
 
-
 	####################################################
 	# Lamps
 	####################################################
+	
 	def update_lamps(self):
 		if self.mode == 'block_war':
 			self.update_block_war_lamps()
@@ -201,11 +202,6 @@ class Crimescenes(modes.Scoring_Mode):
 			self.game.lamps[lampname].pulse(0)
 		elif style == 'off':
 			self.game.lamps[lampname].disable()
-
-
-	####################################################
-	# End Lamps
-	####################################################
 
 	####################################################
 	# Switch Handlers
@@ -397,7 +393,6 @@ class Crimescenes(modes.Scoring_Mode):
 		if level > (self.game.user_settings['Gameplay']['Crimescene levels for finale']-1):
 			self.complete = True
 			self.crimescenes_completed()
-			#self.level = 0
 			self.mode = 'complete'
 		else:
 			self.mode = 'levels'
