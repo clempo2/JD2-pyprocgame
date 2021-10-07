@@ -134,7 +134,7 @@ class JD_Modes(modes.Scoring_Mode):
 		self.missile_award_lit_save = False
 		self.num_modes_completed = 0
 		self.modes_completed = []
-		self.hold_bonus_x = 0
+		self.hold_bonus_x = False
 		self.num_hurryups_collected = 0
 		self.num_extra_mode_balls = 0
 		for mode in self.modes_not_attempted:
@@ -370,6 +370,7 @@ class JD_Modes(modes.Scoring_Mode):
 		return self.bonus_x
 
 	def begin_processing(self):
+		self.hold_bonus_x = False
 		self.mystery_lit = True
 		self.game.update_lamps()
 		if self.is_ultimate_challenge_ready():
