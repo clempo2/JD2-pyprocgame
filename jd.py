@@ -369,9 +369,11 @@ class AssetLoader:
 		voice_prefix = curr_file_path + '/sound/Voice/'
 		for asset in voice_files:
 			self.game.sound.register_sound(asset['key'], voice_prefix + asset['file'])
-		
+
+
 class Attract(game.Mode):
 	"""Attract mode and start buttons"""
+	
 	def __init__(self, game):
 		super(Attract, self).__init__(game, 1)
 		self.display_order = [0,1,2,3,4,5,6,7,8,9]
@@ -462,37 +464,39 @@ class Attract(game.Mode):
 			new_layer.transition = dmd.PushTransition(direction='north')
 			script.append({'seconds':2.0, 'layer':new_layer})
 
-		script.append({'seconds':20.0, 'layer':self.credits_layer})
-		script.append({'seconds':3.0, 'layer':self.judges_layer})
-		script.append({'seconds':4.0, 'layer':self.cityscape_layer})
+		script.extend([
+			{'seconds':20.0, 'layer':self.credits_layer},
+			{'seconds':3.0, 'layer':self.judges_layer},
+			{'seconds':4.0, 'layer':self.cityscape_layer}])
 
 		self.layer = dmd.ScriptedLayer(width=128, height=32, script=script)
 
 	def post_game_display(self):
-		script = list()
-
-		script.append({'seconds':3.0, 'layer':self.jd_layer})
-		script.append({'seconds':4.0, 'layer':self.cityscape_layer})
-		script.append({'seconds':3.0, 'layer':self.proc_splash_layer})
-		script.append({'seconds':3.0, 'layer':self.pyprocgame_layer})
-		script.append({'seconds':20.0, 'layer':self.credits_layer})
-		script.append({'seconds':3.0, 'layer':self.judges_layer})
-		script.append({'seconds':4.0, 'layer':self.cityscape_layer})
-		script.append({'seconds':3.0, 'layer':None})
-
-		script.append({'seconds':3.0, 'layer':self.scores_layer})
+		script = [
+			{'seconds':3.0, 'layer':self.jd_layer},
+			{'seconds':4.0, 'layer':self.cityscape_layer},
+			{'seconds':3.0, 'layer':self.proc_splash_layer},
+			{'seconds':3.0, 'layer':self.pyprocgame_layer},
+			{'seconds':20.0, 'layer':self.credits_layer},
+			{'seconds':3.0, 'layer':self.judges_layer},
+			{'seconds':4.0, 'layer':self.cityscape_layer},
+			{'seconds':3.0, 'layer':None},
+			{'seconds':3.0, 'layer':self.scores_layer}
+		]
+		
 		for frame in highscore.generate_highscore_frames(self.game.highscore_categories):
 			new_layer = dmd.FrameLayer(frame=frame)
 			new_layer.transition = dmd.PushTransition(direction='north')
 			script.append({'seconds':2.0, 'layer':new_layer})
 
-
 		self.layer = dmd.ScriptedLayer(width=128, height=32, script=script)
 
 	def game_over_display(self):
-		script = [{'seconds':6.0, 'layer':self.longwalk_layer},
-			  {'seconds':3.0, 'layer':None},
-			  {'seconds':3.0, 'layer':self.scores_layer}]
+		script = [
+			{'seconds':6.0, 'layer':self.longwalk_layer},
+			{'seconds':3.0, 'layer':None},
+			{'seconds':3.0, 'layer':self.scores_layer}
+		]
 
 		for frame in highscore.generate_highscore_frames(self.game.highscore_categories):
 			new_layer = dmd.FrameLayer(frame=frame)
@@ -518,17 +522,6 @@ class Attract(game.Mode):
 
 	def sw_flipperLwR_active(self, sw):
 		self.layer.force_next(True)
-
-	def setup_display(self, index=0):
-		if index < 5:
-			ret_val = self.setup_intro_display(index)
-		elif index < 7:
-			ret_val = self.setup_score_display(index-5)
-		elif index < 9:
-			ret_val = self.setup_credits_display(index-7)
-		else:
-			ret_val = self.setup_judges_display()
-		return ret_val
 
 	# Eject any balls that get stuck before returning to the trough.
 	def sw_popperL_active_for_500ms(self, sw): # opto!
@@ -826,7 +819,7 @@ class BaseGameMode(game.Mode):
 			if len(self.game.players) < 4:
 				p = self.game.add_player()
 				self.game.set_status(p.name + " added!")
-		else:
+		elif self.game.user_settings['Gameplay']['Allow restarts']:
 			self.game.set_status("Hold for 2s to reset.")
 
 	def sw_startButton_active_for_2s(self, sw):
@@ -911,9 +904,7 @@ class BaseGameMode(game.Mode):
 class JDPlayer(game.Player):
 	"""Keeps the progress of one player to allow the player
 	   to resume where he left off in a multi-player game"""
-	
-	inner_loops = 0
-	outer_loops = 0
+
 	crimescenes = 0
 
 	def __init__(self, name):
@@ -1034,7 +1025,7 @@ class JDGame(game.BasicGame):
 		# because we don't have a game_data template:
 		cat.scores = [highscore.HighScore(score=2,inits='GSS')]
 		cat.titles = ['Inner Loop Champ']
-		cat.score_for_player = lambda player: player.inner_loops
+		cat.score_for_player = lambda player: player.getState('best_inner_loops', 0)
 		cat.score_suffix_singular = ' loop'
 		cat.score_suffix_plural = ' loops'
 		self.highscore_categories.append(cat)
@@ -1044,7 +1035,7 @@ class JDGame(game.BasicGame):
 		# because we don't have a game_data template:
 		cat.scores = [highscore.HighScore(score=2,inits='GSS')]
 		cat.titles = ['Outer Loop Champ']
-		cat.score_for_player = lambda player: player.outer_loops
+		cat.score_for_player = lambda player: player.getState('best_outer_loops', 0)
 		cat.score_suffix_singular = ' loop'
 		cat.score_suffix_plural = ' loops'
 		self.highscore_categories.append(cat)

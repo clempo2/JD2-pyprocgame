@@ -17,12 +17,10 @@ class JD_Modes(modes.Scoring_Mode):
 	def __init__(self, game, priority, font_small, font_big):
 		super(JD_Modes, self).__init__(game, priority)
 
-		self.font = font_small
 		self.all_chain_modes = ['pursuit', 'blackout', 'sniper', 'battleTank', 'impersonator', 'meltdown', 'safecracker', 'manhunt', 'stakeout']
 		self.all_judge_modes = ['Fear', 'Mortis', 'Death', 'Fire']
-
-		# Reset member variables
-		self.reset()
+		
+		self.cow_video_mode_lit = False
 
 		# Instantiate sub-modes
 		self.game_intro = GameIntro(self.game, self.priority+1)
@@ -32,20 +30,27 @@ class JD_Modes(modes.Scoring_Mode):
 		self.info = Info(game, priority+20)
 		self.info.callback = self.info_callback
 		self.ultimate_challenge = UltimateChallenge(game, priority+10)
-		self.mode_pursuit = Pursuit(game, priority+1)
-		self.mode_blackout = Blackout(game, priority+1)
-		self.mode_sniper = Sniper(game, priority+1)
-		self.mode_battleTank = BattleTank(game, priority+1)
-		self.mode_impersonator = Impersonator(game, priority+1)
-		self.mode_meltdown = Meltdown(game, priority+1)
-		self.mode_safecracker = Safecracker(game, priority+1)
-		self.mode_manhunt = ManhuntMillions(game, priority+1)
-		self.mode_stakeout = Stakeout(game, priority+1)
+		self.ultimate_challenge.callback = self.mode_over
 		self.crimescenes = Crimescenes(game, priority+1)
 		self.crimescenes.get_block_war_multiplier = self.get_num_modes_completed
 		self.crimescenes.crimescenes_completed = self.crimescenes_completed
 		self.crimescenes.mb_start_callback = self.multiball_started
 		self.crimescenes.mb_end_callback = self.multiball_ended
+		self.crimescenes.light_extra_ball_function = self.light_extra_ball
+		
+		self.mode_list = {}
+		self.mode_list['pursuit'] = Pursuit(game, priority+1)
+		self.mode_list['blackout'] = Blackout(game, priority+1)
+		self.mode_list['sniper'] = Sniper(game, priority+1)
+		self.mode_list['battleTank'] = BattleTank(game, priority+1)
+		self.mode_list['impersonator'] = Impersonator(game, priority+1)
+		self.mode_list['meltdown'] = Meltdown(game, priority+1)
+		self.mode_list['safecracker'] = Safecracker(game, priority+1)
+		self.mode_list['manhunt'] = ManhuntMillions(game, priority+1)
+		self.mode_list['stakeout'] = Stakeout(game, priority+1)
+		for mode in self.mode_list:
+			self.mode_list[mode].callback = self.mode_over
+		
 		self.missile_award_mode = MissileAwardMode(game, priority+10, font_small)
 		self.missile_award_mode.callback = self.award_missile_award
 		self.mode_completed_hurryup = ModeCompletedHurryUp(game, priority+1)
@@ -63,55 +68,9 @@ class JD_Modes(modes.Scoring_Mode):
 		self.mid_priority_animation = ModesAnimation(self.game, priority + 4)
 		self.high_priority_animation = ModesAnimation(self.game, priority + 210)
 		self.video_mode = ShootingGallery(self.game, priority+11, self.cow_video_mode_lit)
-		self.video_mode.on_complete = self.video_mode_complete	
-
-	def reset(self):
-		self.state = 'idle'
-		self.mode = 0
-		self.num_modes_completed = 0
-		self.modes_completed = []
-		self.modes_attempted = []
-		self.modes_just_attempted = []
-		self.modes_not_attempted = self.all_chain_modes
-		self.modes_not_attempted_ptr = 0
-		self.judges_attempted = []
-		self.judges_not_attempted = self.all_judge_modes
-		self.video_mode_lit = True
-		self.cow_video_mode_lit = False
-		self.extra_balls_lit = 0
-		self.total_extra_balls_lit = 0
-		self.num_extra_mode_balls = 0
-		self.num_hurryups_collected = 0
-		self.mystery_lit = False
-		self.missile_award_lit = False
-		self.missile_award_lit_save = False
-		self.inner_loops_hit = 0
-		self.outer_loops_hit = 0
-		self.hold_bonus_x = False
+		self.video_mode.on_complete = self.video_mode_complete
 		
-		self.bonus_x = 1
-		self.inner_loop_combos = 0
-		self.outer_loop_combos = 0
 		self.active_mode_pointer = 0
-		self.mode_active = False
-		self.mode_list = {}
-		
-		for mode in self.modes_not_attempted:
-			self.drive_mode_lamp(mode, 'off')
-		self.drive_mode_lamp('mystery', 'off')
-		
-		for judge in self.judges_not_attempted:
-			self.game.coils['flasher' + judge].disable()
-
-		# disable auto-plunging for the start of ball - Force player to hit the
-		# right Fire button.
-		self.auto_plunge = 0
-		self.tilt = False
-		self.info_on = False
-		self.skill_shot_added = False
-		self.outer_loop_active = False
-		self.inner_loop_active = False
-		self.intro_playing = False
 
 	def reset_modes(self):
 		self.modes_attempted = []
@@ -121,26 +80,22 @@ class JD_Modes(modes.Scoring_Mode):
 		self.game.update_lamps()
 
 	def mode_started(self):
+		# disable auto-plunging for the start of ball - Force player to hit the
+		# right Fire button.
+		self.auto_plunge = 0
+		self.tilt = False
+		self.info_on = False
+		self.skill_shot_added = False
+		self.outer_loop_active = False
+		self.inner_loop_active = False
+		self.intro_playing = False
+		self.mode_active = False
+
 		# Make sure GIs are on.
 		self.game.lamps.gi01.pulse(0)
 		self.game.lamps.gi02.pulse(0)
 		self.game.lamps.gi03.pulse(0)
 		self.game.lamps.gi04.pulse(0)
-
-		# Set up a mode list dictionary using mode names as keys for easy access.
-		self.mode_list['pursuit'] = self.mode_pursuit
-		self.mode_list['blackout'] = self.mode_blackout
-		self.mode_list['sniper'] = self.mode_sniper
-		self.mode_list['battleTank'] = self.mode_battleTank
-		self.mode_list['impersonator'] = self.mode_impersonator
-		self.mode_list['meltdown'] = self.mode_meltdown
-		self.mode_list['safecracker'] = self.mode_safecracker
-		self.mode_list['manhunt'] = self.mode_manhunt
-		self.mode_list['stakeout'] = self.mode_stakeout
-		for mode in self.mode_list:
-			self.mode_list[mode].callback = self.mode_over
-		self.ultimate_challenge.callback = self.mode_over
-		self.crimescenes.light_extra_ball_function = self.light_extra_ball
 
 		# Add modes that are always active
 		self.game.modes.add(self.crimescenes)
@@ -212,9 +167,9 @@ class JD_Modes(modes.Scoring_Mode):
 		p.setState('num_extra_mode_balls', self.num_extra_mode_balls)
 		p.setState('num_hurryups_collected', self.num_hurryups_collected)
 		p.setState('mystery_lit', self.mystery_lit)
+		p.setState('best_inner_loops', self.best_inner_loops)
+		p.setState('best_outer_loops', self.best_outer_loops)
 		p.setState('missile_award_lit', self.missile_award_lit or self.missile_award_lit_save)
-		p.setState('inner_loops', self.inner_loops_hit)
-		p.setState('outer_loops', self.outer_loops_hit)
 		p.setState('bonus_x', self.bonus_x if self.hold_bonus_x else 1)
 		
 		self.crimescenes.save_player_state()
@@ -241,15 +196,22 @@ class JD_Modes(modes.Scoring_Mode):
 		self.num_extra_mode_balls = p.getState('num_extra_mode_balls', 0)
 		self.num_hurryups_collected = p.getState('num_hurryups_collected', 0)
 		self.mystery_lit = p.getState('mystery_lit', False)
+		self.best_inner_loops = p.getState('best_inner_loops', 0)
+		self.best_outer_loops = p.getState('best_outer_loops', 0)
 		self.missile_award_lit = p.getState('missile_award_lit', False)
-		self.inner_loops_hit = p.getState('inner_loops', 0)
-		self.outer_loops_hit = p.getState('outer_loops', 0)
 		self.bonus_x = p.getState('bonus_x', 1)
 
 		self.crimescenes.restore_player_state()
 		self.ultimate_challenge.restore_player_state()
 		self.missile_award_mode.restore_player_state()
 		self.multiball.restore_player_state()
+		
+		self.inner_loop_combos = 0
+		self.outer_loop_combos = 0
+		self.missile_award_lit_save = False
+						
+		for judge in self.judges_not_attempted:
+			self.game.coils['flasher' + judge].disable()
 
 	def ball_drained(self):
 		# Called as a result of a ball draining into the trough.
@@ -342,15 +304,11 @@ class JD_Modes(modes.Scoring_Mode):
 			self.high_priority_animation.play(anim, repeat, hold, frame_time)
 
 	def update_lamps(self):
-		if self.game.current_player().extra_balls > 0:
-			self.drive_mode_lamp('judgeAgain', 'on')
-		else:
-			self.drive_mode_lamp('judgeAgain', 'off')
+		style = 'on' if self.game.current_player().extra_balls > 0 else 'off'
+		self.drive_mode_lamp('judgeAgain', style)
 
-		if self.extra_balls_lit == 0:
-			self.drive_mode_lamp('extraBall2','off')
-		else:
-			self.drive_mode_lamp('extraBall2','slow')
+		style = 'off' if self.extra_balls_lit == 0 else 'slow'
+		self.drive_mode_lamp('extraBall2', style)
 
 		if self.state != 'ultimate_challenge':
 			for mode in self.modes_not_attempted:
@@ -374,41 +332,27 @@ class JD_Modes(modes.Scoring_Mode):
 			if not self.any_mb_active() and not self.intro_playing:
 				self.game.lamps.rightStartFeature.schedule(schedule=0x00ff00ff, cycle_seconds=0, now=True)
 
-		if self.mystery_lit:
-			self.drive_mode_lamp('mystery', 'on')
-		else:
-			self.drive_mode_lamp('mystery', 'off')
+		style = 'on' if self.mystery_lit else 'off'
+		self.drive_mode_lamp('mystery', style)
 
-		if self.missile_award_lit:
-			self.drive_mode_lamp('airRaid', 'medium')
-		else:
-			self.drive_mode_lamp('airRaid', 'off')
+		style = 'medium' if self.missile_award_lit else 'off'
+		self.drive_mode_lamp('airRaid', style)
 
 		if self.extra_balls_lit > 0:
 			self.enable_extra_ball_lamp()
 
 		if self.state != 'ultimate_challenge':
-			if self.inner_loop_active:
-				self.game.lamps.perp2W.schedule(schedule=0x00ff00ff, cycle_seconds=0, now=True)
-				self.game.lamps.perp2R.schedule(schedule=0x00ff00ff, cycle_seconds=0, now=True)
-				self.game.lamps.perp2Y.schedule(schedule=0x00ff00ff, cycle_seconds=0, now=True)
-				self.game.lamps.perp2G.schedule(schedule=0x00ff00ff, cycle_seconds=0, now=True)
-			else:
-				self.game.lamps.perp2W.disable()
-				self.game.lamps.perp2R.disable()
-				self.game.lamps.perp2Y.disable()
-				self.game.lamps.perp2G.disable()
+			style = 'slow' if self.inner_loop_active else 'off'
+			self.drive_mode_lamp('perp2W', style)
+			self.drive_mode_lamp('perp2R', style)
+			self.drive_mode_lamp('perp2Y', style)
+			self.drive_mode_lamp('perp2G', style)
 
-			if self.outer_loop_active:
-				self.game.lamps.perp4W.schedule(schedule=0x00ff00ff, cycle_seconds=0, now=True)
-				self.game.lamps.perp4R.schedule(schedule=0x00ff00ff, cycle_seconds=0, now=True)
-				self.game.lamps.perp4Y.schedule(schedule=0x00ff00ff, cycle_seconds=0, now=True)
-				self.game.lamps.perp4G.schedule(schedule=0x00ff00ff, cycle_seconds=0, now=True)
-			else:
-				self.game.lamps.perp4W.disable()
-				self.game.lamps.perp4R.disable()
-				self.game.lamps.perp4Y.disable()
-				self.game.lamps.perp4G.disable()
+			style = 'slow' if self.outer_loop_active else 'off'
+			self.drive_mode_lamp('perp4W', style)
+			self.drive_mode_lamp('perp4R', style)
+			self.drive_mode_lamp('perp4Y', style)
+			self.drive_mode_lamp('perp4G', style)
 
 		if self.state == 'pre_ultimate_challenge':
 			self.game.lamps.dropTargetJ.disable()
@@ -432,9 +376,9 @@ class JD_Modes(modes.Scoring_Mode):
 	def drive_mode_lamp(self, lamp_name, style='on'):
 		if style == 'slow':
 			self.game.lamps[lamp_name].schedule(schedule=0x00ff00ff, cycle_seconds=0, now=True)
-		if style == 'medium':
+		elif style == 'medium':
 			self.game.lamps[lamp_name].schedule(schedule=0x0f0f0f0f, cycle_seconds=0, now=True)
-		if style == 'fast':
+		elif style == 'fast':
 			self.game.lamps[lamp_name].schedule(schedule=0x55555555, cycle_seconds=0, now=True)
 		elif style == 'on':
 			self.game.lamps[lamp_name].pulse(0)
@@ -453,23 +397,19 @@ class JD_Modes(modes.Scoring_Mode):
 		self.game.modes.add(self.info)
 
 	def get_info_layers(self):
-		self.title_layer_0 = dmd.TextLayer(128/2, 9, self.game.fonts['tiny7'], "center").set_text('Extra Balls:')
-		self.value_0_layer = dmd.TextLayer(128/2, 19, self.game.fonts['tiny7'], "center").set_text(str(self.game.current_player().extra_balls))
-		self.layer_0 = dmd.GroupedLayer(128, 32, [self.title_layer_0, self.value_0_layer])
+		title_layer_0 = dmd.TextLayer(128/2, 9, self.game.fonts['tiny7'], "center").set_text('Extra Balls:')
+		value_0_layer = dmd.TextLayer(128/2, 19, self.game.fonts['tiny7'], "center").set_text(str(self.game.current_player().extra_balls))
+		layer_0 = dmd.GroupedLayer(128, 32, [title_layer_0, value_0_layer])
 
-		self.title_layer_1a = dmd.TextLayer(128/2, 9, self.game.fonts['tiny7'], "center").set_text('Modes attempted: ' + str(len(self.modes_attempted)) + '/' + str(len(self.modes_attempted) + len(self.modes_not_attempted)))
-		self.title_layer_1b = dmd.TextLayer(128/2, 19, self.game.fonts['tiny7'], "center").set_text('Modes completed: ' + str(len(self.modes_completed)) + '/' + str(len(self.modes_attempted)))
-		self.layer_1 = dmd.GroupedLayer(128, 32, [self.title_layer_1a, self.title_layer_1b])
+		title_layer_1a = dmd.TextLayer(128/2, 9, self.game.fonts['tiny7'], "center").set_text('Modes attempted: ' + str(len(self.modes_attempted)) + '/' + str(len(self.modes_attempted) + len(self.modes_not_attempted)))
+		title_layer_1b = dmd.TextLayer(128/2, 19, self.game.fonts['tiny7'], "center").set_text('Modes completed: ' + str(len(self.modes_completed)) + '/' + str(len(self.modes_attempted)))
+		layer_1 = dmd.GroupedLayer(128, 32, [title_layer_1a, title_layer_1b])
 
-		return [self.layer_0, self.layer_1]
+		return [layer_0, layer_1]
 
 	def info_callback(self):
 		self.game.modes.remove(self.info)
 		self.info_on = False
-
-	####################################################
-	# End Info
-	####################################################
 
 	####################################################
 	# Switch Handlers
@@ -491,38 +431,36 @@ class JD_Modes(modes.Scoring_Mode):
 	def sw_topRightOpto_active(self, sw):
 		#See if ball came around inner left loop
 		if self.game.switches.topCenterRollover.time_since_change() < 1.5:
+			self.inner_loop_active = True
 			self.game.sound.play('inner_loop')
 			self.inner_loop_combos += 1
-			if self.inner_loop_combos > self.game.current_player().inner_loops:
-				self.game.current_player().inner_loops = self.inner_loop_combos
-			self.inner_loops_hit += 1
+			if self.inner_loop_combos > self.best_inner_loops:
+				self.best_inner_loops = self.inner_loop_combos
 			score = 10000 * (self.inner_loop_combos)
 			self.game.score(score)
-			self.cancel_delayed('inner_loop')
-			self.delay(name='inner_loop', event_type=None, delay=3.0, handler=self.inner_loop_combo_handler )
 			self.show_on_display('inner loop: ' + str(self.inner_loop_combos), score, 'mid')
 			anim = self.game.animations['bike_across_screen']
 			self.play_animation(anim, 'mid', repeat=False, hold=False, frame_time=3)
-			self.inner_loop_active = True
 			self.game.update_lamps()
+			self.cancel_delayed('inner_loop')
+			self.delay(name='inner_loop', event_type=None, delay=3.0, handler=self.inner_loop_combo_expired )
 
 	def sw_leftRollover_active(self, sw):
 		#See if ball came around right loop
 		if self.game.switches.topRightOpto.time_since_change() < 1:
+			self.outer_loop_active = True
 			self.game.sound.play('outer_loop')
-			self.outer_loops_hit += 1
-			if self.outer_loop_combos > self.game.current_player().outer_loops:
-				self.game.current_player().outer_loops = self.outer_loop_combos
 			self.outer_loop_combos += 1
+			if self.outer_loop_combos > self.best_outer_loops:
+				self.best_outer_loops = self.outer_loop_combos
 			score = 1000 * (self.outer_loop_combos)
 			self.game.score(score)
-			self.cancel_delayed('outer_loop')
-			self.delay(name='outer_loop', event_type=None, delay=3.0, handler=self.outer_loop_combo_handler )
 			self.show_on_display('outer loop: ' + str(self.outer_loop_combos), score, 'mid')
-			self.outer_loop_active = True
 			anim = self.game.animations['bike_across_screen']
 			self.play_animation(anim, 'mid', repeat=False, hold=False, frame_time=3)
 			self.game.update_lamps()
+			self.cancel_delayed('outer_loop')
+			self.delay(name='outer_loop', event_type=None, delay=3.0, handler=self.outer_loop_combo_expired )
 
 	def sw_dropTargetJ_active(self, sw):
 		self.game.sound.play('drop_target')
@@ -717,16 +655,13 @@ class JD_Modes(modes.Scoring_Mode):
 		else:
 			self.game.sound.play_voice('curse')
 
-	# Enable auto-plunge as soon as the new ball is launched (by the player).
 	def sw_shooterR_inactive_for_300ms(self,sw):
 		self.game.sound.play('ball_launch')
-
-		if self.ball_starting:
-			self.game.ball_save.callback = self.ball_save_callback
 
 		anim = self.game.animations['bikeacrosscity']
 		self.play_animation(anim, 'high', repeat=False, hold=False, frame_time=5)
 
+	# Enable auto-plunge soon after the new ball is launched (by the player).
 	def sw_shooterR_inactive_for_1s(self,sw):
 		self.auto_plunge = 1
 
@@ -770,18 +705,18 @@ class JD_Modes(modes.Scoring_Mode):
 		if self.game.ball == self.game.balls_per_game:
 			if self.replay.replay_achieved[0]:
 				text = 'Highest Score'
-				score = str(self.game.game_data['ClassicHighScoreData'][0]['inits']) + locale.format("%d",self.game.game_data['ClassicHighScoreData'][0]['score'],True)
+				score = str(self.game.game_data['ClassicHighScoreData'][0]['inits']) + locale.format("  %d",self.game.game_data['ClassicHighScoreData'][0]['score'],True)
 			else:
 				text = 'Replay'
 				score = locale.format("%d",self.replay.replay_scores[0],True)
 			self.show_on_display(text, score, 'high')
 
-	def inner_loop_combo_handler(self):
+	def inner_loop_combo_expired(self):
 		self.inner_loop_combos = 0
 		self.inner_loop_active = False
 		self.game.update_lamps()
 
-	def outer_loop_combo_handler(self):
+	def outer_loop_combo_expired(self):
 		self.outer_loop_combos = 0
 		self.outer_loop_active = False
 		self.game.update_lamps()
@@ -803,7 +738,8 @@ class JD_Modes(modes.Scoring_Mode):
 		self.game.coils.knocker.pulse(50)
 		if award == 'Extra Ball':
 			self.award_extra_ball()
-		self.show_on_display('Replay', None, 'mid')
+		else:
+			self.show_on_display('Replay', None, 'mid')
 
 	def award_selection_award(self, award):
 		#self.game.modes.remove(self.award_selection)
@@ -834,9 +770,12 @@ class JD_Modes(modes.Scoring_Mode):
 		self.popperR_eject()
 
 		if self.state == 'idle':
-			self.mode_list[self.mode].play_music()
-			self.game.modes.remove(self.play_intro)
-			# Pause multibal drop target mode if this mode uses the drop targets.
+			# Change state to indicate a mode is in progress.
+			self.state = 'mode'
+			this_mode = self.mode_list[self.mode]
+			this_mode.play_music()
+			
+			# Pause multiball drop target mode if this mode uses the drop targets
 			if self.mode == 'impersonator' or self.mode == 'safecracker':
 				self.multiball.drops.paused = True
 
@@ -846,16 +785,13 @@ class JD_Modes(modes.Scoring_Mode):
 			self.modes_attempted.append(self.mode)
 			self.modes_just_attempted.append(self.mode)
 
-			# Change state to indicate a mode is in progress.
-			self.state = 'mode'
-
-			self.game.modes.add(self.mode_list[self.mode])
+			# Add the mode to the mode Q to activate it.
+			self.game.modes.remove(self.play_intro)
+			self.game.modes.add(this_mode)
 
 			# Start the mode timer
 			mode_time = self.game.user_settings['Gameplay']['Time per chain feature']
-			# Add the mode to the mode Q to activate it.
-			self.mode_list[self.mode].start(mode_time)
-
+			this_mode.start(mode_time)
 			self.mode_active = True
 
 			# See if any extra mode balls need to be launched.
@@ -871,20 +807,18 @@ class JD_Modes(modes.Scoring_Mode):
 				self.missile_award_lit = False
 
 		elif self.state == 'pre_ultimate_challenge':
-			self.game.modes.remove(self.play_ult_intro)
-			# Disable missile award.  Save it so it can be reactivate later.
-
+			# Change state to indicate ultimate challenge is active
+			self.state = 'ultimate_challenge'
 			self.mystery_lit = False
 
+			# Disable missile award.  Save it so it can be reactivate later.
 			if self.missile_award_lit:
 				#self.missile_award_lit_save = True
 				self.missile_award_lit = False
 				self.drive_mode_lamp('airRaid', 'off')
 
-			# Change state to indicate ultimate challenge is active
-			self.state = 'ultimate_challenge'
-
 			# Start ultimate challenge!
+			self.game.modes.remove(self.play_ult_intro)
 			self.game.modes.add(self.ultimate_challenge)
 			self.ultimate_challenge.begin()
 
@@ -904,7 +838,7 @@ class JD_Modes(modes.Scoring_Mode):
 
 	def multiball_started(self):
 		# Make sure no other multiball was already active before
-		# preparing for MB.
+		# preparing for multiball.
 		if not (self.multiball.is_active() and self.crimescenes.is_mb_active()):
 			self.game.sound.fadeout_music()
 			self.game.sound.play_music('multiball', loops=-1)
@@ -951,10 +885,10 @@ class JD_Modes(modes.Scoring_Mode):
 		if self.state == 'ultimate_challenge':
 			self.ultimate_challenge_complete()	
 		else:
-			self.game.modes.remove(self.mode_list[self.mode])
-			self.mode_list[self.mode].stop()
-			self.mode_active = False
 			this_mode = self.mode_list[self.mode]
+			self.game.modes.remove(this_mode)
+			this_mode.stop()
+			self.mode_active = False
 			success = this_mode.completed
 			if self.state == 'mode':
 				self.mode_complete(success)	
@@ -980,16 +914,14 @@ class JD_Modes(modes.Scoring_Mode):
 				self.state = 'idle'
 				self.setup_next_mode()
 			else:
-				# No more modes.  Set it to something that
-				# is unused.
+				# No more modes. Set it to something that is unused.
 				self.state = 'modes_complete'
 		elif len(self.modes_not_attempted) > 0:
-			# Set to idle while in MB.  setup_next_mode() will
-			# be called when MB completes.
+			# Set to idle while in multiball.
+			# setup_next_mode() will be called when multiball completes.
 			self.state = 'idle'
 		else:
-			# No more modes.  Set it to something that
-			# is unused.
+			# No more modes. Set it to something that is unused.
 			self.state = 'modes_complete'
 
 	def crimescenes_completed(self):
@@ -997,7 +929,7 @@ class JD_Modes(modes.Scoring_Mode):
 			self.setup_ultimate_challenge()
 
 	def is_ultimate_challenge_ready(self):
-			# 3 Criteria for finale: jackpot, crimescenes, all modes attempted.
+		# 3 Criteria for finale: jackpot, crimescenes, all modes attempted.
 		return self.multiball.jackpot_collected and \
 				self.crimescenes.complete and \
 				len(self.modes_not_attempted) == 0
@@ -1008,10 +940,10 @@ class JD_Modes(modes.Scoring_Mode):
 	def mode_complete(self, successful=False):
 		self.multiball.drops.paused = False
 
-		# Success: Add to success list and start hurryup
 		if successful:
-			self.game.modes.add(self.mode_completed_hurryup)
+			# Add to success list and start hurryup
 			self.modes_completed.append(self.mode)
+			self.game.modes.add(self.mode_completed_hurryup)
 			self.num_modes_completed += 1
 		else:
 			# See if it's time for the finale!
@@ -1023,14 +955,13 @@ class JD_Modes(modes.Scoring_Mode):
 				self.state = 'idle'
 				self.setup_next_mode()
 			else:
-				# No more modes.  Set it to something that
-				# is unused.
+				# No more modes. Set it to something that is unused.
 				self.state = 'modes_complete'
 
 		# Turn on mode lamp to show it has been attempted
 		self.drive_mode_lamp(self.mode, 'on')
 
-		# Reset the drop targes if the mode just ending used them.
+		# Reset the drop targets if the mode just ending used them.
 		if self.mode == 'impersonator' or self.mode == 'safecracker':
 			self.multiball.drops.animated_reset(.1)
 

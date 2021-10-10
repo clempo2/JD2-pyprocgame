@@ -1,11 +1,11 @@
 from procgame import *
+import random
 
 class MissileAwardMode(game.Mode):
 	"""Choose an award while the ball sits in the left shooter lane"""
 	
 	def __init__(self, game, priority, font):
 		super(MissileAwardMode, self).__init__(game, priority)
-		self.font = font
 		self.title_layer = dmd.TextLayer(128/2, 7, font, "center")
 		self.element_layer = dmd.TextLayer(128/2, 15, font, "center")
 		self.value_layer = dmd.TextLayer(128/2, 22, font, "center")
@@ -58,7 +58,7 @@ class MissileAwardMode(game.Mode):
 			self.awards_remaining[self.award_ptr_adj] = str(10000*(self.award_ptr_adj + 1)) + ' Points'
 		
 	def rotate_awards(self):
-		self.award_ptr += randint(0,4)
+		self.award_ptr += random.randint(0,4)
 		self.award_ptr_adj = self.award_ptr% len(self.awards_remaining)
 		self.current_award = self.awards_remaining[self.award_ptr_adj]
 		self.value_layer.set_text(self.current_award)
