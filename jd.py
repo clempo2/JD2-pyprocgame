@@ -695,11 +695,8 @@ class BaseGameMode(game.Mode):
 		self.game.coils.flasherPursuitL.schedule(0x00001010, cycle_seconds=1, now=False)
 		self.game.coils.flasherPursuitR.schedule(0x00000101, cycle_seconds=1, now=False)
 
-		# Turn on the GIs
-		self.game.lamps.gi01.pulse(0)
-		self.game.lamps.gi02.pulse(0)
-		self.game.lamps.gi03.pulse(0)
-		self.game.lamps.gi04.pulse(0)
+		# Turn on all GIs
+		self.game.update_gi(True)
 
 		# Enable the flippers
 		self.game.enable_flippers(enable=True)
@@ -1200,6 +1197,13 @@ class JDGame(game.BasicGame):
 	def enable_flippers(self, enable=True):
 		super(JDGame, self).enable_flippers(enable)
 		self.flipper_workaround_mode.enable_flippers(enable)
+		
+	def update_gi(self, on):
+		for gi in ['gi01', 'gi02', 'gi03', 'gi04', 'gi05']:
+			if on:
+				self.lamps[gi].pulse(0)
+			else:
+				self.lamps[gi].disable()
 		
 def main():
 	game = None

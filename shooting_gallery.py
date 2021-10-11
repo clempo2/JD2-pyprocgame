@@ -17,13 +17,13 @@ class ShootingGallery(game.Mode):
 	def mode_started(self):
 		self.gallery_index = 0
 		self.scope_pos = 0
-		self.states = ['empty', 'empty', 'empty', 'empty']
+		self.targets = ['empty', 'empty', 'empty', 'empty']
 		self.num_enemies = 0
 		self.num_enemies_old = 0
 		self.num_enemies_shot = 0
 		self.speed_factor = 1
 
-		self.mode = 'active'
+		self.state = 'active'
 		self.success = False
 
 		self.intro_active = True
@@ -111,14 +111,14 @@ class ShootingGallery(game.Mode):
 			if self.speed_factor < 5 and self.num_enemies % 4 == 3 and self.num_enemies != self.num_enemies_old:
 				self.speed_factor += 1
 				self.num_enemies_old = self.num_enemies
-			if self.mode == 'active':
+			if self.state == 'active':
 				target_index = random.randint(0,3)
 				target_type = random.randint(0,1)
 		
 				# Find the first empty position starting with the random target_index.
 				for i in range(0,3):
 					position = (i+target_index)%4
-					if self.states[position] == 'empty':
+					if self.targets[position] == 'empty':
 						if target_type:
 							self.show_enemy(position, -1)
 						else:
@@ -130,7 +130,7 @@ class ShootingGallery(game.Mode):
 				self.delay(name='add', event_type=None, delay=2.0-(self.speed_factor*0.3), handler=self.add_target)
 
 	def finish(self):
-		self.mode = 'complete'
+		self.state = 'complete'
 		self.status_layer.set_text("Completed!")
 		self.instruction_layer_21.set_text("Completion Bonus:")
 		self.instruction_layer_22.set_text(str(100000))
@@ -160,8 +160,8 @@ class ShootingGallery(game.Mode):
 	def remove_target(self, position):
 		# Only remove if it hasn't been shot.  
 		# If it has been shot, it will be removed later.
-		if self.states[position] != 'shot' and self.mode == 'active':
-			self.states[position] = 'empty'
+		if self.targets[position] != 'shot' and self.state == 'active':
+			self.targets[position] = 'empty'
 			self.pos_layers[position].transition.in_out = 'out'
 			self.pos_layers[position].transition.start()
 			#self.pos_layers[position].frame = None
@@ -174,7 +174,7 @@ class ShootingGallery(game.Mode):
 				target_index = random.randint(6,11)
 
 		self.show_target(position, target_index)
-		self.states[position] = 'friend'
+		self.targets[position] = 'friend'
 	
 	def show_enemy(self, position, target_index=-1):
 		self.num_enemies += 1
@@ -185,7 +185,7 @@ class ShootingGallery(game.Mode):
 				target_index = random.randint(0,5)
 
 		self.show_target(position, target_index)
-		self.states[position] = 'enemy'
+		self.targets[position] = 'enemy'
 
 	def show_target(self, position, target_index):
 		new_frame = dmd.Frame(128,32)		
@@ -201,7 +201,7 @@ class ShootingGallery(game.Mode):
 		if self.intro_active:
 			if self.game.switches.flipperLwR.is_active():
 				self.layer.force_next(True)
-		elif self.mode == 'active':
+		elif self.state == 'active':
 			if self.scope_pos != 0:
 				self.scope_pos -= 1
 			self.update_scope_pos()
@@ -210,7 +210,7 @@ class ShootingGallery(game.Mode):
 		if self.intro_active:
 			if self.game.switches.flipperLwL.is_active():
 				self.layer.force_next(True)	
-		elif self.mode == 'active':
+		elif self.state == 'active':
 			if self.scope_pos != 3:
 				self.scope_pos += 1
 			self.update_scope_pos()
@@ -228,15 +228,15 @@ class ShootingGallery(game.Mode):
 
 	def shoot(self):
 		self.shot_layers[self.scope_pos].frame = self.scope_and_shot_anim.frames[self.scope_pos + 4]
-		if self.states[self.scope_pos] == 'enemy':
+		if self.targets[self.scope_pos] == 'enemy':
 			self.delay(name='enemy_shot', event_type=None, delay=1.5, handler=self.enemy_shot, param=self.scope_pos)
-			self.states[self.scope_pos] = 'shot'
+			self.targets[self.scope_pos] = 'shot'
 			self.result_layer.set_text("Good Shot",1)
 			self.num_enemies_shot += 1
 			self.game.sound.play('bad guy shot')
-		elif self.states[self.scope_pos] == 'empty':
+		elif self.targets[self.scope_pos] == 'empty':
 			self.delay(name='empty_shot', event_type=None, delay=0.5, handler=self.empty_shot, param=self.scope_pos)
-		elif self.states[self.scope_pos] == 'friend':
+		elif self.targets[self.scope_pos] == 'friend':
 			self.friend_shot(self.scope_pos)
 
 	def enemy_shot(self, position):
@@ -245,7 +245,7 @@ class ShootingGallery(game.Mode):
 		self.delay(name='enemy_remove', event_type=None, delay=1, handler=self.enemy_remove, param=position)
 
 	def enemy_remove(self, position):
-		self.states[position] = 'empty'
+		self.targets[position] = 'empty'
 		self.pos_layers[position].frame = None
 		self.shot_layers[position].frame = None
 		self.pos_layers[position].blink_frames = 0
@@ -253,7 +253,7 @@ class ShootingGallery(game.Mode):
 
 	def friend_shot(self, position):
 		self.game.sound.play('good guy shot')
-		self.mode = 'complete'
+		self.state = 'complete'
 		self.status_layer.set_text("Failed!")
 		self.cancel_delayed('empty_shot')
 		self.cancel_delayed('enemy_shot')
@@ -266,5 +266,5 @@ class ShootingGallery(game.Mode):
 
 	def empty_shot(self, position):
 		# Make sure it's still empty
-		if self.states[position] == 'empty':
+		if self.targets[position] == 'empty':
 			self.shot_layers[position].frame = None

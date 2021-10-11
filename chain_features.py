@@ -122,30 +122,21 @@ class PlayIntro(game.Mode):
 	def mode_started(self):
 		self.frame_counter = 0
 		self.next_frame()
-		self.update_gi(False, 'all')
+		self.game.update_gi(False)
 		# Disable the flippers
 		self.game.enable_flippers(enable=False)
 
 	def mode_stopped(self):
 		self.cancel_delayed('intro')
-		self.update_gi(True, 'all')
+		self.game.update_gi(True)
 		# Enable the flippers
 		self.game.enable_flippers(enable=True)
 
-	def setup(self, mode, exit_function, exit_function_param, instruction_layers):
+	def setup(self, exit_function, exit_function_param, instruction_layers):
 		self.exit_function = exit_function
 		self.exit_function_param = exit_function_param
-		self.mode = mode
 		self.instruction_layers = instruction_layers
 		self.layer = dmd.GroupedLayer(128, 32, self.instruction_layers[0])
-
-	def update_gi(self, on, num):
-		for i in range(1,5):
-			if num == 'all' or num == i:
-				if on:
-					self.game.lamps['gi0' + str(i)].pulse(0)
-				else:
-					self.game.lamps['gi0' + str(i)].disable()
 
 	def sw_flipperLwL_active(self, sw):
 		if self.game.switches.flipperLwR.is_active():
@@ -168,10 +159,11 @@ class PlayIntro(game.Mode):
 
 class ChainFeature(modes.Scoring_Mode, ModeTimer):
 	"""Base class for the chain modes"""
-	def __init__(self, game, priority, name):
+	def __init__(self, game, priority, name, lamp_name):
 		super(ChainFeature, self).__init__(game, priority)
 		self.completed = False
 		self.name = name
+		self.lamp_name = lamp_name
 		self.countdown_layer = dmd.TextLayer(127, 1, self.game.fonts['tiny7'], "right")
 		self.name_layer = dmd.TextLayer(1, 1, self.game.fonts['tiny7'], "left").set_text(name)
 		self.score_layer = dmd.TextLayer(128/2, 10, self.game.fonts['num_14x10'], "center")
@@ -211,7 +203,7 @@ class ChainFeature(modes.Scoring_Mode, ModeTimer):
 class Pursuit(ChainFeature):
 	"""Pursuit chain mode"""
 	def __init__(self, game, priority):
-		super(Pursuit, self).__init__(game, priority, 'Pursuit')
+		super(Pursuit, self).__init__(game, priority, 'Pursuit', 'pursuit')
 		self.shots_required_for_completion = self.get_difficulty({'easy':3, 'medium':4, 'hard':5})
 
 	def mode_started(self):
@@ -280,7 +272,7 @@ class Pursuit(ChainFeature):
 class Blackout(ChainFeature):
 	"""Blackout chain mode"""
 	def __init__(self, game, priority):
-		super(Blackout, self).__init__(game, priority, 'Blackout')
+		super(Blackout, self).__init__(game, priority, 'Blackout', 'blackout')
 		self.shots_required_for_completion = self.get_difficulty({'easy':2, 'medium':2, 'hard':3})
 
 	def mode_started(self):
@@ -297,16 +289,11 @@ class Blackout(ChainFeature):
 	def mode_stopped(self):
 		self.game.lamps.blackoutJackpot.disable()
 		self.game.coils.flasherBlackout.disable()
-		self.game.lamps.gi01.pulse(0)
-		self.game.lamps.gi02.pulse(0)
-		self.game.lamps.gi03.pulse(0)
-		self.game.lamps.gi04.pulse(0)
+		self.game.update_gi(True)
 
 	def update_lamps(self):
-		self.game.lamps.gi01.disable()
-		self.game.lamps.gi02.disable()
-		self.game.lamps.gi03.disable()
-		self.game.lamps.gi04.disable()
+		self.game.update_gi(False) # disable all gi except gi05
+		self.game.lamps.gi05.pulse(0)
 		self.game.lamps.blackoutJackpot.schedule(schedule=0x000F000F, cycle_seconds=0, now=True)
 
 	def sw_centerRampExit_active(self, sw):
@@ -337,7 +324,7 @@ class Blackout(ChainFeature):
 class Sniper(ChainFeature):
 	"""Sniper chain mode"""
 	def __init__(self, game, priority):
-		super(Sniper, self).__init__(game, priority, 'Sniper')
+		super(Sniper, self).__init__(game, priority, 'Sniper', 'sniper')
 		self.shots_required_for_completion = self.get_difficulty({'easy':2, 'medium':2, 'hard':3})
 
 		self.countdown_layer = dmd.TextLayer(127, 1, self.game.fonts['tiny7'], "right")
@@ -401,7 +388,7 @@ class Sniper(ChainFeature):
 class BattleTank(ChainFeature):
 	"""Battle tank chain mode"""
 	def __init__(self, game, priority):
-		super(BattleTank, self).__init__(game, priority, 'Battle Tank')
+		super(BattleTank, self).__init__(game, priority, 'Battle Tank', 'battleTank')
 
 		self.num_shots = 0
 
@@ -477,7 +464,7 @@ class BattleTank(ChainFeature):
 class Meltdown(ChainFeature):
 	"""Meltdown chain mode"""
 	def __init__(self, game, priority):
-		super(Meltdown, self).__init__(game, priority, 'Meltdown')
+		super(Meltdown, self).__init__(game, priority, 'Meltdown', 'meltdown')
 		self.shots_required_for_completion = self.get_difficulty({'easy':3, 'medium':4, 'hard':5})
 
 	def mode_started(self):
@@ -539,7 +526,7 @@ class Meltdown(ChainFeature):
 class Impersonator(ChainFeature):
 	"""Bad impersonator chain mode"""
 	def __init__(self, game, priority):
-		super(Impersonator, self).__init__(game, priority, 'Impersonator')
+		super(Impersonator, self).__init__(game, priority, 'Impersonator', 'impersonator')
 		self.shots_required_for_completion = self.get_difficulty({'easy':3, 'medium':5, 'hard':7})
 		self.sound_active = False
 
@@ -681,7 +668,7 @@ class Impersonator(ChainFeature):
 class Safecracker(ChainFeature):
 	"""Safecracker chain mode"""
 	def __init__(self, game, priority):
-		super(Safecracker, self).__init__(game, priority, 'Safe Cracker')
+		super(Safecracker, self).__init__(game, priority, 'Safe Cracker', 'safecracker')
 		self.shots_required_for_completion = self.get_difficulty({'easy':2, 'medium':3, 'hard':4})
 		time = random.randint(10,20)
 		self.delay(name='bad guys', event_type=None, delay=time, handler=self.bad_guys)
@@ -750,7 +737,7 @@ class Safecracker(ChainFeature):
 class ManhuntMillions(ChainFeature):
 	"""ManhuntMillions chain mode"""
 	def __init__(self, game, priority):
-		super(ManhuntMillions, self).__init__(game, priority, 'Manhunt')
+		super(ManhuntMillions, self).__init__(game, priority, 'Manhunt', 'manhunt')
 		self.shots_required_for_completion = self.get_difficulty({'easy':2, 'medium':3, 'hard':4})
 
 	def mode_started(self):
@@ -806,7 +793,7 @@ class ManhuntMillions(ChainFeature):
 class Stakeout(ChainFeature):
 	"""Stakeout chain mode"""
 	def __init__(self, game, priority):
-		super(Stakeout, self).__init__(game, priority, 'Stakeout')
+		super(Stakeout, self).__init__(game, priority, 'Stakeout', 'stakeout')
 		self.shots_required_for_completion = self.get_difficulty({'easy':3, 'medium':4, 'hard':5})
 
 	def mode_started(self):

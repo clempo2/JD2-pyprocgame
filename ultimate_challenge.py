@@ -137,16 +137,12 @@ class UltimateIntro(game.Mode):
 
 	def mode_started(self):
 		self.game.sound.stop_music()
-		self.update_gi(False, 'all')
+		self.game.update_gi(False, 'all')
 		# Disable the flippers
 		self.game.enable_flippers(enable=False)
 		self.game.lamps.rightStartFeature.disable()
 		self.game.lamps.ultChallenge.pulse(0)
 		# Leave GI off for Ultimate Challenge
-		#self.game.lamps.gi01.disable()
-		#self.game.lamps.gi02.disable()
-		#self.game.lamps.gi03.disable()
-		#self.game.lamps.gi04.disable()
 		self.game.lamps.dropTargetJ.disable()
 		self.game.lamps.dropTargetU.disable()
 		self.game.lamps.dropTargetD.disable()
@@ -164,7 +160,6 @@ class UltimateIntro(game.Mode):
 	def mode_stopped(self):
 		self.cancel_delayed('intro')
 		# Leave GI off for Ultimate Challenge
-		# self.update_gi(True, 'all')
 		self.game.enable_flippers(enable=True)
 
 	def setup(self, stage, exit_function):
@@ -257,14 +252,6 @@ Normal play resumes when only 1 ball remains.
 	def sw_flipperLwR_active(self, sw):
 		if self.game.switches.flipperLwL.is_active():
 			self.finish()
-
-	def update_gi(self, on, num):
-		for i in range(1,5):
-			if num == 'all' or num == i:
-				if on:
-					self.game.lamps['gi0' + str(i)].pulse(0)
-				else:
-					self.game.lamps['gi0' + str(i)].disable()
 
 
 class Fire(modes.Scoring_Mode):
@@ -1057,7 +1044,7 @@ class Celebration(modes.Scoring_Mode):
 	def mode_stopped(self):
 		self.game.coils.flasherDeath.disable()
 		for lamp in self.game.lamps:
-			if lamp.name.find('gi0', 0) != -1:
+			if lamp.name.startsWith('gi0'):
 				lamp.pulse(0)
 			else:
 				lamp.disable()
