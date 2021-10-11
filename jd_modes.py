@@ -871,7 +871,8 @@ class JD_Modes(modes.Scoring_Mode):
 		self.game.coils.knocker.pulse(50)
 		if award == 'Extra Ball':
 			self.award_extra_ball()
-		self.show_on_display('Replay', None, 'mid')
+		else:
+			self.show_on_display('Replay', None, 'mid')
 
 	def award_selection_award(self, award):
 		#self.game.modes.remove(self.award_selection)
