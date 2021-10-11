@@ -575,10 +575,10 @@ class JD_Modes(modes.Scoring_Mode):
 		#See if ball came around right loop
 		if self.game.switches.topRightOpto.time_since_change() < 1:
 			self.game.sound.play('outer_loop')
-			self.outer_loops_hit += 1
+			self.outer_loop_combos += 1
 			if self.outer_loop_combos > self.game.current_player().outer_loops:
 				self.game.current_player().outer_loops = self.outer_loop_combos
-			self.outer_loop_combos += 1
+			self.outer_loops_hit += 1
 			score = 1000 * (self.outer_loop_combos)
 			self.game.score(score)
 			self.cancel_delayed('outer_loop')
