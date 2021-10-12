@@ -22,14 +22,6 @@ game_data_path = curr_file_path + "/config/game_data.yaml"
 game_data_template_path = curr_file_path + "/config/game_data_template.yaml"
 settings_template_path = curr_file_path + "/config/settings_template.yaml"
 
-font_tiny7 = dmd.font_named('04B-03-7px.dmd')
-font_jazz18 = dmd.font_named("Jazz18-18px.dmd")
-font_14x10 = dmd.font_named("Font14x10.dmd")
-font_18x12 = dmd.font_named("Font18x12.dmd")
-font_07x4 = dmd.font_named("Font07x4.dmd")
-font_07x5 = dmd.font_named("Font07x5.dmd")
-font_09Bx7 = dmd.font_named("Font09Bx7.dmd")
-
 # Workaround to deal with latency of flipper rule programming.
 # Need to make sure flippers deativate when the flipper buttons are
 # released.  The flipper rules will automatically activate the flippers
@@ -129,15 +121,6 @@ class JDGame(game.BasicGame):
 		super(JDGame, self).save_game_data(game_data_path)
 		
 	def setup(self):
-		self.fonts = {}
-		self.fonts['tiny7'] = font_tiny7
-		self.fonts['jazz18'] = font_jazz18
-		self.fonts['num_14x10'] = font_14x10
-		self.fonts['18x12'] = font_18x12
-		self.fonts['num_07x4'] = font_07x4
-		self.fonts['07x5'] = font_07x5
-		self.fonts['num_09Bx7'] = font_09Bx7
-
 		self.lampshow_keys = ['attract0', 'attract1']
 		self.load_config('config/JD.yaml')
 		self.load_settings(settings_template_path, settings_path)
@@ -159,6 +142,12 @@ class JDGame(game.BasicGame):
 
 		self.score_display.set_left_players_justify(self.user_settings['Display']['Left side score justify'])
 
+		# Assets		
+		asset_loader = AssetLoader(self)
+		asset_loader.load_assets(curr_file_path)
+		self.animations = asset_loader.animations
+		self.fonts = asset_loader.fonts
+
 		# Instantiate basic game features
 		self.attract_mode = Attract(self)
 		self.base_game_mode = BaseGameMode(self)
@@ -177,14 +166,10 @@ class JDGame(game.BasicGame):
 		self.trough.num_balls_to_save = self.ball_save.get_num_balls_to_save
 		self.ball_save.trough_enable_ball_save = self.trough.enable_ball_save
 
-		self.deadworld_test = DeadworldTest(self,200,font_tiny7)
+		self.deadworld_test = DeadworldTest(self,200,self.fonts['tiny7'])
 
 		# Setup and instantiate service mode
-		self.service_mode = procgame.service.ServiceMode(self,100,font_tiny7,[self.deadworld_test])
-		
-		asset_loader = AssetLoader(self)
-		asset_loader.load_assets(curr_file_path)
-		self.animations = asset_loader.animations 
+		self.service_mode = procgame.service.ServiceMode(self,100,self.fonts['tiny7'],[self.deadworld_test])
 
 		# High Score stuff
 		self.highscore_categories = []
@@ -321,8 +306,8 @@ class JDGame(game.BasicGame):
 		self.sound.play_voice('high score')
 		banner_mode = game.Mode(game=self, priority=8)
 		markup = dmd.MarkupFrameGenerator()
-		markup.font_plain = dmd.font_named('04B-03-7px.dmd')
-		markup.font_bold = dmd.font_named('04B-03-7px.dmd')
+		markup.font_plain = self.fonts['tiny7']
+		markup.font_bold = markup.font_plain
 		text = '\n[GREAT JOB]\n#%s#\n' % (prompt.left.upper()) # we know that the left is the player name
 		frame = markup.frame_for_markup(markup=text, y_offset=0)
 		banner_mode.layer = dmd.ScriptedLayer(width=128, height=32, script=[{'seconds':4.0, 'layer':dmd.FrameLayer(frame=frame)}])

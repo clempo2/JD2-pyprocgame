@@ -6,6 +6,7 @@ class AssetLoader:
 	def __init__(self, game):
 		self.game = game
 		self.animations = {}
+		self.fonts = {}
 		
 	def load_assets(self, curr_file_path):
 		
@@ -313,6 +314,13 @@ class AssetLoader:
 			{'key': 'shoot again 4', 'file': 'shoot again player 4.wav'},
 			{'key': 'high score', 'file': 'congratulations.wav'}
 		]
+
+		fonts_files = [
+			{'key': 'tiny7', 'file': '04B-03-7px.dmd'},
+			{'key': 'jazz18', 'file': 'Jazz18-18px.dmd'},
+			{'key': 'num_14x10', 'file': 'Font14x10.dmd'},
+			{'key': '07x5', 'file': 'Font07x5.dmd'}
+		]
 		
 		assets_path = curr_file_path + '/assets'
 		
@@ -343,3 +351,6 @@ class AssetLoader:
 		voice_prefix = assets_path + '/sound/Voice/'
 		for asset in voice_files:
 			self.game.sound.register_sound(asset['key'], voice_prefix + asset['file'])
+		
+		for asset in fonts_files:
+			self.fonts[asset['key']] = dmd.font_named(asset['file'])
