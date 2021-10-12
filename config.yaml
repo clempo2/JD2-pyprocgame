@@ -44,11 +44,16 @@ keyboard_switch_map:                                # this is the mapping of key
     4: S84 # trough4
     5: S85 # trough5
     6: S86 # trough6
+    x: SD6 # down service button
+    c: SD7 # up service button
+    v: SD8 # enter service button
     s: S13 # start button
-    a: SD8 # enter service button
-    z: SD5 # exit service button
-    v: SD7 # up service button
-    c: SD6 # down service button
     d: S41 # right shooter lane
-    f: S14 # tilt
-    g: S21 # slam tilt
+    f: S12 # right fire
+    q: S54 # J
+    w: S55 # U
+    e: S56 # D
+    r: S57 # G
+    t: S58 # E
+    9: S14 # tilt
+    0: S21 # slam tilt

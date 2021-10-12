@@ -129,6 +129,16 @@ class JDGame(game.BasicGame):
 		super(JDGame, self).save_game_data(game_data_path)
 		
 	def setup(self):
+		self.fonts = {}
+		self.fonts['tiny7'] = font_tiny7
+		self.fonts['jazz18'] = font_jazz18
+		self.fonts['num_14x10'] = font_14x10
+		self.fonts['18x12'] = font_18x12
+		self.fonts['num_07x4'] = font_07x4
+		self.fonts['07x5'] = font_07x5
+		self.fonts['num_09Bx7'] = font_09Bx7
+
+		self.lampshow_keys = ['attract0', 'attract1']
 		self.load_config('config/JD.yaml')
 		self.load_settings(settings_template_path, settings_path)
 		self.sound.music_volume_offset = self.user_settings['Machine']['Music volume offset']
@@ -175,18 +185,6 @@ class JDGame(game.BasicGame):
 		asset_loader = AssetLoader(self)
 		asset_loader.load_assets(curr_file_path)
 		self.animations = asset_loader.animations 
-		
-		# Setup fonts
-		self.fonts = {}
-		self.fonts['tiny7'] = font_tiny7
-		self.fonts['jazz18'] = font_jazz18
-		self.fonts['num_14x10'] = font_14x10
-		self.fonts['18x12'] = font_18x12
-		self.fonts['num_07x4'] = font_07x4
-		self.fonts['07x5'] = font_07x5
-		self.fonts['num_09Bx7'] = font_09Bx7
-
-		self.lampshow_keys = ['attract0', 'attract1']
 
 		# High Score stuff
 		self.highscore_categories = []

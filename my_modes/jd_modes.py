@@ -771,7 +771,7 @@ class JD_Modes(modes.Scoring_Mode):
 
 			# Add the mode to the mode Q to activate it.
 			self.game.modes.remove(self.play_intro)
-			self.game.modes.add(self.self.mode)
+			self.game.modes.add(self.mode)
 
 			# Start the mode timer
 			mode_time = self.game.user_settings['Gameplay']['Time per chain feature']

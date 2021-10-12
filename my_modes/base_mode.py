@@ -4,15 +4,12 @@ from tilt import Tilt
 from jd_modes import JD_Modes
 from bonus import Bonus
 
-font_tiny7 = dmd.font_named('04B-03-7px.dmd')
-font_jazz18 = dmd.font_named("Jazz18-18px.dmd")
-
 class BaseGameMode(game.Mode):
 	"""Game play when no playable mode is active"""
 	
 	def __init__(self, game):
 		super(BaseGameMode, self).__init__(game, 2)
-		self.tilt = Tilt(self.game, 1000, font_jazz18, font_tiny7, 'tilt', 'slamTilt')
+		self.tilt = Tilt(self.game, 1000, self.game.fonts['jazz18'], self.game.fonts['tiny7'], 'tilt', 'slamTilt')
 		self.flipper_enable_workaround_active = False
 
 	def mode_started(self):
@@ -31,7 +28,7 @@ class BaseGameMode(game.Mode):
 		self.game.enable_flippers(enable=True)
 
 		# Create jd_modes, which handles all of the game rules
-		self.jd_modes = JD_Modes(self.game, 8, font_tiny7, font_jazz18)
+		self.jd_modes = JD_Modes(self.game, 8, self.game.fonts['tiny7'], self.game.fonts['jazz18'])
 
 		# Create mode to check for replay
 		self.replay = procgame.modes.Replay(self.game, 18)
@@ -118,7 +115,7 @@ class BaseGameMode(game.Mode):
 		self.jd_modes.save_player_state()
 
 		# Create the bonus mode so bonus can be calculated.
-		self.bonus = Bonus(self.game, 8, font_jazz18, font_tiny7)
+		self.bonus = Bonus(self.game, 8, self.game.fonts['jazz18'], self.game.fonts['tiny7'])
 		self.game.modes.add(self.bonus)
 
 		# Only compute bonus if it wasn't tilted away.
@@ -165,7 +162,7 @@ class BaseGameMode(game.Mode):
 	# Allow service mode to be entered during a game.
 	def sw_enter_active(self, sw):
 		del self.game.service_mode
-		self.game.service_mode = procgame.service.ServiceMode(self.game,100,font_tiny7,[self.game.deadworld_test])
+		self.game.service_mode = procgame.service.ServiceMode(self.game,100,self.game.fonts['tiny7'],[self.game.deadworld_test])
 		self.game.modes.add(self.game.service_mode)
 		return procgame.game.SwitchStop
 

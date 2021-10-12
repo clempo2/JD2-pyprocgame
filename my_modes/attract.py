@@ -2,9 +2,6 @@ import procgame
 from procgame import *
 import random
 
-font_tiny7 = dmd.font_named('04B-03-7px.dmd')
-font_jazz18 = dmd.font_named("Jazz18-18px.dmd")
-
 class Attract(game.Mode):
 	"""Attract mode and start buttons"""
 	
@@ -37,14 +34,14 @@ class Attract(game.Mode):
 		self.change_lampshow()
 		
 		self.cityscape_layer = self.game.animations['cityscape']
-		self.jd_layer = dmd.TextLayer(128/2, 7, font_jazz18, "center", opaque=True).set_text("Judge Dredd")
+		self.jd_layer = dmd.TextLayer(128/2, 7, self.game.fonts['jazz18'], "center", opaque=True).set_text("Judge Dredd")
 		self.jd_layer.transition = dmd.PushTransition(direction='south')
 		self.proc_splash_layer = self.game.animations['Splash']
 		self.proc_splash_layer.transition = dmd.PushTransition(direction='south')
-		self.pyprocgame_layer = dmd.TextLayer(128/2, 7, font_jazz18, "center", opaque=True).set_text("pyprocgame")
+		self.pyprocgame_layer = dmd.TextLayer(128/2, 7, self.game.fonts['jazz18'], "center", opaque=True).set_text("pyprocgame")
 		self.pyprocgame_layer.transition = dmd.PushTransition(direction='west')
-		self.press_start_layer = dmd.TextLayer(128/2, 7, font_jazz18, "center", opaque=True).set_text("Press Start", seconds=None, blink_frames=1)
-		self.scores_layer = dmd.TextLayer(128/2, 7, font_jazz18, "center", opaque=True).set_text("High Scores")
+		self.press_start_layer = dmd.TextLayer(128/2, 7, self.game.fonts['jazz18'], "center", opaque=True).set_text("Press Start", seconds=None, blink_frames=1)
+		self.scores_layer = dmd.TextLayer(128/2, 7, self.game.fonts['jazz18'], "center", opaque=True).set_text("High Scores")
 		self.scores_layer.transition = dmd.PushTransition(direction='north')
 
 		gen = dmd.MarkupFrameGenerator()
@@ -179,7 +176,7 @@ class Attract(game.Mode):
 		for lamp in self.game.lamps:
 			lamp.disable()
 		del self.game.service_mode
-		self.game.service_mode = procgame.service.ServiceMode(self.game,100,font_tiny7,[self.game.deadworld_test])
+		self.game.service_mode = procgame.service.ServiceMode(self.game,100,self.game.fonts['tiny7'],[self.game.deadworld_test])
 		self.game.modes.add(self.game.service_mode)
 		return procgame.game.SwitchStop
 
