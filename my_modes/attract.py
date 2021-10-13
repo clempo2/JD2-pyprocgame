@@ -9,6 +9,7 @@ class Attract(game.Mode):
 		super(Attract, self).__init__(game, 1)
 		self.display_order = [0,1,2,3,4,5,6,7,8,9]
 		self.display_index = 0
+		self.lampshow_keys = ['attract0', 'attract1']
 
 	def mode_started(self):
 		self.play_super_game = False
@@ -138,8 +139,8 @@ class Attract(game.Mode):
 		self.layer.on_complete = self.post_game_display
 
 	def change_lampshow(self):
-		random.shuffle(self.game.lampshow_keys)
-		self.game.lampctrl.play_show(self.game.lampshow_keys[0], repeat=True)
+		random.shuffle(self.lampshow_keys)
+		self.game.lampctrl.play_show(self.lampshow_keys[0], repeat=True)
 		self.delay(name='lampshow', event_type=None, delay=10, handler=self.change_lampshow)
 
 	def sw_fireL_active(self, sw):

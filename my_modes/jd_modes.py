@@ -103,7 +103,7 @@ class JD_Modes(modes.Scoring_Mode):
 		self.game.modes.add(self.mid_priority_animation)
 		self.game.modes.add(self.high_priority_animation)
 
-		# Set flag for switch events the do something unique the first time they
+		# Set flag for switch events that do something unique the first time
 		# they are triggered.
 		self.ball_starting = True
 
@@ -133,7 +133,7 @@ class JD_Modes(modes.Scoring_Mode):
 
 		# Disable all flashers.
 		for coil in self.game.coils:
-			if coil.name.find('flasher', 0) != -1:
+			if coil.name.startswith('flasher', 0) != -1:
 				coil.disable()
 
 		self.cancel_delayed('inner_loop')
@@ -218,7 +218,7 @@ class JD_Modes(modes.Scoring_Mode):
 	# Award missile award indicated by award param.
 	def award_missile_award(self, award):
 		self.game.sound.play_music('background', loops=-1)
-		if award.find('Points', 0) != -1:
+		if award.endswith('Points', 0) != -1:
 			award_words = award.rsplit(' ')
 			self.game.score(int(award_words[0]))
 			self.show_on_display(str(award_words[0]) + ' Points', None, 'mid')
@@ -501,7 +501,7 @@ class JD_Modes(modes.Scoring_Mode):
 					self.game.ball_save.add(10)
 				else:
 					self.game.ball_save.callback = None
-					self.game.set_status('save  ' + str(self.game.trough.num_balls_in_play) + ' balls')
+					self.game.set_status('save ' + str(self.game.trough.num_balls_in_play) + ' balls')
 					self.game.ball_save.start(num_balls_to_save=self.game.trough.num_balls_in_play, time=10, now=True, allow_multiple_saves=True)
 
 			elif self.state == 'mode':
@@ -720,7 +720,7 @@ class JD_Modes(modes.Scoring_Mode):
 		self.game.update_lamps()
 
 	def replay_callback(self):
-		award =  self.game.user_settings['Replay']['Replay Award']
+		award = self.game.user_settings['Replay']['Replay Award']
 		self.game.coils.knocker.pulse(50)
 		if award == 'Extra Ball':
 			self.award_extra_ball()

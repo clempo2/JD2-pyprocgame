@@ -107,7 +107,6 @@ class JDGame(game.BasicGame):
 		self.setup()
 		
 	def setup(self):
-		self.lampshow_keys = ['attract0', 'attract1']
 		self.load_config('config/JD.yaml')
 		self.load_settings(settings_template_path, settings_path)
 		self.sound.music_volume_offset = self.user_settings['Machine']['Music volume offset']

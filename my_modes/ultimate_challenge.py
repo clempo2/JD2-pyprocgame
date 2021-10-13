@@ -1044,7 +1044,7 @@ class Celebration(modes.Scoring_Mode):
 	def mode_stopped(self):
 		self.game.coils.flasherDeath.disable()
 		for lamp in self.game.lamps:
-			if lamp.name.startsWith('gi0'):
+			if lamp.name.startswith('gi0'):
 				lamp.pulse(0)
 			else:
 				lamp.disable()
