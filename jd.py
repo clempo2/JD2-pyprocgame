@@ -906,22 +906,15 @@ class Game(game.BasicGame):
 		self.modes.remove(mode)
 
 		self.modes.add(self.attract_mode)
-
-		#self.attract_mode.change_display(99)
-		# setup display sequence in Attract.
 		self.attract_mode.game_over_display()
 
-		# Handle stats for last ball here
-		self.game_data['Audits']['Avg Ball Time'] = self.calc_time_average_string(self.game_data['Audits']['Balls Played'], self.game_data['Audits']['Avg Ball Time'], self.ball_time)
-		self.game_data['Audits']['Balls Played'] += 1
-		# Also handle game stats.
+		# Handle game stats.
 		for i in range(0,len(self.players)):
 			game_time = self.get_game_time(i)
 			self.game_data['Audits']['Avg Game Time'] = self.calc_time_average_string( self.game_data['Audits']['Games Played'], self.game_data['Audits']['Avg Game Time'], game_time)
+			self.game_data['Audits']['Avg Score'] = self.calc_number_average(self.game_data['Audits']['Games Played'], self.game_data['Audits']['Avg Score'], self.players[i].score)
 			self.game_data['Audits']['Games Played'] += 1
 
-		for i in range(0,len(self.players)):
-			self.game_data['Audits']['Avg Score'] = self.calc_number_average(self.game_data['Audits']['Games Played'], self.game_data['Audits']['Avg Score'], self.players[i].score)
 		self.save_game_data()
 
 	def set_status(self, text):
