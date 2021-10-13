@@ -4,9 +4,7 @@ import locale
 import os
 import pinproc
 
-import asset_loader
 from asset_loader import AssetLoader
-import my_modes
 from my_modes.attract import Attract
 from my_modes.base_mode import BaseGameMode
 from my_modes.deadworld import Deadworld, DeadworldTest
@@ -106,17 +104,7 @@ class JDGame(game.BasicGame):
 		self.sound = procgame.sound.SoundController(self)
 		self.lampctrl = procgame.lamps.LampController(self)
 		self.logging_enabled = False
-		self.shooting_again = False
 		self.setup()
-	
-	def create_player(self, name):
-		return JDPlayer(name)
-	
-	def save_settings(self):
-		self.save_settings(settings_path)
-
-	def save_game_data(self):
-		super(JDGame, self).save_game_data(game_data_path)
 		
 	def setup(self):
 		self.lampshow_keys = ['attract0', 'attract1']
@@ -162,8 +150,8 @@ class JDGame(game.BasicGame):
 		self.ball_save.trough_enable_ball_save = self.trough.enable_ball_save
 
 		# Service mode
-		self.deadworld_test = DeadworldTest(self,200,self.fonts['tiny7'])
-		self.service_mode = procgame.service.ServiceMode(self,100,self.fonts['tiny7'],[self.deadworld_test])
+		deadworld_test = DeadworldTest(self,200,self.fonts['tiny7'])
+		self.service_mode = procgame.service.ServiceMode(self,100,self.fonts['tiny7'],[deadworld_test])
 
 		# High Score stuff
 		self.highscore_categories = []
@@ -207,6 +195,8 @@ class JDGame(game.BasicGame):
 	def reset(self):
 		# Reset the entire game framework
 		super(JDGame, self).reset()
+		
+		self.shooting_again = False
 
 		# Add the basic modes to the mode queue
 		self.modes.add(self.attract_mode)
@@ -222,20 +212,37 @@ class JDGame(game.BasicGame):
 
 		# Make sure flippers are off, especially for user initiated resets.
 		self.enable_flippers(enable=False)
+	
+	def save_settings(self):
+		self.save_settings(settings_path)
+	
+	def create_player(self, name):
+		return JDPlayer(name)
 
-	# Empty callback just in case a ball drains into the trough before another
-	# drain_callback can be installed by a gameplay mode.
-	def drain_callback(self):
-		pass
+	def getPlayerState(self, key, default = None):
+		p = self.current_player()
+		return p.getState(key, default)
+
+	def setPlayerState(self, key, val):
+		p = self.current_player()
+		p.setState(key, val)
+
+	def start_game(self):
+		super(JDGame, self).start_game()
+		self.game_data['Audits']['Games Started'] += 1
+
+	def ball_starting(self):
+		super(JDGame, self).ball_starting()
+		self.modes.add(self.base_game_mode)
+	
+	def extra_ball(self):
+		p = self.current_player()
+		p.extra_balls += 1
 
 	# Override to create a flag signaling extra ball.
 	def shoot_again(self):
 		super(JDGame, self).shoot_again()
 		self.shooting_again = True
-
-	def ball_starting(self):
-		super(JDGame, self).ball_starting()
-		self.modes.add(self.base_game_mode)
 
 	def end_ball(self):
 		self.shooting_again = False
@@ -243,30 +250,10 @@ class JDGame(game.BasicGame):
 
 		self.game_data['Audits']['Avg Ball Time'] = self.calc_time_average_string(self.game_data['Audits']['Balls Played'], self.game_data['Audits']['Avg Ball Time'], self.ball_time)
 		self.game_data['Audits']['Balls Played'] += 1
-
-	def calc_time_average_string(self, prev_total, prev_x, new_value):
-		prev_time_list = prev_x.split(':')
-		prev_time = (int(prev_time_list[0]) * 60) + int(prev_time_list[1])
-		avg_game_time = int((int(prev_total) * int(prev_time)) + int(new_value)) / (int(prev_total) + 1)
-		avg_game_time_min = avg_game_time/60
-		avg_game_time_sec = str(avg_game_time%60)
-		if len(avg_game_time_sec) == 1:
-			avg_game_time_sec = '0' + avg_game_time_sec
-
-		return_str = str(avg_game_time_min) + ':' + avg_game_time_sec
-		return return_str
-
-	def calc_number_average(self, prev_total, prev_x, new_value):
-		avg_game_time = int((prev_total * prev_x) + new_value) / (prev_total + 1)
-		return int(avg_game_time)
 		
 	def ball_ended(self):
 		self.modes.remove(self.base_game_mode)
 		super(JDGame, self).ball_ended()
-
-	def start_game(self):
-		super(JDGame, self).start_game()
-		self.game_data['Audits']['Games Started'] += 1
 		
 	def game_ended(self):
 		super(JDGame, self).game_ended()
@@ -315,26 +302,17 @@ class JDGame(game.BasicGame):
 
 		self.save_game_data()
 
+	def save_game_data(self):
+		super(JDGame, self).save_game_data(game_data_path)
+
 	def set_status(self, text):
 		self.dmd.set_message(text, 3)
-	
-	def extra_ball(self):
-		p = self.current_player()
-		p.extra_balls += 1
-
-	def getPlayerState(self, key, default = None):
-		p = self.current_player()
-		return p.getState(key, default)
-
-	def setPlayerState(self, key, val):
-		p = self.current_player()
-		p.setState(key, val)
 
 	def setup_ball_search(self):
 
 		# Currently there are no special ball search handlers.  The deadworld
 		# could be one, but running it while balls are locked would screw up
-		# the multiball logic.  There is already logic in the multiball logic
+		# the multiball logic.  There is already logic in the multiball
 		# to eject balls that enter the deadworld when lock isn't lit; so it 
 		# shouldn't be necessary to search the deadworld.  (unless a ball jumps
 		# onto the ring rather than entering through the feeder.)
@@ -344,6 +322,11 @@ class JDGame(game.BasicGame):
 					 reset_switches=self.ballsearch_resetSwitches, \
 					 stop_switches=self.ballsearch_stopSwitches, \
 					 special_handler_modes=special_handler_modes)
+
+	# Empty callback just in case a ball drains into the trough before another
+	# drain_callback can be installed by a gameplay mode.
+	def drain_callback(self):
+		pass
 
 	def enable_flippers(self, enable=True):
 		super(JDGame, self).enable_flippers(enable)
@@ -355,6 +338,22 @@ class JDGame(game.BasicGame):
 				self.lamps[gi].pulse(0)
 			else:
 				self.lamps[gi].disable()
+
+	def calc_time_average_string(self, prev_total, prev_x, new_value):
+		prev_time_list = prev_x.split(':')
+		prev_time = (int(prev_time_list[0]) * 60) + int(prev_time_list[1])
+		avg_game_time = int((int(prev_total) * int(prev_time)) + int(new_value)) / (int(prev_total) + 1)
+		avg_game_time_min = avg_game_time/60
+		avg_game_time_sec = str(avg_game_time%60)
+		if len(avg_game_time_sec) == 1:
+			avg_game_time_sec = '0' + avg_game_time_sec
+
+		return_str = str(avg_game_time_min) + ':' + avg_game_time_sec
+		return return_str
+
+	def calc_number_average(self, prev_total, prev_x, new_value):
+		avg_game_time = int((prev_total * prev_x) + new_value) / (prev_total + 1)
+		return int(avg_game_time)
 		
 def main():
 	game = None
