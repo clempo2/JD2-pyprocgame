@@ -310,8 +310,6 @@ class JDGame(game.BasicGame):
 		for i in range(0,len(self.players)):
 			game_time = self.get_game_time(i)
 			self.game_data['Audits']['Avg Game Time'] = self.calc_time_average_string( self.game_data['Audits']['Games Played'], self.game_data['Audits']['Avg Game Time'], game_time)
-
-		for i in range(0,len(self.players)):
 			self.game_data['Audits']['Avg Score'] = self.calc_number_average(self.game_data['Audits']['Games Played'], self.game_data['Audits']['Avg Score'], self.players[i].score)
 			self.game_data['Audits']['Games Played'] += 1
 
