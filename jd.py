@@ -87,8 +87,6 @@ class JDPlayer(game.Player):
 	"""Keeps the progress of one player to allow the player
 	   to resume where he left off in a multi-player game"""
 
-	crimescenes = 0
-
 	def __init__(self, name):
 		super(JDPlayer, self).__init__(name)
 		self.state_tracking = {}
@@ -155,48 +153,35 @@ class JDGame(game.BasicGame):
 		self.deadworld = Deadworld(self, 20, self.settings['Machine']['Deadworld mod installed'])
 		self.ball_save = procgame.modes.BallSave(self, self.lamps.drainShield, 'shooterR')
 
-		trough_switchnames = []
-		for i in range(1,7):
-			trough_switchnames.append('trough' + str(i))
+		# Trough
+		trough_switchnames = ['trough1', 'trough2', 'trough3', 'trough4', 'trough5', 'trough6']
 		early_save_switchnames = ['outlaneR', 'outlaneL']
 		self.trough = procgame.modes.Trough(self,trough_switchnames,'trough6','trough', early_save_switchnames, 'shooterR', self.drain_callback)
-
-		# Link ball_save to trough
 		self.trough.ball_save_callback = self.ball_save.launch_callback
 		self.trough.num_balls_to_save = self.ball_save.get_num_balls_to_save
 		self.ball_save.trough_enable_ball_save = self.trough.enable_ball_save
 
+		# Service mode
 		self.deadworld_test = DeadworldTest(self,200,self.fonts['tiny7'])
-
-		# Setup and instantiate service mode
 		self.service_mode = procgame.service.ServiceMode(self,100,self.fonts['tiny7'],[self.deadworld_test])
 
 		# High Score stuff
 		self.highscore_categories = []
 		
 		cat = highscore.HighScoreCategory()
-		# because we don't have a game_data template:
-		cat.scores = [highscore.HighScore(score=500000,inits='GSS'),\
-				  highscore.HighScore(score=400000,inits='ASP'),\
-				  highscore.HighScore(score=300000,inits='JRP'),\
-				  highscore.HighScore(score=200000,inits='JAG'),\
-				  highscore.HighScore(score=100000,inits='JTW')]
 		cat.game_data_key = 'ClassicHighScoreData'
 		self.highscore_categories.append(cat)
 		
 		cat = highscore.HighScoreCategory()
 		cat.game_data_key = 'CrimescenesHighScoreData'
-		cat.scores = [highscore.HighScore(score=2,inits='GSS')]
 		cat.titles = ['Crimescene Champ']
-		cat.score_for_player = lambda player: player.crimescenes
+		cat.score_for_player = lambda player: player.getState('total_levels', 0)
 		cat.score_suffix_singular = ' level'
 		cat.score_suffix_plural = ' levels'
 		self.highscore_categories.append(cat)
 		
 		cat = highscore.HighScoreCategory()
 		cat.game_data_key = 'InnerLoopsHighScoreData'
-		# because we don't have a game_data template:
-		cat.scores = [highscore.HighScore(score=2,inits='GSS')]
 		cat.titles = ['Inner Loop Champ']
 		cat.score_for_player = lambda player: player.getState('best_inner_loops', 0)
 		cat.score_suffix_singular = ' loop'
@@ -205,8 +190,6 @@ class JDGame(game.BasicGame):
 
 		cat = highscore.HighScoreCategory()
 		cat.game_data_key = 'OuterLoopsHighScoreData'
-		# because we don't have a game_data template:
-		cat.scores = [highscore.HighScore(score=2,inits='GSS')]
 		cat.titles = ['Outer Loop Champ']
 		cat.score_for_player = lambda player: player.getState('best_outer_loops', 0)
 		cat.score_suffix_singular = ' loop'
@@ -240,7 +223,7 @@ class JDGame(game.BasicGame):
 		# Make sure flippers are off, especially for user initiated resets.
 		self.enable_flippers(enable=False)
 
-	# Empty callback just incase a ball drains into the trough before another
+	# Empty callback just in case a ball drains into the trough before another
 	# drain_callback can be installed by a gameplay mode.
 	def drain_callback(self):
 		pass
@@ -291,9 +274,7 @@ class JDGame(game.BasicGame):
 		# after a game ends (due possibly to a ball search).
 		self.trough.drain_callback = self.drain_callback
 		self.modes.remove(self.base_game_mode)
-		#self.modes.add(self.attract_mode)
 		self.deadworld.mode_stopped()
-		# Restart attract mode lampshows
 
 		# High Score Stuff
 		seq_manager = highscore.EntrySequenceManager(game=self, priority=2)
@@ -306,8 +287,9 @@ class JDGame(game.BasicGame):
 		self.sound.play_voice('high score')
 		banner_mode = game.Mode(game=self, priority=8)
 		markup = dmd.MarkupFrameGenerator()
-		markup.font_plain = self.fonts['tiny7']
-		markup.font_bold = markup.font_plain
+		tiny7 = self.fonts['tiny7']
+		markup.font_plain = tiny7
+		markup.font_bold = tiny7
 		text = '\n[GREAT JOB]\n#%s#\n' % (prompt.left.upper()) # we know that the left is the player name
 		frame = markup.frame_for_markup(markup=text, y_offset=0)
 		banner_mode.layer = dmd.ScriptedLayer(width=128, height=32, script=[{'seconds':4.0, 'layer':dmd.FrameLayer(frame=frame)}])
@@ -321,23 +303,18 @@ class JDGame(game.BasicGame):
 	def highscore_entry_finished(self, mode):
 		self.modes.remove(mode)
 
+		self.attract_mode.game_over_display()
 		self.modes.add(self.attract_mode)
 
-		#self.attract_mode.change_display(99)
-		# setup display sequence in Attract.
-		self.attract_mode.game_over_display()
-
-		# Handle stats for last ball here
-		self.game_data['Audits']['Avg Ball Time'] = self.calc_time_average_string(self.game_data['Audits']['Balls Played'], self.game_data['Audits']['Avg Ball Time'], self.ball_time)
-		self.game_data['Audits']['Balls Played'] += 1
-		# Also handle game stats.
+		# Handle game stats.
 		for i in range(0,len(self.players)):
 			game_time = self.get_game_time(i)
 			self.game_data['Audits']['Avg Game Time'] = self.calc_time_average_string( self.game_data['Audits']['Games Played'], self.game_data['Audits']['Avg Game Time'], game_time)
-			self.game_data['Audits']['Games Played'] += 1
 
 		for i in range(0,len(self.players)):
 			self.game_data['Audits']['Avg Score'] = self.calc_number_average(self.game_data['Audits']['Games Played'], self.game_data['Audits']['Avg Score'], self.players[i].score)
+			self.game_data['Audits']['Games Played'] += 1
+
 		self.save_game_data()
 
 	def set_status(self, text):
