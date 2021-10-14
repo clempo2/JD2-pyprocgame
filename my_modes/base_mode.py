@@ -124,8 +124,8 @@ class BaseGameMode(game.Mode):
 		else:
 			self.end_ball()
 
-	# Final processing for the ending ball.  If bonus was calculated, it is finished
-	# by now.
+	# Final processing for the ending ball.
+	# If bonus was calculated, it is finished by now.
 	def end_ball(self):
 		self.game.modes.remove(self.replay)
 		# Remove the bonus mode since it's finished.

@@ -23,5 +23,6 @@ keyboard_switch_map:                                # this is the mapping of key
     e: S56 # D
     r: S57 # G
     t: S58 # E
+    p: S74 # popperR
     9: S14 # tilt
     0: S21 # slam tilt

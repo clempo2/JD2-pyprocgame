@@ -358,7 +358,7 @@ class Crimescenes(modes.Scoring_Mode):
 		self.award_layer = dmd.TextLayer(128/2, 21, self.game.fonts['07x5'], "center").set_text("Award: " + locale.format("%d",points,True) + " points", 1.5);
 		self.layer = dmd.GroupedLayer(128, 32, [self.title_layer, self.level_layer, self.award_layer])
 
-	def is_mb_active(self):
+	def is_multiball_active(self):
 		return self.mode == 'block_war' or self.mode == 'bonus'
 
 	def block_war_start_callback(self):

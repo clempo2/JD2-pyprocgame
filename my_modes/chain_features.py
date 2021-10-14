@@ -278,7 +278,7 @@ class Blackout(ChainFeature):
 	def mode_started(self):
 		self.shots = 0
 		self.update_status()
-		anim = self.game.animations['blackout'].frames
+		anim = self.game.animations['blackout']
 		self.game.base_game_mode.jd_modes.play_animation(anim, 'high', repeat=False, hold=False, frame_time=3)
 		self.update_lamps()
 
@@ -360,7 +360,7 @@ class Sniper(ChainFeature):
 	def sw_popperR_active_for_300ms(self, sw):
 		self.shots += 1
 		self.game.score(10000)
-		anim = self.game.animations['dredd_shoot_at_sniper'].fames
+		anim = self.game.animations['dredd_shoot_at_sniper']
 		self.game.base_game_mode.jd_modes.play_animation(anim, 'high', repeat=False, hold=False, frame_time=5)
 		self.check_for_completion()
 
