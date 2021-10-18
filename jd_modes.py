@@ -1011,6 +1011,7 @@ class JD_Modes(modes.Scoring_Mode):
 			# Re-enable missile_award if it was lit before multiball started
 			if self.missile_award_lit_save:
 				self.missile_award_lit = True
+				self.missile_award_lit_save = False
 				self.drive_mode_lamp('airRade', 'medium')
 
 	def mode_over(self):
@@ -1021,6 +1022,7 @@ class JD_Modes(modes.Scoring_Mode):
 			# Re-enable missile_award if it was lit before multiball started
 			if self.missile_award_lit_save:
 				self.missile_award_lit = True
+				self.missile_award_lit_save = False
 				self.drive_mode_lamp('airRade', 'medium')
 
 		if self.state == 'ultimate_challenge':
