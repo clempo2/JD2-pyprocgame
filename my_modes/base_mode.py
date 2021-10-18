@@ -9,8 +9,20 @@ class BaseGameMode(game.Mode):
 	
 	def __init__(self, game):
 		super(BaseGameMode, self).__init__(game, 2)
-		self.tilt = Tilt(self.game, 1000, self.game.fonts['jazz18'], self.game.fonts['tiny7'], 'tilt', 'slamTilt')
 		self.flipper_enable_workaround_active = False
+
+		self.game.trough.drain_callback = self.ball_drained_callback
+
+		self.tilt = Tilt(self.game, 1000, self.game.fonts['jazz18'], self.game.fonts['tiny7'], 'tilt', 'slamTilt')
+		self.tilt.tilt_callback = self.tilt_callback
+		self.tilt.slam_tilt_callback = self.slam_tilt_callback
+		self.tilt.num_tilt_warnings = self.game.user_settings['Gameplay']['Number of tilt warnings']
+		
+		self.jd_modes = JD_Modes(self.game, 8, self.game.fonts['tiny7'], self.game.fonts['jazz18'])
+
+		self.replay = procgame.modes.Replay(self.game, 18)
+		self.replay.replay_callback = self.jd_modes.replay_callback
+		self.jd_modes.replay = self.replay
 
 	def mode_started(self):
 		# Disable any previously active lamp
@@ -21,39 +33,21 @@ class BaseGameMode(game.Mode):
 		self.game.coils.flasherPursuitL.schedule(0x00001010, cycle_seconds=1, now=False)
 		self.game.coils.flasherPursuitR.schedule(0x00000101, cycle_seconds=1, now=False)
 
-		# Turn on all GIs
 		self.game.update_gi(True)
-
-		# Enable the flippers
 		self.game.enable_flippers(enable=True)
 
-		# Create jd_modes, which handles all of the game rules
-		self.jd_modes = JD_Modes(self.game, 8, self.game.fonts['tiny7'], self.game.fonts['jazz18'])
-
-		# Create mode to check for replay
-		self.replay = procgame.modes.Replay(self.game, 18)
-		self.game.modes.add(self.replay)
-		self.replay.replay_callback = self.jd_modes.replay_callback
-		self.jd_modes.replay = self.replay
-
 		# Start modes
-		self.game.modes.add(self.jd_modes)
-		self.tilt.tilt_callback = self.tilt_callback
-		self.tilt.slam_tilt_callback = self.slam_tilt_callback
-		self.tilt.num_tilt_warnings = self.game.user_settings['Gameplay']['Number of tilt warnings']
 		self.game.modes.add(self.tilt)
+		self.game.modes.add(self.replay)
+		self.game.modes.add(self.jd_modes)
 
 		# Load the player data saved from the previous ball.
 		# It will be empty if this is the first ball.
-		self.jd_modes.restore_player_state()
 		if self.game.attract_mode.play_super_game:
 			self.jd_modes.multiball.jackpot_collected = True
 			self.jd_modes.crimescenes.complete = True
 			self.jd_modes.modes_not_attempted = []
-		self.jd_modes.begin_processing()
 
-		# Put the ball into play and start tracking it.
-		# self.game.coils.trough.pulse(40)
 		# Always start the ball with no launch callback.
 		self.game.trough.launch_balls(1, self.empty_ball_launch_callback)
 
@@ -63,10 +57,6 @@ class BaseGameMode(game.Mode):
 		# Reset tilt warnings and status
 		self.times_warned = 0;
 		self.tilt_status = 0
-
-		# In case a higher priority mode doesn't install it's own ball_drained
-		# handler.
-		self.game.trough.drain_callback = self.ball_drained_callback
 
 	def empty_ball_launch_callback(self):
 		pass
@@ -110,9 +100,6 @@ class BaseGameMode(game.Mode):
 		# Remove the rules logic from responding to switch events.
 		self.game.modes.remove(self.jd_modes)
 		self.game.modes.remove(self.tilt)
-
-		# save the player's data
-		self.jd_modes.save_player_state()
 
 		# Create the bonus mode so bonus can be calculated.
 		self.bonus = Bonus(self.game, 8, self.game.fonts['jazz18'], self.game.fonts['tiny7'])

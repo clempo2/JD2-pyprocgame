@@ -69,16 +69,19 @@ class JD_Modes(modes.Scoring_Mode):
 		self.high_priority_animation = ModesAnimation(self.game, priority + 210)
 		self.video_mode = ShootingGallery(self.game, priority+11, self.cow_video_mode_lit)
 		self.video_mode.on_complete = self.video_mode_complete
-		
+
 	def reset_modes(self):
 		self.modes_attempted = []
 		self.modes_not_attempted = self.all_chain_modes
 		self.game.update_lamps()
 
 	def mode_started(self):
+		self.restore_player_state()
+
 		# disable auto-plunging for the start of ball
 		# Force player to hit the right Fire button.
 		self.auto_plunge = False
+
 		self.tilt = False
 		self.info_on = False
 		self.skill_shot_added = False
@@ -88,9 +91,8 @@ class JD_Modes(modes.Scoring_Mode):
 		self.mode_active = False
 		self.ball_starting = True
 		self.present_hurryup_selection = False
-
-		# Turn on all GIs
-		self.game.update_gi(True)
+		self.hold_bonus_x = False
+		self.mystery_lit = True
 
 		# Add modes that are always active
 		self.game.modes.add(self.crimescenes)
@@ -102,14 +104,12 @@ class JD_Modes(modes.Scoring_Mode):
 		self.game.modes.add(self.mid_priority_animation)
 		self.game.modes.add(self.high_priority_animation)
 
-		# Turn on GIs.  This is a temporary workaround for slow loading
-		# of the modes that results in the P-ROC watchdog tripping and
-		# the lights turning off.
+		# Turn on all GIs
 		self.game.update_gi(True)
 
+		self.begin_processing()
+
 	def begin_processing(self):
-		self.hold_bonus_x = False
-		self.mystery_lit = True
 		self.game.update_lamps()
 		if self.is_ultimate_challenge_ready():
 			self.setup_ultimate_challenge()
@@ -121,6 +121,8 @@ class JD_Modes(modes.Scoring_Mode):
 			self.ultimate_challenge_complete()
 
 	def mode_stopped(self):
+		self.save_player_state()
+
 		# Remove modes from the mode Q
 		self.game.modes.remove(self.boring)
 		self.game.modes.remove(self.skill_shot)
@@ -165,11 +167,6 @@ class JD_Modes(modes.Scoring_Mode):
 		p.setState('best_outer_loops', self.best_outer_loops)
 		p.setState('missile_award_lit', self.missile_award_lit or self.missile_award_lit_save)
 		p.setState('bonus_x', self.bonus_x if self.hold_bonus_x else 1)
-		
-		self.crimescenes.save_player_state()
-		self.missile_award_mode.save_player_state()
-		self.multiball.save_player_state()
-		self.ultimate_challenge.save_player_state()
 
 	def restore_player_state(self):
 		p = self.game.current_player()
@@ -190,11 +187,6 @@ class JD_Modes(modes.Scoring_Mode):
 		self.best_outer_loops = p.getState('best_outer_loops', 0)
 		self.missile_award_lit = p.getState('missile_award_lit', False)
 		self.bonus_x = p.getState('bonus_x', 1)
-
-		self.crimescenes.restore_player_state()
-		self.ultimate_challenge.restore_player_state()
-		self.missile_award_mode.restore_player_state()
-		self.multiball.restore_player_state()
 		
 		self.inner_loop_combos = 0
 		self.outer_loop_combos = 0
@@ -697,6 +689,7 @@ class JD_Modes(modes.Scoring_Mode):
 		self.game.update_lamps()
 
 	# called when the mode has completed or expired
+	# but before the hurry up (if applicable)
 	def mode_over(self):
 		if not self.multiball.is_active() and not self.crimescenes.is_multiball_active():
 			self.game.sound.stop_music()
@@ -847,10 +840,11 @@ class JD_Modes(modes.Scoring_Mode):
 		# Called as a result of a ball draining into the trough.
 		# End multiball if there is now only one ball in play (and MB was active).
 		self.game.ball_save.callback = None
-		if self.multiball.is_active() and self.game.trough.num_balls_in_play == 1:
-			self.multiball.end_multiball()
-		if self.crimescenes.is_multiball_active() and self.game.trough.num_balls_in_play == 1:
-			self.crimescenes.end_mb()
+		if self.game.trough.num_balls_in_play == 1:
+			if self.multiball.is_active():
+				self.multiball.end_multiball()
+			if self.crimescenes.is_multiball_active():
+				self.crimescenes.end_mb()
 
 	def crimescenes_completed(self):
 		if self.is_ultimate_challenge_ready():

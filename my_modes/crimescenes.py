@@ -66,8 +66,11 @@ class Crimescenes(modes.Scoring_Mode):
 
 	def mode_started(self):
 		self.reset()
+		self.restore_player_state()
 
 	def mode_stopped(self):
+		self.save_player_state()
+		
 		if self.mode == 'bonus' or self.mode == 'block_war':
 			self.cancel_delayed('bonus_target')
 			self.game.modes.remove(self.block_war)

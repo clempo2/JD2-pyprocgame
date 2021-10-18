@@ -26,11 +26,9 @@ class MissileAwardMode(game.Mode):
 		self.delay(name='update', event_type=None, delay=self.delay_time, handler=self.update)
 		self.timer = 70
 		self.active = False
-
-	def restore_player_state(self):
 		self.awards_remaining = self.game.getPlayerState('awards_remaining', self.all_awards[:])
 
-	def save_player_state(self):
+	def mode_stopped(self):
 		self.game.setPlayerState('awards_remaining', self.awards_remaining[:])
 
 	def sw_fireL_active(self, sw):

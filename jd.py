@@ -133,14 +133,12 @@ class JDGame(game.BasicGame):
 		self.animations = asset_loader.animations
 		self.fonts = asset_loader.fonts
 
-		# Instantiate basic game features
-		self.attract_mode = Attract(self)
-		self.base_game_mode = BaseGameMode(self)
-		self.flipper_workaround_mode = FlipperWorkaroundMode(self)
-		self.deadworld = Deadworld(self, 20, self.settings['Machine']['Deadworld mod installed'])
-		self.ball_save = procgame.modes.BallSave(self, self.lamps.drainShield, 'shooterR')
+		# Service mode
+		deadworld_test = DeadworldTest(self,200,self.fonts['tiny7'])
+		self.service_mode = procgame.service.ServiceMode(self,100,self.fonts['tiny7'],[deadworld_test])
 
 		# Trough
+		self.ball_save = procgame.modes.BallSave(self, self.lamps.drainShield, 'shooterR')
 		trough_switchnames = ['trough1', 'trough2', 'trough3', 'trough4', 'trough5', 'trough6']
 		early_save_switchnames = ['outlaneR', 'outlaneL']
 		self.trough = procgame.modes.Trough(self,trough_switchnames,'trough6','trough', early_save_switchnames, 'shooterR', self.drain_callback)
@@ -148,9 +146,11 @@ class JDGame(game.BasicGame):
 		self.trough.num_balls_to_save = self.ball_save.get_num_balls_to_save
 		self.ball_save.trough_enable_ball_save = self.trough.enable_ball_save
 
-		# Service mode
-		deadworld_test = DeadworldTest(self,200,self.fonts['tiny7'])
-		self.service_mode = procgame.service.ServiceMode(self,100,self.fonts['tiny7'],[deadworld_test])
+		# Instantiate basic game features
+		self.attract_mode = Attract(self)
+		self.base_game_mode = BaseGameMode(self)
+		self.flipper_workaround_mode = FlipperWorkaroundMode(self)
+		self.deadworld = Deadworld(self, 20, self.settings['Machine']['Deadworld mod installed'])
 
 		# High Score stuff
 		self.highscore_categories = []

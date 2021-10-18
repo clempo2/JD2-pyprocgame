@@ -1,6 +1,5 @@
 import locale
 import logging
-import os
 import random
 import time
 import procgame
@@ -37,10 +36,12 @@ class UltimateChallenge(modes.Scoring_Mode):
 		self.active = False
 
 	def mode_started(self):
+		self.active_mode = self.game.getPlayerState('challenge_active_mode', 'fire')
 		self.game.coils.resetDropTarget.pulse(40)
 		self.active = True
 
 	def mode_stopped(self):
+		self.game.setPlayerState('challenge_active_mode', self.active_mode)
 		self.game.modes.remove(self.mode_fire)
 		self.game.modes.remove(self.mode_fear)
 		self.game.modes.remove(self.mode_mortis)
@@ -49,12 +50,6 @@ class UltimateChallenge(modes.Scoring_Mode):
 
 	def is_active(self):
 		return self.active
-
-	def save_player_state(self):
-		self.game.setPlayerState('challenge_active_mode', self.active_mode)
-
-	def restore_player_state(self):
-		self.active_mode = self.game.getPlayerState('challenge_active_mode', 'fire')
 
 	def begin(self):
 		self.game.modes.add(self.mode_list[self.active_mode])

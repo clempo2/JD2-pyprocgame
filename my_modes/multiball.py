@@ -46,9 +46,12 @@ class Multiball(modes.Scoring_Mode):
 		self.drops.on_completed = self.possibly_light_lock
 		self.drops.auto_reset = True
 		self.game.modes.add(self.drops)
+		
+		self.restore_player_state()
 		self.update_lamps()
 
 	def mode_stopped(self):
+		self.restore_player_state()
 		self.cancel_delayed(name='voice instructions')
 		self.game.coils.flasherGlobe.disable()
 		self.game.modes.remove(self.drops)
