@@ -132,10 +132,10 @@ class PlayIntro(game.Mode):
 		# Enable the flippers
 		self.game.enable_flippers(enable=True)
 
-	def setup(self, exit_function, exit_function_param, instruction_layers):
+	def setup(self, mode, exit_function):
+		self.mode = mode
 		self.exit_function = exit_function
-		self.exit_function_param = exit_function_param
-		self.instruction_layers = instruction_layers
+		self.instruction_layers = mode.get_instruction_layers()
 		self.layer = dmd.GroupedLayer(128, 32, self.instruction_layers[0])
 
 	def sw_flipperLwL_active(self, sw):
@@ -154,7 +154,7 @@ class PlayIntro(game.Mode):
 			self.layer = dmd.GroupedLayer(128, 32, self.instruction_layers[self.frame_counter])
 			self.frame_counter += 1
 		else:
-			self.exit_function(self.exit_function_param)	
+			self.exit_function()	
 
 
 class ChainFeature(modes.Scoring_Mode, ModeTimer):
@@ -169,6 +169,13 @@ class ChainFeature(modes.Scoring_Mode, ModeTimer):
 		self.score_layer = dmd.TextLayer(128/2, 10, self.game.fonts['num_14x10'], "center")
 		self.status_layer = dmd.TextLayer(128/2, 26, self.game.fonts['tiny7'], "center")
 		self.layer = dmd.GroupedLayer(128, 32, [self.countdown_layer, self.name_layer, self.score_layer, self.status_layer])
+
+	def mode_started(self):
+		self.shots = 0
+		# Start the mode timer
+		mode_time = self.game.user_settings['Gameplay']['Time per chain feature']
+		self.start(mode_time)
+		self.play_music()
 
 	def get_difficulty(self, options):
 		"""Return the number of required shots depending on the settings and the options for the mode"""
@@ -199,6 +206,23 @@ class ChainFeature(modes.Scoring_Mode, ModeTimer):
 
 	def timer_update(self, timer):
 		self.countdown_layer.set_text(str(timer))
+		
+	def start_using_drops(self):
+		self.game.base_game_mode.jd_modes.multiball.drops.paused = True
+		self.reset_drops()
+
+	def stop_using_drops(self):
+		self.game.base_game_mode.jd_modes.multiball.drops.paused = False
+		self.reset_drops()
+		
+	def reset_drops(self):
+		self.game.base_game_mode.jd_modes.multiball.drops.animated_reset(.1)
+		if (self.game.switches.dropTargetJ.is_active() or
+		    	self.game.switches.dropTargetU.is_active() or
+		    	self.game.switches.dropTargetD.is_active() or
+		    	self.game.switches.dropTargetG.is_active() or
+		    	self.game.switches.dropTargetE.is_active()): 
+			self.game.coils.resetDropTarget.pulse(40)
 
 class Pursuit(ChainFeature):
 	"""Pursuit chain mode"""
@@ -207,7 +231,7 @@ class Pursuit(ChainFeature):
 		self.shots_required_for_completion = self.get_difficulty({'easy':3, 'medium':4, 'hard':5})
 
 	def mode_started(self):
-		self.shots = 0
+		super(Pursuit, self).mode_started()
 		self.update_status()
 		self.update_lamps()
 		time = self.game.sound.play_voice('pursuit intro')
@@ -276,7 +300,7 @@ class Blackout(ChainFeature):
 		self.shots_required_for_completion = self.get_difficulty({'easy':2, 'medium':2, 'hard':3})
 
 	def mode_started(self):
-		self.shots = 0
+		super(Blackout, self).mode_started()
 		self.update_status()
 		anim = self.game.animations['blackout']
 		self.game.base_game_mode.jd_modes.play_animation(anim, 'high', repeat=False, hold=False, frame_time=3)
@@ -335,7 +359,7 @@ class Sniper(ChainFeature):
 		self.layer = dmd.GroupedLayer(128, 32, [self.anim_layer,self.countdown_layer, self.name_layer, self.score_layer, self.status_layer])
 
 	def mode_started(self):
-		self.shots = 0
+		super(Sniper, self).mode_started()
 		self.update_status()
 		self.update_lamps()
 		time = random.randint(2,7)
@@ -390,9 +414,8 @@ class BattleTank(ChainFeature):
 	def __init__(self, game, priority):
 		super(BattleTank, self).__init__(game, priority, 'Battle Tank', 'battleTank')
 
-		self.num_shots = 0
-
 	def mode_started(self):
+		super(BattleTank, self).mode_started()
 		self.shots = {'left':False,'center':False,'right':False}
 		self.update_status()
 		self.update_lamps()
@@ -468,7 +491,7 @@ class Meltdown(ChainFeature):
 		self.shots_required_for_completion = self.get_difficulty({'easy':3, 'medium':4, 'hard':5})
 
 	def mode_started(self):
-		self.shots = 0
+		super(Meltdown, self).mode_started()
 		self.update_status()
 		self.update_lamps()
 		self.game.sound.play_voice('meltdown intro')
@@ -534,10 +557,9 @@ class Impersonator(ChainFeature):
 		pass
 
 	def mode_started(self):
-		self.shots = 0
+		super(Impersonator, self).mode_started()
 		self.delay(name='moving_target', event_type=None, delay=1, handler=self.moving_target)
-		if self.game.switches.dropTargetJ.is_active() or self.game.switches.dropTargetU.is_active() or self.game.switches.dropTargetD.is_active() or self.game.switches.dropTargetG.is_active() or self.game.switches.dropTargetE.is_active(): 
-			self.game.coils.resetDropTarget.pulse(40)
+		self.start_using_drops()
 		self.update_status()
 		self.update_lamps()
 		time = self.game.sound.play('bad impersonator')
@@ -553,6 +575,7 @@ class Impersonator(ChainFeature):
 		time = random.randint(2,7)
 		self.game.sound.play('bi - boo')
 		self.delay(name='boo_restart', event_type=None, delay=time, handler=self.boo_restart)
+
 	def shutup_restart(self):
 		time = random.randint(2,7)
 		self.game.sound.play('bi - shutup')
@@ -568,11 +591,7 @@ class Impersonator(ChainFeature):
 
 	def mode_stopped(self):
 		self.game.lamps.awardBadImpersonator.disable()
-		self.game.lamps.dropTargetJ.disable()
-		self.game.lamps.dropTargetU.disable()
-		self.game.lamps.dropTargetD.disable()
-		self.game.lamps.dropTargetG.disable()
-		self.game.lamps.dropTargetE.disable()
+		self.stop_using_drops()
 		self.cancel_delayed('moving_target')
 		self.cancel_delayed('song_restart')
 		self.cancel_delayed('boo_restart')
@@ -679,9 +698,8 @@ class Safecracker(ChainFeature):
 		self.game.sound.play_voice('bad guys')
 
 	def mode_started(self):
-		self.shots = 0
-		if self.game.switches.dropTargetJ.is_active() or self.game.switches.dropTargetU.is_active() or self.game.switches.dropTargetD.is_active() or self.game.switches.dropTargetG.is_active() or self.game.switches.dropTargetE.is_active():
-			self.game.coils.resetDropTarget.pulse(40)
+		super(Safecracker, self).mode_started()
+		self.start_using_drops()
 		self.delay(name='trip_check', event_type=None, delay=1, handler=self.trip_check)
 		self.update_status()
 		self.update_lamps()
@@ -694,8 +712,7 @@ class Safecracker(ChainFeature):
 		self.cancel_delayed('trip_check')
 		self.cancel_delayed('bad guys')
 		self.game.lamps.awardSafecracker.disable()
-		if self.game.switches.dropTargetJ.is_active() or self.game.switches.dropTargetU.is_active() or self.game.switches.dropTargetD.is_active() or self.game.switches.dropTargetG.is_active() or self.game.switches.dropTargetE.is_active():
-			self.game.coils.resetDropTarget.pulse(40)
+		self.stop_using_drops()
 
 	def update_lamps(self):
 		self.game.lamps.awardSafecracker.schedule(schedule=0x00FF00FF, cycle_seconds=0, now=True)
@@ -741,7 +758,7 @@ class ManhuntMillions(ChainFeature):
 		self.shots_required_for_completion = self.get_difficulty({'easy':2, 'medium':3, 'hard':4})
 
 	def mode_started(self):
-		self.shots = 0
+		super(ManhuntMillions, self).mode_started()
 		self.update_status()
 		self.update_lamps()
 		self.game.sound.play_voice('mm - intro')
@@ -797,7 +814,7 @@ class Stakeout(ChainFeature):
 		self.shots_required_for_completion = self.get_difficulty({'easy':3, 'medium':4, 'hard':5})
 
 	def mode_started(self):
-		self.shots = 0
+		super(Stakeout, self).mode_started()
 		self.update_status()
 		self.update_lamps()
 		self.delay(name='boring', event_type=None, delay=15, handler=self.boring_expired)

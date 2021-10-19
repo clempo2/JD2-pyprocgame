@@ -39,6 +39,7 @@ class UltimateChallenge(modes.Scoring_Mode):
 		self.active_mode = self.game.getPlayerState('challenge_active_mode', 'fire')
 		self.game.coils.resetDropTarget.pulse(40)
 		self.active = True
+		self.begin()
 
 	def mode_stopped(self):
 		self.game.setPlayerState('challenge_active_mode', self.active_mode)

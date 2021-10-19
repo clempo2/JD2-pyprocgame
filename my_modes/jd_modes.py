@@ -1,6 +1,5 @@
 from procgame import *
 import locale
-from air_raid import AirRaid
 from chain_features import *
 from ultimate_challenge import UltimateChallenge, UltimateIntro
 from multiball import Multiball
@@ -56,7 +55,6 @@ class JD_Modes(modes.Scoring_Mode):
 		self.mode_completed_hurryup = ModeCompletedHurryUp(game, priority+1)
 		self.mode_completed_hurryup.collected = self.hurryup_collected
 		self.mode_completed_hurryup.expired = self.hurryup_expired
-		self.award_selection = AirRaid(game, priority+1)
 		self.multiball = Multiball(self.game, priority + 1, self.game.user_settings['Machine']['Deadworld mod installed'], font_big)
 		self.multiball.start_callback = self.multiball_started
 		self.multiball.end_callback = self.multiball_ended
@@ -88,7 +86,6 @@ class JD_Modes(modes.Scoring_Mode):
 		self.outer_loop_active = False
 		self.inner_loop_active = False
 		self.intro_playing = False
-		self.mode_active = False
 		self.ball_starting = True
 		self.present_hurryup_selection = False
 		self.hold_bonus_x = False
@@ -137,7 +134,7 @@ class JD_Modes(modes.Scoring_Mode):
 		self.game.modes.remove(self.high_priority_animation)
 		self.game.modes.remove(self.mode_completed_hurryup)
 		
-		if self.mode_active:
+		if self.mode != None:
 			self.game.modes.remove(self.mode)
 
 		# Disable all flashers.
@@ -343,28 +340,19 @@ class JD_Modes(modes.Scoring_Mode):
 			self.game.coils.shooterL.pulse()
 		elif self.missile_award_lit:
 			self.game.sound.stop_music()
-			self.drive_mode_lamp('airRaid', 'off')
-			self.missile_award_lit = False
-			#if self.state == 'mode':
-			#	self.mode.pause(True)
+			self.disable_missile_award()
 			if self.video_mode_lit:
-				self.game.sound.stop_music()
 				self.game.modes.add(self.video_mode)
 				self.video_mode_lit = False
 			else:
 				self.game.modes.add(self.missile_award_mode)
-		#elif self.game.switches.topRampExit.time_since_change() < 5:
 		else:
 			self.missile_award_lit = True
 			self.drive_mode_lamp('airRaid', 'medium')
 			self.game.coils.shooterL.pulse()
-		#else:
-		#	self.game.coils.shooterL.pulse()
 
 	def sw_shooterL_inactive_for_200ms(self, sw):
 		self.game.sound.play('shooterL_launch')
-		if self.state == 'mode':
-			self.mode.pause(False)
 
 	def sw_fireR_active(self, sw):
 		if self.game.switches.shooterR.is_inactive():
@@ -404,30 +392,26 @@ class JD_Modes(modes.Scoring_Mode):
 
 	def sw_popperL_active_for_200ms(self, sw):
 		if self.present_hurryup_selection:
+			# ball will be kicked out normally next time.
+			self.present_hurryup_selection = False
 			self.game.ball_search.disable()
-			#self.award_selection.awards = ['100000 points','crimescenes']
-			#self.award_selection.callback = self.award_selection_award
-			#self.game.modes.add(self.award_selection)
 			self.game.modes.remove(self.mode_completed_hurryup)
 			self.award_selection_award('crimescenes')
 		else:
 			self.flash_then_pop('flashersLowerLeft', 'popperL', 50)
 
-		# Clear flag the ball will be kicked out normally next time.
-		self.present_hurryup_selection = False
 
 	def sw_popperR_active_for_200ms(self, sw):
 		if not self.any_multiball_active():
 			if self.state == 'idle':
+				self.game.lamps.rightStartFeature.disable()
 				self.mode = self.modes_not_attempted[self.modes_not_attempted_ptr]
-				intro_instruction_layers = self.mode.get_instruction_layers()
-				self.play_intro.setup(self.activate_mode, self.mode, intro_instruction_layers)
+				self.play_intro.setup(self.mode, self.activate_mode)
 				self.game.modes.add(self.play_intro)
 				self.intro_playing = True
-				self.game.lamps.rightStartFeature.disable()
 			elif self.state == 'pre_ultimate_challenge':
 				self.game.lamps.rightStartFeature.disable()
-				self.play_ult_intro.setup(self.ultimate_challenge.active_mode, self.activate_mode)
+				self.play_ult_intro.setup(self.ultimate_challenge.active_mode, self.activate_ultimate_challenge)
 				self.game.modes.add(self.play_ult_intro)
 				self.game.modes.remove(self.multiball)
 				self.game.modes.remove(self.crimescenes)
@@ -620,56 +604,37 @@ class JD_Modes(modes.Scoring_Mode):
 				score = locale.format("%d", self.replay.replay_scores[0], True)
 			self.show_on_display(text, score, 'high')
 
-	# called by the mode intro when it has completed showing the instructions
-	def activate_mode(self, mode = None):
+	# activate a chain mode after showing the instructions
+	def activate_mode(self):
+		self.game.modes.remove(self.play_intro)
 		self.intro_playing = False
+		self.save_missile_award()
+
+		# Update the mode lists.
+		self.modes_not_attempted.remove(self.mode)
+		self.modes_attempted.append(self.mode)
+		self.rotate_modes(0)
+
+		# Add the mode to the mode Q to activate it.
+		self.state = 'mode'
+		self.game.modes.add(self.mode)
+		self.mode.play_music()
+		
 		# Put the ball back into play
 		self.popperR_eject()
 
-		if self.state == 'idle':
-			# Change state to indicate a mode is in progress.
-			self.state = 'mode'
-			self.mode.play_music()
-			
-			# Pause multiball drop target mode if this mode uses the drop targets
-			if self.mode.name == 'Impersonator' or self.mode.name == 'Safe Cracker':
-				self.multiball.drops.paused = True
+	# start ultimate challenge after showing the instructions
+	def activate_ultimate_challenge(self):
+		self.game.modes.remove(self.play_ult_intro)
+		self.intro_playing = False
+		self.mystery_lit = False
+		self.disable_missile_award()
 
-			# Update the mode lists.
-			self.modes_not_attempted.remove(self.mode)
-			self.modes_attempted.append(self.mode)
-			self.rotate_modes(0)
+		self.state = 'ultimate_challenge'
+		self.game.modes.add(self.ultimate_challenge)
 
-			# Add the mode to the mode Q to activate it.
-			self.game.modes.remove(self.play_intro)
-			self.game.modes.add(self.mode)
-
-			# Start the mode timer
-			mode_time = self.game.user_settings['Gameplay']['Time per chain feature']
-			self.mode.start(mode_time)
-			self.mode_active = True
-
-			# Disable missile award but save it for later if lit.
-			if self.missile_award_lit:
-				self.drive_mode_lamp('airRaid', 'off')
-				self.missile_award_lit_save = True
-				self.missile_award_lit = False
-
-		elif self.state == 'pre_ultimate_challenge':
-			# Change state to indicate ultimate challenge is active
-			self.state = 'ultimate_challenge'
-			self.mystery_lit = False
-
-			# Disable missile award.  Save it so it can be reactivate later.
-			if self.missile_award_lit:
-				#self.missile_award_lit_save = True
-				self.missile_award_lit = False
-				self.drive_mode_lamp('airRaid', 'off')
-
-			# Start ultimate challenge!
-			self.game.modes.remove(self.play_ult_intro)
-			self.game.modes.add(self.ultimate_challenge)
-			self.ultimate_challenge.begin()
+		# Put the ball back into play
+		self.popperR_eject()
 
 	def setup_next_mode(self):
 		# Don't setup a mode if in multiball.
@@ -695,26 +660,18 @@ class JD_Modes(modes.Scoring_Mode):
 			self.game.sound.stop_music()
 			self.game.sound.play_music('background', loops=-1)
 
-			# Re-enable missile_award if it was lit before multiball started
-			if self.missile_award_lit_save:
-				self.missile_award_lit_save = False
-				self.missile_award_lit = True
-				self.drive_mode_lamp('airRaid', 'medium')
+			self.restore_missile_award()
 
 		if self.state == 'ultimate_challenge':
 			self.ultimate_challenge_complete()	
 		else:
-			self.game.modes.remove(self.mode)
-			self.mode.stop()
-			self.mode_active = False
 			success = self.mode.completed
+			self.game.modes.remove(self.mode)
 			if self.state == 'mode':
 				self.mode_complete(success)	
 
 	# called when a mode has completed and was removed from the Q
 	def mode_complete(self, successful=False):
-		self.multiball.drops.paused = False
-
 		if successful:
 			# Add to success list and start hurryup
 			self.modes_completed.append(self.mode)
@@ -734,10 +691,7 @@ class JD_Modes(modes.Scoring_Mode):
 
 		# Turn on mode lamp to show it has been attempted
 		self.drive_mode_lamp(self.mode.lamp_name, 'on')
-
-		# Reset the drop targets if the mode just ending used them.
-		if self.mode.name == 'Impersonator' or self.mode.name == 'Safe Cracker':
-			self.multiball.drops.animated_reset(.1)
+		self.mode = None
 
 	# called when a successful mode hurry up was achieved
 	def hurryup_collected(self):
@@ -758,7 +712,6 @@ class JD_Modes(modes.Scoring_Mode):
 				self.setup_ultimate_challenge()
 			# If more modes to do, rotate and setup the next one.
 			elif len(self.modes_not_attempted) > 0:
-				self.rotate_modes(1)
 				self.state = 'idle'
 				self.setup_next_mode()
 			else:
@@ -771,6 +724,27 @@ class JD_Modes(modes.Scoring_Mode):
 		else:
 			# No more modes. Set it to something that is unused.
 			self.state = 'modes_complete'
+			
+	# Disable missile award and don't save it for later
+	def disable_missile_award(self):
+		if self.missile_award_lit:
+			self.missile_award_lit_save = False
+			self.missile_award_lit = False
+			self.drive_mode_lamp('airRaid', 'off')
+
+	# Disable missile award but save it for later if lit.
+	def save_missile_award(self):
+		if self.missile_award_lit:
+			self.missile_award_lit_save = True
+			self.missile_award_lit = False
+			self.drive_mode_lamp('airRaid', 'off')
+
+	# Re-enable missile_award if it was lit before multiball started
+	def restore_missile_award(self):
+		if self.missile_award_lit_save:
+			self.missile_award_lit_save = False
+			self.missile_award_lit = True
+			self.drive_mode_lamp('airRaid', 'medium')
 
 	def ball_save_callback(self):
 		if not self.any_multiball_active():
@@ -817,7 +791,6 @@ class JD_Modes(modes.Scoring_Mode):
 			self.show_on_display('Hold Bonus X', None, 'mid')
 
 	def award_selection_award(self, award):
-		#self.game.modes.remove(self.award_selection)
 		self.game.ball_search.enable()
 		if award == 'all' or award == '100000 points':
 			self.game.score(100000)
@@ -880,11 +853,7 @@ class JD_Modes(modes.Scoring_Mode):
 			# Light mystery once for free.
 			self.drive_mode_lamp('mystery', 'on')
 			self.mystery_lit = True
-			# Disable missile award but save it for later if lit.
-			if self.missile_award_lit:
-				self.drive_mode_lamp('airRaid', 'off')
-				self.missile_award_lit_save = True
-				self.missile_award_lit = False
+			self.save_missile_award()
 
 	def multiball_ended(self):
 		# Make sure no other multiball is still active
@@ -899,11 +868,8 @@ class JD_Modes(modes.Scoring_Mode):
 			# Otherwise see about setting up the next mode.
 			elif self.state == 'idle':
 				self.setup_next_mode()
-			# Re-enable missile_award if it was lit before multiball started
-			if self.missile_award_lit_save:
-				self.missile_award_lit_save = False
-				self.missile_award_lit = True
-				self.drive_mode_lamp('airRaid', 'medium')
+
+			self.restore_missile_award()
 
 	def is_ultimate_challenge_ready(self):
 		# 3 Criteria for finale: jackpot, crimescenes, all modes attempted.
