@@ -475,7 +475,6 @@ class BattleTank(ChainFeature):
 	def __init__(self, game, priority):
 		super(BattleTank, self).__init__(game, priority, 'Battle Tank')
 
-		self.num_shots = 0
 		full_voice_path = voice_path + 'battle_tank/'
 		for i in range(1,11):
 			filename = 'unknown tank block ' + str(i) + '.wav'
@@ -489,6 +488,7 @@ class BattleTank(ChainFeature):
 		self.game.sound.register_sound('tank hit 3', full_voice_path+filename)
 
 	def mode_started(self):
+		self.num_shots = 0
 		self.shots = {'left':False,'center':False,'right':False}
 		self.update_status()
 		self.update_lamps()
