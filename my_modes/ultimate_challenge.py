@@ -315,7 +315,6 @@ class Fire(modes.Scoring_Mode):
 			self.drive_mode_lamp('mystery', 'off')
 
 		return True
-
 			
 	def drive_mode_lamp(self, lampname, style='on'):
 		if style == 'slow':
@@ -340,7 +339,6 @@ class Fire(modes.Scoring_Mode):
 	def sw_leftRampToLock_active(self, sw):
 		self.game.deadworld.eject_balls(1)
 		return procgame.game.SwitchStop
-
 
 	def sw_topRightOpto_active(self, sw):
 		#See if ball came around outer left loop

@@ -1,4 +1,3 @@
-import procgame
 from procgame import *
 
 class Tilt(game.Mode):
