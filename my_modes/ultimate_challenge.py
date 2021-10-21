@@ -2,29 +2,21 @@ import locale
 import logging
 import random
 import time
-import procgame
 from procgame import *
+from procgame.game import SwitchStop
 
 class UltimateChallenge(modes.Scoring_Mode):
 	"""Wizard mode"""
 	
 	def __init__(self, game, priority):
 		super(UltimateChallenge, self).__init__(game, priority)
-		self.completed = False
-		self.name = 'Ultimate Challenge'
-		self.modes = ['fire','fear','mortis','death','celebration']
+		self.play_ult_intro = UltimateIntro(self.game, self.priority+1)
+		
 		self.mode_fire = Fire(game, self.priority+1)
 		self.mode_fear = Fear(game, self.priority+1)
 		self.mode_mortis = Mortis(game, self.priority+1)
 		self.mode_death = Death(game, self.priority+1)
 		self.mode_celebration = Celebration(game, self.priority+1)
-		self.active_mode = 'fire'
-		self.mode_list = {}
-		self.mode_list['fire'] = self.mode_fire
-		self.mode_list['fear'] = self.mode_fear
-		self.mode_list['mortis'] = self.mode_mortis
-		self.mode_list['death'] = self.mode_death
-		self.mode_list['celebration'] = self.mode_celebration
 
 		self.mode_fire.complete_callback = self.level_complete_callback
 		self.mode_fear.complete_callback = self.level_complete_callback
@@ -32,8 +24,17 @@ class UltimateChallenge(modes.Scoring_Mode):
 		self.mode_death.complete_callback = self.level_complete_callback
 		self.mode_celebration.complete_callback = self.level_complete_callback
 
-		self.play_ult_intro = UltimateIntro(self.game, self.priority+1)
+		self.mode_list = {
+			'fire': self.mode_fire,
+			'fear': self.mode_fear,
+			'mortis': self.mode_mortis,
+			'death': self.mode_death,
+			'celebration': self.mode_celebration
+		}
+		
+		self.active_mode = 'fire'
 		self.active = False
+		self.completed = False
 
 	def mode_started(self):
 		self.active_mode = self.game.getPlayerState('challenge_active_mode', 'fire')
@@ -77,7 +78,7 @@ class UltimateChallenge(modes.Scoring_Mode):
 
 	def sw_shooterL_active_for_200ms(self, sw):
 		self.game.coils.shooterL.pulse()
-		return procgame.game.SwitchStop	
+		return SwitchStop	
 
 	def level_complete_callback(self):
 		self.game.ball_save.disable()
@@ -133,7 +134,7 @@ class UltimateIntro(game.Mode):
 
 	def mode_started(self):
 		self.game.sound.stop_music()
-		self.game.update_gi(False, 'all')
+		self.game.enable_gi(False)
 		# Disable the flippers
 		self.game.enable_flippers(enable=False)
 		self.game.lamps.rightStartFeature.disable()
@@ -303,30 +304,18 @@ class Fire(modes.Scoring_Mode):
 			for j in range(0,4):
 				lampname = 'perp' + str(i+1) + self.lamp_colors[j]
 				if self.targets[i]:
-					self.drive_mode_lamp(lampname, 'medium')
+					self.game.drive_lamp(lampname, 'medium')
 				else:
-					self.drive_mode_lamp(lampname, 'off')
+					self.game.drive_lamp(lampname, 'off')
 		if self.complete:
 			self.game.coils.flasherFire.disable()
 
 		if self.mystery_lit:
-			self.drive_mode_lamp('mystery', 'on')
+			self.game.drive_lamp('mystery', 'on')
 		else:
-			self.drive_mode_lamp('mystery', 'off')
+			self.game.drive_lamp('mystery', 'off')
 
 		return True
-			
-	def drive_mode_lamp(self, lampname, style='on'):
-		if style == 'slow':
-			self.game.lamps[lampname].schedule(schedule=0x00ff00ff, cycle_seconds=0, now=True)
-		if style == 'medium':
-			self.game.lamps[lampname].schedule(schedule=0x0f0f0f0f, cycle_seconds=0, now=True)
-		if style == 'fast':
-			self.game.lamps[lampname].schedule(schedule=0x55555555, cycle_seconds=0, now=True)
-		elif style == 'on':
-			self.game.lamps[lampname].pulse(0)
-		elif style == 'off':
-			self.game.lamps[lampname].disable()
 
 	def sw_mystery_active(self, sw):
 		self.game.sound.play('mystery')
@@ -334,11 +323,11 @@ class Fire(modes.Scoring_Mode):
 			self.mystery_lit = False
 			self.game.set_status('Add 2 balls!')
 			self.game.trough.launch_balls(2, self.launch_callback)
-		return procgame.game.SwitchStop
+		return SwitchStop
 
 	def sw_leftRampToLock_active(self, sw):
 		self.game.deadworld.eject_balls(1)
-		return procgame.game.SwitchStop
+		return SwitchStop
 
 	def sw_topRightOpto_active(self, sw):
 		#See if ball came around outer left loop
@@ -349,28 +338,28 @@ class Fire(modes.Scoring_Mode):
 		elif self.game.switches.topCenterRollover.time_since_change() < 1:
 			self.switch_hit(1)
 
-		return procgame.game.SwitchStop
+		return SwitchStop
 
 	def sw_popperR_active_for_300ms(self, sw):
 		self.switch_hit(2)
-		return procgame.game.SwitchStop
+		return SwitchStop
 
 	def sw_leftRollover_active(self, sw):
 		#See if ball came around right loop
 		if self.game.switches.topRightOpto.time_since_change() < 1.5:
 			self.switch_hit(3)
-		return procgame.game.SwitchStop
+		return SwitchStop
 
 	def sw_topCenterRollover_active(self, sw):
 		#See if ball came around right loop 
 		#Give it 2 seconds as ball trickles this way.  Might need to adjust.
 		if self.game.switches.topRightOpto.time_since_change() < 2:
 			self.switch_hit(3)
-		return procgame.game.SwitchStop
+		return SwitchStop
 
 	def sw_rightRampExit_active(self, sw):
 		self.switch_hit(4)
-		return procgame.game.SwitchStop
+		return SwitchStop
 
 	def switch_hit(self, num):
 		if self.targets[num]:
@@ -468,9 +457,9 @@ class Fear(modes.Scoring_Mode):
 
 	def update_lamps(self):
 		if self.mystery_lit:
-			self.drive_mode_lamp('mystery', 'on')
+			self.game.drive_lamp('mystery', 'on')
 		else:
-			self.drive_mode_lamp('mystery', 'off')
+			self.game.drive_lamp('mystery', 'off')
 
 		if self.state == 'finished':
 			self.game.coils.flasherFear.disable()
@@ -499,46 +488,34 @@ class Fear(modes.Scoring_Mode):
 			self.game.lamps.multiballJackpot.schedule(schedule=0x0f0f0f0f, cycle_seconds=0, now=True)
 			
 		return True
-			
-	def drive_mode_lamp(self, lampname, style='on'):
-		if style == 'slow':
-			self.game.lamps[lampname].schedule(schedule=0x00ff00ff, cycle_seconds=0, now=True)
-		if style == 'medium':
-			self.game.lamps[lampname].schedule(schedule=0x0f0f0f0f, cycle_seconds=0, now=True)
-		if style == 'fast':
-			self.game.lamps[lampname].schedule(schedule=0x55555555, cycle_seconds=0, now=True)
-		elif style == 'on':
-			self.game.lamps[lampname].pulse(0)
-		elif style == 'off':
-			self.game.lamps[lampname].disable()
 
 	def sw_mystery_active(self, sw):
 		self.game.sound.play('mystery')
 		if self.mystery_lit:
 			self.timer = 20
 			self.mystery_lit = False
-		return procgame.game.SwitchStop
+		return SwitchStop
 
 	def sw_leftRampToLock_active(self, sw):
 		self.game.deadworld.eject_balls(1)
-		return procgame.game.SwitchStop
+		return SwitchStop
 
 	def sw_leftRampExit_active(self, sw):
 		if self.state == 'ramps':
 			if self.active_ramp == 'left':
 				self.ramp_shots_hit += 1
 				self.ramp_shot_hit()
-		return procgame.game.SwitchStop
+		return SwitchStop
 
 	def sw_rightRampExit_active(self, sw):
 		if self.state == 'ramps':
 			if self.active_ramp == 'right':
 				self.ramp_shots_hit += 1
 				self.ramp_shot_hit()
-		return procgame.game.SwitchStop
+		return SwitchStop
 
 	def sw_popperR_active_for_300ms(self, sw):
-		return procgame.game.SwitchStop
+		return SwitchStop
 
 	def ramp_shot_hit(self):
 		if self.ramp_shots_hit == self.ramp_shots_required:
@@ -590,7 +567,7 @@ class Fear(modes.Scoring_Mode):
 			self.finish()
 			self.cancel_delayed(['grace', 'countdown'])
 			self.already_collected = True
-		return procgame.game.SwitchStop
+		return SwitchStop
 	
 	# Ball might jump over first switch.  Use 2nd switch as a catchall.
 	def sw_subwayEnter2_closed(self, sw):
@@ -600,7 +577,7 @@ class Fear(modes.Scoring_Mode):
 			self.banner_layer.set_text('Well Done!')
 			self.finish()
 			self.cancel_delayed(['grace', 'countdown'])
-		return procgame.game.SwitchStop
+		return SwitchStop
 
 	def finish(self, success = True):
 		self.cancel_delayed('taunt')
@@ -683,54 +660,42 @@ class Mortis(modes.Scoring_Mode):
 		self.drive_shot_lamp(3, 'perp5Y')
 		self.drive_shot_lamp(3, 'perp5G')
 		self.drive_shot_lamp(4, 'stopMeltdown')
-
 		return True
 
 	def drive_shot_lamp(self, index, lampname):
-		if self.shots_required[index] > 1:
-			self.game.lamps[lampname].schedule(schedule=0x0f0f0f0f, cycle_seconds=0, now=True)
-		elif self.shots_required[index] > 0:
+		req_shots = self.shots_required[index]
+		if req_shots == 0:
+			self.game.lamps[lampname].disable()
+		elif req_shots == 1:
 			self.game.lamps[lampname].schedule(schedule=0x55555555, cycle_seconds=0, now=True)
 		else:
-			self.game.lamps[lampname].disable()
-			
-	def drive_mode_lamp(self, lampname, style='on'):
-		if style == 'slow':
-			self.game.lamps[lampname].schedule(schedule=0x00ff00ff, cycle_seconds=0, now=True)
-		if style == 'medium':
 			self.game.lamps[lampname].schedule(schedule=0x0f0f0f0f, cycle_seconds=0, now=True)
-		if style == 'fast':
-			self.game.lamps[lampname].schedule(schedule=0x55555555, cycle_seconds=0, now=True)
-		elif style == 'on':
-			self.game.lamps[lampname].pulse(0)
-		elif style == 'off':
-			self.game.lamps[lampname].disable()
 
 	def sw_mystery_active(self, sw):
 		self.switch_hit(0)
-		return procgame.game.SwitchStop
+		return SwitchStop
 
 	def sw_topRightOpto_active(self, sw):
 		#See if ball came around outer left loop
 		if self.game.switches.leftRollover.time_since_change() < 1:
 			self.switch_hit(1)
-		return procgame.game.SwitchStop
+		return SwitchStop
 
 	def sw_popperR_active_for_300ms(self, sw):
 		self.switch_hit(2)
-		return procgame.game.SwitchStop
+		return SwitchStop
 
 	def sw_rightRampExit_active(self, sw):
 		self.switch_hit(3)
-		return procgame.game.SwitchStop
+		return SwitchStop
 
 	def sw_captiveBall3_active(self, sw):
 		self.switch_hit(4)
-		return procgame.game.SwitchStop
+		return SwitchStop
 
 	def sw_leftRampToLock_active(self, sw):
 		self.game.deadworld.eject_balls(1)
-		return procgame.game.SwitchStop
+		return SwitchStop
 
 	def switch_hit(self, index):
 		if self.shots_required[index] > 0:
@@ -771,22 +736,11 @@ class Mortis(modes.Scoring_Mode):
 		self.state = 'finished'
 		self.game.enable_flippers(False)
 
-		self.game.lamps.perp1W.disable()
-		self.game.lamps.perp1R.disable()
-		self.game.lamps.perp1Y.disable()
-		self.game.lamps.perp1G.disable()
-		self.game.lamps.perp3W.disable()
-		self.game.lamps.perp3R.disable()
-		self.game.lamps.perp3Y.disable()
-		self.game.lamps.perp3G.disable()
-		self.game.lamps.perp5W.disable()
-		self.game.lamps.perp5R.disable()
-		self.game.lamps.perp5Y.disable()
-		self.game.lamps.perp5G.disable()
-		self.game.lamps.mystery.disable()
-		self.game.lamps.stopMeltdown.disable()
+		for lamp in ['perp1W', 'perp1R', 'perp1Y', 'perp1G', 'perp3W', 'perp3R', 'perp3Y', 'perp3G', 
+		             'perp5W', 'perp5R', 'perp5Y', 'perp5G', 'mystery', 'stopMeltdown', 'ultChallenge']: 
+			self.game.lamps[lamp].disable()
+
 		self.game.coils.flasherMortis.disable()
-		self.game.lamps.ultChallenge.disable()
 
 		if success:
 			self.complete = True
@@ -862,26 +816,14 @@ class Death(modes.Scoring_Mode):
 		return True
 
 	def drive_shot_lamp(self, index, lampname):
-		if self.active_shots[index] >= 1:
-			self.game.lamps[lampname].schedule(schedule=0x0f0f0f0f, cycle_seconds=0, now=True)
+		if self.active_shots[index] == 0:
+			self.game.lamps[lampname].disable()
 		else:
-			self.game.lamps[lampname].disable()
-
-	def drive_mode_lamp(self, lampname, style='on'):
-		if style == 'slow':
-			self.game.lamps[lampname].schedule(schedule=0x00ff00ff, cycle_seconds=0, now=True)
-		if style == 'medium':
 			self.game.lamps[lampname].schedule(schedule=0x0f0f0f0f, cycle_seconds=0, now=True)
-		if style == 'fast':
-			self.game.lamps[lampname].schedule(schedule=0x55555555, cycle_seconds=0, now=True)
-		elif style == 'on':
-			self.game.lamps[lampname].pulse(0)
-		elif style == 'off':
-			self.game.lamps[lampname].disable()
 
 	def sw_mystery_active(self, sw):
 		self.switch_hit(0)
-		return procgame.game.SwitchStop
+		return SwitchStop
 
 	def sw_topRightOpto_active(self, sw):
 		#See if ball came around outer left loop
@@ -892,11 +834,11 @@ class Death(modes.Scoring_Mode):
 		elif self.game.switches.topCenterRollover.time_since_change() < 1.5:
 			self.switch_hit(1)
 
-		return procgame.game.SwitchStop
+		return SwitchStop
 
 	def sw_popperR_active_for_300ms(self, sw):
 		self.switch_hit(2)
-		return procgame.game.SwitchStop
+		return SwitchStop
 
 	def sw_leftRollover_active(self, sw):
 		#See if ball came around right loop
@@ -905,11 +847,11 @@ class Death(modes.Scoring_Mode):
 
 	def sw_rightRampExit_active(self, sw):
 		self.switch_hit(4)
-		return procgame.game.SwitchStop
+		return SwitchStop
 
 	def sw_leftRampToLock_active(self, sw):
 		self.game.deadworld.eject_balls(1)
-		return procgame.game.SwitchStop
+		return SwitchStop
 
 	def switch_hit(self, index):
 		if self.active_shots[index]:
@@ -958,22 +900,11 @@ class Death(modes.Scoring_Mode):
 		self.cancel_delayed('countdown')
 		self.game.enable_flippers(False)
 
-		self.game.lamps.perp1W.disable()
-		self.game.lamps.perp1R.disable()
-		self.game.lamps.perp1Y.disable()
-		self.game.lamps.perp1G.disable()
-		self.game.lamps.perp3W.disable()
-		self.game.lamps.perp3R.disable()
-		self.game.lamps.perp3Y.disable()
-		self.game.lamps.perp3G.disable()
-		self.game.lamps.perp5W.disable()
-		self.game.lamps.perp5R.disable()
-		self.game.lamps.perp5Y.disable()
-		self.game.lamps.perp5G.disable()
-		self.game.lamps.mystery.disable()
-		self.game.lamps.stopMeltdown.disable()
+		for lamp in ['perp1W', 'perp1R', 'perp1Y', 'perp1G', 'perp3W', 'perp3R', 'perp3Y', 'perp3G', 
+		             'perp5W', 'perp5R', 'perp5Y', 'perp5G', 'mystery', 'stopMeltdown', 'ultChallenge']: 
+			self.game.lamps[lamp].disable()
+
 		self.game.coils.flasherDeath.disable()
-		self.game.lamps.ultChallenge.disable()
 
 		if success:
 			self.complete = True
@@ -1066,21 +997,9 @@ class Celebration(modes.Scoring_Mode):
 
 		return True
 
-	def drive_mode_lamp(self, lampname, style='on'):
-		if style == 'slow':
-			self.game.lamps[lampname].schedule(schedule=0x00ff00ff, cycle_seconds=0, now=True)
-		if style == 'medium':
-			self.game.lamps[lampname].schedule(schedule=0x0f0f0f0f, cycle_seconds=0, now=True)
-		if style == 'fast':
-			self.game.lamps[lampname].schedule(schedule=0x55555555, cycle_seconds=0, now=True)
-		elif style == 'on':
-			self.game.lamps[lampname].pulse(0)
-		elif style == 'off':
-			self.game.lamps[lampname].disable()
-
 	def sw_mystery_active(self, sw):
 		self.game.score(5000)
-		return procgame.game.SwitchStop
+		return SwitchStop
 
 	def sw_topRightOpto_active(self, sw):
 		#See if ball came around outer left loop
@@ -1091,11 +1010,11 @@ class Celebration(modes.Scoring_Mode):
 		elif self.game.switches.topCenterRollover.time_since_change() < 1.5:
 			self.game.score(5000)
 
-		return procgame.game.SwitchStop
+		return SwitchStop
 
 	def sw_popperR_active_for_300ms(self, sw):
 		self.game.score(1000)
-		return procgame.game.SwitchStop
+		return SwitchStop
 
 	def sw_leftRollover_active(self, sw):
 		#See if ball came around right loop
@@ -1104,11 +1023,11 @@ class Celebration(modes.Scoring_Mode):
 
 	def sw_rightRampExit_active(self, sw):
 		self.game.score(1000)
-		return procgame.game.SwitchStop
+		return SwitchStop
 
 	def sw_leftRampToLock_active(self, sw):
 		self.game.deadworld.eject_balls(1)
-		return procgame.game.SwitchStop
+		return SwitchStop
 
 	def sw_dropTargetJ_active_for_250ms(self,sw):
 		return self.drop_targets()

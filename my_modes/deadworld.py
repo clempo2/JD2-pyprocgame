@@ -1,5 +1,5 @@
 from procgame import *
-import procgame.game
+from procgame.game import SwitchStop
 
 class Deadworld(game.Mode):
 	"""Controls the dead world planet"""
@@ -15,7 +15,6 @@ class Deadworld(game.Mode):
 		self.setting_up_eject = False
 	
 	def mode_started(self):
-		#self.debug()
 		pass
 
 	def sw_globePosition2_active(self, sw):
@@ -200,7 +199,7 @@ class DeadworldTest(service.ServiceModeSkeleton):
 
 	def sw_exit_active(self,sw):
 		self.game.modes.remove(self)
-		return procgame.game.SwitchStop
+		return SwitchStop
 
 	def sw_startButton_active(self,sw):
 		if self.globe_state:
@@ -210,7 +209,7 @@ class DeadworldTest(service.ServiceModeSkeleton):
 			self.globe_state = True
 			self.game.coils.globeMotor.pulse(0)
 		self.set_texts()
-		return procgame.game.SwitchStop
+		return SwitchStop
 
 	def sw_superGame_active(self,sw):
 		if self.crane_state:
@@ -220,28 +219,28 @@ class DeadworldTest(service.ServiceModeSkeleton):
 			self.crane_state = True
 			self.game.coils.crane.pulse(0)
 		self.set_texts()
-		return procgame.game.SwitchStop
+		return SwitchStop
 
 	def sw_buyIn_active(self,sw):
 		self.magnet_state = True
 		self.game.coils.craneMagnet.pulse(0)
 		self.set_texts()
-		return procgame.game.SwitchStop
+		return SwitchStop
 
 	def sw_buyIn_inactive(self,sw):
 		self.magnet_state = False
 		self.game.coils.craneMagnet.disable()
 		self.set_texts()
-		return procgame.game.SwitchStop
+		return SwitchStop
 
 	def sw_enter_active(self,sw):
-		return procgame.game.SwitchStop
+		return SwitchStop
 
 	def sw_up_active(self,sw):
-		return procgame.game.SwitchStop
+		return SwitchStop
 
 	def sw_down_active(self,sw):
-		return procgame.game.SwitchStop
+		return SwitchStop
 
 	def sw_magnetOverRing_active(self,sw):
 		self.arm_layer.set_text('SUPERGAME BTN: Crane:  Ring')

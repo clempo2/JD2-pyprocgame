@@ -66,10 +66,29 @@ class Crimescenes(modes.Scoring_Mode):
 
 	def mode_started(self):
 		self.reset()
-		self.restore_player_state()
+		
+		# restore player state
+		p = self.game.current_player()
+		self.level = p.getState('crimescenes_level', 0)
+		self.total_levels = p.getState('crimescenes_total_levels', 0)
+		self.mode = p.getState('crimescenes_mode', 'idle')
+		self.targets = p.getState('crimescenes_targets', [1,0,0,0,0])
+		self.complete = p.getState('crimescenes_complete', False)
+
+		if self.mode == 'idle':
+			self.init_level(0)
+
+		self.num_advance_hits = 0
+		self.update_lamps()
 
 	def mode_stopped(self):
-		self.save_player_state()
+		# save player state
+		p = self.game.current_player()
+		p.setState('crimescenes_level', self.level)
+		p.setState('crimescenes_total_levels', self.total_levels)
+		p.setState('crimescenes_mode', self.mode)
+		p.setState('crimescenes_targets', self.targets)
+		p.setState('crimescenes_complete', self.complete)
 		
 		if self.mode == 'bonus' or self.mode == 'block_war':
 			self.cancel_delayed('bonus_target')
@@ -78,32 +97,10 @@ class Crimescenes(modes.Scoring_Mode):
 		for i in range(1,6):
 			for j in range(0,4):
 				lampname = 'perp' + str(i) + self.lamp_colors[j]
-				self.drive_mode_lamp(lampname, 'off')
+				self.game.drive_lamp(lampname, 'off')
 		for i in range(1,5):
 			lampname = 'crimeLevel' + str(i)
-			self.drive_mode_lamp(lampname, 'off')
-
-	def save_player_state(self):
-		p = self.game.current_player()
-		p.setState('level', self.level)
-		p.setState('total_levels', self.total_levels)
-		p.setState('mode', self.mode)
-		p.setState('targets', self.targets)
-		p.setState('complete', self.complete)
-
-	def restore_player_state(self):
-		p = self.game.current_player()
-		self.total_levels = p.getState('total_levels', 0)
-		self.level = p.getState('level', 0)
-		self.mode = p.getState('mode', 'idle')
-		self.targets = p.getState('targets', [1,0,0,0,0])
-		self.complete = p.getState('complete', False)
-
-		if self.mode == 'idle':
-			self.init_level(0)
-
-		self.num_advance_hits = 0
-		self.update_lamps()
+			self.game.drive_lamp(lampname, 'off')
 
 	def get_bonus_base(self):
 		# Add bonus info: 5000 bonus for attempting
@@ -127,38 +124,37 @@ class Crimescenes(modes.Scoring_Mode):
 			self.update_crimescenes_complete_lamps()
 
 	def update_levels_lamps(self):
-		lampname = 'advanceCrimeLevel'
 		if self.num_advance_hits == 0:
-			self.drive_mode_lamp(lampname, 'on')
+			style = 'on' 
 		elif self.num_advance_hits == 1:
-			self.drive_mode_lamp(lampname, 'slow')
+			style = 'slow'
 		elif self.num_advance_hits == 2:
-			self.drive_mode_lamp(lampname, 'fast')
+			style = 'fast'
 		else:
-			self.drive_mode_lamp(lampname, 'off')
+			style = 'off'
+		self.game.drive_lamp('advanceCrimeLevel', style)
 			
 		for i in range(0,5):
 			lamp_color_num = self.level%4
 			for j in range(0,4):
 				lampname = 'perp' + str(i+1) + self.lamp_colors[j]
 				if self.targets[i] and lamp_color_num == j:
-					self.drive_mode_lamp(lampname, 'medium')
+					self.game.drive_lamp(lampname, 'medium')
 				else:
-					self.drive_mode_lamp(lampname, 'off')
+					self.game.drive_lamp(lampname, 'off')
 		self.update_center_lamps()
-
 
 	def update_bonus_lamps(self):
 		lampname = 'advanceCrimeLevel'
-		self.drive_mode_lamp(lampname, 'off')
+		self.game.drive_lamp(lampname, 'off')
 
 		for i in range(0,5):
 			for j in range(1,len(self.lamp_colors)):
 				lampname = 'perp' + str(i+1) + self.lamp_colors[j]
 				if self.bonus_num == i+1:
-					self.drive_mode_lamp(lampname, 'medium')
+					self.game.drive_lamp(lampname, 'medium')
 				else:
-					self.drive_mode_lamp(lampname, 'off')
+					self.game.drive_lamp(lampname, 'off')
 	
 		self.update_center_lamps()
 
@@ -167,7 +163,7 @@ class Crimescenes(modes.Scoring_Mode):
 			if self.targets[i]:
 				for j in range(0,4):
 					lampname = 'perp' + str(i+1) + self.lamp_colors[j]
-					self.drive_mode_lamp(lampname, 'off')
+					self.game.drive_lamp(lampname, 'off')
 		self.update_center_lamps()
 
 	def update_block_war_lamps(self):
@@ -176,11 +172,11 @@ class Crimescenes(modes.Scoring_Mode):
 			for j in range(0,4):
 				lampname = 'perp' + str(i+1) + self.lamp_colors[j]
 				if j < self.bw_shots_required[i]:
-					self.drive_mode_lamp(lampname, 'medium')
+					self.game.drive_lamp(lampname, 'medium')
 				else:
-					self.drive_mode_lamp(lampname, 'off')
+					self.game.drive_lamp(lampname, 'off')
 		lampname = 'advanceCrimeLevel'
-		self.drive_mode_lamp(lampname, 'off')
+		self.game.drive_lamp(lampname, 'off')
 		self.update_center_lamps()
 
 	def update_center_lamps(self):
@@ -191,21 +187,9 @@ class Crimescenes(modes.Scoring_Mode):
 			lampnum = self.level/4 + 1
 			lampname = 'crimeLevel' + str(i)
 			if i <= lampnum:
-				self.drive_mode_lamp(lampname, 'on')
+				self.game.drive_lamp(lampname, 'on')
 			else:
-				self.drive_mode_lamp(lampname, 'off')
-
-	def drive_mode_lamp(self, lampname, style='on'):
-		if style == 'slow':
-			self.game.lamps[lampname].schedule(schedule=0x00ff00ff, cycle_seconds=0, now=True)
-		if style == 'medium':
-			self.game.lamps[lampname].schedule(schedule=0x0f0f0f0f, cycle_seconds=0, now=True)
-		if style == 'fast':
-			self.game.lamps[lampname].schedule(schedule=0x55555555, cycle_seconds=0, now=True)
-		elif style == 'on':
-			self.game.lamps[lampname].pulse(0)
-		elif style == 'off':
-			self.game.lamps[lampname].disable()
+				self.game.drive_lamp(lampname, 'off')
 
 	####################################################
 	# Switch Handlers

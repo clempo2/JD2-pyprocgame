@@ -122,13 +122,13 @@ class PlayIntro(game.Mode):
 	def mode_started(self):
 		self.frame_counter = 0
 		self.next_frame()
-		self.game.update_gi(False)
+		self.game.enable_gi(False)
 		# Disable the flippers
 		self.game.enable_flippers(enable=False)
 
 	def mode_stopped(self):
 		self.cancel_delayed('intro')
-		self.game.update_gi(True)
+		self.game.enable_gi(True)
 		# Enable the flippers
 		self.game.enable_flippers(enable=True)
 
@@ -313,10 +313,10 @@ class Blackout(ChainFeature):
 	def mode_stopped(self):
 		self.game.lamps.blackoutJackpot.disable()
 		self.game.coils.flasherBlackout.disable()
-		self.game.update_gi(True)
+		self.game.enable_gi(True)
 
 	def update_lamps(self):
-		self.game.update_gi(False) # disable all gi except gi05
+		self.game.enable_gi(False) # disable all gi except gi05
 		self.game.lamps.gi05.pulse(0)
 		self.game.lamps.blackoutJackpot.schedule(schedule=0x000F000F, cycle_seconds=0, now=True)
 

@@ -330,8 +330,20 @@ class JDGame(game.BasicGame):
 	def enable_flippers(self, enable=True):
 		super(JDGame, self).enable_flippers(enable)
 		self.flipper_workaround_mode.enable_flippers(enable)
+
+	def drive_lamp(self, lampname, style='on'):
+		if style == 'slow':
+			self.lamps[lampname].schedule(schedule=0x00ff00ff, cycle_seconds=0, now=True)
+		elif style == 'medium':
+			self.lamps[lampname].schedule(schedule=0x0f0f0f0f, cycle_seconds=0, now=True)
+		elif style == 'fast':
+			self.lamps[lampname].schedule(schedule=0x55555555, cycle_seconds=0, now=True)
+		elif style == 'on':
+			self.lamps[lampname].pulse(0)
+		elif style == 'off':
+			self.lamps[lampname].disable()
 		
-	def update_gi(self, on):
+	def enable_gi(self, on):
 		for gi in ['gi01', 'gi02', 'gi03', 'gi04', 'gi05']:
 			if on:
 				self.lamps[gi].pulse(0)

@@ -1,5 +1,6 @@
 import procgame
 from procgame import *
+from procgame.game import SwitchStop
 from tilt import Tilt
 from jd_modes import JD_Modes
 from bonus import Bonus
@@ -33,20 +34,13 @@ class BaseGameMode(game.Mode):
 		self.game.coils.flasherPursuitL.schedule(0x00001010, cycle_seconds=1, now=False)
 		self.game.coils.flasherPursuitR.schedule(0x00000101, cycle_seconds=1, now=False)
 
-		self.game.update_gi(True)
+		self.game.enable_gi(True)
 		self.game.enable_flippers(enable=True)
 
 		# Start modes
 		self.game.modes.add(self.tilt)
 		self.game.modes.add(self.replay)
 		self.game.modes.add(self.jd_modes)
-
-		# Load the player data saved from the previous ball.
-		# It will be empty if this is the first ball.
-		if self.game.attract_mode.play_super_game:
-			self.jd_modes.multiball.jackpot_collected = True
-			self.jd_modes.crimescenes.complete = True
-			self.jd_modes.modes_not_attempted = []
 
 		# Always start the ball with no launch callback.
 		self.game.trough.launch_balls(1, self.empty_ball_launch_callback)
@@ -70,17 +64,15 @@ class BaseGameMode(game.Mode):
 		self.game.ball_search.disable()
 
 	def ball_drained_callback(self):
+		# Tell jd_modes a ball has drained (but this might not be the last ball).
+		self.jd_modes.ball_drained()
+		
 		if self.game.trough.num_balls_in_play == 0:
-			# Give jd_modes a chance to do any ball processing
-			self.jd_modes.ball_drained()
 			# End the ball
 			if self.tilt_status:
 				self.tilt_delay()
 			else:
 				self.finish_ball()
-		else:
-			# Tell jd_modes a ball has drained (but not the last ball).
-			self.jd_modes.ball_drained()
 
 	def tilt_delay(self):
 		# Make sure tilt switch hasn't been hit for at least 2 seconds before
@@ -144,25 +136,25 @@ class BaseGameMode(game.Mode):
 			# the game goes to attrack mode. This makes it painfully slow to restart,
 			# but it's better than nothing.
 			self.game.reset()
-			return procgame.game.SwitchStop
+			return SwitchStop
 
 	# Allow service mode to be entered during a game.
 	def sw_enter_active(self, sw):
 		del self.game.service_mode
 		self.game.service_mode = procgame.service.ServiceMode(self.game,100,self.game.fonts['tiny7'],[self.game.deadworld_test])
 		self.game.modes.add(self.game.service_mode)
-		return procgame.game.SwitchStop
+		return SwitchStop
 
 	# Outside of the service mode, up/down control audio volume.
 	def sw_down_active(self, sw):
 		volume = self.game.sound.volume_down()
 		self.game.set_status("Volume Down : " + str(volume))
-		return procgame.game.SwitchStop
+		return SwitchStop
 
 	def sw_up_active(self, sw):
 		volume = self.game.sound.volume_up()
 		self.game.set_status("Volume Up : " + str(volume))
-		return procgame.game.SwitchStop
+		return SwitchStop
 
 	# Reset game on slam tilt
 	def slam_tilt_callback(self):

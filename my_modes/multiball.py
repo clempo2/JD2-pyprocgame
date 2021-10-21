@@ -47,11 +47,51 @@ class Multiball(modes.Scoring_Mode):
 		self.drops.auto_reset = True
 		self.game.modes.add(self.drops)
 		
-		self.restore_player_state()
+		# restore player state
+		p = self.game.current_player()
+		self.state = p.getState('multiball_state', 'load')
+		self.num_balls_locked = p.getState('multiball_num_balls_locked', 0)
+		self.num_locks_lit = p.getState('multiball_num_locks_lit', 0)
+		self.num_times_played = p.getState('multiball_num_times_played', 0)
+		self.lock_level = p.getState('multiball_lock_level', 1)
+		self.jackpot_collected = p.getState('multiball_jackpot_collected', False)
+
+		# Virtual locks are needed when there are more balls physically locked 
+		# than the player has locked through play.  This happens when
+		# another player locks more balls than the current player.  Use
+		# Virtual locks > 0 for this case.
+		# Use Virtual locks < 0 when the player has locked more balls than are
+		# physically locked.  This could happen when another player plays
+		# multiball and empties the locked balls.
+		if self.deadworld_mod_installed and self.num_locks_lit > 0:
+			self.virtual_locks_needed = self.game.deadworld.num_balls_locked - self.num_balls_locked
+		else:
+			self.virtual_locks_needed = 0
+
+		if self.virtual_locks_needed < 0:
+			# enable the lock so the player can quickly re-lock
+			self.enable_lock()
+			self.display_text("Lock is Lit!")
+			self.num_balls_locked = self.game.deadworld.num_balls_locked
+			#self.num_locks_lit = 0 - self.virtual_locks_needed
+		elif self.virtual_locks_needed > 0:
+			self.enable_virtual_lock()
+		elif self.num_balls_locked < self.num_locks_lit:
+			self.enable_lock()
+			self.display_text("Lock is Lit!")
+			
 		self.update_lamps()
 
 	def mode_stopped(self):
-		self.restore_player_state()
+		# save player state
+		p = self.game.current_player()
+		p.setState('multiball_state',  self.state)
+		p.setState('multiball_num_balls_locked',  self.num_balls_locked)
+		p.setState('multiball_num_locks_lit',  self.num_locks_lit)
+		p.setState('multiball_num_times_played',  self.num_times_played)
+		p.setState('multiball_lock_level',  self.lock_level)
+		p.setState('multiball_jackpot_collected',  self.jackpot_collected)
+
 		self.cancel_delayed(name='voice instructions')
 		self.game.coils.flasherGlobe.disable()
 		self.game.modes.remove(self.drops)
@@ -117,50 +157,6 @@ class Multiball(modes.Scoring_Mode):
 
 	def display_text(self, text):
 		self.banner_layer.set_text(text, 3)
-
-	def restore_player_state(self):
-		p = self.game.current_player()
-		self.state = p.getState('multiball_state', 'load')
-		self.num_balls_locked = p.getState('multiball_num_balls_locked', 0)
-		self.num_locks_lit = p.getState('multiball_num_locks_lit', 0)
-		self.num_times_played = p.getState('multiball_num_times_played', 0)
-		self.lock_level = p.getState('multiball_lock_level', 1)
-		self.jackpot_collected = p.getState('multiball_jackpot_collected', False)
-
-		# Virtual locks are needed when there are more balls physically locked 
-		# than the player has locked through play.  This happens when
-		# another player locks more balls than the current player.  Use
-		# Virtual locks > 0 for this case.
-		# Use Virtual locks < 0 when the player has locked more balls than are
-		# physically locked.  This could happen when another player plays
-		# multiball and empties the locked balls.
-		if self.deadworld_mod_installed and self.num_locks_lit > 0:
-			self.virtual_locks_needed = self.game.deadworld.num_balls_locked - self.num_balls_locked
-		else:
-			self.virtual_locks_needed = 0
-
-		if self.virtual_locks_needed < 0:
-			# enable the lock so the player can quickly re-lock
-			self.enable_lock()
-			self.display_text("Lock is Lit!")
-			self.num_balls_locked = self.game.deadworld.num_balls_locked
-			#self.num_locks_lit = 0 - self.virtual_locks_needed
-		elif self.virtual_locks_needed > 0:
-			self.enable_virtual_lock()
-		elif self.num_balls_locked < self.num_locks_lit:
-			self.enable_lock()
-			self.display_text("Lock is Lit!")
-			
-		self.update_lamps()
-
-	def save_player_state(self):
-		p = self.game.current_player()
-		p.setState('multiball_state',  self.state)
-		p.setState('multiball_num_balls_locked',  self.num_balls_locked)
-		p.setState('multiball_num_locks_lit',  self.num_locks_lit)
-		p.setState('multiball_num_times_played',  self.num_times_played)
-		p.setState('multiball_lock_level',  self.lock_level)
-		p.setState('multiball_jackpot_collected',  self.jackpot_collected)
 
 	def pause(self):
 		self.paused = 1

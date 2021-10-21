@@ -1,5 +1,6 @@
 import procgame
 from procgame import *
+from procgame.game import SwitchStop
 import random
 
 class Attract(game.Mode):
@@ -179,21 +180,21 @@ class Attract(game.Mode):
 		del self.game.service_mode
 		self.game.service_mode = procgame.service.ServiceMode(self.game,100,self.game.fonts['tiny7'],[self.game.deadworld_test])
 		self.game.modes.add(self.game.service_mode)
-		return procgame.game.SwitchStop
+		return SwitchStop
 
 	def sw_exit_active(self, sw):
-		return procgame.game.SwitchStop
+		return SwitchStop
 
 	# Outside of the service mode, up/down control audio volume.
 	def sw_down_active(self, sw):
 		volume = self.game.sound.volume_down()
 		self.game.set_status("Volume Down : " + str(volume))
-		return procgame.game.SwitchStop
+		return SwitchStop
 
 	def sw_up_active(self, sw):
 		volume = self.game.sound.volume_up()
 		self.game.set_status("Volume Up : " + str(volume))
-		return procgame.game.SwitchStop
+		return SwitchStop
 
 	# Start button starts a game if the trough is full.  Otherwise it
 	# initiates a ball search.
@@ -219,7 +220,7 @@ class Attract(game.Mode):
 				self.game.set_status("Ball Search!")
 				self.game.ball_search.perform_search(5)
 				self.game.deadworld.perform_ball_search()
-		return procgame.game.SwitchStop
+		return SwitchStop
 
 	def sw_superGame_active(self, sw):
 		if self.game.trough.is_full():
@@ -241,7 +242,7 @@ class Attract(game.Mode):
 				self.game.set_status("Ball Search!")
 				self.game.ball_search.perform_search(5)
 				self.game.deadworld.perform_ball_search()
-		return procgame.game.SwitchStop
+		return SwitchStop
 
 	def check_deadworld_empty(self):
 		if self.game.deadworld.num_balls_locked > 0:
