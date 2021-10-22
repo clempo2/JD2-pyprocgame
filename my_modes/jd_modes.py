@@ -97,7 +97,8 @@ class JD_Modes(modes.Scoring_Mode):
 		self.total_extra_balls_lit = p.getState('total_extra_balls_lit', 0)
 		self.best_inner_loops = p.getState('best_inner_loops', 0)
 		self.best_outer_loops = p.getState('best_outer_loops', 0)
-		self.bonus_x = p.getState('bonus_x', 1)
+		self.bonus_x = p.getState('bonus_x', 1) if p.getState('hold_bonus_x') else 1
+		self.hold_bonus_x = False
 
 		# disable auto-plunging for the start of ball
 		# Force player to hit the right Fire button.
@@ -113,7 +114,6 @@ class JD_Modes(modes.Scoring_Mode):
 		self.inner_loop_combos = 0
 		self.outer_loop_combos = 0
 		self.present_hurryup_selection = False
-		self.hold_bonus_x = False
 		self.mystery_lit = True
 		self.tilt = False
 
@@ -178,7 +178,8 @@ class JD_Modes(modes.Scoring_Mode):
 		p.setState('total_extra_balls_lit', self.total_extra_balls_lit)
 		p.setState('best_inner_loops', self.best_inner_loops)
 		p.setState('best_outer_loops', self.best_outer_loops)
-		p.setState('bonus_x', self.bonus_x if self.hold_bonus_x else 1)
+		p.setState('bonus_x', self.bonus_x)
+		p.setState('hold_bonus_x', self.hold_bonus_x)
 
 	####################################################
 	# Instant Info
