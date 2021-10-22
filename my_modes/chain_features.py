@@ -117,19 +117,16 @@ class PlayIntro(game.Mode):
 	"""Displays the mode instructions when a mode starts"""
 	def __init__(self, game, priority):
 		super(PlayIntro, self).__init__(game, priority)
-		self.frame_counter = 0
 
 	def mode_started(self):
 		self.frame_counter = 0
 		self.next_frame()
 		self.game.enable_gi(False)
-		# Disable the flippers
 		self.game.enable_flippers(enable=False)
 
 	def mode_stopped(self):
 		self.cancel_delayed('intro')
 		self.game.enable_gi(True)
-		# Enable the flippers
 		self.game.enable_flippers(enable=True)
 
 	def setup(self, mode, exit_function):
@@ -140,13 +137,11 @@ class PlayIntro(game.Mode):
 
 	def sw_flipperLwL_active(self, sw):
 		if self.game.switches.flipperLwR.is_active():
-			self.cancel_delayed('intro')
-			self.exit_function(self.exit_function_param)	
+			self.exit_function()
 
 	def sw_flipperLwR_active(self, sw):
 		if self.game.switches.flipperLwL.is_active():
-			self.cancel_delayed('intro')
-			self.exit_function(self.exit_function_param)	
+			self.exit_function()
 
 	def next_frame(self):
 		if self.frame_counter != len(self.instruction_layers):
@@ -161,7 +156,6 @@ class ChainFeature(modes.Scoring_Mode, ModeTimer):
 	"""Base class for the chain modes"""
 	def __init__(self, game, priority, name, lamp_name):
 		super(ChainFeature, self).__init__(game, priority)
-		self.completed = False
 		self.name = name
 		self.lamp_name = lamp_name
 		self.countdown_layer = dmd.TextLayer(127, 1, self.game.fonts['tiny7'], "right")
@@ -172,6 +166,7 @@ class ChainFeature(modes.Scoring_Mode, ModeTimer):
 
 	def mode_started(self):
 		self.shots = 0
+		self.completed = False
 		# Start the mode timer
 		mode_time = self.game.user_settings['Gameplay']['Time per chain feature']
 		self.start(mode_time)

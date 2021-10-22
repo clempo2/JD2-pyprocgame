@@ -74,7 +74,7 @@ class JD_Modes(modes.Scoring_Mode):
 	def reset_modes(self):
 		self.state = 'idle'
 		self.modes_attempted = []
-		self.modes_not_attempted = self.all_chain_modes
+		self.modes_not_attempted = self.all_chain_modes[:]
 		self.crimescenes.reset()
 		self.multiball.reset_jackpot_collected()
 		self.game.update_lamps()
@@ -85,8 +85,10 @@ class JD_Modes(modes.Scoring_Mode):
 		self.state = p.getState('state', 'idle')
 		self.supergame = p.getState('state', self.game.attract_mode.play_super_game)
 		self.modes_completed = p.getState('modes_completed', [])
+		self.num_modes_completed = p.getState('num_modes_completed', 0)
 		self.modes_attempted = p.getState('modes_attempted', [])
-		self.modes_not_attempted = p.getState('modes_not_attempted', self.all_chain_modes)
+		self.num_modes_attempted = p.getState('num_modes_attempted', 0)
+		self.modes_not_attempted = p.getState('modes_not_attempted', self.all_chain_modes[:])
 		self.modes_not_attempted_ptr = p.getState('modes_not_attempted_ptr', 0)
 		self.mystery_lit = p.getState('mystery_lit', False)
 		self.missile_award_lit = p.getState('missile_award_lit', False)
@@ -164,7 +166,9 @@ class JD_Modes(modes.Scoring_Mode):
 		p.setState('state', self.state)
 		p.setState('supergame', self.supergame)
 		p.setState('modes_completed', self.modes_completed)
+		p.setState('num_modes_completed', self.num_modes_completed)
 		p.setState('modes_attempted', self.modes_attempted)
+		p.setState('num_modes_attempted', self.num_modes_attempted)
 		p.setState('modes_not_attempted', self.modes_not_attempted)
 		p.setState('modes_not_attempted_ptr', self.modes_not_attempted_ptr)
 		p.setState('video_mode_lit', self.video_mode_lit)
@@ -192,8 +196,8 @@ class JD_Modes(modes.Scoring_Mode):
 		value_0_layer = dmd.TextLayer(128/2, 19, self.game.fonts['tiny7'], "center").set_text(str(self.game.current_player().extra_balls))
 		layer_0 = dmd.GroupedLayer(128, 32, [title_layer_0, value_0_layer])
 
-		title_layer_1a = dmd.TextLayer(128/2, 9, self.game.fonts['tiny7'], "center").set_text('Modes attempted: ' + str(len(self.modes_attempted)) + '/' + str(len(self.all_chain_modes)))
-		title_layer_1b = dmd.TextLayer(128/2, 19, self.game.fonts['tiny7'], "center").set_text('Modes completed: ' + str(len(self.modes_completed)) + '/' + str(len(self.modes_attempted)))
+		title_layer_1a = dmd.TextLayer(128/2, 9, self.game.fonts['tiny7'], "center").set_text('Modes attempted: ' + str(self.num_modes_attempted))
+		title_layer_1b = dmd.TextLayer(128/2, 19, self.game.fonts['tiny7'], "center").set_text('Modes completed: ' + str(self.num_modes_completed))
 		layer_1 = dmd.GroupedLayer(128, 32, [title_layer_1a, title_layer_1b])
 
 		return [layer_0, layer_1]
@@ -643,6 +647,7 @@ class JD_Modes(modes.Scoring_Mode):
 		# Update the mode lists.
 		self.modes_not_attempted.remove(self.mode)
 		self.modes_attempted.append(self.mode)
+		self.num_modes_attempted += 1
 		self.rotate_modes(0)
 
 		# Add the mode to the mode Q to activate it.
@@ -663,12 +668,13 @@ class JD_Modes(modes.Scoring_Mode):
 			# mode was completed successfully, start hurry up award
 			self.modes_completed.append(self.mode)
 			self.game.modes.add(self.mode_completed_hurryup)
+			self.num_modes_completed += 1
 		else:
 			# mode not successful, skip the hurry up
 			self.hurryup_over()
 
 	def get_num_modes_completed(self):
-		return len(self.modes_completed)
+		return self.num_modes_completed
 
 	# called when a successful mode hurry up was achieved
 	def hurryup_collected(self):
@@ -834,11 +840,11 @@ class JD_Modes(modes.Scoring_Mode):
 		self.show_on_display('Bonus at ' + str(self.bonus_x) + 'X', None, 'mid')
 
 	def get_bonus_base(self):
-		num_modes_completed_str = 'Modes Completed: ' + str(len(self.modes_completed))
-		num_modes_attempted_str = 'Modes Attempted: ' + str(len(self.modes_attempted))
+		num_modes_attempted_str = 'Modes Attempted: ' + str(self.num_modes_attempted)
+		num_modes_completed_str = 'Modes Completed: ' + str(self.num_modes_completed)
 		bonus_base_elements = {}
-		bonus_base_elements[num_modes_attempted_str] = len(self.modes_attempted) * 4000
-		bonus_base_elements[num_modes_completed_str] = len(self.modes_completed) * 12000
+		bonus_base_elements[num_modes_attempted_str] = self.num_modes_attempted * 4000
+		bonus_base_elements[num_modes_completed_str] = self.num_modes_completed * 12000
 		bonus_base_elements.update(self.crimescenes.get_bonus_base())
 		return bonus_base_elements
 
