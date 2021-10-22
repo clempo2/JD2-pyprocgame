@@ -102,13 +102,6 @@ class Crimescenes(modes.Scoring_Mode):
 			lampname = 'crimeLevel' + str(i)
 			self.game.drive_lamp(lampname, 'off')
 
-	def get_bonus_base(self):
-		# Add bonus info: 5000 bonus for attempting
-		num_levels_str = 'Crimescene Levels: ' + str(self.total_levels)
-		bonus_base_elements = {}
-		bonus_base_elements[num_levels_str] = self.total_levels*2000
-		return bonus_base_elements
-
 	####################################################
 	# Lamps
 	####################################################
@@ -325,7 +318,7 @@ class Crimescenes(modes.Scoring_Mode):
 				# This is a workaround for when a mode is 
 				# starting (flippers disable during
 				# intro) just before block wars is started.
-				self.game.enable_flippers(enable=True)
+				self.game.enable_flippers(True) 
 				self.game.modes.add(self.block_war)
 				self.mode = 'block_war'
 				self.bw_shots = 1

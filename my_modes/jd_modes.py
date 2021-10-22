@@ -26,7 +26,7 @@ class JD_Modes(modes.Scoring_Mode):
 		self.play_intro = PlayIntro(self.game, self.priority+1)
 		
 		self.crimescenes = Crimescenes(game, priority+1)
-		self.crimescenes.get_block_war_multiplier = self.get_num_modes_completed
+		self.crimescenes.get_block_war_multiplier = lambda: self.num_modes_completed
 		self.crimescenes.crimescenes_completed = self.crimescenes_completed
 		self.crimescenes.mb_start_callback = self.multiball_started
 		self.crimescenes.mb_end_callback = self.multiball_ended
@@ -673,9 +673,6 @@ class JD_Modes(modes.Scoring_Mode):
 			# mode not successful, skip the hurry up
 			self.hurryup_over()
 
-	def get_num_modes_completed(self):
-		return self.num_modes_completed
-
 	# called when a successful mode hurry up was achieved
 	def hurryup_collected(self):
 		if not self.any_multiball_active():
@@ -832,21 +829,9 @@ class JD_Modes(modes.Scoring_Mode):
 		# supergame reverts to normal play for this player
 		self.supergame = False
 
-	def get_bonus_x(self):
-		return self.bonus_x
-
 	def inc_bonus_x(self):
 		self.bonus_x += 1
 		self.show_on_display('Bonus at ' + str(self.bonus_x) + 'X', None, 'mid')
-
-	def get_bonus_base(self):
-		num_modes_attempted_str = 'Modes Attempted: ' + str(self.num_modes_attempted)
-		num_modes_completed_str = 'Modes Completed: ' + str(self.num_modes_completed)
-		bonus_base_elements = {}
-		bonus_base_elements[num_modes_attempted_str] = self.num_modes_attempted * 4000
-		bonus_base_elements[num_modes_completed_str] = self.num_modes_completed * 12000
-		bonus_base_elements.update(self.crimescenes.get_bonus_base())
-		return bonus_base_elements
 
 	def replay_callback(self):
 		award = self.game.user_settings['Replay']['Replay Award']

@@ -122,12 +122,12 @@ class PlayIntro(game.Mode):
 		self.frame_counter = 0
 		self.next_frame()
 		self.game.enable_gi(False)
-		self.game.enable_flippers(enable=False)
+		self.game.enable_flippers(False) 
 
 	def mode_stopped(self):
 		self.cancel_delayed('intro')
 		self.game.enable_gi(True)
-		self.game.enable_flippers(enable=True)
+		self.game.enable_flippers(True) 
 
 	def setup(self, mode, exit_function):
 		self.mode = mode

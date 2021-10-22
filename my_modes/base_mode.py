@@ -25,6 +25,8 @@ class BaseGameMode(game.Mode):
 		self.replay.replay_callback = self.jd_modes.replay_callback
 		self.jd_modes.replay = self.replay
 
+		self.bonus = Bonus(self.game, 8, self.game.fonts['jazz18'], self.game.fonts['tiny7'])
+
 	def mode_started(self):
 		# Disable any previously active lamp
 		for lamp in self.game.lamps:
@@ -35,7 +37,7 @@ class BaseGameMode(game.Mode):
 		self.game.coils.flasherPursuitR.schedule(0x00000101, cycle_seconds=1, now=False)
 
 		self.game.enable_gi(True)
-		self.game.enable_flippers(enable=True)
+		self.game.enable_flippers(True) 
 
 		# Start modes
 		self.game.modes.add(self.tilt)
@@ -57,7 +59,7 @@ class BaseGameMode(game.Mode):
 
 	def mode_stopped(self):
 		# Ensure flippers are disabled
-		self.game.enable_flippers(enable=False)
+		self.game.enable_flippers(False) 
 
 		# Deactivate the ball search logic so it won't search due to no 
 		# switches being hit.
@@ -93,13 +95,12 @@ class BaseGameMode(game.Mode):
 		self.game.modes.remove(self.jd_modes)
 		self.game.modes.remove(self.tilt)
 
-		# Create the bonus mode so bonus can be calculated.
-		self.bonus = Bonus(self.game, 8, self.game.fonts['jazz18'], self.game.fonts['tiny7'])
+		# Add the bonus mode so bonus can be calculated.
 		self.game.modes.add(self.bonus)
 
 		# Only compute bonus if it wasn't tilted away.
 		if not self.tilt_status:
-			self.bonus.compute(self.jd_modes.get_bonus_base(), self.jd_modes.get_bonus_x(), self.end_ball)
+			self.bonus.compute(self.end_ball)
 		else:
 			self.end_ball()
 
@@ -176,7 +177,7 @@ class BaseGameMode(game.Mode):
 			self.jd_modes.tilt = True
 
 			# Disable flippers so the ball will drain.
-			self.game.enable_flippers(enable=False)
+			self.game.enable_flippers(False) 
 
 			# Make sure ball won't be saved when it drains.
 			self.game.ball_save.disable()

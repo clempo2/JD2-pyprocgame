@@ -15,24 +15,37 @@ class Bonus(game.Mode):
 
 	def mode_started(self):
 		# Disable the flippers
-		self.game.enable_flippers(enable=False)
+		self.game.enable_flippers(False) 
 
 	def mode_stopped(self):
 		# Enable the flippers
-		self.game.enable_flippers(enable=True)
+		self.game.enable_flippers(True) 
 
-	def compute(self, base, x, exit_function):
+	def compute(self, exit_function):
 		self.game.sound.play('drain')
 		self.exit_function = exit_function
+		self.total_base = 0
+		
+		p = self.game.current_player()
+		self.x = p.getState("bonus_x")
+		
 		self.elements = []
 		self.value = []
-		for element, value in base.iteritems():
-			self.elements.append(element)
-			self.value.append(value)
-		self.x = x
+		
+		num_modes_attempted = p.getState("num_modes_attempted")
+		self.elements.append('Modes Attempted: ' + str(num_modes_attempted))
+		self.value.append(num_modes_attempted * 4000)
+		
+		num_modes_completed = p.getState("num_modes_completed")
+		self.elements.append('Modes Completed: ' + str(num_modes_completed))
+		self.value.append(num_modes_completed * 12000)
+
+		crimescenes_total_levels = p.getState("crimescenes_total_levels")
+		self.elements.append('Crimescene Levels: ' + str(crimescenes_total_levels))
+		self.value.append(crimescenes_total_levels * 2000)
+
 		self.delay(name='bonus_computer', event_type=None, delay=self.delay_time, handler=self.bonus_computer)
-		self.title_layer.set_text('BONUS:',self.delay_time)
-		self.total_base = 0
+		self.title_layer.set_text('BONUS:', self.delay_time)
 
 	def bonus_computer(self):
 		self.game.sound.play('bonus')

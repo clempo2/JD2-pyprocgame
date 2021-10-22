@@ -134,8 +134,8 @@ class JDGame(game.BasicGame):
 		self.fonts = asset_loader.fonts
 
 		# Service mode
-		deadworld_test = DeadworldTest(self,200,self.fonts['tiny7'])
-		self.service_mode = procgame.service.ServiceMode(self,100,self.fonts['tiny7'],[deadworld_test])
+		self.deadworld_test = DeadworldTest(self,200,self.fonts['tiny7'])
+		self.service_mode = procgame.service.ServiceMode(self,100,self.fonts['tiny7'],[self.deadworld_test])
 
 		# Trough
 		self.ball_save = procgame.modes.BallSave(self, self.lamps.drainShield, 'shooterR')
@@ -162,7 +162,7 @@ class JDGame(game.BasicGame):
 		cat = highscore.HighScoreCategory()
 		cat.game_data_key = 'CrimescenesHighScoreData'
 		cat.titles = ['Crimescene Champ']
-		cat.score_for_player = lambda player: player.getState('total_levels', 0)
+		cat.score_for_player = lambda player: player.getState('crimescenes_total_levels', 0)
 		cat.score_suffix_singular = ' level'
 		cat.score_suffix_plural = ' levels'
 		self.highscore_categories.append(cat)

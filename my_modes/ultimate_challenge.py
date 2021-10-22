@@ -136,7 +136,7 @@ class UltimateIntro(game.Mode):
 		self.game.sound.stop_music()
 		self.game.enable_gi(False)
 		# Disable the flippers
-		self.game.enable_flippers(enable=False)
+		self.game.enable_flippers(False) 
 		self.game.lamps.rightStartFeature.disable()
 		self.game.lamps.ultChallenge.pulse(0)
 		# Leave GI off for Ultimate Challenge
@@ -157,7 +157,7 @@ class UltimateIntro(game.Mode):
 	def mode_stopped(self):
 		self.cancel_delayed('intro')
 		# Leave GI off for Ultimate Challenge
-		self.game.enable_flippers(enable=True)
+		self.game.enable_flippers(True) 
 
 	def setup(self, stage, exit_function):
 		self.exit_function = exit_function
