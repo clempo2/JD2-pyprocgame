@@ -250,6 +250,7 @@ class Pursuit(ChainFeature):
 
 	def mode_started(self):
 		self.shots = 0
+		self.completed = False
 		self.update_status()
 		self.update_lamps()
 		time = self.game.sound.play_voice('pursuit intro')
@@ -327,6 +328,7 @@ class Blackout(ChainFeature):
 
 	def mode_started(self):
 		self.shots = 0
+		self.completed = False
 		self.update_status()
 		filename = curr_file_path + "/dmd/blackout.dmd"
 		if os.path.isfile(filename):
@@ -419,6 +421,7 @@ class Sniper(ChainFeature):
 
 	def mode_started(self):
 		self.shots = 0
+		self.completed = False
 		self.update_status()
 		self.update_lamps()
 		time = random.randint(2,7)
@@ -489,6 +492,7 @@ class BattleTank(ChainFeature):
 
 	def mode_started(self):
 		self.num_shots = 0
+		self.completed = False
 		self.shots = {'left':False,'center':False,'right':False}
 		self.update_status()
 		self.update_lamps()
@@ -583,6 +587,7 @@ class Meltdown(ChainFeature):
 
 	def mode_started(self):
 		self.shots = 0
+		self.completed = False
 		self.update_status()
 		self.update_lamps()
 		self.game.sound.play_voice('meltdown intro')
@@ -678,6 +683,7 @@ class Impersonator(ChainFeature):
 
 	def mode_started(self):
 		self.shots = 0
+		self.completed = False
 		self.delay(name='moving_target', event_type=None, delay=1, handler=self.moving_target)
 		if self.game.switches.dropTargetJ.is_active() or self.game.switches.dropTargetU.is_active() or self.game.switches.dropTargetD.is_active() or self.game.switches.dropTargetG.is_active() or self.game.switches.dropTargetE.is_active(): 
 			self.game.coils.resetDropTarget.pulse(40)
@@ -848,6 +854,7 @@ class Safecracker(ChainFeature):
 
 	def mode_started(self):
 		self.shots = 0
+		self.completed = False
 		if self.game.switches.dropTargetJ.is_active() or self.game.switches.dropTargetU.is_active() or self.game.switches.dropTargetD.is_active() or self.game.switches.dropTargetG.is_active() or self.game.switches.dropTargetE.is_active():
 			self.game.coils.resetDropTarget.pulse(40)
 		self.delay(name='trip_check', event_type=None, delay=1, handler=self.trip_check)
@@ -932,6 +939,7 @@ class ManhuntMillions(ChainFeature):
 
 	def mode_started(self):
 		self.shots = 0
+		self.completed = False
 		self.update_status()
 		self.update_lamps()
 		self.game.sound.play_voice('mm - intro')
@@ -1016,6 +1024,7 @@ class Stakeout(ChainFeature):
 
 	def mode_started(self):
 		self.shots = 0
+		self.completed = False
 		self.update_status()
 		self.update_lamps()
 		self.delay(name='boring', event_type=None, delay=15, handler=self.boring_expired)
