@@ -117,46 +117,6 @@ class BaseGameMode(game.Mode):
 		# TODO: What if the ball doesn't make it into the shooter lane?
 		#       We should check for it on a later mode_tick() and possibly re-pulse.
 
-	def sw_startButton_active(self, sw):
-		if self.game.ball == 1:
-			if len(self.game.players) < 4:
-				p = self.game.add_player()
-				self.game.set_status(p.name + " added!")
-		elif self.game.user_settings['Gameplay']['Allow restarts']:
-			self.game.set_status("Hold for 2s to reset.")
-
-	def sw_startButton_active_for_2s(self, sw):
-		if self.game.ball > 1 and self.game.user_settings['Gameplay']['Allow restarts']:
-			self.game.set_status("Reset!")
-
-			# Need to build a mechanism to reset AND restart the game.  If one ball
-			# is already in play, the game can restart without plunging another ball.
-			# It would skip the skill shot too (if one exists). 
-
-			# Currently just reset the game. This forces the ball(s) to drain and
-			# the game goes to attrack mode. This makes it painfully slow to restart,
-			# but it's better than nothing.
-			self.game.reset()
-			return SwitchStop
-
-	# Allow service mode to be entered during a game.
-	def sw_enter_active(self, sw):
-		del self.game.service_mode
-		self.game.service_mode = procgame.service.ServiceMode(self.game,100,self.game.fonts['tiny7'],[self.game.deadworld_test])
-		self.game.modes.add(self.game.service_mode)
-		return SwitchStop
-
-	# Outside of the service mode, up/down control audio volume.
-	def sw_down_active(self, sw):
-		volume = self.game.sound.volume_down()
-		self.game.set_status("Volume Down : " + str(volume))
-		return SwitchStop
-
-	def sw_up_active(self, sw):
-		volume = self.game.sound.volume_up()
-		self.game.set_status("Volume Up : " + str(volume))
-		return SwitchStop
-
 	# Reset game on slam tilt
 	def slam_tilt_callback(self):
 		self.game.sound.fadeout_music()

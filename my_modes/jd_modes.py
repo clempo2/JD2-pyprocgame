@@ -83,7 +83,7 @@ class JD_Modes(modes.Scoring_Mode):
 		# restore player state
 		p = self.game.current_player()
 		self.state = p.getState('state', 'idle')
-		self.supergame = p.getState('state', self.game.attract_mode.play_super_game)
+		self.supergame = p.getState('state', self.game.supergame)
 		self.modes_completed = p.getState('modes_completed', [])
 		self.num_modes_completed = p.getState('num_modes_completed', 0)
 		self.modes_attempted = p.getState('modes_attempted', [])
@@ -97,7 +97,7 @@ class JD_Modes(modes.Scoring_Mode):
 		self.total_extra_balls_lit = p.getState('total_extra_balls_lit', 0)
 		self.best_inner_loops = p.getState('best_inner_loops', 0)
 		self.best_outer_loops = p.getState('best_outer_loops', 0)
-		self.bonus_x = p.getState('bonus_x', 1) if p.getState('hold_bonus_x') else 1
+		self.bonus_x = p.getState('bonus_x', 1) if p.getState('hold_bonus_x', False) else 1
 		self.hold_bonus_x = False
 
 		# disable auto-plunging for the start of ball
@@ -896,7 +896,7 @@ class GameIntro(game.Mode):
 	def play_intro(self):
 		self.game.sound.play_voice('welcome')
 		gen = dmd.MarkupFrameGenerator()
-		if self.game.attract_mode.play_super_game:
+		if self.game.supergame:
 			self.delay(name='finish', event_type=None, delay=8.0, handler=self.finish)
 			instructions = gen.frame_for_markup("""
 

@@ -5,6 +5,7 @@ import os
 import pinproc
 
 from asset_loader import AssetLoader
+from my_modes.switchmonitor import SwitchMonitor
 from my_modes.attract import Attract
 from my_modes.base_mode import BaseGameMode
 from my_modes.deadworld import Deadworld, DeadworldTest
@@ -80,6 +81,14 @@ class FlipperWorkaroundMode(game.Mode):
 			self.game.coils['flipperUpRMain'].disable()
 			self.game.coils['flipperUpRHold'].disable()
 
+class JDServiceMode(procgame.service.ServiceMode):
+	def __init__(self, game, priority, font, extra_tests=[]):
+		super(JDServiceMode, self).__init__(game, priority, font, extra_tests)
+		
+	def mode_stopped(self):
+		super(JDServiceMode, self).mode_stopped()
+		self.game.service_mode_ended()
+
 
 class JDPlayer(game.Player):
 	"""Keeps the progress of one player to allow the player
@@ -104,28 +113,9 @@ class JDGame(game.BasicGame):
 		self.sound = procgame.sound.SoundController(self)
 		self.lampctrl = procgame.lamps.LampController(self)
 		self.logging_enabled = False
-		self.setup()
-		
-	def setup(self):
+
 		self.load_config('config/JD.yaml')
-		self.load_settings(settings_template_path, settings_path)
-		self.sound.music_volume_offset = self.user_settings['Machine']['Music volume offset']
-		self.sound.set_volume(self.user_settings['Machine']['Initial volume'])
-		self.load_game_data(game_data_template_path, game_data_path)
-		
-		logging.info("Stats:")
-		logging.info(self.game_data)
-		logging.info("Settings:")
-		logging.info(self.settings)
-		logging.info("Initial switch states:")
-		for sw in self.switches:
-			logging.info("  %s:\t%s" % (sw.name, sw.state_str()))
-
-		self.balls_per_game = self.user_settings['Gameplay']['Balls per game']
-
 		self.setup_ball_search()
-
-		self.score_display.set_left_players_justify(self.user_settings['Display']['Left side score justify'])
 
 		# Assets		
 		asset_loader = AssetLoader(self)
@@ -133,15 +123,24 @@ class JDGame(game.BasicGame):
 		self.animations = asset_loader.animations
 		self.fonts = asset_loader.fonts
 
+		self.reset()
+
+	def reset(self):
+		# Reset the entire game framework
+		super(JDGame, self).reset()
+
+		self.load_settings_and_stats()
+
 		# Service mode
-		self.deadworld_test = DeadworldTest(self,200,self.fonts['tiny7'])
-		self.service_mode = procgame.service.ServiceMode(self,100,self.fonts['tiny7'],[self.deadworld_test])
+		self.switch_monitor = SwitchMonitor(game=self)
+		deadworld_test = DeadworldTest(self,200,self.fonts['tiny7'])
+		self.service_mode = JDServiceMode(self,100,self.fonts['tiny7'],[deadworld_test])
 
 		# Trough
-		self.ball_save = procgame.modes.BallSave(self, self.lamps.drainShield, 'shooterR')
 		trough_switchnames = ['trough1', 'trough2', 'trough3', 'trough4', 'trough5', 'trough6']
 		early_save_switchnames = ['outlaneR', 'outlaneL']
 		self.trough = procgame.modes.Trough(self,trough_switchnames,'trough6','trough', early_save_switchnames, 'shooterR', self.drain_callback)
+		self.ball_save = procgame.modes.BallSave(self, self.lamps.drainShield, 'shooterR')
 		self.trough.ball_save_callback = self.ball_save.launch_callback
 		self.trough.num_balls_to_save = self.ball_save.get_num_balls_to_save
 		self.ball_save.trough_enable_ball_save = self.trough.enable_ball_save
@@ -151,6 +150,35 @@ class JDGame(game.BasicGame):
 		self.base_game_mode = BaseGameMode(self)
 		self.flipper_workaround_mode = FlipperWorkaroundMode(self)
 		self.deadworld = Deadworld(self, 20, self.settings['Machine']['Deadworld mod installed'])
+		
+		self.shooting_again = False
+
+		# Add the basic modes to the mode queue
+		self.modes.add(self.switch_monitor)
+		self.modes.add(self.attract_mode)
+		self.modes.add(self.ball_search)
+		self.modes.add(self.deadworld)
+		self.modes.add(self.ball_save)
+		self.modes.add(self.trough)
+		self.modes.add(self.flipper_workaround_mode)
+
+		self.ball_search.disable()
+		self.ball_save.disable()
+		self.trough.drain_callback = self.drain_callback
+
+		# Make sure flippers are off, especially for user initiated resets.
+		self.enable_flippers(enable=False)
+		
+	def load_settings_and_stats(self):
+		self.load_settings(settings_template_path, settings_path)
+		self.sound.music_volume_offset = self.user_settings['Machine']['Music volume offset']
+		self.sound.set_volume(self.user_settings['Machine']['Initial volume'])
+		
+		self.load_game_data(game_data_template_path, game_data_path)
+
+		self.balls_per_game = self.user_settings['Gameplay']['Balls per game']
+
+		self.score_display.set_left_players_justify(self.user_settings['Display']['Left side score justify'])
 
 		# High Score stuff
 		self.highscore_categories = []
@@ -186,37 +214,47 @@ class JDGame(game.BasicGame):
 		for category in self.highscore_categories:
 			category.load_from_game(self)
 
-		# Instead of resetting everything here as well as when a user
-		# initiated reset occurs, do everything in self.reset() and call it
-		# now and during a user initiated reset.
+	def save_settings(self, filename=settings_path):
+		super(JDGame, self).save_settings(filename)
+
+	def start_service_mode(self):
+		""" dump all existing modes that are running
+			stop music, stop lampshows, disable flippers
+			then add the service mode.
+		"""
+		for m in self.modes:
+			self.modes.remove(m)
+
+		self.lampctrl.stop_show()
+		for lamp in self.lamps:
+			lamp.disable()
+
+		self.sound.stop_music()
+		self.enable_flippers(False)
+		self.modes.add(self.service_mode)
+
+	def service_mode_ended(self):
+		self.save_settings()
 		self.reset()
 
-	def reset(self):
-		# Reset the entire game framework
-		super(JDGame, self).reset()
-		
-		self.shooting_again = False
+	def volume_down(self):
+		volume = self.sound.volume_down()
+		self.set_status("Volume Down : " + str(volume))
 
-		# Add the basic modes to the mode queue
-		self.modes.add(self.attract_mode)
-		self.modes.add(self.ball_search)
-		self.modes.add(self.deadworld)
-		self.modes.add(self.ball_save)
-		self.modes.add(self.trough)
-		self.modes.add(self.flipper_workaround_mode)
-
-		self.ball_search.disable()
-		self.ball_save.disable()
-		self.trough.drain_callback = self.drain_callback
-
-		# Make sure flippers are off, especially for user initiated resets.
-		self.enable_flippers(enable=False)
-	
-	def save_settings(self):
-		self.save_settings(settings_path)
+	def volume_up(self):
+		volume = self.sound.volume_up()
+		self.set_status("Volume Up : " + str(volume))
 	
 	def create_player(self, name):
 		return JDPlayer(name)
+
+	def request_additional_player(self):
+		""" attempt to add an additional player, but honor the max number of players """
+		if len(self.players) < 4:
+			p = self.add_player()
+			self.set_status(p.name + " added!")
+		else:
+			self.logger.info("Cannot add more than 4 players.")
 
 	def getPlayerState(self, key, default = None):
 		p = self.current_player()
@@ -226,9 +264,16 @@ class JDGame(game.BasicGame):
 		p = self.current_player()
 		p.setState(key, val)
 
-	def start_game(self):
+	def start_game(self, supergame):
 		super(JDGame, self).start_game()
 		self.game_data['Audits']['Games Started'] += 1
+		self.supergame = supergame
+		self.modes.remove(self.attract_mode)
+
+		# Add the first player
+		self.add_player()
+		# Start the ball.  This includes ejecting a ball from the trough.
+		self.start_ball()
 
 	def ball_starting(self):
 		super(JDGame, self).ball_starting()
@@ -322,6 +367,11 @@ class JDGame(game.BasicGame):
 					 stop_switches=self.ballsearch_stopSwitches, \
 					 special_handler_modes=special_handler_modes)
 
+	def ball_search(self):
+		self.set_status("Ball Search!")
+		self.ball_search.perform_search(5)
+		self.deadworld.perform_ball_search()
+		
 	# Empty callback just in case a ball drains into the trough before another
 	# drain_callback can be installed by a gameplay mode.
 	def drain_callback(self):

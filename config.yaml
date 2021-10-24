@@ -12,9 +12,10 @@ keyboard_switch_map:                                # this is the mapping of key
     4: S84 # trough4
     5: S85 # trough5
     6: S86 # trough6
-    x: SD6 # down service button
-    c: SD7 # up service button
-    v: SD8 # enter service button
+    v: SD5 # exit service button
+    b: SD6 # down service button
+    n: SD7 # up service button
+    m: SD8 # enter service button
     s: S13 # start button
     d: S41 # right shooter lane
     f: S12 # right fire

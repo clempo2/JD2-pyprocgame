@@ -17,6 +17,9 @@ class Deadworld(game.Mode):
 	def mode_started(self):
 		pass
 
+	def mode_stopped(self):
+		self.game.coils.globeMotor.disable()
+
 	def sw_globePosition2_active(self, sw):
 		if self.game.user_settings['Machine']['Deadworld fast eject']:
 			if self.setting_up_eject:
@@ -30,9 +33,6 @@ class Deadworld(game.Mode):
 	def crane_activate(self):
 		if self.ball_eject_in_progress:
 			self.game.coils.crane.pulse(0)
-
-	def mode_stopped(self):
-		self.game.coils.globeMotor.disable()
 
 	def initialize(self, lock_enabled=0, num_player_balls_locked=0):
 		self.lock_enabled = lock_enabled
@@ -128,10 +128,6 @@ class Deadworld(game.Mode):
 		self.game.coils.crane.disable()
 		self.delay(name='crane_release_check', event_type=None, delay=1, handler=self.crane_release_check)
 
-	def debug(self):
-		self.delay(name='debug', event_type=None, delay=1, handler=self.debug)
-		self.game.set_status(str(self.num_balls_to_eject) + "," + str(self.num_balls_locked))
-
 	def crane_release_check(self):
 		if self.num_balls_to_eject > 0:
 			# Only restart if not in fast mode.  Fast mode will just
@@ -152,11 +148,15 @@ class Deadworld(game.Mode):
 	def get_num_balls_locked(self):
 		return self.num_balls_locked - self.num_balls_to_eject
 
+	def debug(self):
+		self.delay(name='debug', event_type=None, delay=1, handler=self.debug)
+		self.game.set_status(str(self.num_balls_to_eject) + "," + str(self.num_balls_locked))
+
 class DeadworldTest(service.ServiceModeSkeleton):
 	"""Coil Test"""
 	def __init__(self, game, priority, font):
 		super(DeadworldTest, self).__init__(game, priority, font)
-		self.name = "DEADWORLD TEST"
+		self.name = "DeadWorld Test"
 		self.title_layer = dmd.TextLayer(1, 1, font, "left")
 		self.globe_layer = dmd.TextLayer(1, 9, font, "left")
 		self.arm_layer = dmd.TextLayer(1, 17, font, "left")

@@ -13,20 +13,19 @@ class Attract(game.Mode):
 		self.lampshow_keys = ['attract0', 'attract1']
 
 	def mode_started(self):
-		self.play_super_game = False
 		self.emptying_deadworld = False
 		if self.game.deadworld.num_balls_locked > 0:
 			self.game.deadworld.eject_balls(self.game.deadworld.num_balls_locked)
 			self.emptying_deadworld = True
 			self.delay(name='deadworld_empty', event_type=None, delay=10, handler=self.check_deadworld_empty)
 
-		# Blink the start button to notify player about starting a game.
+		# Blink the start buttons in alternation to notify player about starting a game.
 		self.game.lamps.startButton.schedule(schedule=0x00ff00ff, cycle_seconds=0, now=False)
-		# Blink the start button to notify player about starting a game.
-		self.game.lamps.superGame.schedule(schedule=0x00ff00ff, cycle_seconds=0, now=False)
+		self.game.lamps.superGame.schedule(schedule=0xff00ff00, cycle_seconds=0, now=False)
+		
 		# Turn on minimal GI lamps
+		self.game.enable_gi(False)
 		self.game.lamps.gi01.pulse(0)
-		self.game.lamps.gi02.disable()
 
 		# Release the ball from places it could be stuck.
 		for name in ['popperL', 'popperR', 'shooterL', 'shooterR']:
@@ -81,6 +80,12 @@ class Attract(game.Mode):
 		self.longwalk_layer = self.game.animations['longwalk']
 
 		self.pre_game_display()
+
+	def mode_stopped(self):
+		self.game.lamps.startButton.pulse(0)
+		self.game.lamps.superGame.pulse(0)
+		self.cancel_delayed(name='lampshow')
+		self.game.lampctrl.stop_show()
 
 	def pre_game_display(self):
 		script = [
@@ -168,81 +173,6 @@ class Attract(game.Mode):
 
 	def sw_shooterR_active_for_500ms(self, sw):
 		self.game.coils.shooterR.pulse(40)
-
-	# Enter service mode when the enter button is pushed.
-	def sw_enter_active(self, sw):
-		#self.game.modes.remove(self.show)
-		self.cancel_delayed(name='lampshow')
-		self.cancel_delayed(name='display')
-		self.game.lampctrl.stop_show()
-		for lamp in self.game.lamps:
-			lamp.disable()
-		del self.game.service_mode
-		self.game.service_mode = procgame.service.ServiceMode(self.game,100,self.game.fonts['tiny7'],[self.game.deadworld_test])
-		self.game.modes.add(self.game.service_mode)
-		return SwitchStop
-
-	def sw_exit_active(self, sw):
-		return SwitchStop
-
-	# Outside of the service mode, up/down control audio volume.
-	def sw_down_active(self, sw):
-		volume = self.game.sound.volume_down()
-		self.game.set_status("Volume Down : " + str(volume))
-		return SwitchStop
-
-	def sw_up_active(self, sw):
-		volume = self.game.sound.volume_up()
-		self.game.set_status("Volume Up : " + str(volume))
-		return SwitchStop
-
-	# Start button starts a game if the trough is full.  Otherwise it
-	# initiates a ball search.
-	# This is probably a good place to add logic to detect completely lost balls.
-	# Perhaps if the trough isn't full after a few ball search attempts, it logs a ball
-	# as lost?	
-	def sw_startButton_active(self, sw):
-		if self.game.trough.is_full():
-			self.game.lampctrl.save_state('temp')
-			# Stop the attract mode lampshows
-			self.cancel_delayed(name='lampshow')
-			self.game.lampctrl.stop_show()
-			# Remove attract mode from mode queue - Necessary?
-			self.game.modes.remove(self)
-			# Initialize game	
-			self.game.start_game()
-			# Add the first player
-			self.game.add_player()
-			# Start the ball.  This includes ejecting a ball from the trough.
-			self.game.start_ball()
-		else: 
-			if not self.emptying_deadworld:
-				self.game.set_status("Ball Search!")
-				self.game.ball_search.perform_search(5)
-				self.game.deadworld.perform_ball_search()
-		return SwitchStop
-
-	def sw_superGame_active(self, sw):
-		if self.game.trough.is_full():
-			self.play_super_game = True
-			self.game.lampctrl.save_state('temp')
-			# Stop the attract mode lampshows
-			self.cancel_delayed(name='lampshow')
-			self.game.lampctrl.stop_show()
-			# Remove attract mode from mode queue - Necessary?
-			self.game.modes.remove(self)
-			# Initialize game	
-			self.game.start_game()
-			# Add the first player
-			self.game.add_player()
-			# Start the ball.  This includes ejecting a ball from the trough.
-			self.game.start_ball()
-		else: 
-			if not self.emptying_deadworld:
-				self.game.set_status("Ball Search!")
-				self.game.ball_search.perform_search(5)
-				self.game.deadworld.perform_ball_search()
-		return SwitchStop
 
 	def check_deadworld_empty(self):
 		if self.game.deadworld.num_balls_locked > 0:
