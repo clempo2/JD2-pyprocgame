@@ -669,7 +669,7 @@ class Game(game.BasicGame):
 		return JDPlayer(name)
 	
 	def save_settings(self):
-		self.save_settings(settings_path)
+		super(Game, self).save_settings(settings_path)
 
 	def save_game_data(self):
 		super(Game, self).save_game_data(game_data_path)
