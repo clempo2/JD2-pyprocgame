@@ -214,8 +214,11 @@ class JDGame(game.BasicGame):
 		for category in self.highscore_categories:
 			category.load_from_game(self)
 
-	def save_settings(self, filename=settings_path):
-		super(JDGame, self).save_settings(filename)
+	def save_settings(self):
+		super(JDGame, self).save_settings(settings_path)
+
+	def save_game_data(self):
+		super(JDGame, self).save_game_data(game_data_path)
 
 	def start_service_mode(self):
 		""" dump all existing modes that are running
@@ -345,9 +348,6 @@ class JDGame(game.BasicGame):
 			self.game_data['Audits']['Games Played'] += 1
 
 		self.save_game_data()
-
-	def save_game_data(self):
-		super(JDGame, self).save_game_data(game_data_path)
 
 	def set_status(self, text):
 		self.dmd.set_message(text, 3)
