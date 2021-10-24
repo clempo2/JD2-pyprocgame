@@ -133,6 +133,7 @@ class JD_Modes(modes.Scoring_Mode):
 		self.missile_award_lit = False
 		self.missile_award_lit_save = False
 		self.num_modes_completed = 0
+		self.num_modes_attempted = 0
 		self.modes_completed = []
 		self.hold_bonus_x = False
 		self.num_hurryups_collected = 0
@@ -258,6 +259,7 @@ class JD_Modes(modes.Scoring_Mode):
 		info_record['outer_loops'] = self.outer_loops_hit
 		info_record['missile_award_lit'] = self.missile_award_lit or self.missile_award_lit_save
 		info_record['num_modes_completed'] = self.num_modes_completed
+		info_record['num_modes_attempted'] = self.num_modes_attempted
 		info_record['crimescenes'] = self.crimescenes.get_info_record()
 		info_record['missile_award_mode'] = self.missile_award_mode.get_info_record()
 		info_record['multiball'] = self.multiball.get_info_record()
@@ -292,6 +294,7 @@ class JD_Modes(modes.Scoring_Mode):
 			self.inner_loops_hit = info_record['inner_loops']
 			self.outer_loops_hit = info_record['outer_loops']
 			self.num_modes_completed = info_record['num_modes_completed']
+			self.num_modes_attempted = info_record['num_modes_attempted']
 			self.crimescenes.update_info_record(info_record['crimescenes'])
 			self.ultimate_challenge.update_info_record(info_record['ultimate_challenge'])
 			self.missile_award_mode.update_info_record(info_record['missile_award_mode'])
@@ -358,11 +361,11 @@ class JD_Modes(modes.Scoring_Mode):
 
 	def get_bonus_base(self):
 		# Add bonus info: 5000 bonus for attempting
-		num_modes_completed_str = 'Modes Completed: ' + str(len(self.modes_completed))
-		num_modes_attempted_str = 'Modes Attempted: ' + str(len(self.modes_attempted))
+		num_modes_completed_str = 'Modes Completed: ' + str(self.num_modes_completed)
+		num_modes_attempted_str = 'Modes Attempted: ' + str(self.num_modes_attempted)
 		bonus_base_elements = {}
-		bonus_base_elements[num_modes_attempted_str] = len(self.modes_attempted)*4000
-		bonus_base_elements[num_modes_completed_str] = len(self.modes_completed)*12000
+		bonus_base_elements[num_modes_attempted_str] = self.num_modes_attempted*4000
+		bonus_base_elements[num_modes_completed_str] = self.num_modes_completed*12000
 		bonus_base_elements.update(self.crimescenes.get_bonus_base())
 		return bonus_base_elements
 
@@ -916,6 +919,7 @@ class JD_Modes(modes.Scoring_Mode):
 			self.rotate_modes(0)
 			self.modes_attempted.append(self.mode)
 			self.modes_just_attempted.append(self.mode)
+			self.num_modes_attempted += 1
 
 			# Change state to indicate a mode is in progress.
 			self.state = 'mode'
