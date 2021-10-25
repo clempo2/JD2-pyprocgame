@@ -372,10 +372,12 @@ class JD_Modes(modes.Scoring_Mode):
 	def sw_slingL_active(self, sw):
 		self.game.sound.play('slingshot')
 		self.rotate_modes(-1)
+		self.game.score(100)
 
 	def sw_slingR_active(self, sw):
 		self.game.sound.play('slingshot')
 		self.rotate_modes(1)
+		self.game.score(100)
 
 	def sw_popperL_active_for_200ms(self, sw):
 		if self.present_hurryup_selection:

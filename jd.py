@@ -84,7 +84,7 @@ class FlipperWorkaroundMode(game.Mode):
 class JDServiceMode(procgame.service.ServiceMode):
 	def __init__(self, game, priority, font, extra_tests=[]):
 		super(JDServiceMode, self).__init__(game, priority, font, extra_tests)
-		
+
 	def mode_stopped(self):
 		super(JDServiceMode, self).mode_stopped()
 		self.game.service_mode_ended()

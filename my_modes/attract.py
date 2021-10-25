@@ -5,7 +5,7 @@ import random
 
 class Attract(game.Mode):
 	"""Attract mode and start buttons"""
-	
+
 	def __init__(self, game):
 		super(Attract, self).__init__(game, 1)
 		self.display_order = [0,1,2,3,4,5,6,7,8,9]
@@ -22,7 +22,7 @@ class Attract(game.Mode):
 		# Blink the start buttons in alternation to notify player about starting a game.
 		self.game.lamps.startButton.schedule(schedule=0x00ff00ff, cycle_seconds=0, now=False)
 		self.game.lamps.superGame.schedule(schedule=0xff00ff00, cycle_seconds=0, now=False)
-		
+
 		# Turn on minimal GI lamps
 		self.game.enable_gi(False)
 		self.game.lamps.gi01.pulse(0)

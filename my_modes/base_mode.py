@@ -157,9 +157,3 @@ class BaseGameMode(game.Mode):
 			self.tilt_status = 1
 			#play sound
 			#play video
-	
-	def sw_slingL_active(self, sw):
-		self.game.score(100)
-
-	def sw_slingR_active(self, sw):
-		self.game.score(100)
