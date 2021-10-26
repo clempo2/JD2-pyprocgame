@@ -1,5 +1,10 @@
-import procgame
-from procgame import *
+from procgame.dmd import FrameLayer, MarkupFrameGenerator, ScriptedLayer
+from procgame.game import BasicGame, Mode, Player
+from procgame.highscore import CategoryLogic, EntrySequenceManager, HighScoreCategory
+from procgame.lamps import LampController
+from procgame.modes import BallSave, BallSearch, Trough
+from procgame.service import ServiceMode
+from procgame.sound import SoundController
 import locale
 import os
 import pinproc
@@ -27,7 +32,7 @@ settings_template_path = curr_file_path + "/config/settings_template.yaml"
 # if the buttons are held while the enable ruler is programmed, but 
 # if the buttons are released immediately after that, the deactivation
 # would be missed without this workaround.
-class FlipperWorkaroundMode(game.Mode):
+class FlipperWorkaroundMode(Mode):
 	"""Workaround to deal with latency of flipper rule programming"""
 	def __init__(self, game):
 		super(FlipperWorkaroundMode, self).__init__(game, 2)
@@ -81,7 +86,7 @@ class FlipperWorkaroundMode(game.Mode):
 			self.game.coils['flipperUpRMain'].disable()
 			self.game.coils['flipperUpRHold'].disable()
 
-class JDServiceMode(procgame.service.ServiceMode):
+class JDServiceMode(ServiceMode):
 	def __init__(self, game, priority, font, extra_tests=[]):
 		super(JDServiceMode, self).__init__(game, priority, font, extra_tests)
 
@@ -90,7 +95,7 @@ class JDServiceMode(procgame.service.ServiceMode):
 		self.game.service_mode_ended()
 
 
-class JDPlayer(game.Player):
+class JDPlayer(Player):
 	"""Keeps the progress of one player to allow the player
 	   to resume where he left off in a multi-player game"""
 
@@ -105,13 +110,13 @@ class JDPlayer(game.Player):
 		return self.state_tracking.get(key,default)
 
 
-class JDGame(game.BasicGame):
+class JDGame(BasicGame):
 	"""Judge Dredd pinball game"""
 	
 	def __init__(self):
 		super(JDGame, self).__init__(pinproc.MachineTypeWPC)
-		self.sound = procgame.sound.SoundController(self)
-		self.lampctrl = procgame.lamps.LampController(self)
+		self.sound = SoundController(self)
+		self.lampctrl = LampController(self)
 		self.logging_enabled = False
 
 		self.load_config('config/JD.yaml')
@@ -139,8 +144,8 @@ class JDGame(game.BasicGame):
 		# Trough
 		trough_switchnames = ['trough1', 'trough2', 'trough3', 'trough4', 'trough5', 'trough6']
 		early_save_switchnames = ['outlaneR', 'outlaneL']
-		self.trough = procgame.modes.Trough(self,trough_switchnames,'trough6','trough', early_save_switchnames, 'shooterR', self.drain_callback)
-		self.ball_save = procgame.modes.BallSave(self, self.lamps.drainShield, 'shooterR')
+		self.trough = Trough(self,trough_switchnames,'trough6','trough', early_save_switchnames, 'shooterR', self.drain_callback)
+		self.ball_save = BallSave(self, self.lamps.drainShield, 'shooterR')
 		self.trough.ball_save_callback = self.ball_save.launch_callback
 		self.trough.num_balls_to_save = self.ball_save.get_num_balls_to_save
 		self.ball_save.trough_enable_ball_save = self.trough.enable_ball_save
@@ -183,11 +188,11 @@ class JDGame(game.BasicGame):
 		# High Score stuff
 		self.highscore_categories = []
 		
-		cat = highscore.HighScoreCategory()
+		cat = HighScoreCategory()
 		cat.game_data_key = 'ClassicHighScoreData'
 		self.highscore_categories.append(cat)
 		
-		cat = highscore.HighScoreCategory()
+		cat = HighScoreCategory()
 		cat.game_data_key = 'CrimescenesHighScoreData'
 		cat.titles = ['Crimescene Champ']
 		cat.score_for_player = lambda player: player.getState('crimescenes_total_levels', 0)
@@ -195,7 +200,7 @@ class JDGame(game.BasicGame):
 		cat.score_suffix_plural = ' levels'
 		self.highscore_categories.append(cat)
 		
-		cat = highscore.HighScoreCategory()
+		cat = HighScoreCategory()
 		cat.game_data_key = 'InnerLoopsHighScoreData'
 		cat.titles = ['Inner Loop Champ']
 		cat.score_for_player = lambda player: player.getState('best_inner_loops', 0)
@@ -203,7 +208,7 @@ class JDGame(game.BasicGame):
 		cat.score_suffix_plural = ' loops'
 		self.highscore_categories.append(cat)
 
-		cat = highscore.HighScoreCategory()
+		cat = HighScoreCategory()
 		cat.game_data_key = 'OuterLoopsHighScoreData'
 		cat.titles = ['Outer Loop Champ']
 		cat.score_for_player = lambda player: player.getState('best_outer_loops', 0)
@@ -311,22 +316,22 @@ class JDGame(game.BasicGame):
 		self.deadworld.mode_stopped()
 
 		# High Score Stuff
-		seq_manager = highscore.EntrySequenceManager(game=self, priority=2)
+		seq_manager = EntrySequenceManager(game=self, priority=2)
 		seq_manager.finished_handler = self.highscore_entry_finished
-		seq_manager.logic = highscore.CategoryLogic(game=self, categories=self.highscore_categories)
+		seq_manager.logic = CategoryLogic(game=self, categories=self.highscore_categories)
 		seq_manager.ready_handler = self.highscore_entry_ready_to_prompt
 		self.modes.add(seq_manager)
 
 	def highscore_entry_ready_to_prompt(self, mode, prompt):
 		self.sound.play_voice('high score')
-		banner_mode = game.Mode(game=self, priority=8)
-		markup = dmd.MarkupFrameGenerator()
+		banner_mode = Mode(game=self, priority=8)
+		markup = MarkupFrameGenerator()
 		tiny7 = self.fonts['tiny7']
 		markup.font_plain = tiny7
 		markup.font_bold = tiny7
 		text = '\n[GREAT JOB]\n#%s#\n' % (prompt.left.upper()) # we know that the left is the player name
 		frame = markup.frame_for_markup(markup=text, y_offset=0)
-		banner_mode.layer = dmd.ScriptedLayer(width=128, height=32, script=[{'seconds':4.0, 'layer':dmd.FrameLayer(frame=frame)}])
+		banner_mode.layer = ScriptedLayer(width=128, height=32, script=[{'seconds':4.0, 'layer':FrameLayer(frame=frame)}])
 		banner_mode.layer.on_complete = lambda: self.highscore_banner_complete(banner_mode=banner_mode, highscore_entry_mode=mode)
 		self.modes.add(banner_mode)
 
@@ -361,7 +366,7 @@ class JDGame(game.BasicGame):
 		# shouldn't be necessary to search the deadworld.  (unless a ball jumps
 		# onto the ring rather than entering through the feeder.)
 		special_handler_modes = []
-		self.ball_search = procgame.modes.BallSearch(self, priority=100, \
+		self.ball_search = BallSearch(self, priority=100, \
 					 countdown_time=10, coils=self.ballsearch_coils, \
 					 reset_switches=self.ballsearch_resetSwitches, \
 					 stop_switches=self.ballsearch_stopSwitches, \

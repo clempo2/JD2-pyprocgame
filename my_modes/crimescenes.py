@@ -102,6 +102,13 @@ class Crimescenes(modes.Scoring_Mode):
 			lampname = 'crimeLevel' + str(i)
 			self.game.drive_lamp(lampname, 'off')
 
+	def get_info_layers(self):
+		title_layer = dmd.TextLayer(128/2, 7, self.game.fonts['tiny7'], "center").set_text('Crimescenes')
+		level_layer = dmd.TextLayer(128/2, 16, self.game.fonts['tiny7'], "center").set_text('Current Level: ' + str(self.level + 1) + '/16')
+		block_layer = dmd.TextLayer(128/2, 25, self.game.fonts['tiny7'], "center").set_text('Block War in ' + str(4-(self.level % 4)) + ' levels')
+		info_layer = dmd.GroupedLayer(128, 32, [title_layer, level_layer, block_layer])
+		return [info_layer]
+
 	####################################################
 	# Lamps
 	####################################################
@@ -333,10 +340,10 @@ class Crimescenes(modes.Scoring_Mode):
 				#Play sound, lamp show, etc
 
 	def display_level_complete(self, level, points):
-		self.title_layer = dmd.TextLayer(128/2, 7, self.game.fonts['07x5'], "center").set_text("Advance Crimescene", 1.5);
-		self.level_layer = dmd.TextLayer(128/2, 14, self.game.fonts['07x5'], "center").set_text("Level " + str(level + 1) + " complete", 1.5);
-		self.award_layer = dmd.TextLayer(128/2, 21, self.game.fonts['07x5'], "center").set_text("Award: " + locale.format("%d",points,True) + " points", 1.5);
-		self.layer = dmd.GroupedLayer(128, 32, [self.title_layer, self.level_layer, self.award_layer])
+		title_layer = dmd.TextLayer(128/2, 7, self.game.fonts['07x5'], "center").set_text("Advance Crimescene", 1.5);
+		level_layer = dmd.TextLayer(128/2, 14, self.game.fonts['07x5'], "center").set_text("Level " + str(level + 1) + " complete", 1.5);
+		award_layer = dmd.TextLayer(128/2, 21, self.game.fonts['07x5'], "center").set_text("Award: " + locale.format("%d",points,True) + " points", 1.5);
+		self.layer = dmd.GroupedLayer(128, 32, [title_layer, level_layer, award_layer])
 
 	def is_multiball_active(self):
 		return self.mode == 'block_war' or self.mode == 'bonus'
@@ -389,15 +396,6 @@ class Crimescenes(modes.Scoring_Mode):
 
 	def complete(self):
 		return self.complete
-
-	def get_info_layers(self):
-		self.title_layer = dmd.TextLayer(128/2, 7, self.game.fonts['tiny7'], "center").set_text('Crimescenes')
-		self.item_0_layer = dmd.TextLayer(128/2, 16, self.game.fonts['tiny7'], "center").set_text('Current Level: ' + str(self.level + 1) + '/16')
-		self.value_0_layer = dmd.TextLayer(128/2, 25, self.game.fonts['tiny7'], "center").set_text('Block War in ' + str(4-(self.level % 4)) + ' levels')
-
-		self.layer_0 = dmd.GroupedLayer(128, 32, [self.title_layer, self.item_0_layer, self.value_0_layer])
-
-		return [self.layer_0]
 		
 class BlockWar(game.Mode):
 	"""Multiball activated by crime scenes"""
