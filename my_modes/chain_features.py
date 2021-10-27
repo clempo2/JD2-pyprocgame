@@ -1,9 +1,9 @@
 from procgame.game import Mode
 from procgame.modes import Scoring_Mode
 from procgame.dmd import GroupedLayer, TextLayer
+from random import randint
 import locale
 import logging
-import random
 import time
 
 class ModeTimer(Mode):
@@ -256,12 +256,12 @@ class Sniper(ChainFeature):
 		super(Sniper, self).mode_started()
 		self.update_status()
 		self.update_lamps()
-		time = random.randint(2,7)
+		time = randint(2,7)
 		self.delay(name='gunshot', event_type=None, delay=time, handler=self.gunshot)
 
 	def gunshot(self):
 		self.game.sound.play_voice('sniper - shot')
-		time = random.randint(2,7)
+		time = randint(2,7)
 		self.delay(name='gunshot', event_type=None, delay=time, handler=self.gunshot)
 
 	def update_status(self):
@@ -466,12 +466,12 @@ class Impersonator(ChainFeature):
 		self.delay(name='song_restart', event_type=None, delay=6, handler=self.song_restart)
 
 	def boo_restart(self):
-		time = random.randint(2,7)
+		time = randint(2,7)
 		self.game.sound.play('bi - boo')
 		self.delay(name='boo_restart', event_type=None, delay=time, handler=self.boo_restart)
 
 	def shutup_restart(self):
-		time = random.randint(2,7)
+		time = randint(2,7)
 		self.game.sound.play('bi - shutup')
 		self.delay(name='shutup_restart', event_type=None, delay=time, handler=self.shutup_restart)
 
@@ -549,11 +549,7 @@ class Impersonator(ChainFeature):
 
 	def moving_target(self):
 		# ModeTimer is continuously updating self.timer
-		self.game.lamps.dropTargetJ.disable()
-		self.game.lamps.dropTargetU.disable()
-		self.game.lamps.dropTargetD.disable()
-		self.game.lamps.dropTargetG.disable()
-		self.game.lamps.dropTargetE.disable()
+		self.game.disable_drops()
 		if self.timer%6 == 0:
 			self.game.lamps.dropTargetJ.pulse(0)
 			self.game.lamps.dropTargetU.pulse(0)
@@ -583,11 +579,11 @@ class Safecracker(ChainFeature):
 	def __init__(self, game, priority):
 		super(Safecracker, self).__init__(game, priority, 'Safe Cracker', 'safecracker')
 		self.shots_required_for_completion = self.get_difficulty({'easy':2, 'medium':3, 'hard':4})
-		time = random.randint(10,20)
+		time = randint(10,20)
 		self.delay(name='bad guys', event_type=None, delay=time, handler=self.bad_guys)
 
 	def bad_guys(self):
-		time = random.randint(5,10)
+		time = randint(5,10)
 		self.delay(name='bad guys', event_type=None, delay=time, handler=self.bad_guys)
 		self.game.sound.play_voice('bad guys')
 

@@ -29,34 +29,37 @@ class Chain(Mode):
 		self.mode_completed_hurryup.collected = self.hurryup_collected
 		self.mode_completed_hurryup.expired = self.hurryup_over
 
-	def reset(self):
-		self.modes_attempted = []
-		self.modes_not_attempted = self.all_chain_modes[:]
-
 	def mode_started(self):
 		# restore player state
 		p = self.game.current_player()
-		self.modes_completed = p.getState('modes_completed', [])
-		self.num_modes_completed = p.getState('num_modes_completed', 0)
-		self.modes_attempted = p.getState('modes_attempted', [])
-		self.num_modes_attempted = p.getState('num_modes_attempted', 0)
 		self.modes_not_attempted = p.getState('modes_not_attempted', self.all_chain_modes[:])
 		self.modes_not_attempted_ptr = p.getState('modes_not_attempted_ptr', 0)
+		self.modes_attempted = p.getState('modes_attempted', [])
+		self.modes_completed = p.getState('modes_completed', [])
+		self.num_modes_attempted = p.getState('num_modes_attempted', 0)
+		self.num_modes_completed = p.getState('num_modes_completed', 0)
 		
 		self.mode = None
 
 	def mode_stopped(self):
 		# save player state
 		p = self.game.current_player()
-		p.setState('modes_completed', self.modes_completed)
-		p.setState('num_modes_completed', self.num_modes_completed)
-		p.setState('modes_attempted', self.modes_attempted)
-		p.setState('num_modes_attempted', self.num_modes_attempted)
 		p.setState('modes_not_attempted', self.modes_not_attempted)
 		p.setState('modes_not_attempted_ptr', self.modes_not_attempted_ptr)
+		p.setState('modes_attempted', self.modes_attempted)
+		p.setState('modes_completed', self.modes_completed)
+		p.setState('num_modes_completed', self.num_modes_completed)
+		p.setState('num_modes_attempted', self.num_modes_attempted)
 		
 		if self.mode != None:
 			self.game.modes.remove(self.mode)
+
+	def reset(self):
+		p = self.game.current_player()
+		p.setState('modes_not_attempted', self.all_chain_modes[:])
+		p.setState('modes_not_attempted_ptr', 0)
+		p.setState('modes_attempted', [])
+		p.setState('modes_completed', [])
 
 	def get_info_layers(self):
 		attempted_layer = TextLayer(128/2, 9, self.game.fonts['tiny7'], "center").set_text('Modes attempted: ' + str(self.num_modes_attempted))

@@ -1,17 +1,16 @@
+from procgame.dmd import GroupedLayer, MarkupFrameGenerator, PanningLayer, TextLayer
+from procgame.game import Mode, SwitchStop
+from procgame.modes import Scoring_Mode
+from random import shuffle
 import locale
-import logging
-import random
-import time
-from procgame import *
-from procgame.game import SwitchStop
 
-class UltimateChallenge(modes.Scoring_Mode):
+class UltimateChallenge(Scoring_Mode):
 	"""Wizard mode"""
-	
+
 	def __init__(self, game, priority):
 		super(UltimateChallenge, self).__init__(game, priority)
 		self.play_ult_intro = UltimateIntro(self.game, self.priority+1)
-		
+
 		self.mode_fire = Fire(game, self.priority+1)
 		self.mode_fear = Fear(game, self.priority+1)
 		self.mode_mortis = Mortis(game, self.priority+1)
@@ -31,7 +30,7 @@ class UltimateChallenge(modes.Scoring_Mode):
 			'death': self.mode_death,
 			'celebration': self.mode_celebration
 		}
-		
+
 		self.active_mode = 'fire'
 		self.active = False
 		self.completed = False
@@ -62,12 +61,12 @@ class UltimateChallenge(modes.Scoring_Mode):
 
 	def get_instruction_layers(self):
 		font = self.game.fonts['tiny7']
-		instr_layer1 = dmd.TextLayer(128/2, 15, font, "center").set_text('This')
-		instr_layer2 = dmd.TextLayer(128/2, 15, font, "center").set_text('is')
-		instr_layer3 = dmd.TextLayer(128/2, 15, font, "center").set_text('the')
-		instr_layer4 = dmd.TextLayer(128/2, 15, font, "center").set_text('Ultimate')
-		instr_layer5 = dmd.TextLayer(128/2, 15, font, "center").set_text('Challenge')
-		instruction_layers = [[instr_layer1],[instr_layer2],[instr_layer3],[instr_layer4],[instr_layer5]]
+		instr_layer1 = TextLayer(128/2, 15, font, "center").set_text('This')
+		instr_layer2 = TextLayer(128/2, 15, font, "center").set_text('is')
+		instr_layer3 = TextLayer(128/2, 15, font, "center").set_text('the')
+		instr_layer4 = TextLayer(128/2, 15, font, "center").set_text('Ultimate')
+		instr_layer5 = TextLayer(128/2, 15, font, "center").set_text('Challenge')
+		instruction_layers = [[instr_layer1], [instr_layer2], [instr_layer3], [instr_layer4], [instr_layer5]]
 		return instruction_layers
 
 	def timer_update(self, timer):
@@ -94,22 +93,21 @@ class UltimateChallenge(modes.Scoring_Mode):
 				self.game.modes.add(self.play_ult_intro)
 			elif self.active_mode == 'mortis':
 				self.game.modes.remove(self.mode_mortis)
-				self.play_ult_intro.setup('fear', self.begin)
 				self.active_mode = 'fear'
+				self.play_ult_intro.setup('fear', self.begin)
 				self.game.modes.add(self.play_ult_intro)
 			elif self.active_mode == 'fear':
 				self.game.modes.remove(self.mode_fear)
-				self.play_ult_intro.setup('death', self.begin)
 				self.active_mode = 'death'
+				self.play_ult_intro.setup('death', self.begin)
 				self.game.modes.add(self.play_ult_intro)
 			elif self.active_mode == 'death':
 				self.completed = True
 				self.game.modes.remove(self.mode_death)
-				self.play_ult_intro.setup('celebration', self.begin)
 				self.active_mode = 'celebration'
+				self.play_ult_intro.setup('celebration', self.begin)
 				self.game.modes.add(self.play_ult_intro)
-			# Can get here if in celebration and last balls drain at the
-			# same time.
+			# Can get here if in celebration and last balls drain at the same time.
 			elif self.active_mode == 'celebration':
 				self.game.modes.remove(self.mode_celebration)
 				self.game.base_game_mode.ball_drained_callback()
@@ -123,36 +121,25 @@ class UltimateChallenge(modes.Scoring_Mode):
 				self.callback()
 
 
-class UltimateIntro(game.Mode):
+class UltimateIntro(Mode):
 	"""Display wizard mode instructions"""
 	def __init__(self, game, priority):
 		super(UltimateIntro, self).__init__(game, priority)
-		self.gen = dmd.MarkupFrameGenerator()
+		self.gen = MarkupFrameGenerator()
 		self.delay_time = 5
 		self.exit_function = None
 		self.instructions = self.gen.frame_for_markup("") # empty
 
 	def mode_started(self):
 		self.game.sound.stop_music()
-		self.game.enable_gi(False)
-		# Disable the flippers
 		self.game.enable_flippers(False) 
+		self.game.enable_gi(False)
 		self.game.lamps.rightStartFeature.disable()
 		self.game.lamps.ultChallenge.pulse(0)
-		# Leave GI off for Ultimate Challenge
-		self.game.lamps.dropTargetJ.disable()
-		self.game.lamps.dropTargetU.disable()
-		self.game.lamps.dropTargetD.disable()
-		self.game.lamps.dropTargetG.disable()
-		self.game.lamps.dropTargetE.disable()
+		self.game.disable_drops()
 
-		self.layer = dmd.PanningLayer(width=128, height=32, frame=self.instructions, origin=(0,0), translate=(0,1), bounce=False)
+		self.layer = PanningLayer(width=128, height=32, frame=self.instructions, origin=(0,0), translate=(0,1), bounce=False)
 		self.delay(name='finish', event_type=None, delay=self.delay_time, handler=self.finish )
-
-	def finish(self):
-		self.game.modes.remove(self)
-		if self.exit_function:
-			self.exit_function()
 
 	def mode_stopped(self):
 		self.cancel_delayed('intro')
@@ -243,15 +230,18 @@ Normal play resumes when only 1 ball remains.
 """)
 
 	def sw_flipperLwL_active(self, sw):
-		if self.game.switches.flipperLwR.is_active():
-			self.finish()
+		self.finish()
 
 	def sw_flipperLwR_active(self, sw):
-		if self.game.switches.flipperLwL.is_active():
-			self.finish()
+		self.finish()
+
+	def finish(self):
+		self.game.modes.remove(self)
+		if self.exit_function:
+			self.exit_function()
 
 
-class Fire(modes.Scoring_Mode):
+class Fire(Scoring_Mode):
 	"""Dark judge Fire wizard mode"""
 	def __init__(self, game, priority):
 		super(Fire, self).__init__(game, priority)
@@ -295,7 +285,6 @@ class Fire(modes.Scoring_Mode):
 		if self.shots == self.shots_required_for_completion:
 			self.completed = True
 			self.game.score(50000)
-			logging.info("% 10.3f Pursuit calling callback" % (time.time()))
 			self.cancel_delayed('taunt')
 			self.callback()
 
@@ -399,7 +388,7 @@ class Fire(modes.Scoring_Mode):
 		return True
 
 	def finish(self):
-		self.layer = dmd.TextLayer(128/2, 13, self.game.fonts['tiny7'], "center", True).set_text('Fire Defeated!')
+		self.layer = TextLayer(128/2, 13, self.game.fonts['tiny7'], "center", True).set_text('Fire Defeated!')
 		self.game.coils.flasherFire.disable()
 		self.game.lamps.ultChallenge.disable()
 		self.game.enable_flippers(False)
@@ -414,17 +403,17 @@ class Fire(modes.Scoring_Mode):
 		# original callback so it can replace it while modes are active.
 
 
-class Fear(modes.Scoring_Mode):
+class Fear(Scoring_Mode):
 	"""Dark judge Fear wizard mode"""
 	def __init__(self, game, priority):
 		super(Fear, self).__init__(game, priority)
 		self.complete = False
 		self.mystery_lit = True
-		self.countdown_layer = dmd.TextLayer(127, 1, self.game.fonts['tiny7'], "right")
-		self.name_layer = dmd.TextLayer(1, 1, self.game.fonts['tiny7'], "left").set_text('Fear')
-		self.score_layer = dmd.TextLayer(128/2, 10, self.game.fonts['num_14x10'], "center")
-		self.status_layer = dmd.TextLayer(128/2, 26, self.game.fonts['tiny7'], "center")
-		self.layer = dmd.GroupedLayer(128, 32, [self.countdown_layer, self.name_layer, self.score_layer, self.status_layer])
+		self.countdown_layer = TextLayer(127, 1, self.game.fonts['tiny7'], "right")
+		self.name_layer = TextLayer(1, 1, self.game.fonts['tiny7'], "left").set_text('Fear')
+		self.score_layer = TextLayer(128/2, 10, self.game.fonts['num_14x10'], "center")
+		self.status_layer = TextLayer(128/2, 26, self.game.fonts['tiny7'], "center")
+		self.layer = GroupedLayer(128, 32, [self.countdown_layer, self.name_layer, self.score_layer, self.status_layer])
 
 	def mode_started(self):
 		self.state = 'ramps'
@@ -586,11 +575,11 @@ class Fear(modes.Scoring_Mode):
 		self.update_lamps()
 		self.game.lamps.ultChallenge.disable()
 		if success:
-			self.layer = dmd.TextLayer(128/2, 13, self.game.fonts['tiny7'], "center", True).set_text('Fear Defeated!')
+			self.layer = TextLayer(128/2, 13, self.game.fonts['tiny7'], "center", True).set_text('Fear Defeated!')
 			self.complete = True
 			self.complete_callback()
 		else:
-			self.layer = dmd.TextLayer(128/2, 13, self.game.fonts['tiny7'], "center", True).set_text('You lose!')
+			self.layer = TextLayer(128/2, 13, self.game.fonts['tiny7'], "center", True).set_text('You lose!')
 		
 		# Call callback back to ult-challenge.
 		# in ult-challenge, change trough callback so that mode can 
@@ -613,7 +602,7 @@ class Fear(modes.Scoring_Mode):
 			self.finish(False)
 
 
-class Mortis(modes.Scoring_Mode):
+class Mortis(Scoring_Mode):
 	"""Dark judge Mortis wizard mode"""
 	def __init__(self, game, priority):
 		super(Mortis, self).__init__(game, priority)
@@ -732,7 +721,7 @@ class Mortis(modes.Scoring_Mode):
 
 	def finish(self, success = True):
 		self.cancel_delayed('taunt')
-		self.layer = dmd.TextLayer(128/2, 13, self.game.fonts['tiny7'], "center", True).set_text('Mortis Defeated!')
+		self.layer = TextLayer(128/2, 13, self.game.fonts['tiny7'], "center", True).set_text('Mortis Defeated!')
 		self.state = 'finished'
 		self.game.enable_flippers(False)
 
@@ -752,16 +741,16 @@ class Mortis(modes.Scoring_Mode):
 		# original callback so it can replace it while modes are active.
 
 
-class Death(modes.Scoring_Mode):
+class Death(Scoring_Mode):
 	"""Dark judge Death wizard mode"""
 	def __init__(self, game, priority):
 		super(Death, self).__init__(game, priority)
 		self.complete = False
-		self.countdown_layer = dmd.TextLayer(127, 1, self.game.fonts['tiny7'], "right")
-		self.name_layer = dmd.TextLayer(1, 1, self.game.fonts['tiny7'], "left").set_text('Death')
-		self.score_layer = dmd.TextLayer(128/2, 10, self.game.fonts['num_14x10'], "center")
-		self.status_layer = dmd.TextLayer(128/2, 26, self.game.fonts['tiny7'], "center")
-		self.layer = dmd.GroupedLayer(128, 32, [self.countdown_layer, self.name_layer, self.score_layer, self.status_layer])
+		self.countdown_layer = TextLayer(127, 1, self.game.fonts['tiny7'], "right")
+		self.name_layer = TextLayer(1, 1, self.game.fonts['tiny7'], "left").set_text('Death')
+		self.score_layer = TextLayer(128/2, 10, self.game.fonts['num_14x10'], "center")
+		self.status_layer = TextLayer(128/2, 26, self.game.fonts['tiny7'], "center")
+		self.layer = GroupedLayer(128, 32, [self.countdown_layer, self.name_layer, self.score_layer, self.status_layer])
 
 	def mode_started(self):
 		self.current_shot_index = 0
@@ -896,7 +885,7 @@ class Death(modes.Scoring_Mode):
 
 	def finish(self, success = True):
 		self.cancel_delayed('taunt')
-		self.layer = dmd.TextLayer(128/2, 13, self.game.fonts['tiny7'], "center", True).set_text('Death Defeated!')
+		self.layer = TextLayer(128/2, 13, self.game.fonts['tiny7'], "center", True).set_text('Death Defeated!')
 		self.cancel_delayed('countdown')
 		self.game.enable_flippers(False)
 
@@ -936,15 +925,12 @@ class Death(modes.Scoring_Mode):
 			self.delay(name='countdown', event_type=None, delay=1, handler=self.decrement_timer)
 
 
-class Celebration(modes.Scoring_Mode):
+class Celebration(Scoring_Mode):
 	"""Final multiball wizard mode after all dark judges have been defeated"""
 	def __init__(self, game, priority):
 		super(Celebration, self).__init__(game, priority)
-		#self.layer = dmd.TextLayer(128/2, 13, self.game.fonts['tiny7'], "center", False)
 
 	def mode_started(self):
-		#self.layer.set_text('Celebration Multiball!', 3)
-
 		# Call callback now to set up drain callback, which will decide
 		# when multiball should end... probably when 1 ball is left.
 		self.complete_callback()
@@ -985,7 +971,7 @@ class Celebration(modes.Scoring_Mode):
 			if i > 16:
 				lamp_schedules[i] = (lamp_schedules[i] | (0xffff << (32-(i-16)))) & 0xffffffff
 
-		random.shuffle(lamp_schedules)
+		shuffle(lamp_schedules)
 		i = 0
 		for lamp in self.game.lamps:
 			if lamp.name.find('gi0', 0) == -1 and \

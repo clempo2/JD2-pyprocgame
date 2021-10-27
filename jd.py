@@ -397,6 +397,13 @@ class JDGame(BasicGame):
 			self.lamps[lampname].pulse(0)
 		elif style == 'off':
 			self.lamps[lampname].disable()
+
+	def disable_drops(self):
+		self.game.lamps.dropTargetJ.disable()
+		self.game.lamps.dropTargetU.disable()
+		self.game.lamps.dropTargetD.disable()
+		self.game.lamps.dropTargetG.disable()
+		self.game.lamps.dropTargetE.disable()
 		
 	def enable_gi(self, on):
 		for gi in ['gi01', 'gi02', 'gi03', 'gi04', 'gi05']:

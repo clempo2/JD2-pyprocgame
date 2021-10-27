@@ -61,6 +61,10 @@ class JD_Modes(Scoring_Mode):
 		self.chain.reset()
 		self.crimescenes.reset()
 		self.multiball.reset_jackpot_collected()
+		self.game.modes.add(self.chain)
+		self.game.modes.add(self.multiball)
+		self.game.modes.add(self.crimescenes)
+		self.game.modes.add(self.boring)
 		self.game.update_lamps()
 
 	def mode_started(self):
@@ -473,11 +477,7 @@ class JD_Modes(Scoring_Mode):
 			self.game.drive_lamp('perp4G', style)
 
 		if self.state == 'pre_ultimate_challenge':
-			self.game.lamps.dropTargetJ.disable()
-			self.game.lamps.dropTargetU.disable()
-			self.game.lamps.dropTargetD.disable()
-			self.game.lamps.dropTargetG.disable()
-			self.game.lamps.dropTargetE.disable()
+			self.game.disable_drops()
 			self.game.lamps.advanceCrimeLevel.disable()
 			self.game.lamps.mystery.disable()
 
@@ -573,7 +573,7 @@ class JD_Modes(Scoring_Mode):
 			self.game.score(100000)
 
 		if award == 'all' or award == 'crimescenes':
-			self.crimescenes.level_complete(1)
+			self.crimescenes.level_complete()
 
 	def video_mode_complete(self, success):
 		if self.state == 'mode':
@@ -601,6 +601,7 @@ class JD_Modes(Scoring_Mode):
 		self.game.lamps.rightStartFeature.disable()
 		self.play_ult_intro.setup(self.ultimate_challenge.active_mode, self.activate_ultimate_challenge)
 		self.game.modes.add(self.play_ult_intro)
+		self.game.modes.remove(self.chain)
 		self.game.modes.remove(self.multiball)
 		self.game.modes.remove(self.crimescenes)
 		self.game.modes.remove(self.skill_shot)
