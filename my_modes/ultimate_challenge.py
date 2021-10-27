@@ -179,7 +179,7 @@ Stage 2
 
 Judge Mortis is spreading disease throughout the city.
 
-Banish him by shooting each the lit shot twice.
+Banish him by shooting each lit shot twice.
 
 2 ball multiball with temporary ball save.
 """)

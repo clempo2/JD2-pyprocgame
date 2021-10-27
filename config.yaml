@@ -5,20 +5,19 @@ pinproc_class: procgame.fakepinproc.FakePinPROC # comment out this line when usi
 
 desktop_dmd_scale: 5                # the dmd scale is the multiplier per dot.  At 5 each dot is 5x5 pixels
 
-keyboard_switch_map:                                # this is the mapping of keyboard keys to switch matrix keys
+keyboard_switch_map:                                # this is the mapping of keyboard keys to switch matrix keys, for K_* constants, see https://www.pygame.org/docs/ref/key.html#module-pygame.key
     1: S81 # trough1
     2: S82 # trough2
     3: S83 # trough3
     4: S84 # trough4
     5: S85 # trough5
     6: S86 # trough6
-    v: SD5 # exit service button
-    b: SD6 # down service button
-    n: SD7 # up service button
-    m: SD8 # enter service button
-    s: S13 # start button
-    d: S41 # right shooter lane
-    f: S12 # right fire
+    K_UP: SD5 # exit
+    K_LEFT: SD6 # down
+    K_RIGHT: SD7 # up
+    K_DOWN: SD8 # enter
+    a: S44 # superGame
+    s: S13 # startButton
     q: S54 # J
     w: S55 # U
     e: S56 # D
@@ -27,3 +26,14 @@ keyboard_switch_map:                                # this is the mapping of key
     p: S74 # popperR
     9: S14 # tilt
     0: S21 # slam tilt
+    K_LSHIFT: SF4 # flipperLwL
+    K_RSHIFT: SF2 # flipperLwR
+    K_CAPSLOCK: S11 # fireL
+    K_RETURN: S12 # fireR
+    K_TAB: S73 # popperL
+    K_BACKSPACE: S74 # popperR
+    '[': S64 # leftRampExit
+    ']': S66 # centerRampExit
+    '\': S76 # rightRampExit
+
+    

@@ -1,3 +1,4 @@
+from procgame.config import value_for_key_path
 from procgame.dmd import FrameLayer, MarkupFrameGenerator, ScriptedLayer
 from procgame.game import BasicGame, Mode, Player
 from procgame.highscore import CategoryLogic, EntrySequenceManager, HighScoreCategory
@@ -8,6 +9,7 @@ from procgame.sound import SoundController
 import locale
 import os
 import pinproc
+import pygame.locals
 
 from asset_loader import AssetLoader
 from my_modes.switchmonitor import SwitchMonitor
@@ -129,6 +131,35 @@ class JDGame(BasicGame):
 		self.fonts = asset_loader.fonts
 
 		self.reset()
+		
+	# override load_config to allow pygame key names and pygame numeric keys in the key_map
+	def load_config(self, path):
+		super(BasicGame,self).load_config(path) # by-pass immediate superclass
+
+		# Setup the key mappings from the config.yaml.
+		# We used to do this in __init__, but at that time the
+		# configuration isn't loaded so we can't peek into self.switches.
+		key_map_config = value_for_key_path(keypath='keyboard_switch_map', default={})
+		if self.desktop:
+			for k, v in key_map_config.items():
+				switch_name = str(v)
+				if self.switches.has_key(switch_name):
+					switch_number = self.switches[switch_name].number
+				else:
+					switch_number = pinproc.decode(self.machine_type, switch_name)
+				if (type(k) == str):
+					if (k.startswith('K_')): # key is a pygame key name
+						key = getattr(pygame.locals, k)
+					else: # key is character
+						key = ord(k)
+				elif (type(k) == int):
+					if (k < 10):
+						key = ord(str(k)) # digit character
+					else:
+						key = k # numbers used as bindings for specials -- for example K_LSHIFT is 304
+				else:
+					raise ValueError('invalid key name in config file: ' + str(k)) 
+				self.desktop.add_key_map(key, switch_number)
 
 	def reset(self):
 		# Reset the entire game framework
@@ -399,11 +430,11 @@ class JDGame(BasicGame):
 			self.lamps[lampname].disable()
 
 	def disable_drops(self):
-		self.game.lamps.dropTargetJ.disable()
-		self.game.lamps.dropTargetU.disable()
-		self.game.lamps.dropTargetD.disable()
-		self.game.lamps.dropTargetG.disable()
-		self.game.lamps.dropTargetE.disable()
+		self.lamps.dropTargetJ.disable()
+		self.lamps.dropTargetU.disable()
+		self.lamps.dropTargetD.disable()
+		self.lamps.dropTargetG.disable()
+		self.lamps.dropTargetE.disable()
 		
 	def enable_gi(self, on):
 		for gi in ['gi01', 'gi02', 'gi03', 'gi04', 'gi05']:
