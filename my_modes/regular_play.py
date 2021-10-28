@@ -8,22 +8,19 @@ from ultimate_challenge import UltimateChallenge, UltimateIntro
 from multiball import Multiball
 from boring import Boring
 from skillshot import SkillShot
-from info import Info
 from missile_award import MissileAwardMode
 from shooting_gallery import ShootingGallery
 
-class JD_Modes(Scoring_Mode):
-	"""Controls playable modes"""
+class RegularPlay(Scoring_Mode):
+	"""Controls all play before entering ultimate challenge"""
 	
 	def __init__(self, game, priority, font_small, font_big):
-		super(JD_Modes, self).__init__(game, priority)
+		super(RegularPlay, self).__init__(game, priority)
 
 		self.cow_video_mode_lit = False # TODO: this should be a game settings
 
 		# Instantiate sub-modes
 		self.game_intro = GameIntro(self.game, self.priority+1)
-		self.info = Info(game, priority+20)
-		self.info.callback = self.info_ended
 		self.boring = Boring(self.game, self.priority+1)
 		self.skill_shot = SkillShot(self.game, priority + 5)
 		self.chain = Chain(self.game, self.priority)
@@ -77,8 +74,6 @@ class JD_Modes(Scoring_Mode):
 		self.video_mode_lit = p.getState('video_mode_lit', True)
 		self.extra_balls_lit = p.getState('extra_balls_lit', 0)
 		self.total_extra_balls_lit = p.getState('total_extra_balls_lit', 0)
-		self.best_inner_loops = p.getState('best_inner_loops', 0)
-		self.best_outer_loops = p.getState('best_outer_loops', 0)
 		self.bonus_x = p.getState('bonus_x', 1) if p.getState('hold_bonus_x', False) else 1
 		self.hold_bonus_x = False
 
@@ -88,12 +83,7 @@ class JD_Modes(Scoring_Mode):
 
 		self.ball_starting = True
 		self.skill_shot_added = False
-		self.info_on = False
 		self.intro_playing = False
-		self.outer_loop_active = False
-		self.inner_loop_active = False
-		self.inner_loop_combos = 0
-		self.outer_loop_combos = 0
 		self.mystery_lit = True
 		self.tilt = False
 
@@ -137,9 +127,6 @@ class JD_Modes(Scoring_Mode):
 			if coil.name.startswith('flasher', 0) != -1:
 				coil.disable()
 
-		self.cancel_delayed('inner_loop')
-		self.cancel_delayed('outer_loop')
-
 		# save player state
 		p = self.game.current_player()
 		p.setState('state', self.state)
@@ -149,8 +136,6 @@ class JD_Modes(Scoring_Mode):
 		p.setState('missile_award_lit', self.missile_award_lit or self.missile_award_lit_save)
 		p.setState('extra_balls_lit', self.extra_balls_lit)
 		p.setState('total_extra_balls_lit', self.total_extra_balls_lit)
-		p.setState('best_inner_loops', self.best_inner_loops)
-		p.setState('best_outer_loops', self.best_outer_loops)
 		p.setState('bonus_x', self.bonus_x)
 		p.setState('hold_bonus_x', self.hold_bonus_x)
 
@@ -233,63 +218,6 @@ class JD_Modes(Scoring_Mode):
 			self.show_on_display(text, score, 'high')
 
 	#
-	# Instant Info
-	#
-
-	def sw_flipperLwL_active_for_6s(self, sw):
-		if not self.any_multiball_active() and not self.info_on:
-			self.start_info()
-
-	def sw_flipperLwR_active_for_6s(self, sw):
-		if not self.any_multiball_active() and not self.info_on:
-			self.start_info()
-	
-	def start_info(self):
-		self.info_on = True
-		info_layers = self.get_info_layers()
-		info_layers.extend(self.chain.get_info_layers())
-		info_layers.extend(self.crimescenes.get_info_layers())
-		self.info.set_layers(info_layers)
-		self.game.modes.add(self.info)
-
-	def get_info_layers(self):
-		title_layer = TextLayer(128/2, 9, self.game.fonts['tiny7'], "center").set_text('Extra Balls:')
-		item_layer = TextLayer(128/2, 19, self.game.fonts['tiny7'], "center").set_text(str(self.game.current_player().extra_balls))
-		info_layer = GroupedLayer(128, 32, [title_layer, item_layer])
-		return [info_layer]
-
-	def info_ended(self):
-		self.game.modes.remove(self.info)
-		self.info_on = False
-
-	#
-	# Drop Targets
-	#
-
-	def sw_dropTargetJ_active(self, sw):
-		self.game.sound.play('drop_target')
-		self.game.score(200)
-
-	def sw_dropTargetU_active(self, sw):
-		self.game.sound.play('drop_target')
-		self.game.score(200)
-
-	def sw_dropTargetD_active(self, sw):
-		#self.game.sound.play('drop_target')
-		pass
-
-	def sw_dropTargetG_active(self, sw):
-		self.game.sound.play('drop_target')
-		self.game.score(200)
-
-	def sw_dropTargetE_active(self, sw):
-		self.game.sound.play('drop_target')
-		self.game.score(200)
-
-	def sw_subwayEnter2_active(self, sw):
-		self.game.score(500)
-
-	#
 	# Mystery
 	#
 	
@@ -346,23 +274,6 @@ class JD_Modes(Scoring_Mode):
 			self.chain.rotate_modes(-1)
 		elif not self.any_multiball_active() and self.missile_award_mode.active:
 			self.game.coils.shooterL.pulse(50)
-
-	#
-	# Ramps
-	#
-	
-	def sw_leftRampEnter_active(self, sw):
-		self.game.coils.flasherGlobe.schedule(0x33333, cycle_seconds=1, now=False)
-		self.game.coils.flasherCursedEarth.schedule(0x33333, cycle_seconds=1, now=False)
-
-	def sw_leftRampExit_active(self, sw):
-		self.game.sound.play('left_ramp')
-		self.game.score(2000)
-
-	def sw_rightRampExit_active(self, sw):
-		self.game.sound.play('right_ramp')
-		self.game.coils.flashersRtRamp.schedule(0x33333, cycle_seconds=1, now=False)
-		self.game.score(2000)
 
 	#
 	# Shooter Lanes
@@ -464,13 +375,13 @@ class JD_Modes(Scoring_Mode):
 		self.game.drive_lamp('airRaid', style)
 
 		if self.state != 'ultimate_challenge':
-			style = 'slow' if self.inner_loop_active else 'off'
+			style = 'slow' if self.game.base_play.inner_loop_active else 'off'
 			self.game.drive_lamp('perp2W', style)
 			self.game.drive_lamp('perp2R', style)
 			self.game.drive_lamp('perp2Y', style)
 			self.game.drive_lamp('perp2G', style)
 
-			style = 'slow' if self.outer_loop_active else 'off'
+			style = 'slow' if self.game.base_play.outer_loop_active else 'off'
 			self.game.drive_lamp('perp4W', style)
 			self.game.drive_lamp('perp4R', style)
 			self.game.drive_lamp('perp4Y', style)
@@ -626,54 +537,6 @@ class JD_Modes(Scoring_Mode):
 		self.reset_modes()
 		# supergame reverts to normal play for this player
 		self.supergame = False
-
-	#
-	# Loop Combos
-	#
-
-	def sw_topRightOpto_active(self, sw):
-		#See if ball came around inner left loop
-		if self.game.switches.topCenterRollover.time_since_change() < 1.5:
-			self.inner_loop_active = True
-			self.game.sound.play('inner_loop')
-			self.inner_loop_combos += 1
-			if self.inner_loop_combos > self.best_inner_loops:
-				self.best_inner_loops = self.inner_loop_combos
-			score = 10000 * (self.inner_loop_combos)
-			self.game.score(score)
-			self.show_on_display('inner loop: ' + str(self.inner_loop_combos), score, 'mid')
-			anim = self.game.animations['bike_across_screen']
-			self.play_animation(anim, 'mid', repeat=False, hold=False, frame_time=3)
-			self.game.update_lamps()
-			self.cancel_delayed('inner_loop')
-			self.delay(name='inner_loop', event_type=None, delay=3.0, handler=self.inner_loop_combo_expired)
-
-	def sw_leftRollover_active(self, sw):
-		#See if ball came around right loop
-		if self.game.switches.topRightOpto.time_since_change() < 1:
-			self.outer_loop_active = True
-			self.game.sound.play('outer_loop')
-			self.outer_loop_combos += 1
-			if self.outer_loop_combos > self.best_outer_loops:
-				self.best_outer_loops = self.outer_loop_combos
-			score = 1000 * (self.outer_loop_combos)
-			self.game.score(score)
-			self.show_on_display('outer loop: ' + str(self.outer_loop_combos), score, 'mid')
-			anim = self.game.animations['bike_across_screen']
-			self.play_animation(anim, 'mid', repeat=False, hold=False, frame_time=3)
-			self.game.update_lamps()
-			self.cancel_delayed('outer_loop')
-			self.delay(name='outer_loop', event_type=None, delay=3.0, handler=self.outer_loop_combo_expired )
-
-	def inner_loop_combo_expired(self):
-		self.inner_loop_combos = 0
-		self.inner_loop_active = False
-		self.game.update_lamps()
-
-	def outer_loop_combo_expired(self):
-		self.outer_loop_combos = 0
-		self.outer_loop_active = False
-		self.game.update_lamps()
 
 	#
 	# Extra ball

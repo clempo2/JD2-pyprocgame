@@ -110,14 +110,14 @@ class UltimateChallenge(Scoring_Mode):
 			# Can get here if in celebration and last balls drain at the same time.
 			elif self.active_mode == 'celebration':
 				self.game.modes.remove(self.mode_celebration)
-				self.game.base_game_mode.ball_drained_callback()
+				self.game.base_play.ball_drained_callback()
 				
 			self.game.enable_flippers(True)
-			self.game.trough.drain_callback = self.game.base_game_mode.ball_drained_callback
+			self.game.trough.drain_callback = self.game.base_play.ball_drained_callback
 		elif self.game.trough.num_balls_in_play == 1:
 			if self.active_mode == 'celebration':
 				self.game.modes.remove(self.mode_celebration)
-				self.game.trough.drain_callback = self.game.base_game_mode.ball_drained_callback
+				self.game.trough.drain_callback = self.game.base_play.ball_drained_callback
 				self.callback()
 
 

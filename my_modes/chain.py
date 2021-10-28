@@ -68,14 +68,10 @@ class Chain(Mode):
 		return [info_layer]
 
 	def sw_slingL_active(self, sw):
-		self.game.sound.play('slingshot')
 		self.rotate_modes(-1)
-		self.game.score(100)
 
 	def sw_slingR_active(self, sw):
-		self.game.sound.play('slingshot')
 		self.rotate_modes(1)
-		self.game.score(100)
 
 	# move the pointer to the next available mode to the left or right
 	def rotate_modes(self, step):
@@ -93,13 +89,13 @@ class Chain(Mode):
 		self.mode = self.modes_not_attempted[self.modes_not_attempted_ptr]
 		self.play_intro.setup(self.mode, self.activate_chain_mode)
 		self.game.modes.add(self.play_intro)
-		self.game.base_game_mode.jd_modes.intro_playing = True
+		self.game.base_play.regular_play.intro_playing = True
 
 	# activate a chain mode after showing the instructions
 	def activate_chain_mode(self):
 		self.game.modes.remove(self.play_intro)
-		self.game.base_game_mode.jd_modes.intro_playing = False
-		self.game.base_game_mode.jd_modes.save_missile_award()
+		self.game.base_play.regular_play.intro_playing = False
+		self.game.base_play.regular_play.save_missile_award()
 
 		# Update the mode lists.
 		self.modes_not_attempted.remove(self.mode)
@@ -108,12 +104,12 @@ class Chain(Mode):
 		self.rotate_modes(0)
 
 		# Add the mode to the mode Q to activate it.
-		self.game.base_game_mode.jd_modes.state = 'mode'
+		self.game.base_play.regular_play.state = 'mode'
 		self.game.modes.add(self.mode)
 		self.mode.play_music()
 		
 		# Put the ball back into play
-		self.game.base_game_mode.jd_modes.popperR_eject()
+		self.game.base_play.regular_play.popperR_eject()
 
 	# called when the mode has completed or expired but before the hurry up
 	def chain_mode_over(self):
@@ -132,7 +128,7 @@ class Chain(Mode):
 
 	# called when a successful mode hurry up was achieved
 	def hurryup_collected(self):
-		if self.game.base_game_mode.jd_modes.any_multiball_active():
+		if self.game.base_play.regular_play.any_multiball_active():
 			award = 'all'
 		else:
 			award = 'crimescenes'
@@ -142,7 +138,7 @@ class Chain(Mode):
 	# called when the mode is over including the hurry up selection
 	def hurryup_over(self):
 		self.game.modes.remove(self.mode_completed_hurryup)
-		self.game.base_game_mode.jd_modes.setup_next_mode()
+		self.game.base_play.regular_play.setup_next_mode()
 
 
 class PlayIntro(Mode):

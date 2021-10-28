@@ -1,10 +1,11 @@
-from procgame import *
+from procgame.dmd import TextLayer
+from procgame.game import Mode
 
-class Info(game.Mode):
+class Info(Mode):
 	"""Display status report"""
 	def __init__(self, game, priority):
 		super(Info, self).__init__(game, priority)
-		self.title_layer = dmd.TextLayer(128/2, 14, self.game.fonts['tiny7'], "center").set_text("Instant Info")
+		self.title_layer = TextLayer(128/2, 14, self.game.fonts['tiny7'], "center").set_text("Instant Info")
 
 	def set_layers(self, layers):
 		self.layers = [self.title_layer]

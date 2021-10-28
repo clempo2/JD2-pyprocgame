@@ -102,15 +102,15 @@ class ChainFeature(Scoring_Mode, ModeTimer):
 		self.countdown_layer.set_text(str(timer))
 		
 	def start_using_drops(self):
-		self.game.base_game_mode.jd_modes.multiball.drops.paused = True
+		self.game.base_play.regular_play.multiball.drops.paused = True
 		self.reset_drops()
 
 	def stop_using_drops(self):
-		self.game.base_game_mode.jd_modes.multiball.drops.paused = False
+		self.game.base_play.regular_play.multiball.drops.paused = False
 		self.reset_drops()
 		
 	def reset_drops(self):
-		self.game.base_game_mode.jd_modes.multiball.drops.animated_reset(.1)
+		self.game.base_play.regular_play.multiball.drops.animated_reset(.1)
 		if (self.game.switches.dropTargetJ.is_active() or
 		    	self.game.switches.dropTargetU.is_active() or
 		    	self.game.switches.dropTargetD.is_active() or
@@ -197,7 +197,7 @@ class Blackout(ChainFeature):
 		super(Blackout, self).mode_started()
 		self.update_status()
 		anim = self.game.animations['blackout']
-		self.game.base_game_mode.jd_modes.play_animation(anim, 'high', repeat=False, hold=False, frame_time=3)
+		self.game.base_play.regular_play.play_animation(anim, 'high', repeat=False, hold=False, frame_time=3)
 		self.update_lamps()
 
 	def update_status(self):
@@ -279,7 +279,7 @@ class Sniper(ChainFeature):
 		self.shots += 1
 		self.game.score(10000)
 		anim = self.game.animations['dredd_shoot_at_sniper']
-		self.game.base_game_mode.jd_modes.play_animation(anim, 'high', repeat=False, hold=False, frame_time=5)
+		self.game.base_play.regular_play.play_animation(anim, 'high', repeat=False, hold=False, frame_time=5)
 		self.check_for_completion()
 
 	def check_for_completion(self):

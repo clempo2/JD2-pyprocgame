@@ -14,7 +14,7 @@ import pygame.locals
 from asset_loader import AssetLoader
 from my_modes.switchmonitor import SwitchMonitor
 from my_modes.attract import Attract
-from my_modes.base_mode import BaseGameMode
+from my_modes.base_play import BasePlay
 from my_modes.deadworld import Deadworld, DeadworldTest
 
 import logging
@@ -183,7 +183,7 @@ class JDGame(BasicGame):
 
 		# Instantiate basic game features
 		self.attract_mode = Attract(self)
-		self.base_game_mode = BaseGameMode(self)
+		self.base_play = BasePlay(self)
 		self.flipper_workaround_mode = FlipperWorkaroundMode(self)
 		self.deadworld = Deadworld(self, 20, self.settings['Machine']['Deadworld mod installed'])
 		
@@ -316,7 +316,7 @@ class JDGame(BasicGame):
 
 	def ball_starting(self):
 		super(JDGame, self).ball_starting()
-		self.modes.add(self.base_game_mode)
+		self.modes.add(self.base_play)
 	
 	def extra_ball(self):
 		p = self.current_player()
@@ -335,7 +335,7 @@ class JDGame(BasicGame):
 		self.game_data['Audits']['Balls Played'] += 1
 		
 	def ball_ended(self):
-		self.modes.remove(self.base_game_mode)
+		self.modes.remove(self.base_play)
 		super(JDGame, self).ball_ended()
 		
 	def game_ended(self):
@@ -343,7 +343,7 @@ class JDGame(BasicGame):
 		# Make sure nothing unexpected happens if a ball drains
 		# after a game ends (due possibly to a ball search).
 		self.trough.drain_callback = self.drain_callback
-		self.modes.remove(self.base_game_mode)
+		self.modes.remove(self.base_play)
 		self.deadworld.mode_stopped()
 
 		# High Score Stuff
