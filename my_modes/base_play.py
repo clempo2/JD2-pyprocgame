@@ -7,7 +7,7 @@ from regular_play import RegularPlay
 from tilt import Tilt
 
 class BasePlay(Mode):
-	"""Game play when no playable mode is active"""
+	"""Base rules for all the time the ball is in play"""
 	
 	def __init__(self, game):
 		super(BasePlay, self).__init__(game, 2)

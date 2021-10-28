@@ -614,7 +614,7 @@ class RegularPlay(Scoring_Mode):
 			if self.multiball.is_active():
 				self.multiball.end_multiball()
 			if self.crimescenes.is_multiball_active():
-				self.crimescenes.end_mb()
+				self.crimescenes.end_multiball()
 
 	#
 	# Bonus

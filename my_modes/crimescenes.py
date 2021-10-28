@@ -1,8 +1,10 @@
-from procgame import *
+from procgame.dmd import GroupedLayer, TextLayer
+from procgame.game import Mode
+from procgame.modes import Scoring_Mode
 import locale
 import random
 
-class Crimescenes(modes.Scoring_Mode):
+class Crimescenes(Scoring_Mode):
 	"""Crime scenes mode"""
 	
 	def __init__(self, game, priority):
@@ -76,7 +78,7 @@ class Crimescenes(modes.Scoring_Mode):
 		self.complete = p.getState('crimescenes_complete', False)
 
 		if self.mode == 'idle':
-			self.init_level(0)
+			self.init_level(self.level)
 
 		self.num_advance_hits = 0
 		self.update_lamps()
@@ -103,10 +105,10 @@ class Crimescenes(modes.Scoring_Mode):
 			self.game.drive_lamp(lampname, 'off')
 
 	def get_info_layers(self):
-		title_layer = dmd.TextLayer(128/2, 7, self.game.fonts['tiny7'], "center").set_text('Crimescenes')
-		level_layer = dmd.TextLayer(128/2, 16, self.game.fonts['tiny7'], "center").set_text('Current Level: ' + str(self.level + 1) + '/16')
-		block_layer = dmd.TextLayer(128/2, 25, self.game.fonts['tiny7'], "center").set_text('Block War in ' + str(4-(self.level % 4)) + ' levels')
-		info_layer = dmd.GroupedLayer(128, 32, [title_layer, level_layer, block_layer])
+		title_layer = TextLayer(128/2, 7, self.game.fonts['tiny7'], "center").set_text('Crimescenes')
+		level_layer = TextLayer(128/2, 16, self.game.fonts['tiny7'], "center").set_text('Current Level: ' + str(self.level + 1) + '/16')
+		block_layer = TextLayer(128/2, 25, self.game.fonts['tiny7'], "center").set_text('Block War in ' + str(4-(self.level % 4)) + ' levels')
+		info_layer = GroupedLayer(128, 32, [title_layer, level_layer, block_layer])
 		return [info_layer]
 
 	####################################################
@@ -145,8 +147,7 @@ class Crimescenes(modes.Scoring_Mode):
 		self.update_center_lamps()
 
 	def update_bonus_lamps(self):
-		lampname = 'advanceCrimeLevel'
-		self.game.drive_lamp(lampname, 'off')
+		self.game.drive_lamp('advanceCrimeLevel', 'off')
 
 		for i in range(0,5):
 			for j in range(1,len(self.lamp_colors)):
@@ -183,8 +184,7 @@ class Crimescenes(modes.Scoring_Mode):
 		# Use 4 center crimescene lamps to indicate block.
 		# 4 levels per block.
 		for i in range (1,5):
-			#lampnum = self.level%4 + 1
-			lampnum = self.level/4 + 1
+			lampnum = self.level//4 + 1
 			lampname = 'crimeLevel' + str(i)
 			if i <= lampnum:
 				self.game.drive_lamp(lampname, 'on')
@@ -280,7 +280,7 @@ class Crimescenes(modes.Scoring_Mode):
 		for i in range(0,5):
 			self.bw_shots_required[i] = num
 
-	def end_mb(self):
+	def end_multiball(self):
 		self.cancel_delayed('bonus_target')
 		self.game.modes.remove(self.block_war)
 		self.mode = 'levels'
@@ -316,7 +316,7 @@ class Crimescenes(modes.Scoring_Mode):
 			self.start_bonus()
 		else:
 			self.total_levels += self.num_levels_to_advance
-			for number in range(0,self.num_levels_to_advance):
+			for number in range(0, self.num_levels_to_advance):
 				if self.level + number == self.extra_ball_levels:
 					self.light_extra_ball_function()
 					break
@@ -340,10 +340,10 @@ class Crimescenes(modes.Scoring_Mode):
 				#Play sound, lamp show, etc
 
 	def display_level_complete(self, level, points):
-		title_layer = dmd.TextLayer(128/2, 7, self.game.fonts['07x5'], "center").set_text("Advance Crimescene", 1.5);
-		level_layer = dmd.TextLayer(128/2, 14, self.game.fonts['07x5'], "center").set_text("Level " + str(level + 1) + " complete", 1.5);
-		award_layer = dmd.TextLayer(128/2, 21, self.game.fonts['07x5'], "center").set_text("Award: " + locale.format("%d",points,True) + " points", 1.5);
-		self.layer = dmd.GroupedLayer(128, 32, [title_layer, level_layer, award_layer])
+		title_layer = TextLayer(128/2, 7, self.game.fonts['07x5'], "center").set_text("Advance Crimescene", 1.5);
+		level_layer = TextLayer(128/2, 14, self.game.fonts['07x5'], "center").set_text("Level " + str(level + 1) + " complete", 1.5);
+		award_layer = TextLayer(128/2, 21, self.game.fonts['07x5'], "center").set_text("Award: " + locale.format("%d",points,True) + " points", 1.5);
+		self.layer = GroupedLayer(128, 32, [title_layer, level_layer, award_layer])
 
 	def is_multiball_active(self):
 		return self.mode == 'block_war' or self.mode == 'bonus'
@@ -385,32 +385,37 @@ class Crimescenes(modes.Scoring_Mode):
 			self.mode = 'levels'
 			level_template = self.level_templates[level]
 			random.shuffle(level_template)
-			# First initialize targets (redundant?)
-			for i in range(0,5):
-				self.targets[i] = 0
+			
+			num_targets_to_pick_from_template = self.level_nums[level]
+			if num_targets_to_pick_from_template > len(level_template):
+				raise ValueError("Number of targets necessary for level " + level + " exceeds the list of targets in the template")
+
 			# Now fill targets according to shuffled template
-			for i in range(0,5):
-				if i < self.level_nums[level] and i < len(self.level_templates[level]):
-					self.targets[level_template[i]] = 1
+			self.targets = [0] * 5
+			for i in range(0, num_targets_to_pick_from_template):
+				self.targets[level_template[i]] = 1
 		self.update_lamps()
 
 	def complete(self):
 		return self.complete
 		
-class BlockWar(game.Mode):
+class BlockWar(Mode):
 	"""Multiball activated by crime scenes"""
 	def __init__(self, game, priority):
 		super(BlockWar, self).__init__(game, priority)
-		self.countdown_layer = dmd.TextLayer(128/2, 7, self.game.fonts['jazz18'], "center")
-		self.banner_layer = dmd.TextLayer(128/2, 7, self.game.fonts['jazz18'], "center")
-		self.score_reason_layer = dmd.TextLayer(128/2, 7, self.game.fonts['07x5'], "center")
-		self.score_value_layer = dmd.TextLayer(128/2, 17, self.game.fonts['07x5'], "center")
+		self.countdown_layer = TextLayer(128/2, 7, self.game.fonts['jazz18'], "center")
+		self.banner_layer = TextLayer(128/2, 7, self.game.fonts['jazz18'], "center")
+		self.score_reason_layer = TextLayer(128/2, 7, self.game.fonts['07x5'], "center")
+		self.score_value_layer = TextLayer(128/2, 17, self.game.fonts['07x5'], "center")
 		self.anim_layer = self.game.animations['blockwars']
-		self.layer = dmd.GroupedLayer(128, 32, [self.anim_layer, self.countdown_layer, self.banner_layer, self.score_reason_layer, self.score_value_layer])
+		self.layer = GroupedLayer(128, 32, [self.anim_layer, self.countdown_layer, self.banner_layer, self.score_reason_layer, self.score_value_layer])
 	
 	def mode_started(self):
 		self.banner_layer.set_text("Block War!", 3)
 		self.game.sound.play_voice('block war start')
+
+	def mode_stopped(self):
+		pass
 
 	def switch_hit(self, shot_index, num_remaining, multiplier):
 		score = 5000 * multiplier
@@ -434,6 +439,3 @@ class BlockWar(game.Mode):
 		self.banner_layer.set_text("Jackpot!", 2)
 		self.game.sound.play_voice('jackpot')
 		self.game.score(500000)
-
-	def mode_stopped(self):
-		pass
