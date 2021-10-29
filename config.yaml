@@ -34,6 +34,9 @@ keyboard_switch_map:                                # this is the mapping of key
     K_BACKSPACE: S74 # popperR
     '[': S64 # leftRampExit
     ']': S66 # centerRampExit
-    '\': S76 # rightRampExit
+    K_BACKSLASH: S76 # rightRampExit
+    'l': S33 # leftRollover
+    ';': S35 # topCenterRollover
+    "'": S72 # topRightOpto
 
     
