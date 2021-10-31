@@ -1,21 +1,45 @@
-from procgame.dmd import TextLayer
+from procgame.dmd import GroupedLayer, TextLayer
 from procgame.game import Mode
 
-class Info(Mode):
+class StatusReport(Mode):
 	"""Display status report"""
-	def __init__(self, game, priority):
-		super(Info, self).__init__(game, priority)
-		self.title_layer = TextLayer(128/2, 14, self.game.fonts['tiny7'], "center").set_text("Instant Info")
 
-	def set_layers(self, layers):
-		self.layers = [self.title_layer]
-		self.layers.extend(layers)
-	
+	def __init__(self, game, priority):
+		super(StatusReport, self).__init__(game, priority)
+
 	def mode_started(self):
+		tiny_font = self.game.fonts['tiny7']
+		player = self.game.current_player()
+
+		report_title_layer = TextLayer(128/2, 9, tiny_font, "center").set_text('Status Report')
+		extra_ball_layer = TextLayer(128/2, 19, tiny_font, "center").set_text('Extra Balls: ' + str(player.extra_balls))
+		main_title_layer = GroupedLayer(128, 32, [report_title_layer, extra_ball_layer])
+
+		self.report_layers = [main_title_layer]
+		self.report_layers.extend(self.game.base_play.regular_play.chain.get_status_layers())
+		self.report_layers.extend(self.game.base_play.regular_play.crimescenes.get_status_layers())
+		self.report_layers.extend(self.game.base_play.combos.get_status_layers())
+		
 		self.index = 0
-		self.index_max = len(self.layers) - 1
+		self.index_max = len(self.report_layers) - 1
 		self.update_display()
 		
+	def mode_stopped(self):
+		self.report_layers = []
+
+	def update_display(self):
+		self.layer = self.report_layers[self.index]
+		self.delay(name='delayed_progression', event_type=None, delay=3.0, handler=self.progress, param=1)
+
+	def progress(self, step):
+		self.cancel_delayed('delayed_progression')
+		self.index += step
+		if self.index < 0:
+			self.index = self.index_max
+		elif self.index > self.index_max:
+			self.index = 0
+		self.update_display()
+
 	def sw_flipperLwL_active(self,sw):
 		if self.game.switches.flipperLwR.is_active():
 			self.progress(-1)
@@ -34,18 +58,4 @@ class Info(Mode):
 
 	def exit(self):
 		self.cancel_delayed('delayed_progression')
-		self.callback()
-
-	def progress(self, step):
-		self.cancel_delayed('delayed_progression')
-		self.index += step
-		if self.index < 0:
-			self.index = self.index_max
-		elif self.index > self.index_max:
-			self.index = 0
-		self.update_display()
-
-	def update_display(self):
-		self.layer = self.layers[self.index]
-		self.delay(name='delayed_progression', event_type=None, delay=3.0, handler=self.progress, param=1)
-
+		self.game.modes.remove(self)

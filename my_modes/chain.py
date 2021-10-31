@@ -61,11 +61,12 @@ class Chain(Mode):
 		p.setState('modes_attempted', [])
 		p.setState('modes_completed', [])
 
-	def get_info_layers(self):
-		attempted_layer = TextLayer(128/2, 9, self.game.fonts['tiny7'], "center").set_text('Modes attempted: ' + str(self.num_modes_attempted))
-		completed_layer = TextLayer(128/2, 19, self.game.fonts['tiny7'], "center").set_text('Modes completed: ' + str(self.num_modes_completed))
-		info_layer = GroupedLayer(128, 32, [attempted_layer, completed_layer])
-		return [info_layer]
+	def get_status_layers(self):
+		tiny_font = self.game.fonts['tiny7']
+		attempted_layer = TextLayer(128/2, 9, tiny_font, "center").set_text('Modes attempted: ' + str(self.num_modes_attempted))
+		completed_layer = TextLayer(128/2, 19, tiny_font, "center").set_text('Modes completed: ' + str(self.num_modes_completed))
+		status_layer = GroupedLayer(128, 32, [attempted_layer, completed_layer])
+		return [status_layer]
 
 	def sw_slingL_active(self, sw):
 		self.rotate_modes(-1)

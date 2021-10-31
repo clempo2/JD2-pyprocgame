@@ -375,13 +375,13 @@ class RegularPlay(Scoring_Mode):
 		self.game.drive_lamp('airRaid', style)
 
 		if self.state != 'ultimate_challenge':
-			style = 'slow' if self.game.base_play.inner_loop_active else 'off'
+			style = 'slow' if self.game.base_play.combos.inner_loop_active else 'off'
 			self.game.drive_lamp('perp2W', style)
 			self.game.drive_lamp('perp2R', style)
 			self.game.drive_lamp('perp2Y', style)
 			self.game.drive_lamp('perp2G', style)
 
-			style = 'slow' if self.game.base_play.outer_loop_active else 'off'
+			style = 'slow' if self.game.base_play.combos.outer_loop_active else 'off'
 			self.game.drive_lamp('perp4W', style)
 			self.game.drive_lamp('perp4R', style)
 			self.game.drive_lamp('perp4Y', style)

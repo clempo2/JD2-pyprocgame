@@ -98,12 +98,13 @@ class Crimescenes(Scoring_Mode):
 	def is_multiball_active(self):
 		return self.mode == 'block_war' or self.mode == 'bonus'
 
-	def get_info_layers(self):
-		title_layer = TextLayer(128/2, 7, self.game.fonts['tiny7'], "center").set_text('Crimescenes')
-		level_layer = TextLayer(128/2, 16, self.game.fonts['tiny7'], "center").set_text('Current Level: ' + str(self.level + 1) + '/16')
-		block_layer = TextLayer(128/2, 25, self.game.fonts['tiny7'], "center").set_text('Block War in ' + str(4-(self.level % 4)) + ' levels')
-		info_layer = GroupedLayer(128, 32, [title_layer, level_layer, block_layer])
-		return [info_layer]
+	def get_status_layers(self):
+		tiny_font = self.game.fonts['tiny7']
+		title_layer = TextLayer(128/2, 7, tiny_font, "center").set_text('Crime Scenes')
+		level_layer = TextLayer(128/2, 16, tiny_font, "center").set_text('Current Level: ' + str(self.level + 1) + '/16')
+		block_layer = TextLayer(128/2, 25, tiny_font, "center").set_text('Block War in ' + str(4-(self.level % 4)) + ' levels')
+		status_layer = GroupedLayer(128, 32, [title_layer, level_layer, block_layer])
+		return [status_layer]
 
 	#
 	# Advance Crime Level
