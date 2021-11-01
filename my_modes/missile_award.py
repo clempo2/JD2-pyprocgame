@@ -1,35 +1,37 @@
-from procgame import *
-import random
+from procgame.dmd import GroupedLayer, TextLayer
+from procgame.game import Mode
+from random import randint
 
-class MissileAwardMode(game.Mode):
+class MissileAwardMode(Mode):
 	"""Choose an award while the ball sits in the left shooter lane"""
 	
 	def __init__(self, game, priority, font):
 		super(MissileAwardMode, self).__init__(game, priority)
-		self.title_layer = dmd.TextLayer(128/2, 7, font, "center")
-		self.element_layer = dmd.TextLayer(128/2, 15, font, "center")
-		self.value_layer = dmd.TextLayer(128/2, 22, font, "center")
-		self.layer = dmd.GroupedLayer(128, 32, [self.title_layer,self.element_layer, self.value_layer])
-		self.all_awards = ['Light Extra Ball', 'Advance Crimescenes', '30000 Points', 'Bonus +1X', 'Hold Bonus X']
-		self.awards = self.all_awards
-		self.awards_allow_repeat = [False, True, True, True, False]
-		self.awards_remaining = self.awards[:]
-		self.delay_time = 0.200
-		self.award_ptr = 0
-		self.award_ptr_adj = 0
+		
+		self.title_layer = TextLayer(128/2, 7, font, "center")
+		self.element_layer = TextLayer(128/2, 15, font, "center")
+		self.value_layer = TextLayer(128/2, 22, font, "center")
+		self.layer = GroupedLayer(128, 32, [self.title_layer,self.element_layer, self.value_layer])
+
 		self.title_layer.set_text("Missile Award")
 		self.element_layer.set_text("Left Fire btn collects:")
+		
+		self.initial_awards = ['Light Extra Ball', 'Advance Crimescenes', '30000 Points', 'Bonus +1X', 'Hold Bonus X']
+		self.repeatable_award = [False, True, True, True, False]
+		self.current_award_ptr = 0
+
+		self.delay_time = 0.200
 		self.active = False
 
 	def mode_started(self):
+		self.available_awards = self.game.getPlayerState('available_awards', self.initial_awards[:])
 		self.rotate_awards()
-		self.delay(name='update', event_type=None, delay=self.delay_time, handler=self.update)
 		self.timer = 70
-		self.active = False
-		self.awards_remaining = self.game.getPlayerState('awards_remaining', self.all_awards[:])
+		self.active = True
+		self.delay(name='missile_update', event_type=None, delay=self.delay_time, handler=self.update)
 
 	def mode_stopped(self):
-		self.game.setPlayerState('awards_remaining', self.awards_remaining[:])
+		self.game.setPlayerState('available_awards', self.available_awards)
 
 	def sw_fireL_active(self, sw):
 		self.timer = 3
@@ -41,22 +43,18 @@ class MissileAwardMode(game.Mode):
 		elif self.timer == 3:
 			self.game.coils.shooterL.pulse()
 			self.award()
-			self.delay(name='update', event_type=None, delay=self.delay_time, handler=self.update)
-			self.timer -= 1
-		else:
-			self.active = True
-			self.delay(name='update', event_type=None, delay=self.delay_time, handler=self.update)
-			if self.timer > 10:
-				self.rotate_awards()
+		elif self.timer > 10:
+			self.rotate_awards()
+			
+		if self.timer > 0:
+			self.delay(name='missile_update', event_type=None, delay=self.delay_time, handler=self.update)
 			self.timer -= 1
 
 	def award(self):
-		self.callback(self.current_award)
-		if not self.awards_allow_repeat[self.award_ptr_adj]:
-			self.awards_remaining[self.award_ptr_adj] = str(10000*(self.award_ptr_adj + 1)) + ' Points'
+		self.callback(self.available_awards[self.current_award_ptr])
+		if not self.repeatable_award[self.current_award_ptr]:
+			self.available_awards[self.current_award_ptr] = str(10000*(self.current_award_ptr + 1)) + ' Points'
 		
 	def rotate_awards(self):
-		self.award_ptr += random.randint(0,4)
-		self.award_ptr_adj = self.award_ptr% len(self.awards_remaining)
-		self.current_award = self.awards_remaining[self.award_ptr_adj]
-		self.value_layer.set_text(self.current_award)
+		self.self.current_award_ptr = (self.current_award_ptr + randint(1,4)) % len(self.available_awards)
+		self.value_layer.set_text(self.available_awards[self.current_award_ptr])
