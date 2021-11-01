@@ -1,10 +1,10 @@
 import locale
-from procgame.dmd import AnimatedLayer, GroupedLayer, PanningLayer, TextLayer
+from procgame.dmd import GroupedLayer, PanningLayer, TextLayer
 from procgame.game import Mode
 from procgame.modes import Scoring_Mode
 from chain import Chain
 from crimescenes import Crimescenes
-from ultimate_challenge import UltimateChallenge, UltimateIntro
+from challenge import UltimateChallenge, UltimateIntro
 from multiball import Multiball
 from boring import Boring
 from skillshot import SkillShot
@@ -45,13 +45,6 @@ class RegularPlay(Scoring_Mode):
 		self.play_ult_intro = UltimateIntro(self.game, self.priority+1)
 		self.ultimate_challenge = UltimateChallenge(game, priority+10)
 		self.ultimate_challenge.callback = self.ultimate_challenge_over
-		
-		self.low_priority_display = ModesDisplay(self.game, priority)
-		self.mid_priority_display = ModesDisplay(self.game, priority + 3)
-		self.high_priority_display = ModesDisplay(self.game, priority + 200)
-		self.low_priority_animation = ModesAnimation(self.game, priority)
-		self.mid_priority_animation = ModesAnimation(self.game, priority + 4)
-		self.high_priority_animation = ModesAnimation(self.game, priority + 210)
 
 	def reset_modes(self):
 		self.state = 'idle'
@@ -91,12 +84,6 @@ class RegularPlay(Scoring_Mode):
 		self.game.modes.add(self.chain)
 		self.game.modes.add(self.crimescenes)
 		self.game.modes.add(self.multiball)
-		self.game.modes.add(self.low_priority_display)
-		self.game.modes.add(self.mid_priority_display)
-		self.game.modes.add(self.high_priority_display)
-		self.game.modes.add(self.low_priority_animation)
-		self.game.modes.add(self.mid_priority_animation)
-		self.game.modes.add(self.high_priority_animation)
 
 		self.missile_award_lit_save = self.missile_award_lit
 		self.setup_next_mode(True)
@@ -114,13 +101,6 @@ class RegularPlay(Scoring_Mode):
 		self.game.modes.remove(self.crimescenes)
 		self.game.modes.remove(self.multiball)
 		self.game.modes.remove(self.ultimate_challenge)
-		self.game.modes.remove(self.low_priority_display)
-		self.game.modes.remove(self.mid_priority_display)
-		self.game.modes.remove(self.high_priority_display)
-		self.game.modes.remove(self.low_priority_animation)
-		self.game.modes.remove(self.mid_priority_animation)
-		self.game.modes.remove(self.high_priority_animation)
-		self.game.modes.remove(self.mode_completed_hurryup)
 
 		# Disable all flashers.
 		for coil in self.game.coils:
@@ -184,24 +164,8 @@ class RegularPlay(Scoring_Mode):
 		self.setup_next_mode(True)
 
 	#
-	# Display
+	# Message
 	#
-	
-	def show_on_display(self, text=None, score=None, priority='low'):
-		if priority == 'low':
-			self.low_priority_display.display(text,score)
-		elif priority == 'mid':
-			self.mid_priority_display.display(text,score)
-		elif priority == 'high':
-			self.high_priority_display.display(text,score)
-
-	def play_animation(self, anim, priority='low', repeat=False, hold=False, frame_time=1):
-		if priority == 'low':
-			self.low_priority_animation.play(anim, repeat, hold, frame_time)
-		elif priority == 'mid':
-			self.mid_priority_animation.play(anim, repeat, hold, frame_time)
-		elif priority == 'high':
-			self.high_priority_animation.play(anim, repeat, hold, frame_time)
 
 	def welcome(self):
 		if self.game.ball == 1 or self.game.shooting_again:
@@ -215,7 +179,7 @@ class RegularPlay(Scoring_Mode):
 			else:
 				text = 'Replay'
 				score = locale.format("%d", self.replay.replay_scores[0], True)
-			self.show_on_display(text, score, 'high')
+			self.game.base_play.show_on_display(text, score, 'high')
 
 	#
 	# Mystery
@@ -283,7 +247,7 @@ class RegularPlay(Scoring_Mode):
 		self.game.sound.play('ball_launch')
 
 		anim = self.game.animations['bikeacrosscity']
-		self.play_animation(anim, 'high', repeat=False, hold=False, frame_time=5)
+		self.game.base_play.play_animation(anim, 'high', repeat=False, hold=False, frame_time=5)
 
 	# Enable auto-plunge soon after the new ball is launched (by the player).
 	def sw_shooterR_inactive_for_1s(self,sw):
@@ -466,18 +430,18 @@ class RegularPlay(Scoring_Mode):
 		if award.endswith('Points', 0) != -1:
 			award_words = award.rsplit(' ')
 			self.game.score(int(award_words[0]))
-			self.show_on_display(str(award_words[0]) + ' Points', None, 'mid')
+			self.game.base_play.show_on_display(str(award_words[0]) + ' Points', None, 'mid')
 			self.game.set_status(award)
 		elif award == 'Light Extra Ball':
 			self.light_extra_ball()
 		elif award == 'Advance Crimescenes':
 			self.crimescenes.level_complete()
-			self.show_on_display('Crimes Adv', None, 'mid')
+			self.game.base_play.show_on_display('Crimes Adv', None, 'mid')
 		elif award == 'Bonus +1X':
 			self.inc_bonus_x()
 		elif award == 'Hold Bonus X':
 			self.hold_bonus_x = True
-			self.show_on_display('Hold Bonus X', None, 'mid')
+			self.game.base_play.show_on_display('Hold Bonus X', None, 'mid')
 
 	def award_hurryup_award(self, award):
 		if award == 'all' or award == '100000 points':
@@ -551,14 +515,14 @@ class RegularPlay(Scoring_Mode):
 			self.extra_balls_lit += 1
 			self.total_extra_balls_lit += 1
 			self.enable_extra_ball_lamp()
-			self.show_on_display("Extra Ball Lit!", None, 'high')
+			self.game.base_play.show_on_display("Extra Ball Lit!", None, 'high')
 
 	def award_extra_ball(self):
 		self.game.extra_ball()
 		self.extra_balls_lit -= 1
-		self.show_on_display("Extra Ball!", None,'high')
+		self.game.base_play.show_on_display("Extra Ball!", None,'high')
 		anim = self.game.animations['EBAnim']
-		self.play_animation(anim, 'high', repeat=False, hold=False)
+		self.game.base_play.play_animation(anim, 'high', repeat=False, hold=False)
 		self.game.update_lamps()
 
 	def enable_extra_ball_lamp(self):
@@ -603,7 +567,7 @@ class RegularPlay(Scoring_Mode):
 	def ball_save_callback(self):
 		if not self.any_multiball_active():
 			self.game.sound.play_voice('ball saved')
-			self.show_on_display("Ball Saved!", None, 'mid')
+			self.game.base_play.show_on_display("Ball Saved!", None, 'mid')
 			self.skill_shot.skill_shot_expired()
 
 	def ball_drained(self):
@@ -622,7 +586,7 @@ class RegularPlay(Scoring_Mode):
 	
 	def inc_bonus_x(self):
 		self.bonus_x += 1
-		self.show_on_display('Bonus at ' + str(self.bonus_x) + 'X', None, 'mid')
+		self.game.base_play.show_on_display('Bonus at ' + str(self.bonus_x) + 'X', None, 'mid')
 
 	def replay_callback(self):
 		award = self.game.user_settings['Replay']['Replay Award']
@@ -630,39 +594,7 @@ class RegularPlay(Scoring_Mode):
 		if award == 'Extra Ball':
 			self.award_extra_ball()
 		else:
-			self.show_on_display('Replay', None, 'mid')
-
-
-class ModesDisplay(Mode):
-	"""Display some text when the ball is active"""
-	def __init__(self, game, priority):
-		super(ModesDisplay, self).__init__(game, priority)
-		self.big_text_layer = TextLayer(128/2, 7, self.game.fonts['jazz18'], "center")
-		self.small_text_layer = TextLayer(128/2, 7, self.game.fonts['07x5'], "center")
-		self.score_layer = TextLayer(128/2, 17, self.game.fonts['num_14x10'], "center")
-
-	def display(self, text=None, score=None):
-		if score:
-			self.score_layer.set_text(str(score),3)
-		if text:
-			if score:
-				self.small_text_layer.set_text(text,3)
-				self.layer = GroupedLayer(128, 32, [self.small_text_layer, self.score_layer])
-			else:
-				self.big_text_layer.set_text(text,3)
-				self.layer = GroupedLayer(128, 32, [self.big_text_layer])
-		else:
-			self.layer = GroupedLayer(128, 32, [self.score_layer])
-
-
-class ModesAnimation(Mode):
-	"""Play an animation when the ball is active"""
-	def __init__(self, game, priority):
-		super(ModesAnimation, self).__init__(game, priority)
-
-	def play(self, anim, repeat=False, hold=False, frame_time=1):
-		self.layer = AnimatedLayer(frames=anim.frames, repeat=repeat, hold=hold, frame_time=frame_time)
-
+			self.game.base_play.show_on_display('Replay', None, 'mid')
 
 class GameIntro(Mode):
 	"""Welcome on first ball or shoot again"""

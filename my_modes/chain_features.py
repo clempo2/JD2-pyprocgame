@@ -195,7 +195,7 @@ class Blackout(ChainFeature):
 		super(Blackout, self).mode_started()
 		self.update_status()
 		anim = self.game.animations['blackout']
-		self.game.base_play.regular_play.play_animation(anim, 'high', repeat=False, hold=False, frame_time=3)
+		self.game.base_play.play_animation(anim, 'high', repeat=False, hold=False, frame_time=3)
 		self.update_lamps()
 
 	def update_status(self):
@@ -276,7 +276,7 @@ class Sniper(ChainFeature):
 		self.shots += 1
 		self.game.score(10000)
 		anim = self.game.animations['dredd_shoot_at_sniper']
-		self.game.base_play.regular_play.play_animation(anim, 'high', repeat=False, hold=False, frame_time=5)
+		self.game.base_play.play_animation(anim, 'high', repeat=False, hold=False, frame_time=5)
 		self.check_for_completion()
 
 	def check_for_completion(self):

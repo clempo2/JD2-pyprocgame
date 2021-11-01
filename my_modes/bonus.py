@@ -1,25 +1,22 @@
-from procgame import *
+from procgame.dmd import GroupedLayer, TextLayer
+from procgame.game import Mode
 
-class Bonus(game.Mode):
+class Bonus(Mode):
 	"""Display end of ball bonus"""
+	
 	def __init__(self, game, priority, font_big, font_small):
 		super(Bonus, self).__init__(game, priority)
-		self.font_big = font_big
-		self.font_small = font_small
-		self.title_layer = dmd.TextLayer(128/2, 7, font_big, "center")
-		self.element_layer = dmd.TextLayer(128/2, 7, font_small, "center")
-		self.value_layer = dmd.TextLayer(128/2, 20, font_small, "center")
-		self.layer = dmd.GroupedLayer(128, 32, [self.title_layer,self.element_layer, self.value_layer])
+		self.title_layer = TextLayer(128/2, 7, font_big, "center")
+		self.element_layer = TextLayer(128/2, 7, font_small, "center")
+		self.value_layer = TextLayer(128/2, 20, font_small, "center")
+		self.layer = GroupedLayer(128, 32, [self.title_layer,self.element_layer, self.value_layer])
 
 	def mode_started(self):
-		# Disable the flippers
-		self.game.enable_flippers(False) 
 		self.step = 0
 		self.delay_time = 1
 
 	def mode_stopped(self):
-		# Enable the flippers
-		self.game.enable_flippers(True) 
+		pass
 
 	def compute(self, exit_function):
 		self.game.sound.play('drain')

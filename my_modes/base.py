@@ -1,8 +1,9 @@
+from procgame.dmd import AnimatedLayer, GroupedLayer, TextLayer
 from procgame.game import Mode
 from procgame.modes import Replay
 from bonus import Bonus
 from combos import Combos
-from regular_play import RegularPlay
+from regular import RegularPlay
 from status import StatusReport
 from tilt import Tilt
 
@@ -31,6 +32,10 @@ class BasePlay(Mode):
 
 		self.bonus = Bonus(self.game, 8, self.game.fonts['jazz18'], self.game.fonts['tiny7'])
 
+		self.priority_display = {'low': ModesDisplay(self.game, 18), 'mid': ModesDisplay(self.game, 21), 'high': ModesDisplay(self.game, 200) }
+		self.priority_animation = {'low': ModesAnimation(self.game, 18), 'mid': ModesAnimation(self.game, 22), 'high': ModesAnimation(self.game, 210) }
+		self.priority_modes = self.priority_display.values() + self.priority_animation.values()
+
 	def mode_started(self):
 		# Disable any previously active lamp
 		for lamp in self.game.lamps:
@@ -48,6 +53,8 @@ class BasePlay(Mode):
 		self.game.modes.add(self.combos)
 		self.game.modes.add(self.regular_play)
 		self.game.modes.add(self.replay)
+		for mode in self.priority_modes:
+			self.game.modes.add(mode)
 
 		# Always start the ball with no launch callback.
 		self.game.trough.launch_balls(1, self.empty_ball_launch_callback)
@@ -60,9 +67,24 @@ class BasePlay(Mode):
 		self.tilt_status = 0
 
 	def mode_stopped(self):
+		for mode in self.priority_modes:
+			self.game.modes.remove(mode)
+
 		self.game.enable_flippers(False) 
 		self.game.ball_search.disable()
 
+	#
+	# Priority Display
+	#
+	
+	def show_on_display(self, text=None, score=None, priority='low'):
+		display_mode = self.priority_display[priority]
+		display_mode.display(text, score)
+
+	def play_animation(self, anim, priority='low', repeat=False, hold=False, frame_time=1):
+		animation_mode = self.priority_animation[priority]
+		animation_mode.play(anim, repeat, hold, frame_time)
+	
 	#
 	# Status Report
 	#
@@ -76,57 +98,6 @@ class BasePlay(Mode):
 	def display_status_report(self):
 		if not self.status_report in self.game.modes:
 			self.game.modes.add(self.status_report)
-
-	#
-	# End of Ball
-	#
-	
-	def empty_ball_launch_callback(self):
-		pass
-
-	def ball_drained_callback(self):
-		# Tell regular_play a ball has drained (but this might not be the last ball).
-		self.regular_play.ball_drained()
-		
-		if self.game.trough.num_balls_in_play == 0:
-			# End the ball
-			if self.tilt_status:
-				self.tilt_delay()
-			else:
-				self.finish_ball()
-
-	def finish_ball(self):
-		self.game.sound.fadeout_music()
-
-		# Make sure the motor isn't spinning between balls.
-		self.game.coils.globeMotor.disable()
-
-		# Remove the rules logic from responding to switch events.
-		self.game.modes.remove(self.regular_play)
-		self.game.modes.remove(self.combos)
-		self.game.modes.remove(self.tilt)
-
-		# Add the bonus mode so bonus can be calculated.
-		self.game.modes.add(self.bonus)
-
-		# Only compute bonus if it wasn't tilted away.
-		if not self.tilt_status:
-			self.bonus.compute(self.end_ball)
-		else:
-			self.end_ball()
-
-	# Final processing for the ending ball.
-	# If bonus was calculated, it is finished by now.
-	def end_ball(self):
-		self.game.modes.remove(self.replay)
-		# Remove the bonus mode since it's finished.
-		self.game.modes.remove(self.bonus)
-		# Tell the game object it can process the end of ball
-		# (to end player's turn or shoot again)
-		self.game.end_ball()
-
-		# TODO: What if the ball doesn't make it into the shooter lane?
-		#       We should check for it on a later mode_tick() and possibly re-pulse.
 
 	#
 	# Drop Targets
@@ -184,6 +155,58 @@ class BasePlay(Mode):
 		self.game.score(100)
 
 	#
+	# End of Ball
+	#
+	
+	def empty_ball_launch_callback(self):
+		pass
+
+	def ball_drained_callback(self):
+		# Tell regular_play a ball has drained (but this might not be the last ball).
+		self.regular_play.ball_drained()
+		
+		if self.game.trough.num_balls_in_play == 0:
+			# End the ball
+			if self.tilt_status:
+				self.tilt_delay()
+			else:
+				self.finish_ball()
+
+	def finish_ball(self):
+		self.game.sound.fadeout_music()
+
+		# Make sure the motor isn't spinning between balls.
+		self.game.coils.globeMotor.disable()
+
+		self.game.modes.remove(self.regular_play)
+		self.game.modes.remove(self.combos)
+		self.game.modes.remove(self.tilt)
+
+		self.game.enable_flippers(False) 
+
+		if self.tilt_status:
+			# ball tilted, skip bonus
+			self.end_ball()
+		else:
+			self.game.modes.add(self.bonus)
+			self.bonus.compute(self.end_ball)
+
+	# Final processing for the ball
+	# If bonus was calculated, it is finished by now.
+	def end_ball(self):
+		self.game.modes.remove(self.bonus)
+		self.game.modes.remove(self.replay)
+		
+		self.game.enable_flippers(True)
+		 
+		# Tell the game object it can process the end of ball
+		# (to end player's turn or shoot again)
+		self.game.end_ball()
+
+		# TODO: What if the ball doesn't make it into the shooter lane?
+		#       We should check for it on a later mode_tick() and possibly re-pulse.
+
+	#
 	# Tilt
 	#
 	
@@ -236,3 +259,36 @@ class BasePlay(Mode):
 			self.delay(name='tilt_bob_settle', event_type=None, delay=2.0, handler=self.tilt_delay)
 		else:
 			self.finish_ball()
+
+
+class ModesDisplay(Mode):
+	"""Display some text when the ball is active"""
+
+	def __init__(self, game, priority):
+		super(ModesDisplay, self).__init__(game, priority)
+		self.big_text_layer = TextLayer(128/2, 7, self.game.fonts['jazz18'], "center")
+		self.small_text_layer = TextLayer(128/2, 7, self.game.fonts['07x5'], "center")
+		self.score_layer = TextLayer(128/2, 17, self.game.fonts['num_14x10'], "center")
+
+	def display(self, text=None, score=None):
+		layers = []
+		if text:
+			text_layer = self.small_text_layer if score else self.big_text_layer
+			text_layer.set_text(text, 3)
+			layers.append(text_layer)
+		if score:
+			self.score_layer.set_text(str(score),3)
+			layers.append(self.score_layer)
+		self.layer = GroupedLayer(128, 32, layers)
+
+
+class ModesAnimation(Mode):
+	"""Play an animation when the ball is active"""
+
+	def __init__(self, game, priority):
+		super(ModesAnimation, self).__init__(game, priority)
+
+	def play(self, anim, repeat=False, hold=False, frame_time=1):
+		self.layer = AnimatedLayer(frames=anim.frames, repeat=repeat, hold=hold, frame_time=frame_time)
+
+

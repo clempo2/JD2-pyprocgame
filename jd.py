@@ -14,7 +14,7 @@ import pygame.locals
 from asset_loader import AssetLoader
 from my_modes.switchmonitor import SwitchMonitor
 from my_modes.attract import Attract
-from my_modes.base_play import BasePlay
+from my_modes.base import BasePlay
 from my_modes.deadworld import Deadworld, DeadworldTest
 
 import logging

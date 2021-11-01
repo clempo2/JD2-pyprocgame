@@ -1,7 +1,8 @@
-from procgame import *
+from procgame.dmd import Animation, AnimatedLayer, font_named
 
 class AssetLoader:
 	"""An asset manager inspired by SkeletonGame.AssetManager"""
+	
 	def __init__(self, game):
 		self.game = game
 		self.animations = {}
@@ -325,11 +326,11 @@ class AssetLoader:
 		
 		animations_prefix = assets_path + '/dmd/'
 		for asset in animations_files:
-			anim = dmd.Animation().load(animations_prefix + asset['file'])
+			anim = Animation().load(animations_prefix + asset['file'])
 			repeat = asset.get('repeat', False)
 			holdLastFrame = asset.get('holdLastFrame', False)
 			frame_time = asset.get('frame_time', 1)
-			layer = dmd.AnimatedLayer(frames=anim.frames, repeat=repeat, hold=holdLastFrame, frame_time=frame_time)
+			layer = AnimatedLayer(frames=anim.frames, repeat=repeat, hold=holdLastFrame, frame_time=frame_time)
 			composite_op = asset.get('composite_op')
 			if composite_op:
 				layer.composite_op = composite_op
@@ -352,4 +353,4 @@ class AssetLoader:
 			self.game.sound.register_sound(asset['key'], voice_prefix + asset['file'])
 		
 		for asset in fonts_files:
-			self.fonts[asset['key']] = dmd.font_named(asset['file'])
+			self.fonts[asset['key']] = font_named(asset['file'])
