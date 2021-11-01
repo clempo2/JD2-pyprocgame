@@ -16,7 +16,7 @@ class BasePlay(Mode):
 
 		self.game.trough.drain_callback = self.ball_drained_callback
 		
-		# create modes
+		# Instantiate sub-modes
 		self.tilt = Tilt(self.game, 1000, self.game.fonts['jazz18'], self.game.fonts['tiny7'], 'tilt', 'slamTilt')
 		self.tilt.tilt_callback = self.tilt_callback
 		self.tilt.slam_tilt_callback = self.slam_tilt_callback
@@ -27,8 +27,7 @@ class BasePlay(Mode):
 		self.status_report = StatusReport(self.game, 28)
 
 		self.replay = Replay(self.game, 18)
-		self.replay.replay_callback = self.regular_play.replay_callback
-		self.regular_play.replay = self.replay
+		self.replay.replay_callback = self.replay_callback
 
 		self.bonus = Bonus(self.game, 8, self.game.fonts['jazz18'], self.game.fonts['tiny7'])
 
@@ -37,6 +36,11 @@ class BasePlay(Mode):
 		self.priority_modes = self.priority_display.values() + self.priority_animation.values()
 
 	def mode_started(self):
+		# restore player state
+		p = self.game.current_player()
+		self.bonus_x = p.getState('bonus_x', 1) if p.getState('hold_bonus_x', False) else 1
+		self.hold_bonus_x = False
+
 		# Disable any previously active lamp
 		for lamp in self.game.lamps:
 			lamp.disable()
@@ -72,6 +76,10 @@ class BasePlay(Mode):
 
 		self.game.enable_flippers(False) 
 		self.game.ball_search.disable()
+		
+		p = self.game.current_player()
+		p.setState('bonus_x', self.bonus_x)
+		p.setState('hold_bonus_x', self.hold_bonus_x)
 
 	#
 	# Priority Display
@@ -98,6 +106,18 @@ class BasePlay(Mode):
 	def display_status_report(self):
 		if not self.status_report in self.game.modes:
 			self.game.modes.add(self.status_report)
+
+	#
+	# Replay
+	#
+	
+	def replay_callback(self):
+		award = self.game.user_settings['Replay']['Replay Award']
+		self.game.coils.knocker.pulse(50)
+		if award == 'Extra Ball':
+			self.award_extra_ball()
+		else:
+			self.show_on_display('Replay', None, 'mid')
 
 	#
 	# Drop Targets
@@ -205,6 +225,18 @@ class BasePlay(Mode):
 
 		# TODO: What if the ball doesn't make it into the shooter lane?
 		#       We should check for it on a later mode_tick() and possibly re-pulse.
+
+	#
+	# Bonus
+	#
+	
+	def inc_bonus_x(self):
+		self.bonus_x += 1
+		self.show_on_display('Bonus at ' + str(self.bonus_x) + 'X', None, 'mid')
+
+	def hold_bonus_x(self):
+		self.hold_bonus_x = True
+		self.game.base_play.show_on_display('Hold Bonus X', None, 'mid')
 
 	#
 	# Tilt

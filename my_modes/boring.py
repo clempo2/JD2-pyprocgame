@@ -1,13 +1,14 @@
-from procgame import *
+from procgame.game import Mode
 
-class Boring(game.Mode):
+class Boring(Mode):
 	"""Taunt player if nothing happens for a while"""
+	
 	def __init__(self, game, priority):
 		super(Boring, self).__init__(game, priority)
-		self.enable_reset = False
 	
 	def mode_started(self):
-		self.delay(name='timer', event_type=None, delay=20, handler=self.timer_expired)
+		self.enable_reset = False
+		self.reset()
 		
 	def mode_stopped(self):
 		self.cancel_delayed('timer')
@@ -21,7 +22,16 @@ class Boring(game.Mode):
 
 	def reset(self):
 		self.cancel_delayed('timer')
-		self.mode_started()
+		self.delay(name='timer', event_type=None, delay=20, handler=self.timer_expired)
+
+	def popper_active(self):
+		self.pause()
+		self.enable_reset = True
+
+	def popper_inactive(self):
+		if self.enable_reset:
+			self.enable_reset = False
+			self.reset()
 		
 	def sw_subwayEnter2_active(self, sw):
 		self.reset()
@@ -33,29 +43,24 @@ class Boring(game.Mode):
 		self.reset()
 
 	def sw_popperR_active_for_1s(self, sw):
-		self.pause()
-		self.enable_reset = True
+		self.popper_active()
 
 	def sw_popperR_inactive_for_1s(self, sw):
-		if (self.enable_reset):
-			self.reset()
-			self.enable_reset = False
+		self.popper_inactive()
 
 	def sw_popperL_active_for_1s(self, sw):
 		self.pause()
 		self.enable_reset = True
 
 	def sw_popperL_inactive_for_1s(self, sw):
-		if (self.enable_reset):
-			self.reset()
-			self.enable_reset = False
+		self.popper_inactive()
 
 	def sw_shooterL_active_for_1s(self, sw):
 		self.pause()
 		self.enable_reset = True
 
 	def sw_shooterL_inactive_for_1s(self, sw):
-		if (self.enable_reset):
+		if self.enable_reset:
 			self.reset()
 			self.enable_reset = False
 

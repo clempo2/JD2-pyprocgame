@@ -20,12 +20,12 @@ class RegularPlay(Scoring_Mode):
 		self.cow_video_mode_lit = False # TODO: this should be a game settings
 
 		# Instantiate sub-modes
-		self.game_intro = GameIntro(self.game, self.priority+1)
-		self.boring = Boring(self.game, self.priority+1)
+		self.game_intro = GameIntro(self.game, priority + 1)
+		self.boring = Boring(self.game, priority + 1)
 		self.skill_shot = SkillShot(self.game, priority + 5)
-		self.chain = Chain(self.game, self.priority)
+		self.chain = Chain(self.game, priority)
 		
-		self.crimescenes = Crimescenes(game, priority+1)
+		self.crimescenes = Crimescenes(game, priority + 1)
 		self.crimescenes.get_block_war_multiplier = lambda: self.num_modes_completed
 		self.crimescenes.crimescenes_completed = self.crimescenes_completed
 		self.crimescenes.mb_start_callback = self.multiball_started
@@ -36,14 +36,14 @@ class RegularPlay(Scoring_Mode):
 		self.multiball.start_callback = self.multiball_started
 		self.multiball.end_callback = self.multiball_ended
 
-		self.video_mode = ShootingGallery(self.game, priority+11, self.cow_video_mode_lit)
+		self.video_mode = ShootingGallery(self.game, priority + 11, self.cow_video_mode_lit)
 		self.video_mode.on_complete = self.video_mode_complete
 		
-		self.missile_award_mode = MissileAwardMode(game, priority+10, font_small)
+		self.missile_award_mode = MissileAwardMode(game, priority + 10, font_small)
 		self.missile_award_mode.callback = self.award_missile_award
 
-		self.play_ult_intro = UltimateIntro(self.game, self.priority+1)
-		self.ultimate_challenge = UltimateChallenge(game, priority+10)
+		self.play_ult_intro = UltimateIntro(self.game, priority + 1)
+		self.ultimate_challenge = UltimateChallenge(game, priority + 10)
 		self.ultimate_challenge.callback = self.ultimate_challenge_over
 
 	def reset_modes(self):
@@ -67,8 +67,6 @@ class RegularPlay(Scoring_Mode):
 		self.video_mode_lit = p.getState('video_mode_lit', True)
 		self.extra_balls_lit = p.getState('extra_balls_lit', 0)
 		self.total_extra_balls_lit = p.getState('total_extra_balls_lit', 0)
-		self.bonus_x = p.getState('bonus_x', 1) if p.getState('hold_bonus_x', False) else 1
-		self.hold_bonus_x = False
 
 		# disable auto-plunging for the start of ball
 		# Force player to hit the right Fire button.
@@ -116,8 +114,6 @@ class RegularPlay(Scoring_Mode):
 		p.setState('missile_award_lit', self.missile_award_lit or self.missile_award_lit_save)
 		p.setState('extra_balls_lit', self.extra_balls_lit)
 		p.setState('total_extra_balls_lit', self.total_extra_balls_lit)
-		p.setState('bonus_x', self.bonus_x)
-		p.setState('hold_bonus_x', self.hold_bonus_x)
 
 	def sw_popperR_active_for_200ms(self, sw):
 		if not self.any_multiball_active():
@@ -173,12 +169,12 @@ class RegularPlay(Scoring_Mode):
 
 	def high_score_mention(self):
 		if self.game.ball == self.game.balls_per_game:
-			if self.replay.replay_achieved[0]:
+			if self.base_play.replay.replay_achieved[0]:
 				text = 'Highest Score'
 				score = str(self.game.game_data['ClassicHighScoreData'][0]['inits']) + locale.format("  %d",self.game.game_data['ClassicHighScoreData'][0]['score'],True)
 			else:
 				text = 'Replay'
-				score = locale.format("%d", self.replay.replay_scores[0], True)
+				score = locale.format("%d", self.base_play.replay.replay_scores[0], True)
 			self.game.base_play.show_on_display(text, score, 'high')
 
 	#
@@ -195,7 +191,7 @@ class RegularPlay(Scoring_Mode):
 		self.game.sound.play('meltdown')
 		self.game.drive_lamp('mystery', 'on')
 		self.mystery_lit = True
-		self.inc_bonus_x()
+		self.game.base_play.inc_bonus_x()
 
 	def sw_mystery_active(self, sw):
 		self.game.sound.play('mystery')
@@ -438,10 +434,9 @@ class RegularPlay(Scoring_Mode):
 			self.crimescenes.level_complete()
 			self.game.base_play.show_on_display('Crimes Adv', None, 'mid')
 		elif award == 'Bonus +1X':
-			self.inc_bonus_x()
+			self.game.base_play.inc_bonus_x()
 		elif award == 'Hold Bonus X':
-			self.hold_bonus_x = True
-			self.game.base_play.show_on_display('Hold Bonus X', None, 'mid')
+			self.game.base_play.hold_bonus_x()
 
 	def award_hurryup_award(self, award):
 		if award == 'all' or award == '100000 points':
@@ -579,22 +574,6 @@ class RegularPlay(Scoring_Mode):
 				self.multiball.end_multiball()
 			if self.crimescenes.is_multiball_active():
 				self.crimescenes.end_multiball()
-
-	#
-	# Bonus
-	#
-	
-	def inc_bonus_x(self):
-		self.bonus_x += 1
-		self.game.base_play.show_on_display('Bonus at ' + str(self.bonus_x) + 'X', None, 'mid')
-
-	def replay_callback(self):
-		award = self.game.user_settings['Replay']['Replay Award']
-		self.game.coils.knocker.pulse(50)
-		if award == 'Extra Ball':
-			self.award_extra_ball()
-		else:
-			self.game.base_play.show_on_display('Replay', None, 'mid')
 
 class GameIntro(Mode):
 	"""Welcome on first ball or shoot again"""
