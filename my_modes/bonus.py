@@ -9,10 +9,9 @@ class Bonus(Mode):
 		self.title_layer = TextLayer(128/2, 7, font_big, "center")
 		self.element_layer = TextLayer(128/2, 7, font_small, "center")
 		self.value_layer = TextLayer(128/2, 20, font_small, "center")
-		self.layer = GroupedLayer(128, 32, [self.title_layer,self.element_layer, self.value_layer])
+		self.layer = GroupedLayer(128, 32, [self.title_layer, self.element_layer, self.value_layer])
 
 	def mode_started(self):
-		self.step = 0
 		self.delay_time = 1
 
 	def mode_stopped(self):
@@ -26,63 +25,54 @@ class Bonus(Mode):
 		p = self.game.current_player()
 		self.x = p.getState("bonus_x")
 		
-		self.elements = []
-		self.value = []
+		self.bonus_items = []
 		
 		num_modes_attempted = p.getState("num_modes_attempted")
-		self.elements.append('Modes Attempted: ' + str(num_modes_attempted))
-		self.value.append(num_modes_attempted * 4000)
+		self.bonus_items.append({'name':'Modes Attempted: ' + str(num_modes_attempted), 'value':num_modes_attempted * 4000})
 		
 		num_modes_completed = p.getState("num_modes_completed")
-		self.elements.append('Modes Completed: ' + str(num_modes_completed))
-		self.value.append(num_modes_completed * 12000)
+		self.bonus_items.append({'name':'Modes Completed: ' + str(num_modes_completed), 'value':num_modes_completed * 12000})
 
 		crimescenes_total_levels = p.getState("crimescenes_total_levels")
-		self.elements.append('Crimescene Levels: ' + str(crimescenes_total_levels))
-		self.value.append(crimescenes_total_levels * 2000)
+		self.bonus_items.append({'name':'Crimescene Levels: ' + str(crimescenes_total_levels), 'value':crimescenes_total_levels * 2000})
 
-		self.delay(name='bonus_computer', event_type=None, delay=self.delay_time, handler=self.bonus_computer)
-		self.title_layer.set_text('BONUS:', self.delay_time)
+		self.delay(name='bonus_items', event_type=None, delay=self.delay_time, handler=self.show_bonus_items, param=0)
+		self.title_layer.set_text('BONUS', self.delay_time)
 
-	def bonus_computer(self):
+	def show_bonus_items(self, item_index):
 		self.game.sound.play('bonus')
-		self.title_layer.set_text('')
-		self.element_layer.set_text(self.elements[self.step])
-		self.value_layer.set_text(str(self.value[self.step]))
-		self.total_base += self.value[self.step]
-		self.step += 1
+		bonus_item = self.bonus_items[self.item_index]
+		self.element_layer.set_text(bonus_item['name'])
+		self.value_layer.set_text(str(bonus_item['value']))
+		self.total_base += self.value[self.item_index]
 
-		if self.step == len(self.elements) or len(self.elements) == 0:
-			self.delay(name='bonus_finish', event_type=None, delay=self.delay_time, handler=self.bonus_finish)
-			self.step = 0
+		if self.step < len(self.bonus_items):
+			self.delay(name='bonus_items', event_type=None, delay=self.delay_time, handler=self.show_bonus_items, param=item_index + 1)
 		else:
-			self.delay(name='bonus_computer', event_type=None, delay=self.delay_time, handler=self.bonus_computer)
+			self.delay(name='bonus_calculation', event_type=None, delay=self.delay_time, handler=self.show_bonus_calculation, param=0)
 
-	def bonus_finish(self):
-		if self.step == 0:
-			self.game.sound.play('bonus')
-			self.element_layer.set_text('Total Base:')
-			self.value_layer.set_text(str(self.total_base))
-			self.delay(name='bonus_finish', event_type=None, delay=self.delay_time, handler=self.bonus_finish)
-		elif self.step == 1:
-			self.game.sound.play('bonus')
-			self.element_layer.set_text('Multiplier:')
-			self.value_layer.set_text(str(self.x))
-			self.delay(name='bonus_finish', event_type=None, delay=self.delay_time, handler=self.bonus_finish)
-		elif self.step == 2:
-			self.game.sound.play('bonus')
-			total_bonus = self.total_base * self.x
-			self.element_layer.set_text('Total Bonus:')
-			self.value_layer.set_text(str(total_bonus))
-			self.game.score(total_bonus)
-			self.delay(name='bonus_finish', event_type=None, delay=self.delay_time, handler=self.bonus_finish)
-		else:
+	def show_bonus_calculation(self, step):
+		if step == 3:
 			self.exit_function()
-		self.step += 1
+			
+		self.game.sound.play('bonus')
+		if step == 0:
+			text = 'Total Base:'
+			value = self.total_base
+		elif step == 1:
+			text = 'Multiplier:'
+			value = self.x
+		elif step == 2:
+			text = 'Total Bonus:'  
+			value = self.total_base * self.x
+			self.game.score(value)
+
+		self.element_layer.set_text(text)
+		self.value_layer.set_text(str(value))
+		self.delay(name='bonus_calculation', event_type=None, delay=self.delay_time, handler=self.show_bonus_calculation, param=step + 1)
 
 	def sw_flipperLwL_active(self, sw):
 		self.delay_time = 0.2
 
 	def sw_flipperLwR_active(self, sw):
 		self.delay_time = 0.2
-
