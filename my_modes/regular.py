@@ -26,7 +26,7 @@ class RegularPlay(Scoring_Mode):
 		self.chain = Chain(self.game, priority)
 		
 		self.crimescenes = Crimescenes(game, priority + 1)
-		self.crimescenes.get_block_war_multiplier = lambda: self.num_modes_completed
+		self.crimescenes.get_num_modes_completed = lambda: self.chain.num_modes_completed
 		self.crimescenes.crimescenes_completed = self.crimescenes_completed
 		self.crimescenes.mb_start_callback = self.multiball_started
 		self.crimescenes.mb_end_callback = self.multiball_ended
@@ -42,9 +42,8 @@ class RegularPlay(Scoring_Mode):
 		self.missile_award_mode = MissileAwardMode(game, priority + 10, font_small)
 		self.missile_award_mode.callback = self.award_missile_award
 
-		self.play_ult_intro = UltimateIntro(self.game, priority + 1)
 		self.ultimate_challenge = UltimateChallenge(game, priority + 10)
-		self.ultimate_challenge.callback = self.ultimate_challenge_over
+		self.ultimate_challenge.exit_callback = self.ultimate_challenge_over
 
 	def reset_modes(self):
 		self.state = 'idle'
@@ -356,17 +355,10 @@ class RegularPlay(Scoring_Mode):
 	#
 
 	def sw_popperL_active_for_200ms(self, sw):
-		self.flash_then_pop('flashersLowerLeft', 'popperL', 50)
+		self.game.base_play.flash_then_pop('flashersLowerLeft', 'popperL', 50)
 	
 	def popperR_eject(self):
-		self.flash_then_pop('flashersRtRamp', 'popperR', 20)
-
-	def flash_then_pop(self, flasher, coil, pulse):
-		self.game.coils[flasher].schedule(0x00555555, cycle_seconds=1, now=True)
-		self.delay(name='delayed_pop', event_type=None, delay=1.0, handler=self.delayed_pop, param=[coil, pulse])
-
-	def delayed_pop(self, coil_pulse):
-		self.game.coils[coil_pulse[0]].pulse(coil_pulse[1])	
+		self.game.base_play.flash_then_pop('flashersRtRamp', 'popperR', 20)
 
 	#
 	# Multiball
@@ -465,29 +457,20 @@ class RegularPlay(Scoring_Mode):
 				self.crimescenes.complete and \
 				len(self.chain.modes_not_attempted) == 0
 
-	# start ultimate challenge by showing the instructions
 	def start_ultimate_challenge(self):
-		self.game.lamps.rightStartFeature.disable()
-		self.play_ult_intro.setup(self.ultimate_challenge.active_mode, self.activate_ultimate_challenge)
-		self.game.modes.add(self.play_ult_intro)
 		self.game.modes.remove(self.chain)
 		self.game.modes.remove(self.multiball)
 		self.game.modes.remove(self.crimescenes)
 		self.game.modes.remove(self.skill_shot)
-		self.intro_playing = True
 
-	# start ultimate challenge after showing the instructions
-	def activate_ultimate_challenge(self):
-		self.game.modes.remove(self.play_ult_intro)
-		self.intro_playing = False
+		self.game.lamps.rightStartFeature.disable()
+		self.intro_playing = False  ### TODO, remove this flag for ultimate challenge since it is no longer correct
 		self.mystery_lit = False
 		self.disable_missile_award()
-
+		
 		self.state = 'ultimate_challenge'
-		self.game.modes.add(self.ultimate_challenge)
-
-		# Put the ball back into play
-		self.popperR_eject()
+		self.game.modes.add(self.ultimate_challenge)  ## TODO: looks like adding is same as start_challenge() except for the value of eject in play_ult_intro.setup()
+		self.ultimate_challenge.start_challenge()
 
 	def ultimate_challenge_over(self):
 		self.game.modes.remove(self.ultimate_challenge)	

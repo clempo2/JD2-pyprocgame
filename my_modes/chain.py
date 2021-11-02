@@ -144,6 +144,7 @@ class Chain(Mode):
 
 class PlayIntro(Mode):
 	"""Displays the instructions when a chain mode starts"""
+	
 	def __init__(self, game, priority):
 		super(PlayIntro, self).__init__(game, priority)
 
@@ -183,6 +184,7 @@ class PlayIntro(Mode):
 
 class ModeCompletedHurryUp(Mode):
 	"""Hurry up to subway after a chain mode is successfully completed"""
+	
 	def __init__(self, game, priority):
 		super(ModeCompletedHurryUp, self).__init__(game, priority)
 		self.countdown_layer = TextLayer(128/2, 7, self.game.fonts['jazz18'], "center")

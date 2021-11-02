@@ -40,7 +40,6 @@ class Crimescenes(Scoring_Mode):
 			self.level_num_shots = [ 1, 1, 2, 2, 2, 3, 3, 3, 3, 3, 4, 4, 4, 4, 5, 5 ]
 
 		self.block_war = BlockWar(game, priority+5)
-		self.get_block_war_multiplier = None
 
 	# restart crime scenes from the first level
 	def reset(self):
@@ -187,10 +186,7 @@ class Crimescenes(Scoring_Mode):
 					self.game.sound.play_voice('crime')
 				self.update_lamps()
 		elif self.mode == 'block_war':
-			if self.get_block_war_multiplier != None:
-				block_war_multiplier = self.get_block_war_multiplier() + 1
-			else:
-				block_war_multiplier = 1
+			block_war_multiplier = self.get_num_modes_completed() + 1
 			if self.bw_shots_required[num] > 0:
 				self.bw_shots_required[num] -= 1
 				self.block_war.switch_hit(num, self.bw_shots_required[num], block_war_multiplier)

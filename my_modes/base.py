@@ -188,6 +188,17 @@ class BasePlay(Mode):
 		self.game.sound.play('inlane')
 
 	#
+	# Coil
+	#
+
+	def flash_then_pop(self, flasher, coil, pulse):
+		self.game.coils[flasher].schedule(0x00555555, cycle_seconds=1, now=True)
+		self.delay(name='delayed_pop', event_type=None, delay=1.0, handler=self.delayed_pop, param=[coil, pulse])
+
+	def delayed_pop(self, coil_pulse):
+		self.game.coils[coil_pulse[0]].pulse(coil_pulse[1])	
+
+	#
 	# End of Ball
 	#
 	

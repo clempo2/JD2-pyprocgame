@@ -9,17 +9,18 @@ class UltimateChallenge(Scoring_Mode):
 
 	def __init__(self, game, priority):
 		super(UltimateChallenge, self).__init__(game, priority)
+
 		self.play_ult_intro = UltimateIntro(self.game, self.priority+1)
 
 		self.mode_fire = Fire(game, self.priority+1)
-		self.mode_fear = Fear(game, self.priority+1)
 		self.mode_mortis = Mortis(game, self.priority+1)
+		self.mode_fear = Fear(game, self.priority+1)
 		self.mode_death = Death(game, self.priority+1)
 		self.mode_celebration = Celebration(game, self.priority+1)
 
 		self.mode_fire.complete_callback = self.level_complete_callback
-		self.mode_fear.complete_callback = self.level_complete_callback
 		self.mode_mortis.complete_callback = self.level_complete_callback
+		self.mode_fear.complete_callback = self.level_complete_callback
 		self.mode_death.complete_callback = self.level_complete_callback
 		self.mode_celebration.complete_callback = self.level_complete_callback
 
@@ -31,7 +32,6 @@ class UltimateChallenge(Scoring_Mode):
 			'celebration': self.mode_celebration
 		}
 
-		self.active_mode = 'fire'
 		self.active = False
 		self.completed = False
 
@@ -39,7 +39,6 @@ class UltimateChallenge(Scoring_Mode):
 		self.active_mode = self.game.getPlayerState('challenge_active_mode', 'fire')
 		self.game.coils.resetDropTarget.pulse(40)
 		self.active = True
-		self.begin()
 
 	def mode_stopped(self):
 		self.game.setPlayerState('challenge_active_mode', self.active_mode)
@@ -47,17 +46,21 @@ class UltimateChallenge(Scoring_Mode):
 		self.game.modes.remove(self.mode_fear)
 		self.game.modes.remove(self.mode_mortis)
 		self.game.modes.remove(self.mode_death)
+		self.game.modes.remove(self.mode_celebration)
 		self.active = False
 
+	def start_challenge(self):
+		# called by regular play to start ultimate challenge from where we left off last time
+		# pass True to eject the ball from popperR
+		self.play_ult_intro.setup(self.mode_list[self.active_mode], self.begin, True)
+		self.game.modes.add(self.play_ult_intro)
+		
 	def is_active(self):
 		return self.active
 
 	def begin(self):
 		self.game.modes.add(self.mode_list[self.active_mode])
 		self.game.sound.play_music('mode', loops=-1)
-
-	def register_callback_function(self, function):
-		self.callback = function
 
 	def get_instruction_layers(self):
 		font = self.game.fonts['tiny7']
@@ -89,23 +92,23 @@ class UltimateChallenge(Scoring_Mode):
 			if self.active_mode == 'fire':
 				self.game.modes.remove(self.mode_fire)
 				self.active_mode = 'mortis'
-				self.play_ult_intro.setup('mortis', self.begin)
+				self.play_ult_intro.setup(self.mode_mortis, self.begin)
 				self.game.modes.add(self.play_ult_intro)
 			elif self.active_mode == 'mortis':
 				self.game.modes.remove(self.mode_mortis)
 				self.active_mode = 'fear'
-				self.play_ult_intro.setup('fear', self.begin)
+				self.play_ult_intro.setup(self.mode.fear, self.begin)
 				self.game.modes.add(self.play_ult_intro)
 			elif self.active_mode == 'fear':
 				self.game.modes.remove(self.mode_fear)
 				self.active_mode = 'death'
-				self.play_ult_intro.setup('death', self.begin)
+				self.play_ult_intro.setup(self.mode.death, self.begin)
 				self.game.modes.add(self.play_ult_intro)
 			elif self.active_mode == 'death':
 				self.completed = True
 				self.game.modes.remove(self.mode_death)
 				self.active_mode = 'celebration'
-				self.play_ult_intro.setup('celebration', self.begin)
+				self.play_ult_intro.setup(self.mode.celebration, self.begin)
 				self.game.modes.add(self.play_ult_intro)
 			# Can get here if in celebration and last balls drain at the same time.
 			elif self.active_mode == 'celebration':
@@ -118,17 +121,18 @@ class UltimateChallenge(Scoring_Mode):
 			if self.active_mode == 'celebration':
 				self.game.modes.remove(self.mode_celebration)
 				self.game.trough.drain_callback = self.game.base_play.ball_drained_callback
-				self.callback()
+				self.exit_callback()
 
 
 class UltimateIntro(Mode):
-	"""Display wizard mode instructions"""
+	"""Display instructions for a wizard mode"""
+	
 	def __init__(self, game, priority):
 		super(UltimateIntro, self).__init__(game, priority)
 		self.gen = MarkupFrameGenerator()
 		self.delay_time = 5
 		self.exit_function = None
-		self.instructions = self.gen.frame_for_markup("") # empty
+		self.instructions_frame = self.gen.frame_for_markup("") # empty
 
 	def mode_started(self):
 		self.game.sound.stop_music()
@@ -138,21 +142,48 @@ class UltimateIntro(Mode):
 		self.game.lamps.ultChallenge.pulse(0)
 		self.game.disable_drops()
 
-		self.layer = PanningLayer(width=128, height=32, frame=self.instructions, origin=(0,0), translate=(0,1), bounce=False)
+		self.layer = PanningLayer(width=128, height=32, frame=self.instruction_frame, origin=(0,0), translate=(0,1), bounce=False)
 		self.delay(name='finish', event_type=None, delay=self.delay_time, handler=self.finish )
 
 	def mode_stopped(self):
-		self.cancel_delayed('intro')
+		self.cancel_delayed('finish')
 		# Leave GI off for Ultimate Challenge
 		self.game.enable_flippers(True) 
 
-	def setup(self, stage, exit_function):
+	def setup(self, mode, exit_function, eject=False):
+		self.delay_time = mode.instruction_delay()
+		self.instruction_frame = self.gen.frame_for_markup(mode.instructions())
 		self.exit_function = exit_function
-		self.stage = stage
+		self.eject = eject
 
-		if stage == 'fire':
-			self.delay_time = 15
-			self.instructions = self.gen.frame_for_markup("""
+	def sw_flipperLwL_active(self, sw):
+		self.finish()
+
+	def sw_flipperLwR_active(self, sw):
+		self.finish()
+
+	def finish(self):
+		self.game.modes.remove(self)
+		if self.eject:
+			# we were started from regular mode, put the ball back in play
+			self.game.base_play.flash_then_pop('flashersRtRamp', 'popperR', 20)
+		if self.exit_function:
+			self.exit_function()
+
+
+class Fire(Scoring_Mode):
+	"""Fire, dark judge wizard mode"""
+	
+	def __init__(self, game, priority):
+		super(Fire, self).__init__(game, priority)
+		self.complete = False
+		self.mystery_lit = True
+
+	def instruction_delay(self):
+		return 15
+		
+	def instructions(self):
+		return """
 
 #ULTIMATE#
 #CHALLENGE#
@@ -166,87 +197,7 @@ Judge Fire is creating chaos by lighting fires all over Mega City One.
 Extinguish fires and banish Judge Fire by shooting the lit crimescene shots.
 
 4 ball multiball.  No ball save.
-""")
-
-		elif stage == 'mortis':
-			self.delay_time = 11.5
-			self.instructions = self.gen.frame_for_markup("""
-
-#ULTIMATE#
-#CHALLENGE#
-
-Stage 2
-
-Judge Mortis is spreading disease throughout the city.
-
-Banish him by shooting each lit shot twice.
-
-2 ball multiball with temporary ball save.
-""")
-
-		elif stage == 'fear':
-			self.delay_time = 13
-			self.instructions = self.gen.frame_for_markup("""
-
-#ULTIMATE#
-#CHALLENGE#
-
-Stage 3
-
-Judge Fear is reigning terror on the city.
-
-Banish him by shooting the lit ramp shots and then the subway before time runs out.
-
-1 ball with temporary ball save.
-""")
-
-		elif stage == 'death':
-			self.delay_time = 13
-			self.instructions = self.gen.frame_for_markup("""
-
-#ULTIMATE#
-#CHALLENGE#
-
-Stage 4
-
-Judge Death is on a murder spree.
-
-Banish him by shooting the lit crimescene shots before time expires.  Shots slowly re-light so finish him quickly.
-
-1 ball with temporary ball save.
-""")
-
-		else:
-			self.delay_time = 8
-			self.instructions = self.gen.frame_for_markup("""
-
-#CONGRATS#
-
-The Dark Judges have all been banished.
-
-Enjoy a 6-ball celebration multiball.  All shots score.
-
-Normal play resumes when only 1 ball remains.
-""")
-
-	def sw_flipperLwL_active(self, sw):
-		self.finish()
-
-	def sw_flipperLwR_active(self, sw):
-		self.finish()
-
-	def finish(self):
-		self.game.modes.remove(self)
-		if self.exit_function:
-			self.exit_function()
-
-
-class Fire(Scoring_Mode):
-	"""Dark judge Fire wizard mode"""
-	def __init__(self, game, priority):
-		super(Fire, self).__init__(game, priority)
-		self.complete = False
-		self.mystery_lit = True
+"""
 
 	def mode_started(self):
 		self.mystery_lit = True
@@ -403,8 +354,184 @@ class Fire(Scoring_Mode):
 		# original callback so it can replace it while modes are active.
 
 
+class Mortis(Scoring_Mode):
+	"""Mortis, dark judge wizard mode"""
+	def __init__(self, game, priority):
+		super(Mortis, self).__init__(game, priority)
+		self.complete = False
+
+	def instruction_delay(self):
+		return 11.5
+		
+	def instructions(self):
+		return """
+
+#ULTIMATE#
+#CHALLENGE#
+
+Stage 2
+
+Judge Mortis is spreading disease throughout the city.
+
+Banish him by shooting each lit shot twice.
+
+2 ball multiball with temporary ball save.
+"""
+
+	def mode_started(self):
+		self.state = 'ramps'
+		self.shots_required = [2, 2, 2, 2, 2]
+		self.update_lamps()
+		self.complete = False
+		if self.game.switches.popperR.is_active():
+			self.game.trough.launch_balls(1, self.launch_callback)
+		else:
+			self.game.trough.launch_balls(2, self.launch_callback)
+		self.game.coils.flasherMortis.schedule(schedule=0x80808080, cycle_seconds=0, now=True)
+		self.already_collected = False
+		self.delay(name='taunt_timer', event_type=None, delay=5, handler=self.taunt)
+
+	def taunt(self):
+		self.game.sound.play_voice('mortis - taunt')
+		self.delay(name='taunt_timer', event_type=None, delay=10, handler=self.taunt)
+
+	def launch_callback(self):
+		ball_save_time = 20
+		self.game.ball_save.start(num_balls_to_save=2, time=ball_save_time, now=False, allow_multiple_saves=True)
+		pass
+
+	def mode_stopped(self):
+		self.cancel_delayed('taunt')
+		self.game.coils.flasherMortis.disable()
+
+	def update_lamps(self):
+		self.drive_shot_lamp(0, 'mystery')
+		self.drive_shot_lamp(1, 'perp1W')
+		self.drive_shot_lamp(1, 'perp1R')
+		self.drive_shot_lamp(1, 'perp1Y')
+		self.drive_shot_lamp(1, 'perp1G')
+		self.drive_shot_lamp(2, 'perp3W')
+		self.drive_shot_lamp(2, 'perp3R')
+		self.drive_shot_lamp(2, 'perp3Y')
+		self.drive_shot_lamp(2, 'perp3G')
+		self.drive_shot_lamp(3, 'perp5W')
+		self.drive_shot_lamp(3, 'perp5R')
+		self.drive_shot_lamp(3, 'perp5Y')
+		self.drive_shot_lamp(3, 'perp5G')
+		self.drive_shot_lamp(4, 'stopMeltdown')
+		return True
+
+	def drive_shot_lamp(self, index, lampname):
+		req_shots = self.shots_required[index]
+		if req_shots == 0:
+			self.game.lamps[lampname].disable()
+		elif req_shots == 1:
+			self.game.lamps[lampname].schedule(schedule=0x55555555, cycle_seconds=0, now=True)
+		else:
+			self.game.lamps[lampname].schedule(schedule=0x0f0f0f0f, cycle_seconds=0, now=True)
+
+	def sw_mystery_active(self, sw):
+		self.switch_hit(0)
+		return SwitchStop
+
+	def sw_topRightOpto_active(self, sw):
+		#See if ball came around outer left loop
+		if self.game.switches.leftRollover.time_since_change() < 1:
+			self.switch_hit(1)
+		return SwitchStop
+
+	def sw_popperR_active_for_300ms(self, sw):
+		self.switch_hit(2)
+		return SwitchStop
+
+	def sw_rightRampExit_active(self, sw):
+		self.switch_hit(3)
+		return SwitchStop
+
+	def sw_captiveBall3_active(self, sw):
+		self.switch_hit(4)
+		return SwitchStop
+
+	def sw_leftRampToLock_active(self, sw):
+		self.game.deadworld.eject_balls(1)
+		return SwitchStop
+
+	def switch_hit(self, index):
+		if self.shots_required[index] > 0:
+			self.game.lampctrl.play_show('shot_hit', False, self.game.update_lamps)
+			self.game.score(10000)
+			self.shots_required[index] -= 1
+			self.update_lamps()
+			self.check_for_completion()
+
+	def sw_dropTargetJ_active_for_250ms(self,sw):
+		self.drop_targets()
+
+	def sw_dropTargetU_active_for_250ms(self,sw):
+		self.drop_targets()
+
+	def sw_dropTargetD_active_for_250ms(self,sw):
+		self.drop_targets()
+
+	def sw_dropTargetG_active_for_250ms(self,sw):
+		self.drop_targets()
+
+	def sw_dropTargetE_active_for_250ms(self,sw):
+		self.drop_targets()
+
+	def drop_targets(self):
+		self.game.coils.resetDropTarget.pulse(40)
+		return True
+
+	def check_for_completion(self):
+		for i in range(0,5):
+			if self.shots_required[i] > 0:
+				return False
+		self.finish()
+
+	def finish(self, success = True):
+		self.cancel_delayed('taunt')
+		self.layer = TextLayer(128/2, 13, self.game.fonts['tiny7'], "center", True).set_text('Mortis Defeated!')
+		self.state = 'finished'
+		self.game.enable_flippers(False)
+
+		for lamp in ['perp1W', 'perp1R', 'perp1Y', 'perp1G', 'perp3W', 'perp3R', 'perp3Y', 'perp3G', 
+		             'perp5W', 'perp5R', 'perp5Y', 'perp5G', 'mystery', 'stopMeltdown', 'ultChallenge']: 
+			self.game.lamps[lamp].disable()
+
+		self.game.coils.flasherMortis.disable()
+
+		if success:
+			self.complete = True
+			self.complete_callback()
+		
+		# Call callback back to ult-challenge.
+		# in ult-challenge, change trough callback so that mode can 
+		# transition when all balls drain.  It should keep track of 
+		# original callback so it can replace it while modes are active.
+
+
 class Fear(Scoring_Mode):
-	"""Dark judge Fear wizard mode"""
+	"""Fear, dark judge wizard mode"""
+
+	def instruction_delay(self):
+		return 13
+		
+	def instructions(self):
+		return """
+
+#ULTIMATE#
+#CHALLENGE#
+
+Stage 3
+
+Judge Fear is reigning terror on the city.
+
+Banish him by shooting the lit ramp shots and then the subway before time runs out.
+
+1 ball with temporary ball save.
+"""
+
 	def __init__(self, game, priority):
 		super(Fear, self).__init__(game, priority)
 		self.complete = False
@@ -602,147 +729,9 @@ class Fear(Scoring_Mode):
 			self.finish(False)
 
 
-class Mortis(Scoring_Mode):
-	"""Dark judge Mortis wizard mode"""
-	def __init__(self, game, priority):
-		super(Mortis, self).__init__(game, priority)
-		self.complete = False
-
-	def mode_started(self):
-		self.state = 'ramps'
-		self.shots_required = [2, 2, 2, 2, 2]
-		self.update_lamps()
-		self.complete = False
-		if self.game.switches.popperR.is_active():
-			self.game.trough.launch_balls(1, self.launch_callback)
-		else:
-			self.game.trough.launch_balls(2, self.launch_callback)
-		self.game.coils.flasherMortis.schedule(schedule=0x80808080, cycle_seconds=0, now=True)
-		self.already_collected = False
-		self.delay(name='taunt_timer', event_type=None, delay=5, handler=self.taunt)
-
-	def taunt(self):
-		self.game.sound.play_voice('mortis - taunt')
-		self.delay(name='taunt_timer', event_type=None, delay=10, handler=self.taunt)
-
-	def launch_callback(self):
-		ball_save_time = 20
-		self.game.ball_save.start(num_balls_to_save=2, time=ball_save_time, now=False, allow_multiple_saves=True)
-		pass
-
-	def mode_stopped(self):
-		self.cancel_delayed('taunt')
-		self.game.coils.flasherMortis.disable()
-
-	def update_lamps(self):
-		self.drive_shot_lamp(0, 'mystery')
-		self.drive_shot_lamp(1, 'perp1W')
-		self.drive_shot_lamp(1, 'perp1R')
-		self.drive_shot_lamp(1, 'perp1Y')
-		self.drive_shot_lamp(1, 'perp1G')
-		self.drive_shot_lamp(2, 'perp3W')
-		self.drive_shot_lamp(2, 'perp3R')
-		self.drive_shot_lamp(2, 'perp3Y')
-		self.drive_shot_lamp(2, 'perp3G')
-		self.drive_shot_lamp(3, 'perp5W')
-		self.drive_shot_lamp(3, 'perp5R')
-		self.drive_shot_lamp(3, 'perp5Y')
-		self.drive_shot_lamp(3, 'perp5G')
-		self.drive_shot_lamp(4, 'stopMeltdown')
-		return True
-
-	def drive_shot_lamp(self, index, lampname):
-		req_shots = self.shots_required[index]
-		if req_shots == 0:
-			self.game.lamps[lampname].disable()
-		elif req_shots == 1:
-			self.game.lamps[lampname].schedule(schedule=0x55555555, cycle_seconds=0, now=True)
-		else:
-			self.game.lamps[lampname].schedule(schedule=0x0f0f0f0f, cycle_seconds=0, now=True)
-
-	def sw_mystery_active(self, sw):
-		self.switch_hit(0)
-		return SwitchStop
-
-	def sw_topRightOpto_active(self, sw):
-		#See if ball came around outer left loop
-		if self.game.switches.leftRollover.time_since_change() < 1:
-			self.switch_hit(1)
-		return SwitchStop
-
-	def sw_popperR_active_for_300ms(self, sw):
-		self.switch_hit(2)
-		return SwitchStop
-
-	def sw_rightRampExit_active(self, sw):
-		self.switch_hit(3)
-		return SwitchStop
-
-	def sw_captiveBall3_active(self, sw):
-		self.switch_hit(4)
-		return SwitchStop
-
-	def sw_leftRampToLock_active(self, sw):
-		self.game.deadworld.eject_balls(1)
-		return SwitchStop
-
-	def switch_hit(self, index):
-		if self.shots_required[index] > 0:
-			self.game.lampctrl.play_show('shot_hit', False, self.game.update_lamps)
-			self.game.score(10000)
-			self.shots_required[index] -= 1
-			self.update_lamps()
-			self.check_for_completion()
-
-	def sw_dropTargetJ_active_for_250ms(self,sw):
-		self.drop_targets()
-
-	def sw_dropTargetU_active_for_250ms(self,sw):
-		self.drop_targets()
-
-	def sw_dropTargetD_active_for_250ms(self,sw):
-		self.drop_targets()
-
-	def sw_dropTargetG_active_for_250ms(self,sw):
-		self.drop_targets()
-
-	def sw_dropTargetE_active_for_250ms(self,sw):
-		self.drop_targets()
-
-	def drop_targets(self):
-		self.game.coils.resetDropTarget.pulse(40)
-		return True
-
-	def check_for_completion(self):
-		for i in range(0,5):
-			if self.shots_required[i] > 0:
-				return False
-		self.finish()
-
-	def finish(self, success = True):
-		self.cancel_delayed('taunt')
-		self.layer = TextLayer(128/2, 13, self.game.fonts['tiny7'], "center", True).set_text('Mortis Defeated!')
-		self.state = 'finished'
-		self.game.enable_flippers(False)
-
-		for lamp in ['perp1W', 'perp1R', 'perp1Y', 'perp1G', 'perp3W', 'perp3R', 'perp3Y', 'perp3G', 
-		             'perp5W', 'perp5R', 'perp5Y', 'perp5G', 'mystery', 'stopMeltdown', 'ultChallenge']: 
-			self.game.lamps[lamp].disable()
-
-		self.game.coils.flasherMortis.disable()
-
-		if success:
-			self.complete = True
-			self.complete_callback()
-		
-		# Call callback back to ult-challenge.
-		# in ult-challenge, change trough callback so that mode can 
-		# transition when all balls drain.  It should keep track of 
-		# original callback so it can replace it while modes are active.
-
-
 class Death(Scoring_Mode):
-	"""Dark judge Death wizard mode"""
+	"""Death, dark judge wizard mode"""
+	
 	def __init__(self, game, priority):
 		super(Death, self).__init__(game, priority)
 		self.complete = False
@@ -751,6 +740,24 @@ class Death(Scoring_Mode):
 		self.score_layer = TextLayer(128/2, 10, self.game.fonts['num_14x10'], "center")
 		self.status_layer = TextLayer(128/2, 26, self.game.fonts['tiny7'], "center")
 		self.layer = GroupedLayer(128, 32, [self.countdown_layer, self.name_layer, self.score_layer, self.status_layer])
+
+	def instruction_delay(self):
+		return 13
+		
+	def instructions(self):
+		return """
+
+#ULTIMATE#
+#CHALLENGE#
+
+Stage 4
+
+Judge Death is on a murder spree.
+
+Banish him by shooting the lit crimescene shots before time expires.  Shots slowly re-light so finish him quickly.
+
+1 ball with temporary ball save.
+"""
 
 	def mode_started(self):
 		self.current_shot_index = 0
@@ -927,8 +934,24 @@ class Death(Scoring_Mode):
 
 class Celebration(Scoring_Mode):
 	"""Final multiball wizard mode after all dark judges have been defeated"""
+
 	def __init__(self, game, priority):
 		super(Celebration, self).__init__(game, priority)
+
+	def instruction_delay(self):
+		return 8
+
+	def instructions(self):
+		return """
+
+#CONGRATS#
+
+The Dark Judges have all been banished.
+
+Enjoy a 6-ball celebration multiball.  All shots score.
+
+Normal play resumes when only 1 ball remains.
+"""
 
 	def mode_started(self):
 		# Call callback now to set up drain callback, which will decide
