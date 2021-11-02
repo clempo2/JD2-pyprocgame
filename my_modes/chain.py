@@ -23,7 +23,7 @@ class Chain(Mode):
 
 		self.all_chain_modes = [pursuit, blackout, sniper, battleTank, impersonator, meltdown, safecracker, manhunt, stakeout]
 		for mode in self.all_chain_modes:
-			mode.callback = self.chain_mode_over
+			mode.exit_callback = self.chain_mode_over
 		
 		self.mode_completed_hurryup = ModeCompletedHurryUp(game, priority+1)
 		self.mode_completed_hurryup.collected = self.hurryup_collected

@@ -3,11 +3,10 @@ from procgame.modes import Scoring_Mode
 from procgame.dmd import GroupedLayer, TextLayer
 from random import randint
 import locale
-import logging
-import time
 
 class ModeTimer(Mode):
 	"""timer for a timed mode"""
+	
 	def __init__(self, game, priority):
 		super(ModeTimer, self).__init__(game, priority)
 		self.timer = 0;
@@ -41,7 +40,7 @@ class ModeTimer(Mode):
 			self.timer_update(self.timer)
 		else:
 			self.failed()
-			self.callback()
+			self.exit_callback()
 
 	def failed(self):
 		pass
@@ -52,6 +51,7 @@ class ModeTimer(Mode):
 
 class ChainFeature(Scoring_Mode, ModeTimer):
 	"""Base class for the chain modes"""
+	
 	def __init__(self, game, priority, name, lamp_name):
 		super(ChainFeature, self).__init__(game, priority)
 		self.name = name
@@ -76,9 +76,6 @@ class ChainFeature(Scoring_Mode, ModeTimer):
 		if not difficulty in ['easy', 'medium', 'hard']:
 			difficulty = 'medium'
 		return options[difficulty]
-
-	def register_callback_function(self, function):
-		self.callback = function
 
 	def play_music(self):
 		self.game.sound.stop_music()
@@ -119,6 +116,7 @@ class ChainFeature(Scoring_Mode, ModeTimer):
 
 class Pursuit(ChainFeature):
 	"""Pursuit chain mode"""
+	
 	def __init__(self, game, priority):
 		super(Pursuit, self).__init__(game, priority, 'Pursuit', 'pursuit')
 		self.shots_required_for_completion = self.get_difficulty({'easy':3, 'medium':4, 'hard':5})
@@ -169,7 +167,7 @@ class Pursuit(ChainFeature):
 			self.game.sound.play_voice('complete')
 			self.completed = True
 			self.game.score(50000)
-			self.callback()
+			self.exit_callback()
 		else:
 			self.game.sound.play_voice('good shot')
 
@@ -187,6 +185,7 @@ class Pursuit(ChainFeature):
 	
 class Blackout(ChainFeature):
 	"""Blackout chain mode"""
+
 	def __init__(self, game, priority):
 		super(Blackout, self).__init__(game, priority, 'Blackout', 'blackout')
 		self.shots_required_for_completion = self.get_difficulty({'easy':2, 'medium':2, 'hard':3})
@@ -198,14 +197,14 @@ class Blackout(ChainFeature):
 		self.game.base_play.play_animation(anim, 'high', repeat=False, hold=False, frame_time=3)
 		self.update_lamps()
 
-	def update_status(self):
-		status = 'Shots made: ' + str(self.shots) + '/' + str(self.shots_required_for_completion)
-		self.status_layer.set_text(status)
-
 	def mode_stopped(self):
 		self.game.lamps.blackoutJackpot.disable()
 		self.game.coils.flasherBlackout.disable()
 		self.game.enable_gi(True)
+
+	def update_status(self):
+		status = 'Shots made: ' + str(self.shots) + '/' + str(self.shots_required_for_completion)
+		self.status_layer.set_text(status)
 
 	def update_lamps(self):
 		self.game.enable_gi(False) # disable all gi except gi05
@@ -225,7 +224,7 @@ class Blackout(ChainFeature):
 		elif self.shots == self.shots_required_for_completion:
 			self.completed = True
 			self.game.score(110000)
-			self.callback()
+			self.exit_callback()
 
 	def get_instruction_layers(self):
 		font = self.game.fonts['jazz18']
@@ -238,6 +237,7 @@ class Blackout(ChainFeature):
 
 class Sniper(ChainFeature):
 	"""Sniper chain mode"""
+
 	def __init__(self, game, priority):
 		super(Sniper, self).__init__(game, priority, 'Sniper', 'sniper')
 		self.shots_required_for_completion = self.get_difficulty({'easy':2, 'medium':2, 'hard':3})
@@ -256,21 +256,21 @@ class Sniper(ChainFeature):
 		time = randint(2,7)
 		self.delay(name='gunshot', event_type=None, delay=time, handler=self.gunshot)
 
-	def gunshot(self):
-		self.game.sound.play_voice('sniper - shot')
-		time = randint(2,7)
-		self.delay(name='gunshot', event_type=None, delay=time, handler=self.gunshot)
+	def mode_stopped(self):
+		self.game.lamps.awardSniper.disable()
+		self.cancel_delayed('gunshot')
 
 	def update_status(self):
 		status = 'Shots made: ' + str(self.shots) + '/' + str(self.shots_required_for_completion)
 		self.status_layer.set_text(status)
 
-	def mode_stopped(self):
-		self.game.lamps.awardSniper.disable()
-		self.cancel_delayed('gunshot')
-
 	def update_lamps(self):
 		self.game.lamps.awardSniper.schedule(schedule=0x00FF00FF, cycle_seconds=0, now=True)
+
+	def gunshot(self):
+		self.game.sound.play_voice('sniper - shot')
+		time = randint(2,7)
+		self.delay(name='gunshot', event_type=None, delay=time, handler=self.gunshot)
 
 	def sw_popperR_active_for_300ms(self, sw):
 		self.shots += 1
@@ -285,7 +285,7 @@ class Sniper(ChainFeature):
 			self.game.sound.play_voice('sniper - hit')
 			self.completed = True
 			self.game.score(50000)
-			self.callback()
+			self.exit_callback()
 		else:
 			self.game.sound.play_voice('sniper - miss')
 
@@ -301,6 +301,7 @@ class Sniper(ChainFeature):
 
 class BattleTank(ChainFeature):
 	"""Battle tank chain mode"""
+
 	def __init__(self, game, priority):
 		super(BattleTank, self).__init__(game, priority, 'Battle Tank', 'battleTank')
 
@@ -311,14 +312,14 @@ class BattleTank(ChainFeature):
 		self.update_lamps()
 		self.game.sound.play_voice('tank intro')
 
-	def update_status(self):
-		status = 'Shots made: ' + str(self.num_shots) + '/' + str(len(self.shots))
-		self.status_layer.set_text(status)
-
 	def mode_stopped(self):
 		self.game.lamps.tankCenter.disable()
 		self.game.lamps.tankLeft.disable()
 		self.game.lamps.tankRight.disable()
+
+	def update_status(self):
+		status = 'Shots made: ' + str(self.num_shots) + '/' + str(len(self.shots))
+		self.status_layer.set_text(status)
 
 	def update_lamps(self):
 		if not self.shots['center']:
@@ -361,7 +362,7 @@ class BattleTank(ChainFeature):
 		if self.shots['right'] and self.shots['left'] and self.shots['center']:
 			self.completed = True
 			self.game.score(50000)
-			self.callback()
+			self.exit_callback()
 
 	def get_instruction_layers(self):
 		font = self.game.fonts['jazz18']
@@ -375,6 +376,7 @@ class BattleTank(ChainFeature):
 
 class Meltdown(ChainFeature):
 	"""Meltdown chain mode"""
+
 	def __init__(self, game, priority):
 		super(Meltdown, self).__init__(game, priority, 'Meltdown', 'meltdown')
 		self.shots_required_for_completion = self.get_difficulty({'easy':3, 'medium':4, 'hard':5})
@@ -385,12 +387,12 @@ class Meltdown(ChainFeature):
 		self.update_lamps()
 		self.game.sound.play_voice('meltdown intro')
 
+	def mode_stopped(self):
+		self.game.lamps.stopMeltdown.disable()
+
 	def update_status(self):
 		status = 'Shots made: ' + str(self.shots) + '/' + str(self.shots_required_for_completion)
 		self.status_layer.set_text(status)
-
-	def mode_stopped(self):
-		self.game.lamps.stopMeltdown.disable()
 
 	def update_lamps(self):
 		self.game.lamps.stopMeltdown.schedule(schedule=0x00FF00FF, cycle_seconds=0, now=True)
@@ -420,7 +422,7 @@ class Meltdown(ChainFeature):
 			self.game.sound.play_voice('meltdown all')
 			self.completed = True
 			self.game.score(50000)
-			self.callback()
+			self.exit_callback()
 		elif self.shots <= 4:
 			self.game.sound.play_voice('meltdown ' + str(self.shots))
 
@@ -436,6 +438,7 @@ class Meltdown(ChainFeature):
 
 class Impersonator(ChainFeature):
 	"""Bad impersonator chain mode"""
+
 	def __init__(self, game, priority):
 		super(Impersonator, self).__init__(game, priority, 'Impersonator', 'impersonator')
 		self.shots_required_for_completion = self.get_difficulty({'easy':3, 'medium':5, 'hard':7})
@@ -469,14 +472,6 @@ class Impersonator(ChainFeature):
 		self.game.sound.play('bi - shutup')
 		self.delay(name='shutup_restart', event_type=None, delay=time, handler=self.shutup_restart)
 
-	def update_status(self):
-		if self.shots > self.shots_required_for_completion:
-			extra_shots = self.shots - self.shots_required_for_completion
-			status = 'Shots made: ' + str(extra_shots) + ' extra'
-		else:
-			status = 'Shots made: ' + str(self.shots) + '/' + str(self.shots_required_for_completion)
-		self.status_layer.set_text(status)
-
 	def mode_stopped(self):
 		self.game.lamps.awardBadImpersonator.disable()
 		self.stop_using_drops()
@@ -487,6 +482,14 @@ class Impersonator(ChainFeature):
 		self.cancel_delayed('end_sound')
 		self.game.sound.stop('bi - song')
 		self.game.sound.stop('bi - boo')
+
+	def update_status(self):
+		if self.shots > self.shots_required_for_completion:
+			extra_shots = self.shots - self.shots_required_for_completion
+			status = 'Shots made: ' + str(extra_shots) + ' extra'
+		else:
+			status = 'Shots made: ' + str(self.shots) + '/' + str(self.shots_required_for_completion)
+		self.status_layer.set_text(status)
 
 	def update_lamps(self):
 		self.game.lamps.awardBadImpersonator.schedule(schedule=0x00FF00FF, cycle_seconds=0, now=True)
@@ -570,6 +573,7 @@ class Impersonator(ChainFeature):
 
 class Safecracker(ChainFeature):
 	"""Safecracker chain mode"""
+
 	def __init__(self, game, priority):
 		super(Safecracker, self).__init__(game, priority, 'Safe Cracker', 'safecracker')
 		self.shots_required_for_completion = self.get_difficulty({'easy':2, 'medium':3, 'hard':4})
@@ -588,15 +592,15 @@ class Safecracker(ChainFeature):
 		self.update_status()
 		self.update_lamps()
 
-	def update_status(self):
-		status = 'Shots made: ' + str(self.shots) + '/' + str(self.shots_required_for_completion)
-		self.status_layer.set_text(status)
-
 	def mode_stopped(self):
 		self.cancel_delayed('trip_check')
 		self.cancel_delayed('bad guys')
 		self.game.lamps.awardSafecracker.disable()
 		self.stop_using_drops()
+
+	def update_status(self):
+		status = 'Shots made: ' + str(self.shots) + '/' + str(self.shots_required_for_completion)
+		self.status_layer.set_text(status)
 
 	def update_lamps(self):
 		self.game.lamps.awardSafecracker.schedule(schedule=0x00FF00FF, cycle_seconds=0, now=True)
@@ -615,7 +619,7 @@ class Safecracker(ChainFeature):
 			self.game.sound.play_voice('complete')
 			self.completed = True
 			self.game.score(50000)
-			self.callback()
+			self.exit_callback()
 		else:
 			self.game.sound.play_voice('shot')
 
@@ -636,6 +640,7 @@ class Safecracker(ChainFeature):
 
 class ManhuntMillions(ChainFeature):
 	"""ManhuntMillions chain mode"""
+
 	def __init__(self, game, priority):
 		super(ManhuntMillions, self).__init__(game, priority, 'Manhunt', 'manhunt')
 		self.shots_required_for_completion = self.get_difficulty({'easy':2, 'medium':3, 'hard':4})
@@ -645,16 +650,16 @@ class ManhuntMillions(ChainFeature):
 		self.update_status()
 		self.update_lamps()
 		self.game.sound.play_voice('mm - intro')
-
-	def update_lamps(self):
-		self.game.coils.flasherPursuitL.schedule(schedule=0x000F000F, cycle_seconds=0, now=True)
+		
+	def mode_stopped(self):
+		self.game.coils.flasherPursuitL.disable()
 
 	def update_status(self):
 		status = 'Shots made: ' + str(self.shots) + '/' + str(self.shots_required_for_completion)
 		self.status_layer.set_text(status)
-		
-	def mode_stopped(self):
-		self.game.coils.flasherPursuitL.disable()
+
+	def update_lamps(self):
+		self.game.coils.flasherPursuitL.schedule(schedule=0x000F000F, cycle_seconds=0, now=True)
 
 	# Award shot if ball diverted for multiball.  Ensure it was a fast
 	# shot rather than one that just trickles in.
@@ -675,7 +680,7 @@ class ManhuntMillions(ChainFeature):
 			self.game.sound.play_voice('mm - done')
 			self.completed = True
 			self.game.score(50000)
-			self.callback()
+			self.exit_callback()
 		else:
 			self.game.sound.play_voice('mm - shot')
 
@@ -691,6 +696,7 @@ class ManhuntMillions(ChainFeature):
 
 class Stakeout(ChainFeature):
 	"""Stakeout chain mode"""
+	
 	def __init__(self, game, priority):
 		super(Stakeout, self).__init__(game, priority, 'Stakeout', 'stakeout')
 		self.shots_required_for_completion = self.get_difficulty({'easy':3, 'medium':4, 'hard':5})
@@ -701,20 +707,20 @@ class Stakeout(ChainFeature):
 		self.update_lamps()
 		self.delay(name='boring', event_type=None, delay=15, handler=self.boring_expired)
 
-	def boring_expired(self):
-		self.game.sound.play_voice('so - boring')
-		self.delay(name='boring', event_type=None, delay=5, handler=self.boring_expired)
-
-	def update_lamps(self):
-		self.game.coils.flasherPursuitR.schedule(schedule=0x000F000F, cycle_seconds=0, now=True)
+	def mode_stopped(self):
+		self.cancel_delayed('boring')
+		self.game.coils.flasherPursuitR.disable()
 
 	def update_status(self):
 		status = 'Shots made: ' + str(self.shots) + '/' + str(self.shots_required_for_completion)
 		self.status_layer.set_text(status)
 
-	def mode_stopped(self):
-		self.cancel_delayed('boring')
-		self.game.coils.flasherPursuitR.disable()
+	def update_lamps(self):
+		self.game.coils.flasherPursuitR.schedule(schedule=0x000F000F, cycle_seconds=0, now=True)
+
+	def boring_expired(self):
+		self.game.sound.play_voice('so - boring')
+		self.delay(name='boring', event_type=None, delay=5, handler=self.boring_expired)
 
 	def sw_rightRampExit_active(self, sw):
 		self.shots += 1
@@ -728,7 +734,7 @@ class Stakeout(ChainFeature):
 		if self.shots == self.shots_required_for_completion:
 			self.completed = True
 			self.game.score(50000)
-			self.callback()
+			self.exit_callback()
 		elif self.shots == 1:
 			self.game.sound.play_voice('so - over there')
 		elif self.shots == 2:

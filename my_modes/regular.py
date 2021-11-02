@@ -54,7 +54,6 @@ class RegularPlay(Scoring_Mode):
 		self.game.modes.add(self.chain)
 		self.game.modes.add(self.multiball)
 		self.game.modes.add(self.crimescenes)
-		self.game.modes.add(self.boring)
 		self.game.update_lamps()
 
 	def mode_started(self):
@@ -392,15 +391,15 @@ class RegularPlay(Scoring_Mode):
 
 	def multiball_ended(self):
 		self.setup_next_mode(True)
+	
+	#
+	# Awards
+	#
 
 	def light_missile_award(self):
 		self.missile_award_lit_save = False
 		self.missile_award_lit = True
 		self.game.drive_lamp('airRaid', 'medium')
-	
-	#
-	# Awards
-	#
 	
 	# Disable missile award and don't save it for later
 	def disable_missile_award(self):
@@ -475,7 +474,6 @@ class RegularPlay(Scoring_Mode):
 		self.game.modes.remove(self.multiball)
 		self.game.modes.remove(self.crimescenes)
 		self.game.modes.remove(self.skill_shot)
-		self.game.modes.remove(self.boring)
 		self.intro_playing = True
 
 	# start ultimate challenge after showing the instructions
@@ -534,17 +532,8 @@ class RegularPlay(Scoring_Mode):
 			self.award_extra_ball()
 
 	#
-	# Inlane + ball drain
+	# End of ball
 	#
-
-	def sw_inlaneL_active(self, sw):
-		self.game.sound.play('inlane')
-
-	def sw_inlaneR_active(self, sw):
-		self.game.sound.play('inlane')
-
-	def sw_inlaneFarR_active(self, sw):
-		self.game.sound.play('inlane')
 
 	def sw_outlaneL_active(self, sw):
 		self.outlane_active()
@@ -575,8 +564,10 @@ class RegularPlay(Scoring_Mode):
 			if self.crimescenes.is_multiball_active():
 				self.crimescenes.end_multiball()
 
+
 class GameIntro(Mode):
 	"""Welcome on first ball or shoot again"""
+
 	def __init__(self, game, priority):
 		super(GameIntro, self).__init__(game, priority)
 

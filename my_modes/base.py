@@ -175,6 +175,19 @@ class BasePlay(Mode):
 		self.game.score(100)
 
 	#
+	# Inlanes
+	#
+
+	def sw_inlaneL_active(self, sw):
+		self.game.sound.play('inlane')
+
+	def sw_inlaneR_active(self, sw):
+		self.game.sound.play('inlane')
+
+	def sw_inlaneFarR_active(self, sw):
+		self.game.sound.play('inlane')
+
+	#
 	# End of Ball
 	#
 	
