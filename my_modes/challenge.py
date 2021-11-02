@@ -18,11 +18,9 @@ class UltimateChallenge(Scoring_Mode):
 		self.mode_death = Death(game, self.priority+1)
 		self.mode_celebration = Celebration(game, self.priority+1)
 
-		self.mode_fire.complete_callback = self.level_complete_callback
-		self.mode_mortis.complete_callback = self.level_complete_callback
-		self.mode_fear.complete_callback = self.level_complete_callback
-		self.mode_death.complete_callback = self.level_complete_callback
-		self.mode_celebration.complete_callback = self.level_complete_callback
+		self.all_modes = [self.mode_fire, self.mode_mortis, self.mode_fear, self.mode_fire, self.mode_death, self.mode_celebration]
+		for mode in self.all_modes:
+			mode.complete_callback = self.level_complete_callback
 
 		self.mode_list = {
 			'fire': self.mode_fire,
@@ -39,14 +37,13 @@ class UltimateChallenge(Scoring_Mode):
 		self.active_mode = self.game.getPlayerState('challenge_active_mode', 'fire')
 		self.game.coils.resetDropTarget.pulse(40)
 		self.active = True
+		self.completed = False
 
 	def mode_stopped(self):
 		self.game.setPlayerState('challenge_active_mode', self.active_mode)
-		self.game.modes.remove(self.mode_fire)
-		self.game.modes.remove(self.mode_fear)
-		self.game.modes.remove(self.mode_mortis)
-		self.game.modes.remove(self.mode_death)
-		self.game.modes.remove(self.mode_celebration)
+		self.game.modes.remove(self.play_ult_intro)
+		for mode in self.all_modes:
+			self.game.modes.remove(mode)
 		self.active = False
 
 	def start_challenge(self):
@@ -61,16 +58,6 @@ class UltimateChallenge(Scoring_Mode):
 	def begin(self):
 		self.game.modes.add(self.mode_list[self.active_mode])
 		self.game.sound.play_music('mode', loops=-1)
-
-	def get_instruction_layers(self):
-		font = self.game.fonts['tiny7']
-		instr_layer1 = TextLayer(128/2, 15, font, "center").set_text('This')
-		instr_layer2 = TextLayer(128/2, 15, font, "center").set_text('is')
-		instr_layer3 = TextLayer(128/2, 15, font, "center").set_text('the')
-		instr_layer4 = TextLayer(128/2, 15, font, "center").set_text('Ultimate')
-		instr_layer5 = TextLayer(128/2, 15, font, "center").set_text('Challenge')
-		instruction_layers = [[instr_layer1], [instr_layer2], [instr_layer3], [instr_layer4], [instr_layer5]]
-		return instruction_layers
 
 	def timer_update(self, timer):
 		self.countdown_layer.set_text(str(timer))
@@ -151,8 +138,9 @@ class UltimateIntro(Mode):
 		self.game.enable_flippers(True) 
 
 	def setup(self, mode, exit_function, eject=False):
-		self.delay_time = mode.instruction_delay()
-		self.instruction_frame = self.gen.frame_for_markup(mode.instructions())
+		instructions = mode.instructions()
+		self.delay_time = len(instructions) / 16
+		self.instruction_frame = self.gen.frame_for_markup(instructions)
 		self.exit_function = exit_function
 		self.eject = eject
 
@@ -171,17 +159,38 @@ class UltimateIntro(Mode):
 			self.exit_function()
 
 
-class Fire(Scoring_Mode):
-	"""Fire, dark judge wizard mode"""
+class DarkJudge(Scoring_Mode):
+	"""Base class for dark judge wizard modes"""
+	
+	def __init__(self, game, priority):
+		super(DarkJudge, self).__init__(game, priority)
+
+	def sw_dropTargetJ_active_for_250ms(self,sw):
+		self.reset_drops()
+
+	def sw_dropTargetU_active_for_250ms(self,sw):
+		self.reset_drops()
+
+	def sw_dropTargetD_active_for_250ms(self,sw):
+		self.reset_drops()
+
+	def sw_dropTargetG_active_for_250ms(self,sw):
+		self.reset_drops()
+
+	def sw_dropTargetE_active_for_250ms(self,sw):
+		self.reset_drops()
+
+	def reset_drops(self):
+		self.game.coils.resetDropTarget.pulse(40)
+
+
+class Fire(DarkJudge):
+	"""Fire wizard mode"""
 	
 	def __init__(self, game, priority):
 		super(Fire, self).__init__(game, priority)
-		self.complete = False
 		self.mystery_lit = True
 
-	def instruction_delay(self):
-		return 15
-		
 	def instructions(self):
 		return """
 
@@ -200,12 +209,12 @@ Extinguish fires and banish Judge Fire by shooting the lit crimescene shots.
 """
 
 	def mode_started(self):
+		self.complete = False
 		self.mystery_lit = True
 		self.game.coils.flasherFire.schedule(schedule=0x80808080, cycle_seconds=0, now=True)
 		self.targets = [1,1,1,1,1]
 		self.lamp_colors = ['G', 'Y', 'R', 'W']
 		self.update_lamps()
-		self.complete = False
 		if self.game.deadworld.num_balls_locked == 1:
 			balls_to_launch = 2
 			self.game.deadworld.eject_balls(1)
@@ -309,25 +318,6 @@ Extinguish fires and banish Judge Fire by shooting the lit crimescene shots.
 				self.finish()
 			self.update_lamps()
 
-	def sw_dropTargetJ_active_for_250ms(self,sw):
-		self.drop_targets()
-
-	def sw_dropTargetU_active_for_250ms(self,sw):
-		self.drop_targets()
-
-	def sw_dropTargetD_active_for_250ms(self,sw):
-		self.drop_targets()
-
-	def sw_dropTargetG_active_for_250ms(self,sw):
-		self.drop_targets()
-
-	def sw_dropTargetE_active_for_250ms(self,sw):
-		self.drop_targets()
-
-	def drop_targets(self):
-		self.game.coils.resetDropTarget.pulse(40)
-		return True
-
 	def target_hit(self, num):
 		self.game.lampctrl.play_show('shot_hit', False, self.game.update_lamps)
 		self.game.score(10000)
@@ -355,14 +345,11 @@ Extinguish fires and banish Judge Fire by shooting the lit crimescene shots.
 
 
 class Mortis(Scoring_Mode):
-	"""Mortis, dark judge wizard mode"""
+	"""Mortis wizard mode"""
+
 	def __init__(self, game, priority):
 		super(Mortis, self).__init__(game, priority)
-		self.complete = False
 
-	def instruction_delay(self):
-		return 11.5
-		
 	def instructions(self):
 		return """
 
@@ -379,10 +366,10 @@ Banish him by shooting each lit shot twice.
 """
 
 	def mode_started(self):
+		self.complete = False
 		self.state = 'ramps'
 		self.shots_required = [2, 2, 2, 2, 2]
 		self.update_lamps()
-		self.complete = False
 		if self.game.switches.popperR.is_active():
 			self.game.trough.launch_balls(1, self.launch_callback)
 		else:
@@ -464,25 +451,6 @@ Banish him by shooting each lit shot twice.
 			self.update_lamps()
 			self.check_for_completion()
 
-	def sw_dropTargetJ_active_for_250ms(self,sw):
-		self.drop_targets()
-
-	def sw_dropTargetU_active_for_250ms(self,sw):
-		self.drop_targets()
-
-	def sw_dropTargetD_active_for_250ms(self,sw):
-		self.drop_targets()
-
-	def sw_dropTargetG_active_for_250ms(self,sw):
-		self.drop_targets()
-
-	def sw_dropTargetE_active_for_250ms(self,sw):
-		self.drop_targets()
-
-	def drop_targets(self):
-		self.game.coils.resetDropTarget.pulse(40)
-		return True
-
 	def check_for_completion(self):
 		for i in range(0,5):
 			if self.shots_required[i] > 0:
@@ -512,11 +480,8 @@ Banish him by shooting each lit shot twice.
 
 
 class Fear(Scoring_Mode):
-	"""Fear, dark judge wizard mode"""
+	"""Fear wizard mode"""
 
-	def instruction_delay(self):
-		return 13
-		
 	def instructions(self):
 		return """
 
@@ -534,7 +499,6 @@ Banish him by shooting the lit ramp shots and then the subway before time runs o
 
 	def __init__(self, game, priority):
 		super(Fear, self).__init__(game, priority)
-		self.complete = False
 		self.mystery_lit = True
 		self.countdown_layer = TextLayer(127, 1, self.game.fonts['tiny7'], "right")
 		self.name_layer = TextLayer(1, 1, self.game.fonts['tiny7'], "left").set_text('Fear')
@@ -543,14 +507,14 @@ Banish him by shooting the lit ramp shots and then the subway before time runs o
 		self.layer = GroupedLayer(128, 32, [self.countdown_layer, self.name_layer, self.score_layer, self.status_layer])
 
 	def mode_started(self):
+		self.complete = False
+		self.mystery_lit = True
 		self.state = 'ramps'
 		self.ramp_shots_required = 4
 		self.ramp_shots_hit = 0
 		self.active_ramp = 'left'
 		self.timer = 20
-		self.mystery_lit = True
 		self.update_lamps()
-		self.complete = False
 		if self.game.switches.popperR.is_inactive():
 			self.game.trough.launch_balls(1, self.launch_callback)
 		self.game.coils.flasherFear.schedule(schedule=0x80808080, cycle_seconds=0, now=True)
@@ -653,28 +617,15 @@ Banish him by shooting the lit ramp shots and then the subway before time runs o
 		if self.state == 'subway':
 			self.game.coils.tripDropTarget.pulse(60)
 
-	def sw_dropTargetJ_active_for_250ms(self,sw):
-		self.drop_targets()
-
-	def sw_dropTargetU_active_for_250ms(self,sw):
-		self.drop_targets()
-
 	def sw_dropTargetD_active_for_250ms(self,sw):
 		if self.state == 'ramps':
-			self.drop_targets()
+			self.reset_drops()
 		else:
 			self.update_lamps()
 
-	def sw_dropTargetG_active_for_250ms(self,sw):
-		self.drop_targets()
-
-	def sw_dropTargetE_active_for_250ms(self,sw):
-		self.drop_targets()
-
-	def drop_targets(self):
+	def reset_drops(self):
 		if self.state != 'subway':
 			self.game.coils.resetDropTarget.pulse(40)
-		return True
 
 	def sw_subwayEnter1_closed(self, sw):
 		if self.state == 'subway':
@@ -730,20 +681,16 @@ Banish him by shooting the lit ramp shots and then the subway before time runs o
 
 
 class Death(Scoring_Mode):
-	"""Death, dark judge wizard mode"""
+	"""Death wizard mode"""
 	
 	def __init__(self, game, priority):
 		super(Death, self).__init__(game, priority)
-		self.complete = False
 		self.countdown_layer = TextLayer(127, 1, self.game.fonts['tiny7'], "right")
 		self.name_layer = TextLayer(1, 1, self.game.fonts['tiny7'], "left").set_text('Death')
 		self.score_layer = TextLayer(128/2, 10, self.game.fonts['num_14x10'], "center")
 		self.status_layer = TextLayer(128/2, 26, self.game.fonts['tiny7'], "center")
 		self.layer = GroupedLayer(128, 32, [self.countdown_layer, self.name_layer, self.score_layer, self.status_layer])
 
-	def instruction_delay(self):
-		return 13
-		
 	def instructions(self):
 		return """
 
@@ -760,18 +707,18 @@ Banish him by shooting the lit crimescene shots before time expires.  Shots slow
 """
 
 	def mode_started(self):
+		self.complete = False
+		self.already_collected = False
 		self.current_shot_index = 0
 		self.total_timer = 180
 		self.timer = 10
 		self.active_shots = [1, 1, 1, 1, 1]
 		self.shot_order = [4,2,0,3,1]
 		self.update_lamps()
-		self.complete = False
 		if self.game.switches.popperR.is_inactive():
 			self.game.trough.launch_balls(1, self.launch_callback)
 		self.game.coils.flasherDeath.schedule(schedule=0x80808080, cycle_seconds=0, now=True)
 		self.delay(name='countdown', event_type=None, delay=1, handler=self.decrement_timer)
-		self.already_collected = False
 		self.game.coils.resetDropTarget.pulse(40)
 		self.delay(name='taunt_timer', event_type=None, delay=5, handler=self.taunt)
 
@@ -865,25 +812,6 @@ Banish him by shooting the lit crimescene shots before time expires.  Shots slow
 				break
 		self.update_lamps()
 
-	def sw_dropTargetJ_active_for_250ms(self,sw):
-		self.drop_targets()
-
-	def sw_dropTargetU_active_for_250ms(self,sw):
-		self.drop_targets()
-
-	def sw_dropTargetD_active_for_250ms(self,sw):
-		self.drop_targets()
-
-	def sw_dropTargetG_active_for_250ms(self,sw):
-		self.drop_targets()
-
-	def sw_dropTargetE_active_for_250ms(self,sw):
-		self.drop_targets()
-
-	def drop_targets(self):
-		self.game.coils.resetDropTarget.pulse(40)
-		return True
-
 	def check_for_completion(self):
 		for i in range(0,5):
 			if self.active_shots[i]:
@@ -937,9 +865,6 @@ class Celebration(Scoring_Mode):
 
 	def __init__(self, game, priority):
 		super(Celebration, self).__init__(game, priority)
-
-	def instruction_delay(self):
-		return 8
 
 	def instructions(self):
 		return """
@@ -1037,24 +962,3 @@ Normal play resumes when only 1 ball remains.
 	def sw_leftRampToLock_active(self, sw):
 		self.game.deadworld.eject_balls(1)
 		return SwitchStop
-
-	def sw_dropTargetJ_active_for_250ms(self,sw):
-		return self.drop_targets()
-
-	def sw_dropTargetU_active_for_250ms(self,sw):
-		return self.drop_targets()
-
-	def sw_dropTargetD_active_for_250ms(self,sw):
-		return self.drop_targets()
-
-	def sw_dropTargetG_active_for_250ms(self,sw):
-		return self.drop_targets()
-
-	def sw_dropTargetE_active_for_250ms(self,sw):
-		return self.drop_targets()
-
-	def drop_targets(self):
-		self.game.score(1000)
-		self.game.coils.resetDropTarget.pulse(40)
-		return True
-
