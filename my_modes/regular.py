@@ -4,7 +4,6 @@ from procgame.game import Mode
 from procgame.modes import Scoring_Mode
 from chain import Chain
 from crimescenes import Crimescenes
-from challenge import UltimateChallenge, UltimateIntro
 from multiball import Multiball
 from boring import Boring
 from skillshot import SkillShot
@@ -42,24 +41,19 @@ class RegularPlay(Scoring_Mode):
 		self.missile_award_mode = MissileAwardMode(game, priority + 10, font_small)
 		self.missile_award_mode.callback = self.award_missile_award
 
-		self.ultimate_challenge = UltimateChallenge(game, priority + 10)
-		self.ultimate_challenge.exit_callback = self.ultimate_challenge_over
-
 	def reset_modes(self):
 		self.state = 'idle'
 		self.chain.reset()
 		self.crimescenes.reset()
 		self.multiball.reset_jackpot_collected()
-		self.game.modes.add(self.chain)
-		self.game.modes.add(self.multiball)
-		self.game.modes.add(self.crimescenes)
+		self.mystery_lit = False
+		self.disable_missile_award()
 		self.game.update_lamps()
 
 	def mode_started(self):
 		# restore player state
 		p = self.game.current_player()
 		self.state = p.getState('state', 'idle')
-		self.supergame = p.getState('supergame', self.game.supergame)
 		self.mystery_lit = p.getState('mystery_lit', False)
 		self.missile_award_lit = p.getState('missile_award_lit', False)
 		self.video_mode_lit = p.getState('video_mode_lit', True)
@@ -96,7 +90,6 @@ class RegularPlay(Scoring_Mode):
 		self.game.modes.remove(self.chain)
 		self.game.modes.remove(self.crimescenes)
 		self.game.modes.remove(self.multiball)
-		self.game.modes.remove(self.ultimate_challenge)
 
 		# Disable all flashers.
 		for coil in self.game.coils:
@@ -106,7 +99,6 @@ class RegularPlay(Scoring_Mode):
 		# save player state
 		p = self.game.current_player()
 		p.setState('state', self.state)
-		p.setState('supergame', self.supergame)
 		p.setState('video_mode_lit', self.video_mode_lit)
 		p.setState('mystery_lit', self.mystery_lit)
 		p.setState('missile_award_lit', self.missile_award_lit or self.missile_award_lit_save)
@@ -128,9 +120,7 @@ class RegularPlay(Scoring_Mode):
 	# called right after a mode has ended
 	# show next available mode if no mode is currently running
 	def setup_next_mode(self, after_multiball=False):
-		if self.supergame:
-			self.start_ultimate_challenge()
-		elif not self.any_multiball_active():
+		if not self.any_multiball_active():
 			# all multiballs finished so we can decide what happens next
 			self.game.sound.fadeout_music()
 			self.game.sound.play_music('background', loops=-1)
@@ -318,9 +308,6 @@ class RegularPlay(Scoring_Mode):
 					self.game.lamps.rightStartFeature.schedule(schedule=0x00ff00ff, cycle_seconds=0, now=True)
 				if len(self.chain.modes_not_attempted) > 0:
 					self.game.drive_lamp(self.chain.modes_not_attempted[self.chain.modes_not_attempted_ptr].lamp_name, 'slow')
-			self.game.drive_lamp('ultChallenge', 'off') 
-		elif self.state == 'ultimate_challenge':
-			self.game.drive_lamp('ultChallenge', 'on') 
 		elif self.state == 'pre_ultimate_challenge':
 			self.game.drive_lamp('ultChallenge', 'slow') 
 			if not self.any_multiball_active() and not self.intro_playing:
@@ -365,7 +352,7 @@ class RegularPlay(Scoring_Mode):
 	#
 	
 	def any_multiball_active(self):
-		return self.multiball.is_active() or self.crimescenes.is_multiball_active() or self.ultimate_challenge.is_active()
+		return self.multiball.is_active() or self.crimescenes.is_multiball_active()
 
 	def multiball_started(self):
 		# Make sure no other multiball was already active before
@@ -458,25 +445,10 @@ class RegularPlay(Scoring_Mode):
 				len(self.chain.modes_not_attempted) == 0
 
 	def start_ultimate_challenge(self):
-		self.game.modes.remove(self.chain)
-		self.game.modes.remove(self.multiball)
-		self.game.modes.remove(self.crimescenes)
-		self.game.modes.remove(self.skill_shot)
-
 		self.game.lamps.rightStartFeature.disable()
-		self.intro_playing = False  ### TODO, remove this flag for ultimate challenge since it is no longer correct
-		self.mystery_lit = False
-		self.disable_missile_award()
-		
-		self.state = 'ultimate_challenge'
-		self.game.modes.add(self.ultimate_challenge)  ## TODO: looks like adding is same as start_challenge() except for the value of eject in play_ult_intro.setup()
-		self.ultimate_challenge.start_challenge()
-
-	def ultimate_challenge_over(self):
-		self.game.modes.remove(self.ultimate_challenge)	
 		self.reset_modes()
-		# supergame reverts to normal play for this player
-		self.supergame = False
+		self.game.modes.remove(self)
+		self.game.base_play.start_ultimate_challenge(True)
 
 	#
 	# Extra ball

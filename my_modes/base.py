@@ -2,6 +2,7 @@ from procgame.dmd import AnimatedLayer, GroupedLayer, TextLayer
 from procgame.game import Mode
 from procgame.modes import Replay
 from bonus import Bonus
+from challenge import UltimateChallenge
 from combos import Combos
 from regular import RegularPlay
 from status import StatusReport
@@ -23,13 +24,17 @@ class BasePlay(Mode):
 		self.tilt.num_tilt_warnings = self.game.user_settings['Gameplay']['Number of tilt warnings']
 		
 		self.combos = Combos(self.game, 28)
-		self.regular_play = RegularPlay(self.game, 8, self.game.fonts['tiny7'], self.game.fonts['jazz18'])
 		self.status_report = StatusReport(self.game, 28)
+		
+		self.regular_play = RegularPlay(self.game, 8, self.game.fonts['tiny7'], self.game.fonts['jazz18'])
+		
+		self.ultimate_challenge = UltimateChallenge(game, 8)
+		self.ultimate_challenge.exit_callback = self.ultimate_challenge_over
+
+		self.bonus = Bonus(self.game, 8, self.game.fonts['jazz18'], self.game.fonts['tiny7'])
 
 		self.replay = Replay(self.game, 18)
 		self.replay.replay_callback = self.replay_callback
-
-		self.bonus = Bonus(self.game, 8, self.game.fonts['jazz18'], self.game.fonts['tiny7'])
 
 		self.priority_display = {'low': ModesDisplay(self.game, 18), 'mid': ModesDisplay(self.game, 21), 'high': ModesDisplay(self.game, 200) }
 		self.priority_animation = {'low': ModesAnimation(self.game, 18), 'mid': ModesAnimation(self.game, 22), 'high': ModesAnimation(self.game, 210) }
@@ -51,15 +56,6 @@ class BasePlay(Mode):
 
 		self.game.enable_gi(True)
 
-		# Start modes
-		self.game.enable_flippers(True) 
-		self.game.modes.add(self.tilt)
-		self.game.modes.add(self.combos)
-		self.game.modes.add(self.regular_play)
-		self.game.modes.add(self.replay)
-		for mode in self.priority_modes:
-			self.game.modes.add(mode)
-
 		# Always start the ball with no launch callback.
 		self.game.trough.launch_balls(1, self.empty_ball_launch_callback)
 
@@ -69,6 +65,19 @@ class BasePlay(Mode):
 		# Reset tilt warnings and status
 		self.times_warned = 0;
 		self.tilt_status = 0
+
+		# Start modes
+		self.game.enable_flippers(True)
+		self.game.modes.add(self.tilt)
+		self.game.modes.add(self.combos)
+		self.game.modes.add(self.replay)
+		for mode in self.priority_modes:
+			self.game.modes.add(mode)
+
+		if p.getState('supergame', self.game.supergame):
+			self.start_ultimate_challenge(False)
+		else:
+			self.game.modes.add(self.regular_play)
 
 	def mode_stopped(self):
 		for mode in self.priority_modes:
@@ -106,6 +115,20 @@ class BasePlay(Mode):
 	def display_status_report(self):
 		if not self.status_report in self.game.modes:
 			self.game.modes.add(self.status_report)
+
+	#
+	# Ultimate Challenge
+	#
+
+	def start_ultimate_challenge(self, eject):
+		# eject is True if ball is in popperR, False if ball is in shooterR
+		self.game.modes.remove(self.regular_play)
+		self.game.modes.add(self.ultimate_challenge)
+		self.ultimate_challenge.start_challenge(eject)
+
+	def ultimate_challenge_over(self):
+		self.game.modes.remove(self.ultimate_challenge)	
+		self.game.modes.add(self.regular_play)
 
 	#
 	# Replay
@@ -222,9 +245,10 @@ class BasePlay(Mode):
 		# Make sure the motor isn't spinning between balls.
 		self.game.coils.globeMotor.disable()
 
-		self.game.modes.remove(self.regular_play)
 		self.game.modes.remove(self.combos)
 		self.game.modes.remove(self.tilt)
+		self.game.modes.remove(self.regular_play)
+		self.game.modes.remove(self.ultimate_challenge)
 
 		self.game.enable_flippers(False) 
 
