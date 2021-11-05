@@ -5,7 +5,7 @@ from random import randint
 import locale
 
 class ModeTimer(Mode):
-	"""timer for a timed mode"""
+	'''timer for a timed mode'''
 	
 	def __init__(self, game, priority):
 		super(ModeTimer, self).__init__(game, priority)
@@ -27,10 +27,11 @@ class ModeTimer(Mode):
 	def add(self,adder):
 		self.timer += adder 
 
-	def pause(self, pause_unpause=True):
-		if pause_unpause:
-			self.cancel_delayed('decrement timer')
-		elif self.timer > 0:
+	def pause(self):
+		self.cancel_delayed('decrement timer')
+		
+	def resume(self):
+		if self.timer > 0:
 			self.delay(name='decrement timer', event_type=None, delay=1, handler=self.decrement_timer)
 
 	def decrement_timer(self):
@@ -50,16 +51,16 @@ class ModeTimer(Mode):
 
 
 class ChainFeature(Scoring_Mode, ModeTimer):
-	"""Base class for the chain modes"""
+	'''Base class for the chain modes'''
 	
 	def __init__(self, game, priority, name, lamp_name):
 		super(ChainFeature, self).__init__(game, priority)
 		self.name = name
 		self.lamp_name = lamp_name
-		self.countdown_layer = TextLayer(127, 1, self.game.fonts['tiny7'], "right")
-		self.name_layer = TextLayer(1, 1, self.game.fonts['tiny7'], "left").set_text(name)
-		self.score_layer = TextLayer(128/2, 10, self.game.fonts['num_14x10'], "center")
-		self.status_layer = TextLayer(128/2, 26, self.game.fonts['tiny7'], "center")
+		self.countdown_layer = TextLayer(127, 1, self.game.fonts['tiny7'], 'right')
+		self.name_layer = TextLayer(1, 1, self.game.fonts['tiny7'], 'left').set_text(name)
+		self.score_layer = TextLayer(128/2, 10, self.game.fonts['num_14x10'], 'center')
+		self.status_layer = TextLayer(128/2, 26, self.game.fonts['tiny7'], 'center')
 		self.layer = GroupedLayer(128, 32, [self.countdown_layer, self.name_layer, self.score_layer, self.status_layer])
 
 	def mode_started(self):
@@ -71,7 +72,7 @@ class ChainFeature(Scoring_Mode, ModeTimer):
 		self.play_music()
 
 	def get_difficulty(self, options):
-		"""Return the number of required shots depending on the settings and the options for the mode"""
+		'''Return the number of required shots depending on the settings and the options for the mode'''
 		difficulty = self.game.user_settings['Gameplay']['Chain feature difficulty']
 		if not difficulty in ['easy', 'medium', 'hard']:
 			difficulty = 'medium'
@@ -83,8 +84,11 @@ class ChainFeature(Scoring_Mode, ModeTimer):
 
 	def get_instruction_layers(self):
 		font = self.game.fonts['jazz18']
-		layer1 = TextLayer(128/2, 7, font, "center").set_text(name)
-		instruction_layers = [[layer1]]
+		font_small = self.game.fonts['tiny7']
+		layer1 = TextLayer(128/2, 7, font, 'center').set_text(self.name)
+		layer21 = TextLayer(128/2, 7, font, 'center').set_text(self.name)
+		layer22 = TextLayer(128/2, 24, font_small, 'center').set_text(self.instructions)
+		instruction_layers = [[layer1], [layer21, layer22]]
 		return instruction_layers
 
 	def mode_tick(self):
@@ -92,7 +96,7 @@ class ChainFeature(Scoring_Mode, ModeTimer):
 		if score == 0:
 			self.score_layer.set_text('00')
 		else:
-			self.score_layer.set_text(locale.format("%d",score,True))
+			self.score_layer.set_text(locale.format('%d',score,True))
 
 	def timer_update(self, timer):
 		self.countdown_layer.set_text(str(timer))
@@ -115,11 +119,12 @@ class ChainFeature(Scoring_Mode, ModeTimer):
 			self.game.coils.resetDropTarget.pulse(40)
 
 class Pursuit(ChainFeature):
-	"""Pursuit chain mode"""
+	'''Pursuit chain mode'''
 	
 	def __init__(self, game, priority):
 		super(Pursuit, self).__init__(game, priority, 'Pursuit', 'pursuit')
 		self.shots_required_for_completion = self.get_difficulty({'easy':3, 'medium':4, 'hard':5})
+		self.instructions = 'Shoot ' + str(self.shots_required_for_completion) + ' L/R ramp shots'
 
 	def mode_started(self):
 		super(Pursuit, self).mode_started()
@@ -173,22 +178,14 @@ class Pursuit(ChainFeature):
 
 	def failed(self):
 		self.game.sound.play_voice('failed')
-
-	def get_instruction_layers(self):
-		font = self.game.fonts['jazz18']
-		font_small = self.game.fonts['tiny7']
-		layer1 = TextLayer(128/2, 7, font, "center").set_text(self.name)
-		layer21 = TextLayer(128/2, 7, font, "center").set_text(self.name)
-		layer22 = TextLayer(128/2, 24, font_small, "center").set_text("Shoot " + str(self.shots_required_for_completion) + " L/R ramp shots")
-		instruction_layers = [[layer1], [layer21, layer22]]
-		return instruction_layers
 	
 class Blackout(ChainFeature):
-	"""Blackout chain mode"""
+	'''Blackout chain mode'''
 
 	def __init__(self, game, priority):
 		super(Blackout, self).__init__(game, priority, 'Blackout', 'blackout')
 		self.shots_required_for_completion = self.get_difficulty({'easy':2, 'medium':2, 'hard':3})
+		self.instructions = 'Shoot center ramp'
 
 	def mode_started(self):
 		super(Blackout, self).mode_started()
@@ -226,28 +223,19 @@ class Blackout(ChainFeature):
 			self.game.score(110000)
 			self.exit_callback()
 
-	def get_instruction_layers(self):
-		font = self.game.fonts['jazz18']
-		font_small = self.game.fonts['tiny7']
-		layer1 = TextLayer(128/2, 7, font, "center").set_text(self.name)
-		layer21 = TextLayer(128/2, 7, font, "center").set_text(self.name)
-		layer22 = TextLayer(128/2, 24, font_small, "center").set_text("Shoot center ramp")
-		instruction_layers = [[layer1], [layer21, layer22]]
-		return instruction_layers
-
 class Sniper(ChainFeature):
-	"""Sniper chain mode"""
+	'''Sniper chain mode'''
 
 	def __init__(self, game, priority):
 		super(Sniper, self).__init__(game, priority, 'Sniper', 'sniper')
 		self.shots_required_for_completion = self.get_difficulty({'easy':2, 'medium':2, 'hard':3})
+		self.instructions = 'Shoot Sniper Tower 2 times'
 
-		self.countdown_layer = TextLayer(127, 1, self.game.fonts['tiny7'], "right")
-		self.name_layer = TextLayer(1, 1, self.game.fonts['tiny7'], "left").set_text("Sniper")
-		self.score_layer = TextLayer(127, 10, self.game.fonts['num_14x10'], "right")
-		self.status_layer = TextLayer(127, 26, self.game.fonts['tiny7'], "right")
+		# Sniper has extra animation on left and text right justified
+		self.score_layer = TextLayer(127, 10, self.game.fonts['num_14x10'], 'right')
+		self.status_layer = TextLayer(127, 26, self.game.fonts['tiny7'], 'right')
 		self.anim_layer = self.game.animations['scope']
-		self.layer = GroupedLayer(128, 32, [self.anim_layer,self.countdown_layer, self.name_layer, self.score_layer, self.status_layer])
+		self.layer = GroupedLayer(128, 32, [self.anim_layer, self.countdown_layer, self.name_layer, self.score_layer, self.status_layer])
 
 	def mode_started(self):
 		super(Sniper, self).mode_started()
@@ -289,21 +277,13 @@ class Sniper(ChainFeature):
 		else:
 			self.game.sound.play_voice('sniper - miss')
 
-	def get_instruction_layers(self):
-		font = self.game.fonts['jazz18']
-		font_small = self.game.fonts['tiny7']
-		layer1 = TextLayer(128/2, 7, font, "center").set_text(self.name)
-		layer21 = TextLayer(128/2, 7, font, "center").set_text(self.name)
-		layer22 = TextLayer(128/2, 24, font_small, "center").set_text("Shoot Sniper Tower 2 times")
-		instruction_layers = [[layer1], [layer21, layer22]]
-		return instruction_layers
-
 
 class BattleTank(ChainFeature):
-	"""Battle tank chain mode"""
+	'''Battle tank chain mode'''
 
 	def __init__(self, game, priority):
 		super(BattleTank, self).__init__(game, priority, 'Battle Tank', 'battleTank')
+		self.instructions = 'Shoot all 3 battle tank shots'
 
 	def mode_started(self):
 		super(BattleTank, self).mode_started()
@@ -364,22 +344,14 @@ class BattleTank(ChainFeature):
 			self.game.score(50000)
 			self.exit_callback()
 
-	def get_instruction_layers(self):
-		font = self.game.fonts['jazz18']
-		font_small = self.game.fonts['tiny7']
-		layer1 = TextLayer(128/2, 7, font, "center").set_text(self.name)
-		layer21 = TextLayer(128/2, 7, font, "center").set_text(self.name)
-		layer22 = TextLayer(128/2, 24, font_small, "center").set_text("Shoot all 3 battle tank shots")
-		instruction_layers = [[layer1], [layer21, layer22]]
-		return instruction_layers
-
 
 class Meltdown(ChainFeature):
-	"""Meltdown chain mode"""
+	'''Meltdown chain mode'''
 
 	def __init__(self, game, priority):
 		super(Meltdown, self).__init__(game, priority, 'Meltdown', 'meltdown')
 		self.shots_required_for_completion = self.get_difficulty({'easy':3, 'medium':4, 'hard':5})
+		self.instructions = 'Activate ' + str(self.shots_required_for_completion) + ' captive ball switches'
 
 	def mode_started(self):
 		super(Meltdown, self).mode_started()
@@ -426,22 +398,14 @@ class Meltdown(ChainFeature):
 		elif self.shots <= 4:
 			self.game.sound.play_voice('meltdown ' + str(self.shots))
 
-	def get_instruction_layers(self):
-		font = self.game.fonts['jazz18']
-		font_small = self.game.fonts['tiny7']
-		layer1 = TextLayer(128/2, 7, font, "center").set_text(self.name)
-		layer21 = TextLayer(128/2, 7, font, "center").set_text(self.name)
-		layer22 = TextLayer(128/2, 24, font_small, "center").set_text("Activate " + str(self.shots_required_for_completion) + " captive ball switches")
-		instruction_layers = [[layer1], [layer21, layer22]]
-		return instruction_layers
-
 
 class Impersonator(ChainFeature):
-	"""Bad impersonator chain mode"""
+	'''Bad impersonator chain mode'''
 
 	def __init__(self, game, priority):
 		super(Impersonator, self).__init__(game, priority, 'Impersonator', 'impersonator')
 		self.shots_required_for_completion = self.get_difficulty({'easy':3, 'medium':5, 'hard':7})
+		self.instructions = 'Shoot ' + str(self.shots_required_for_completion) + ' lit drop targets'
 		self.sound_active = False
 
 	def play_music(self):
@@ -475,11 +439,7 @@ class Impersonator(ChainFeature):
 	def mode_stopped(self):
 		self.game.lamps.awardBadImpersonator.disable()
 		self.stop_using_drops()
-		self.cancel_delayed('moving_target')
-		self.cancel_delayed('song_restart')
-		self.cancel_delayed('boo_restart')
-		self.cancel_delayed('shutup_restart')
-		self.cancel_delayed('end_sound')
+		self.cancel_delayed(['moving_target', 'song_restart', 'boo_restart', 'shutup_restart', 'end_sound'])
 		self.game.sound.stop('bi - song')
 		self.game.sound.stop('bi - boo')
 
@@ -560,41 +520,30 @@ class Impersonator(ChainFeature):
 			self.game.lamps.dropTargetG.pulse(0)
 			self.game.lamps.dropTargetE.pulse(0)
 		self.delay(name='moving_target', event_type=None, delay=1, handler=self.moving_target)
-
-	def get_instruction_layers(self):
-		font = self.game.fonts['jazz18']
-		font_small = self.game.fonts['tiny7']
-		layer1 = TextLayer(128/2, 7, font, "center").set_text(self.name)
-		layer21 = TextLayer(128/2, 7, font, "center").set_text(self.name)
-		layer22 = TextLayer(128/2, 24, font_small, "center").set_text("Shoot " + str(self.shots_required_for_completion) + " lit drop targets")
-		instruction_layers = [[layer1], [layer21, layer22]]
-		return instruction_layers
 		
 
 class Safecracker(ChainFeature):
-	"""Safecracker chain mode"""
+	'''Safecracker chain mode'''
 
 	def __init__(self, game, priority):
 		super(Safecracker, self).__init__(game, priority, 'Safe Cracker', 'safecracker')
 		self.shots_required_for_completion = self.get_difficulty({'easy':2, 'medium':3, 'hard':4})
-		time = randint(10,20)
-		self.delay(name='bad guys', event_type=None, delay=time, handler=self.bad_guys)
+		self.instructions = 'Shoot the subway ' + str(self.shots_required_for_completion) + ' times'
 
 	def bad_guys(self):
-		time = randint(5,10)
-		self.delay(name='bad guys', event_type=None, delay=time, handler=self.bad_guys)
+		self.delay(name='bad guys', event_type=None, delay=randint(5,10), handler=self.bad_guys)
 		self.game.sound.play_voice('bad guys')
 
 	def mode_started(self):
 		super(Safecracker, self).mode_started()
 		self.start_using_drops()
 		self.delay(name='trip_check', event_type=None, delay=1, handler=self.trip_check)
+		self.delay(name='bad guys', event_type=None, delay=randint(10,20), handler=self.bad_guys)
 		self.update_status()
 		self.update_lamps()
 
 	def mode_stopped(self):
-		self.cancel_delayed('trip_check')
-		self.cancel_delayed('bad guys')
+		self.cancel_delayed(['trip_check', 'bad guys'])
 		self.game.lamps.awardSafecracker.disable()
 		self.stop_using_drops()
 
@@ -628,22 +577,14 @@ class Safecracker(ChainFeature):
 			self.game.coils.tripDropTarget.pulse(40)
 			self.delay(name='trip_check', event_type=None, delay=.400, handler=self.trip_check)
 
-	def get_instruction_layers(self):
-		font = self.game.fonts['jazz18']
-		font_small = self.game.fonts['tiny7']
-		layer1 = TextLayer(128/2, 7, font, "center").set_text(self.name)
-		layer21 = TextLayer(128/2, 7, font, "center").set_text(self.name)
-		layer22 = TextLayer(128/2, 24, font_small, "center").set_text("Shoot the subway " + str(self.shots_required_for_completion) + " times")
-		instruction_layers = [[layer1], [layer21, layer22]]
-		return instruction_layers
-
 
 class ManhuntMillions(ChainFeature):
-	"""ManhuntMillions chain mode"""
+	'''ManhuntMillions chain mode'''
 
 	def __init__(self, game, priority):
 		super(ManhuntMillions, self).__init__(game, priority, 'Manhunt', 'manhunt')
 		self.shots_required_for_completion = self.get_difficulty({'easy':2, 'medium':3, 'hard':4})
+		self.instructions = 'Shoot the left ramp ' + str(self.shots_required_for_completion) + ' times'
 
 	def mode_started(self):
 		super(ManhuntMillions, self).mode_started()
@@ -684,22 +625,14 @@ class ManhuntMillions(ChainFeature):
 		else:
 			self.game.sound.play_voice('mm - shot')
 
-	def get_instruction_layers(self):
-		font = self.game.fonts['jazz18']
-		font_small = self.game.fonts['tiny7']
-		layer1 = TextLayer(128/2, 7, font, "center").set_text(self.name)
-		layer21 = TextLayer(128/2, 7, font, "center").set_text(self.name)
-		layer22 = TextLayer(128/2, 24, font_small, "center").set_text("Shoot the left ramp " + str(self.shots_required_for_completion) + " times")
-		instruction_layers = [[layer1], [layer21, layer22]]
-		return instruction_layers
-
 
 class Stakeout(ChainFeature):
-	"""Stakeout chain mode"""
+	'''Stakeout chain mode'''
 	
 	def __init__(self, game, priority):
 		super(Stakeout, self).__init__(game, priority, 'Stakeout', 'stakeout')
 		self.shots_required_for_completion = self.get_difficulty({'easy':3, 'medium':4, 'hard':5})
+		self.instructions = 'Shoot the right ramp ' + str(self.shots_required_for_completion) + ' times'
 
 	def mode_started(self):
 		super(Stakeout, self).mode_started()
@@ -741,12 +674,3 @@ class Stakeout(ChainFeature):
 			self.game.sound.play_voice('so - surrounded')
 		elif self.shots == 3:
 			self.game.sound.play_voice('so - move in')
-
-	def get_instruction_layers(self):
-		font = self.game.fonts['jazz18']
-		font_small = self.game.fonts['tiny7']
-		layer1 = TextLayer(128/2, 7, font, "center").set_text(self.name)
-		layer21 = TextLayer(128/2, 7, font, "center").set_text(self.name)
-		layer22 = TextLayer(128/2, 24, font_small, "center").set_text("Shoot the right ramp " + str(self.shots_required_for_completion) + " times")
-		instruction_layers = [[layer1], [layer21, layer22]]
-		return instruction_layers

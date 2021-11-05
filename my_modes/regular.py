@@ -1,5 +1,5 @@
 import locale
-from procgame.dmd import GroupedLayer, PanningLayer, TextLayer
+from procgame.dmd import GroupedLayer, MarkupFrameGenerator, PanningLayer, TextLayer
 from procgame.game import Mode
 from procgame.modes import Scoring_Mode
 from chain import Chain
@@ -11,9 +11,9 @@ from missile_award import MissileAwardMode
 from shooting_gallery import ShootingGallery
 
 class RegularPlay(Scoring_Mode):
-	"""Controls all play before entering ultimate challenge"""
+	"""Controls all play except ultimate challenge"""
 	
-	def __init__(self, game, priority, font_small, font_big):
+	def __init__(self, game, priority):
 		super(RegularPlay, self).__init__(game, priority)
 
 		self.cow_video_mode_lit = False # TODO: this should be a game settings
@@ -31,14 +31,14 @@ class RegularPlay(Scoring_Mode):
 		self.crimescenes.mb_end_callback = self.multiball_ended
 		self.crimescenes.light_extra_ball_function = self.light_extra_ball
 
-		self.multiball = Multiball(self.game, priority + 1, self.game.user_settings['Machine']['Deadworld mod installed'], font_big)
+		self.multiball = Multiball(self.game, priority + 1, self.game.user_settings['Machine']['Deadworld mod installed'])
 		self.multiball.start_callback = self.multiball_started
 		self.multiball.end_callback = self.multiball_ended
 
 		self.video_mode = ShootingGallery(self.game, priority + 11, self.cow_video_mode_lit)
 		self.video_mode.on_complete = self.video_mode_complete
 		
-		self.missile_award_mode = MissileAwardMode(game, priority + 10, font_small)
+		self.missile_award_mode = MissileAwardMode(game, priority + 10)
 		self.missile_award_mode.callback = self.award_missile_award
 
 	def reset_modes(self):
@@ -68,7 +68,6 @@ class RegularPlay(Scoring_Mode):
 		self.skill_shot_added = False
 		self.intro_playing = False
 		self.mystery_lit = True
-		self.tilt = False
 
 		# Add modes that are always active
 		self.game.modes.add(self.chain)
@@ -85,15 +84,12 @@ class RegularPlay(Scoring_Mode):
 
 	def mode_stopped(self):
 		# Remove modes from the mode Q
-		self.game.modes.remove(self.boring)
-		self.game.modes.remove(self.skill_shot)
-		self.game.modes.remove(self.chain)
-		self.game.modes.remove(self.crimescenes)
-		self.game.modes.remove(self.multiball)
+		for mode in [self.boring, self.skill_shot, self.chain, self.crimescenes, self.multiball]:
+			self.game.modes.remove(mode)
 
 		# Disable all flashers.
 		for coil in self.game.coils:
-			if coil.name.startswith('flasher', 0) != -1:
+			if coil.name.startswith('flasher', 0):
 				coil.disable()
 
 		# save player state
@@ -126,11 +122,11 @@ class RegularPlay(Scoring_Mode):
 			self.game.sound.play_music('background', loops=-1)
 			
 			if after_multiball:
-				# last concurrent multiball just ended
+				# the last multiball that was still running just ended
 				self.restore_missile_award()
 
 			if self.is_ultimate_challenge_ready():
-				# congratulations, you have reached the finale!
+				# you have reached the finale, shoot the right popper to start it
 				self.state = 'pre_ultimate_challenge'
 				self.game.lamps.ultChallenge.schedule(schedule=0x00ff00ff, cycle_seconds=0, now=True)
 				self.game.lamps.rightStartFeature.schedule(schedule=0x00ff00ff, cycle_seconds=0, now=True)
@@ -237,7 +233,7 @@ class RegularPlay(Scoring_Mode):
 	def sw_shooterR_inactive_for_1s(self,sw):
 		self.auto_plunge = True
 
-		if self.ball_starting and not self.tilt:
+		if self.ball_starting and not self.game.base_play.tilt.tilted:
 			self.skill_shot.begin()
 			ball_save_time = self.game.user_settings['Gameplay']['New ball ballsave time']
 			self.game.ball_save.callback = self.ball_save_callback
@@ -355,8 +351,8 @@ class RegularPlay(Scoring_Mode):
 		return self.multiball.is_active() or self.crimescenes.is_multiball_active()
 
 	def multiball_started(self):
-		# Make sure no other multiball was already active before
-		# preparing for multiball.
+		# Make sure no other multiball was already active before preparing for multiball.
+		# One multiball is the caller, so if both are active it means the other multiball was already active
 		if not (self.multiball.is_active() and self.crimescenes.is_multiball_active()):
 			self.game.sound.fadeout_music()
 			self.game.sound.play_music('multiball', loops=-1)
@@ -465,14 +461,6 @@ class RegularPlay(Scoring_Mode):
 			self.enable_extra_ball_lamp()
 			self.game.base_play.show_on_display("Extra Ball Lit!", None, 'high')
 
-	def award_extra_ball(self):
-		self.game.extra_ball()
-		self.extra_balls_lit -= 1
-		self.game.base_play.show_on_display("Extra Ball!", None,'high')
-		anim = self.game.animations['EBAnim']
-		self.game.base_play.play_animation(anim, 'high', repeat=False, hold=False)
-		self.game.update_lamps()
-
 	def enable_extra_ball_lamp(self):
 		self.game.drive_lamp('extraBall2', 'on')
 
@@ -485,6 +473,14 @@ class RegularPlay(Scoring_Mode):
 		self.game.sound.play('extra_ball_target')
 		if self.extra_balls_lit > 0:
 			self.award_extra_ball()
+
+	def award_extra_ball(self):
+		self.game.extra_ball()
+		self.extra_balls_lit -= 1
+		self.game.base_play.show_on_display("Extra Ball!", None,'high')
+		anim = self.game.animations['EBAnim']
+		self.game.base_play.play_animation(anim, 'high', repeat=False, hold=False)
+		self.game.update_lamps()
 
 	#
 	# End of ball
@@ -529,6 +525,9 @@ class GameIntro(Mode):
 	def mode_started(self):
 		self.delay(name='start', event_type=None, delay=1.0, handler=self.start )
 
+	def mode_stopped(self):
+		self.cancel_delayed(['finish', 'start'])
+
 	def start(self):
 		if self.game.shooting_again:
 			self.shoot_again()
@@ -537,23 +536,16 @@ class GameIntro(Mode):
 
 	def shoot_again(self):
 		self.game.sound.play_voice('shoot again ' + str(self.game.current_player_index+1))
-		self.again_layer = TextLayer(128/2, 9, self.game.fonts['jazz18'], "center").set_text('Shoot Again',3)
+		big_font = self.game.fonts['jazz18']
+		self.again_layer = TextLayer(128/2, 9, big_font, "center").set_text('Shoot Again',3)
 		self.layer = GroupedLayer(128, 32, [self.again_layer])
 
 	def play_intro(self):
 		self.game.sound.play_voice('welcome')
 		gen = MarkupFrameGenerator()
 		if self.game.supergame:
-			self.delay(name='finish', event_type=None, delay=8.0, handler=self.finish)
-			instructions = gen.frame_for_markup("""
-
-#INSTRUCTIONS#
-
-[Hit Right Fire to abort]
-
-You have started the SuperGame.  Ultimate Challenge is lit.  Shoot the sniper tower to start the finale.
-""")
-
+			# each wizard mode has its own intro
+			self.finish()
 		else:
 			self.delay(name='finish', event_type=None, delay=25.0, handler=self.finish)
 			instructions = gen.frame_for_markup("""
@@ -583,7 +575,3 @@ During multiball, shoot left ramp to light jackpot then shoot subway to collect
 
 	def finish(self):
 		self.game.modes.remove(self)
-
-	def mode_stopped(self):
-		self.cancel_delayed('finish')
-		self.cancel_delayed('start')

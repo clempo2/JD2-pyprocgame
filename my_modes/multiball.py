@@ -1,27 +1,28 @@
-import procgame
-from procgame import *
+from procgame.dmd import GroupedLayer, TextLayer
+from procgame.modes import BasicDropTargetBank, Scoring_Mode
 
-class Multiball(modes.Scoring_Mode):
+class Multiball(Scoring_Mode):
 	"""Multiball activated by locking balls in the Deadworld planet"""
 	
-	def __init__(self, game, priority, deadworld_mod_installed, font):
+	def __init__(self, game, priority, deadworld_mod_installed):
 		super(Multiball, self).__init__(game, priority)
 		self.deadworld_mod_installed = deadworld_mod_installed
+		font = self.game.fonts['jazz18']
 		self.lock_enabled = 0
 		self.num_balls_locked = 0
 		self.num_balls_to_eject = 0
 		self.virtual_locks_needed = 0
-		self.banner_layer = dmd.TextLayer(128/2, 7, font, "center")
-		self.layer = dmd.GroupedLayer(128, 32, [self.banner_layer])
+		self.banner_layer = TextLayer(128/2, 7, font, "center")
+		self.layer = GroupedLayer(128, 32, [self.banner_layer])
 		self.state = 'load'
-		self.paused = 0
+		self.paused = False
 		self.num_locks_lit = 0
 		self.num_times_played = 0
 		self.num_left_ramp_shots_hit = 0
 		self.num_left_ramp_shots_needed = 1
 		self.jackpot_lit = False
 		self.lock_level = 1
-		self.drops = procgame.modes.BasicDropTargetBank(self.game, priority=priority+1, prefix='dropTarget', letters='JUDGE')
+		self.drops = BasicDropTargetBank(self.game, priority=priority+1, prefix='dropTarget', letters='JUDGE')
 		self.jackpot_collected = False
 		self.delay(name='voice instructions', event_type=None, delay=10, handler=self.voice_instructions)
 
@@ -102,6 +103,17 @@ class Multiball(modes.Scoring_Mode):
 	def is_active(self):
 		return self.state == 'multiball'
 
+	def start_multiball(self):
+		self.game.sound.play_voice('multiball')
+		self.num_balls_locked = 0
+		self.state = 'multiball'
+		self.display_text("Multiball!")
+		self.start_callback()
+		self.num_left_ramp_shots_hit = 0
+		self.num_left_ramp_shots_needed = 1
+		self.jackpot_lit = False
+		self.update_lamps()
+
 	def end_multiball(self):
 		self.cancel_delayed(name='trip_check')
 		self.game.coils.flasherGlobe.disable()
@@ -112,17 +124,6 @@ class Multiball(modes.Scoring_Mode):
 			self.game.coils.resetDropTarget.pulse(40)
 		self.num_locks_lit = 0
 		self.lock_level += 1
-		self.update_lamps()
-
-	def start_multiball(self):
-		self.game.sound.play_voice('multiball')
-		self.num_balls_locked = 0
-		self.state = 'multiball'
-		self.display_text("Multiball!")
-		self.start_callback()
-		self.num_left_ramp_shots_hit = 0
-		self.num_left_ramp_shots_needed = 1
-		self.jackpot_lit = False
 		self.update_lamps()
 
 	def trip_check(self):
@@ -159,12 +160,12 @@ class Multiball(modes.Scoring_Mode):
 		self.banner_layer.set_text(text, 3)
 
 	def pause(self):
-		self.paused = 1
+		self.paused = True
 		if self.lock_enabled:
 			self.disable_lock()
 
 	def resume(self):
-		self.paused = 0
+		self.paused = False
 		if self.lock_enabled:
 			self.game.status("resuming")
 			self.enable_lock()

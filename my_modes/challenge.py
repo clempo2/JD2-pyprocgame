@@ -436,8 +436,7 @@ Banish him by shooting the lit ramp shots and then the subway before time runs o
 		self.delay(name='taunt', event_type=None, delay=5, handler=self.taunt)
 
 	def mode_stopped(self):
-		self.cancel_delayed('countdown')
-		self.cancel_delayed('taunt')
+		self.cancel_delayed(['countdown', 'taunt'])
 		self.game.coils.flasherFire.disable()
 
 	def launch_callback(self):
@@ -738,8 +737,7 @@ Banish him by shooting the lit crimescene shots before time expires.  Shots slow
 			self.finish(success=True)
 
 	def finish(self, success):
-		self.cancel_delayed('taunt')
-		self.cancel_delayed('countdown')
+		self.cancel_delayed(['taunt', 'countdown'])
 		self.layer = TextLayer(128/2, 13, self.game.fonts['tiny7'], "center", True).set_text('Death Defeated!')
 		self.game.enable_flippers(False)
 

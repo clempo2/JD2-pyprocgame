@@ -1,4 +1,3 @@
-import locale
 from procgame.dmd import GroupedLayer, TextLayer
 from procgame.game import Mode
 from chain_features import Pursuit, Blackout, Sniper, BattleTank, Impersonator, Meltdown, Safecracker, ManhuntMillions, Stakeout
@@ -9,7 +8,7 @@ class Chain(Mode):
 	def __init__(self, game, priority):
 		super(Chain, self).__init__(game, priority)
 
-		self.play_intro = PlayIntro(self.game, self.priority+1)
+		self.chain_intro = ChainIntro(self.game, self.priority+1)
 
 		pursuit = Pursuit(game, priority+1)
 		blackout = Blackout(game, priority+1)
@@ -26,8 +25,8 @@ class Chain(Mode):
 			mode.exit_callback = self.chain_mode_over
 		
 		self.mode_completed_hurryup = ModeCompletedHurryUp(game, priority+1)
-		self.mode_completed_hurryup.collected = self.hurryup_collected
-		self.mode_completed_hurryup.expired = self.hurryup_over
+		self.mode_completed_hurryup.collected_callback = self.hurryup_collected
+		self.mode_completed_hurryup.expired_callback = self.hurryup_over
 
 	def mode_started(self):
 		# restore player state
@@ -88,15 +87,14 @@ class Chain(Mode):
 	def start_chain_mode(self):
 		self.game.lamps.rightStartFeature.disable()
 		self.mode = self.modes_not_attempted[self.modes_not_attempted_ptr]
-		self.play_intro.setup(self.mode, self.activate_chain_mode)
-		self.game.modes.add(self.play_intro)
+		self.chain_intro.setup(self.mode, self.activate_chain_mode)
+		self.game.modes.add(self.chain_intro)
 		self.game.base_play.regular_play.intro_playing = True
 
 	# activate a chain mode after showing the instructions
 	def activate_chain_mode(self):
-		self.game.modes.remove(self.play_intro)
+		self.game.modes.remove(self.chain_intro)
 		self.game.base_play.regular_play.intro_playing = False
-		self.game.base_play.regular_play.save_missile_award()
 
 		# Update the mode lists.
 		self.modes_not_attempted.remove(self.mode)
@@ -110,7 +108,7 @@ class Chain(Mode):
 		self.mode.play_music()
 		
 		# Put the ball back into play
-		self.game.base_play.regular_play.popperR_eject()
+		self.game.base_play.flash_then_pop('flashersRtRamp', 'popperR', 20)
 
 	# called when the mode has completed or expired but before the hurry up
 	def chain_mode_over(self):
@@ -129,10 +127,8 @@ class Chain(Mode):
 
 	# called when a successful mode hurry up was achieved
 	def hurryup_collected(self):
-		if self.game.base_play.regular_play.any_multiball_active():
-			award = 'all'
-		else:
-			award = 'crimescenes'
+		mb_active = self.game.base_play.regular_play.any_multiball_active()
+		award = 'all' if mb_active else 'crimescenes'
 		self.award_hurryup_award(award)
 		self.hurryup_over()
 
@@ -142,11 +138,11 @@ class Chain(Mode):
 		self.game.base_play.regular_play.setup_next_mode()
 
 
-class PlayIntro(Mode):
+class ChainIntro(Mode):
 	"""Displays the instructions when a chain mode starts"""
 	
 	def __init__(self, game, priority):
-		super(PlayIntro, self).__init__(game, priority)
+		super(ChainIntro, self).__init__(game, priority)
 
 	def mode_started(self):
 		self.frame_counter = 0
@@ -166,12 +162,10 @@ class PlayIntro(Mode):
 		self.layer = GroupedLayer(128, 32, self.instruction_layers[0])
 
 	def sw_flipperLwL_active(self, sw):
-		if self.game.switches.flipperLwR.is_active():
-			self.exit_function()
+		self.exit_function()
 
 	def sw_flipperLwR_active(self, sw):
-		if self.game.switches.flipperLwL.is_active():
-			self.exit_function()
+		self.exit_function()
 
 	def next_frame(self):
 		if self.frame_counter != len(self.instruction_layers):
@@ -225,7 +219,7 @@ class ModeCompletedHurryUp(Mode):
 			self.collect_hurry_up()
 			
 	def collect_hurry_up(self):
-		self.collected()
+		self.collected_callback()
 		self.game.sound.play_voice('collected')
 		self.cancel_delayed(['grace', 'countdown', 'trip_check'])
 		self.already_collected = True
@@ -244,4 +238,4 @@ class ModeCompletedHurryUp(Mode):
 			self.delay(name='grace', event_type=None, delay=2, handler=self.delayed_removal)
 			
 	def delayed_removal(self):
-		self.expired()
+		self.expired_callback()

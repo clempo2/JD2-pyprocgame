@@ -1,15 +1,13 @@
-import procgame
-from procgame import *
-from procgame.game import SwitchStop
-import random
+from procgame.dmd import FrameLayer, MarkupFrameGenerator, PanningLayer, PushTransition, ScriptedLayer, TextLayer
+from procgame.game import Mode
+from procgame.highscore import generate_highscore_frames
+from random import shuffle
 
-class Attract(game.Mode):
+class Attract(Mode):
 	"""Attract mode and start buttons"""
 
 	def __init__(self, game):
 		super(Attract, self).__init__(game, 1)
-		self.display_order = [0,1,2,3,4,5,6,7,8,9]
-		self.display_index = 0
 		self.lampshow_keys = ['attract0', 'attract1']
 
 	def mode_started(self):
@@ -35,17 +33,17 @@ class Attract(game.Mode):
 		self.change_lampshow()
 		
 		self.cityscape_layer = self.game.animations['cityscape']
-		self.jd_layer = dmd.TextLayer(128/2, 7, self.game.fonts['jazz18'], "center", opaque=True).set_text("Judge Dredd")
-		self.jd_layer.transition = dmd.PushTransition(direction='south')
+		self.jd_layer = TextLayer(128/2, 7, self.game.fonts['jazz18'], "center", opaque=True).set_text("Judge Dredd")
+		self.jd_layer.transition = PushTransition(direction='south')
 		self.proc_splash_layer = self.game.animations['Splash']
-		self.proc_splash_layer.transition = dmd.PushTransition(direction='south')
-		self.pyprocgame_layer = dmd.TextLayer(128/2, 7, self.game.fonts['jazz18'], "center", opaque=True).set_text("pyprocgame")
-		self.pyprocgame_layer.transition = dmd.PushTransition(direction='west')
-		self.press_start_layer = dmd.TextLayer(128/2, 7, self.game.fonts['jazz18'], "center", opaque=True).set_text("Press Start", seconds=None, blink_frames=1)
-		self.scores_layer = dmd.TextLayer(128/2, 7, self.game.fonts['jazz18'], "center", opaque=True).set_text("High Scores")
-		self.scores_layer.transition = dmd.PushTransition(direction='north')
+		self.proc_splash_layer.transition = PushTransition(direction='south')
+		self.pyprocgame_layer = TextLayer(128/2, 7, self.game.fonts['jazz18'], "center", opaque=True).set_text("pyprocgame")
+		self.pyprocgame_layer.transition = PushTransition(direction='west')
+		self.press_start_layer = TextLayer(128/2, 7, self.game.fonts['jazz18'], "center", opaque=True).set_text("Press Start", seconds=None, blink_frames=1)
+		self.scores_layer = TextLayer(128/2, 7, self.game.fonts['jazz18'], "center", opaque=True).set_text("High Scores")
+		self.scores_layer.transition = PushTransition(direction='north')
 
-		gen = dmd.MarkupFrameGenerator()
+		gen = MarkupFrameGenerator()
 		credits_frame = gen.frame_for_markup("""
 
 
@@ -74,7 +72,7 @@ class Attract(game.Mode):
 [Rob Anthony]
 """)
 
-		self.credits_layer = dmd.PanningLayer(width=128, height=32, frame=credits_frame, origin=(0,0), translate=(0,1), bounce=False)
+		self.credits_layer = PanningLayer(width=128, height=32, frame=credits_frame, origin=(0,0), translate=(0,1), bounce=False)
 		self.guntech_layer = self.game.animations['guntech']
 		self.judges_layer = self.game.animations['darkjudges_no_bg']
 		self.longwalk_layer = self.game.animations['longwalk']
@@ -97,9 +95,9 @@ class Attract(game.Mode):
 			{'seconds':3.0, 'layer':self.scores_layer}
 		]
 
-		for frame in highscore.generate_highscore_frames(self.game.highscore_categories):
-			new_layer = dmd.FrameLayer(frame=frame)
-			new_layer.transition = dmd.PushTransition(direction='north')
+		for frame in generate_highscore_frames(self.game.highscore_categories):
+			new_layer = FrameLayer(frame=frame)
+			new_layer.transition = PushTransition(direction='north')
 			script.append({'seconds':2.0, 'layer':new_layer})
 
 		script.extend([
@@ -107,7 +105,7 @@ class Attract(game.Mode):
 			{'seconds':3.0, 'layer':self.judges_layer},
 			{'seconds':4.0, 'layer':self.cityscape_layer}])
 
-		self.layer = dmd.ScriptedLayer(width=128, height=32, script=script)
+		self.layer = ScriptedLayer(width=128, height=32, script=script)
 
 	def post_game_display(self):
 		script = [
@@ -122,12 +120,12 @@ class Attract(game.Mode):
 			{'seconds':3.0, 'layer':self.scores_layer}
 		]
 		
-		for frame in highscore.generate_highscore_frames(self.game.highscore_categories):
-			new_layer = dmd.FrameLayer(frame=frame)
-			new_layer.transition = dmd.PushTransition(direction='north')
+		for frame in generate_highscore_frames(self.game.highscore_categories):
+			new_layer = FrameLayer(frame=frame)
+			new_layer.transition = PushTransition(direction='north')
 			script.append({'seconds':2.0, 'layer':new_layer})
 
-		self.layer = dmd.ScriptedLayer(width=128, height=32, script=script)
+		self.layer = ScriptedLayer(width=128, height=32, script=script)
 
 	def game_over_display(self):
 		script = [
@@ -136,16 +134,16 @@ class Attract(game.Mode):
 			{'seconds':3.0, 'layer':self.scores_layer}
 		]
 
-		for frame in highscore.generate_highscore_frames(self.game.highscore_categories):
-			new_layer = dmd.FrameLayer(frame=frame)
-			new_layer.transition = dmd.PushTransition(direction='north')
+		for frame in generate_highscore_frames(self.game.highscore_categories):
+			new_layer = FrameLayer(frame=frame)
+			new_layer.transition = PushTransition(direction='north')
 			script.append({'seconds':2.0, 'layer':new_layer})
 
-		self.layer = dmd.ScriptedLayer(width=128, height=32, script=script)
+		self.layer = ScriptedLayer(width=128, height=32, script=script)
 		self.layer.on_complete = self.post_game_display
 
 	def change_lampshow(self):
-		random.shuffle(self.lampshow_keys)
+		shuffle(self.lampshow_keys)
 		self.game.lampctrl.play_show(self.lampshow_keys[0], repeat=True)
 		self.delay(name='lampshow', event_type=None, delay=10, handler=self.change_lampshow)
 

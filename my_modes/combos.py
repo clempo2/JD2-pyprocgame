@@ -22,8 +22,7 @@ class Combos(Mode):
 		p.setState('best_inner_loops', self.best_inner_loops)
 		p.setState('best_outer_loops', self.best_outer_loops)
 		
-		self.cancel_delayed('inner_loop')
-		self.cancel_delayed('outer_loop')
+		self.cancel_delayed(['inner_loop', 'outer_loop'])
 
 	def get_status_layers(self):
 		tiny_font = self.game.fonts['tiny7']

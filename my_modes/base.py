@@ -6,7 +6,7 @@ from challenge import UltimateChallenge
 from combos import Combos
 from regular import RegularPlay
 from status import StatusReport
-from tilt import Tilt
+from tilt import TiltMonitorMode
 
 class BasePlay(Mode):
 	"""Base rules for all the time the ball is in play"""
@@ -18,20 +18,17 @@ class BasePlay(Mode):
 		self.game.trough.drain_callback = self.ball_drained_callback
 		
 		# Instantiate sub-modes
-		self.tilt = Tilt(self.game, 1000, self.game.fonts['jazz18'], self.game.fonts['tiny7'], 'tilt', 'slamTilt')
-		self.tilt.tilt_callback = self.tilt_callback
-		self.tilt.slam_tilt_callback = self.slam_tilt_callback
+		self.tilt = TiltMonitorMode(self.game, 1000, 'tilt', 'slamTilt')
 		self.tilt.num_tilt_warnings = self.game.user_settings['Gameplay']['Number of tilt warnings']
 		
 		self.combos = Combos(self.game, 28)
 		self.status_report = StatusReport(self.game, 28)
-		
-		self.regular_play = RegularPlay(self.game, 8, self.game.fonts['tiny7'], self.game.fonts['jazz18'])
+		self.regular_play = RegularPlay(self.game, 8)
 		
 		self.ultimate_challenge = UltimateChallenge(game, 8)
 		self.ultimate_challenge.exit_callback = self.ultimate_challenge_over
 
-		self.bonus = Bonus(self.game, 8, self.game.fonts['jazz18'], self.game.fonts['tiny7'])
+		self.bonus = Bonus(self.game, 8)
 
 		self.replay = Replay(self.game, 18)
 		self.replay.replay_callback = self.replay_callback
@@ -41,10 +38,11 @@ class BasePlay(Mode):
 		self.priority_modes = self.priority_display.values() + self.priority_animation.values()
 
 	def mode_started(self):
-		# restore player state
+		# init player state
 		p = self.game.current_player()
-		self.bonus_x = p.getState('bonus_x', 1) if p.getState('hold_bonus_x', False) else 1
-		self.hold_bonus_x = False
+		bonus_x = p.getState('bonus_x', 1) if p.getState('hold_bonus_x', False) else 1
+		p.setState('bonus_x', bonus_x)
+		p.setState('hold_bonus_x', False)
 
 		# Disable any previously active lamp
 		for lamp in self.game.lamps:
@@ -61,10 +59,6 @@ class BasePlay(Mode):
 
 		# Enable ball search in case a ball gets stuck during gameplay.
 		self.game.ball_search.enable()
-
-		# Reset tilt warnings and status
-		self.times_warned = 0;
-		self.tilt_status = 0
 
 		# Start modes
 		self.game.enable_flippers(True)
@@ -85,10 +79,6 @@ class BasePlay(Mode):
 
 		self.game.enable_flippers(False) 
 		self.game.ball_search.disable()
-		
-		p = self.game.current_player()
-		p.setState('bonus_x', self.bonus_x)
-		p.setState('hold_bonus_x', self.hold_bonus_x)
 
 	#
 	# Priority Display
@@ -137,10 +127,10 @@ class BasePlay(Mode):
 	def replay_callback(self):
 		award = self.game.user_settings['Replay']['Replay Award']
 		self.game.coils.knocker.pulse(50)
+		self.show_on_display('Replay', None, 'mid')
 		if award == 'Extra Ball':
-			self.award_extra_ball()
-		else:
-			self.show_on_display('Replay', None, 'mid')
+			self.game.extra_ball()
+		#else add a credit in your head
 
 	#
 	# Drop Targets
@@ -234,8 +224,8 @@ class BasePlay(Mode):
 		
 		if self.game.trough.num_balls_in_play == 0:
 			# End the ball
-			if self.tilt_status:
-				self.tilt_delay()
+			if self.tilt.tilted:
+				self.tilt.tilt_delay(self.finish_ball)
 			else:
 				self.finish_ball()
 
@@ -252,7 +242,7 @@ class BasePlay(Mode):
 
 		self.game.enable_flippers(False) 
 
-		if self.tilt_status:
+		if self.tilt.tilted:
 			# ball tilted, skip bonus
 			self.end_ball()
 		else:
@@ -266,7 +256,7 @@ class BasePlay(Mode):
 		self.game.modes.remove(self.replay)
 		
 		self.game.enable_flippers(True)
-		 
+
 		# Tell the game object it can process the end of ball
 		# (to end player's turn or shoot again)
 		self.game.end_ball()
@@ -279,66 +269,14 @@ class BasePlay(Mode):
 	#
 	
 	def inc_bonus_x(self):
-		self.bonus_x += 1
-		self.show_on_display('Bonus at ' + str(self.bonus_x) + 'X', None, 'mid')
+		p = self.game.current_player()
+		bonus_x = p.getState('bonus_x') + 1
+		p.setState('bonus_x', bonus_x)
+		self.show_on_display('Bonus at ' + str(bonus_x) + 'X', None, 'mid')
 
 	def hold_bonus_x(self):
-		self.hold_bonus_x = True
+		self.game.setPlayerState('hold_bonus_x', True)
 		self.game.base_play.show_on_display('Hold Bonus X', None, 'mid')
-
-	#
-	# Tilt
-	#
-	
-	# Reset game on slam tilt
-	def slam_tilt_callback(self):
-		self.game.sound.fadeout_music()
-		# Need to play a sound and show a slam tilt screen.
-		# For now just popup a status message.
-		self.game.reset()
-		return True
-
-	def tilt_callback(self):
-		# Process tilt.
-		# First check to make sure tilt hasn't already been processed once.
-		# No need to do this stuff again if for some reason tilt already occurred.
-		if self.tilt_status == 0:
-
-			self.game.sound.fadeout_music()
-			
-			# Tell the rules logic tilt occurred
-			self.regular_play.tilt = True
-
-			# Disable flippers so the ball will drain.
-			self.game.enable_flippers(False) 
-
-			# Make sure ball won't be saved when it drains.
-			self.game.ball_save.disable()
-
-			# Make sure the ball search won't run while ball is draining.
-			self.game.ball_search.disable()
-
-			# Ensure all lamps are off.
-			for lamp in self.game.lamps:
-				lamp.disable()
-
-			# Kick balls out of places it could be stuck.
-			if self.game.switches.shooterR.is_active():
-				self.game.coils.shooterR.pulse(50)
-			if self.game.switches.shooterL.is_active():
-				self.game.coils.shooterL.pulse(20)
-			self.tilt_status = 1
-			#play sound
-			#play video
-
-	def tilt_delay(self):
-		# Make sure tilt switch hasn't been hit for at least 2 seconds before
-		# finishing ball to ensure next ball doesn't start with tilt bob still
-		# swaying.
-		if self.game.switches.tilt.time_since_change() < 2:
-			self.delay(name='tilt_bob_settle', event_type=None, delay=2.0, handler=self.tilt_delay)
-		else:
-			self.finish_ball()
 
 
 class ModesDisplay(Mode):
@@ -357,7 +295,7 @@ class ModesDisplay(Mode):
 			text_layer.set_text(text, 3)
 			layers.append(text_layer)
 		if score:
-			self.score_layer.set_text(str(score),3)
+			self.score_layer.set_text(str(score), 3)
 			layers.append(self.score_layer)
 		self.layer = GroupedLayer(128, 32, layers)
 
@@ -370,5 +308,3 @@ class ModesAnimation(Mode):
 
 	def play(self, anim, repeat=False, hold=False, frame_time=1):
 		self.layer = AnimatedLayer(frames=anim.frames, repeat=repeat, hold=hold, frame_time=frame_time)
-
-

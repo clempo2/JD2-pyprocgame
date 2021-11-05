@@ -1,7 +1,6 @@
-from procgame import *
-from procgame.game import SwitchStop, SwitchContinue
-
-class SwitchMonitor(game.Mode):
+from procgame.game import Mode, SwitchStop, SwitchContinue
+from procgame.highscore import EntrySequenceManager
+class SwitchMonitor(Mode):
 	"""A mode that monitors for specific switches and helps advance state as appropriate"""
 
 	def __init__(self, game):
@@ -41,7 +40,7 @@ class SwitchMonitor(game.Mode):
 
 	def start_button_activated(self, supergame, button_name):
 		for m in self.game.modes:
-			if isinstance(m, highscore.EntrySequenceManager):
+			if isinstance(m, EntrySequenceManager):
 				return SwitchContinue
 
 		if (self.game.attract_mode in self.game.modes):

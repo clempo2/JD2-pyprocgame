@@ -5,13 +5,14 @@ from random import randint
 class MissileAwardMode(Mode):
 	"""Choose an award while the ball sits in the left shooter lane"""
 	
-	def __init__(self, game, priority, font):
+	def __init__(self, game, priority):
 		super(MissileAwardMode, self).__init__(game, priority)
 		
+		font = self.game.fonts['tiny7']
 		self.title_layer = TextLayer(128/2, 7, font, "center")
 		self.element_layer = TextLayer(128/2, 15, font, "center")
 		self.value_layer = TextLayer(128/2, 22, font, "center")
-		self.layer = GroupedLayer(128, 32, [self.title_layer,self.element_layer, self.value_layer])
+		self.layer = GroupedLayer(128, 32, [self.title_layer, self.element_layer, self.value_layer])
 
 		self.title_layer.set_text("Missile Award")
 		self.element_layer.set_text("Left Fire btn collects:")
