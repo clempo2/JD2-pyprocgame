@@ -379,10 +379,8 @@ Banish him by shooting each lit shot twice.
 			self.check_for_completion()
 
 	def check_for_completion(self):
-		for i in range(0,5):
-			if self.shots_required[i] > 0:
-				return False
-		self.finish()
+		if not any(self.shots_required):
+			self.finish()
 
 	def finish(self):
 		self.cancel_delayed('taunt')

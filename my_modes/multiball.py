@@ -120,7 +120,11 @@ class Multiball(Scoring_Mode):
 		self.state = 'load'
 		self.end_callback()
 		self.jackpot_lit = False
-		if self.game.switches.dropTargetJ.is_active() or self.game.switches.dropTargetU.is_active() or self.game.switches.dropTargetD.is_active() or self.game.switches.dropTargetG.is_active() or self.game.switches.dropTargetE.is_active(): 
+		if (self.game.switches.dropTargetJ.is_active() or
+				self.game.switches.dropTargetU.is_active() or
+				self.game.switches.dropTargetD.is_active() or
+				self.game.switches.dropTargetG.is_active() or
+				self.game.switches.dropTargetE.is_active()): 
 			self.game.coils.resetDropTarget.pulse(40)
 		self.num_locks_lit = 0
 		self.lock_level += 1

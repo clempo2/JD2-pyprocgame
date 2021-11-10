@@ -73,6 +73,12 @@ class Chain(Mode):
 	def sw_slingR_active(self, sw):
 		self.rotate_modes(1)
 
+	def sw_fireR_active(self, sw):
+		self.rotate_modes(1)
+
+	def sw_fireL_active(self, sw):
+		self.rotate_modes(-1)
+
 	# move the pointer to the next available mode to the left or right
 	def rotate_modes(self, step):
 		self.modes_not_attempted_ptr += step
@@ -82,6 +88,14 @@ class Chain(Mode):
 			self.modes_not_attempted_ptr = 0
 		
 		self.game.update_lamps()
+
+	def setup_next_mode(self):
+		if len(self.modes_not_attempted) == 0:
+			return 'modes_complete'
+		else:
+			self.game.drive_lamp(self.modes_not_attempted[self.modes_not_attempted_ptr].lamp_name,'slow')
+			self.game.lamps.rightStartFeature.schedule(schedule=0x00ff00ff, cycle_seconds=0, now=True)
+			return 'idle'
 
 	# start a chain mode by showing the instructions
 	def start_chain_mode(self):

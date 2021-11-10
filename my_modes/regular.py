@@ -130,15 +130,8 @@ class RegularPlay(Scoring_Mode):
 				self.state = 'pre_ultimate_challenge'
 				self.game.lamps.ultChallenge.schedule(schedule=0x00ff00ff, cycle_seconds=0, now=True)
 				self.game.lamps.rightStartFeature.schedule(schedule=0x00ff00ff, cycle_seconds=0, now=True)
-			elif len(self.chain.modes_not_attempted) > 0:
-				# TODO: move this code to chain.py somehow
-				# offer next available mode
-				self.state = 'idle'
-				self.game.drive_lamp(self.chain.modes_not_attempted[self.chain.modes_not_attempted_ptr].lamp_name,'slow')
-				self.game.lamps.rightStartFeature.schedule(schedule=0x00ff00ff, cycle_seconds=0, now=True)
 			else:
-				# all modes attempted, let the player finish the other ultimate challenge requirements 
-				self.state = 'modes_complete'
+				self.state = self.chain.setup_next_mode()
 
 	def crimescenes_completed(self):
 		self.setup_next_mode(True)
@@ -205,18 +198,15 @@ class RegularPlay(Scoring_Mode):
 	#
 	
 	def sw_fireR_active(self, sw):
-		if self.game.switches.shooterR.is_inactive():
-			self.chain.rotate_modes(1)
-		else:
+		if self.game.switches.shooterR.is_active():
 			self.game.coils.shooterR.pulse(50)
 			if self.ball_starting:
 				self.game.sound.stop_music()
 				self.game.sound.play_music('background', loops=-1)
 
 	def sw_fireL_active(self, sw):
-		if self.game.switches.shooterL.is_inactive():
-			self.chain.rotate_modes(-1)
-		elif not self.any_multiball_active() and self.missile_award_mode.active:
+		if (self.game.switches.shooterL.is_active() and
+		        not self.any_multiball_active() and self.missile_award_mode.active):
 			self.game.coils.shooterL.pulse(50)
 
 	#

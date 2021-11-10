@@ -4,14 +4,16 @@ from procgame.dmd import GroupedLayer, TextLayer
 from procgame.game import Mode
 from procgame.modes import Scoring_Mode
 
+lamp_colors = ['G', 'Y', 'R', 'W']
+
 class Crimescenes(Scoring_Mode):
 	"""Crime scenes mode"""
 	
 	def __init__(self, game, priority):
 		super(Crimescenes, self).__init__(game, priority)
+		# we always award the most difficult target that remains in the current level  
 		self.target_award_order = [1,3,0,2,4]
-		self.lamp_colors = ['G', 'Y', 'R', 'W']
-		self.extra_ball_levels = 4
+		self.extra_ball_level = 4
 
 		difficulty = self.game.user_settings['Gameplay']['Crimescene shot difficulty']
 		if difficulty == 'easy':
@@ -58,9 +60,7 @@ class Crimescenes(Scoring_Mode):
 		self.complete = p.getState('crimescenes_complete', False)
 
 		self.num_advance_hits = 0
-		self.bonus_num = 1
-		self.bw_shots = 1
-		self.bw_shots_required = [1,1,1,1,1]
+		self.bonus_shot = 0
 		self.mb_active = False
 
 		if self.mode == 'init':
@@ -79,12 +79,12 @@ class Crimescenes(Scoring_Mode):
 		p.setState('crimescenes_complete', self.complete)
 		
 		if self.mode == 'bonus' or self.mode == 'block_war':
-			self.cancel_delayed('bonus_target')
+			self.cancel_delayed('rotate_bonus_target')
 			self.game.modes.remove(self.block_war)
 
 		for i in range(1,6):
 			for j in range(0,4):
-				lampname = 'perp' + str(i) + self.lamp_colors[j]
+				lampname = 'perp' + str(i) + lamp_colors[j]
 				self.game.drive_lamp(lampname, 'off')
 
 		for i in range(1,5):
@@ -118,10 +118,9 @@ class Crimescenes(Scoring_Mode):
 			self.update_lamps()
 
 	def award_hit(self):
-		for i in range(0,5):
-			award_switch = self.target_award_order[i]
-			if self.targets[award_switch]:
-				self.switch_hit(award_switch)
+		for award_shot in self.target_award_order:
+			if self.targets[award_shot]:
+				self.switch_hit(award_shot)
 				return True
 
 	#
@@ -175,60 +174,44 @@ class Crimescenes(Scoring_Mode):
 	def sw_rightRampExit_active(self, sw):
 		self.switch_hit(4)
 
-	def switch_hit(self, num):
+	def switch_hit(self, shot):
 		if self.mode == 'levels':
-			if self.targets[num]:
+			if self.targets[shot]:
+				self.targets[shot] = 0
 				self.game.score(1000)
-				self.targets[num] = 0
-				if self.all_targets_off():
+				if self.all_targets_hit():
 					self.level_complete()
 				else:
 					self.game.sound.play_voice('crime')
 				self.update_lamps()
 		elif self.mode == 'block_war':
 			block_war_multiplier = self.get_num_modes_completed() + 1
-			if self.bw_shots_required[num] > 0:
-				self.bw_shots_required[num] -= 1
-				self.block_war.switch_hit(num, self.bw_shots_required[num], block_war_multiplier)
-			if self.all_bw_shots_hit():
-				self.finish_level_complete()
+			self.block_war.switch_hit(shot, block_war_multiplier)
+			if self.block_war.all_shots_hit():
+				self.block_war_round_complete()
 			else:
 				self.game.sound.play_voice('good shot')
 				self.update_lamps()
 		elif self.mode == 'bonus':
-			if num+1 == self.bonus_num:
-				self.cancel_delayed('bonus_target')
-				self.finish_level_complete()
+			if shot == self.bonus_shot:
+				self.cancel_delayed('rotate_bonus_target')
+				self.bonus_round_collected()
 
-	def all_targets_off(self):
-		for i in range(0,5):
-			if self.targets[i]:
-				return False
-		return True
+	# return whether all targets making up the current level have been hit
+	def all_targets_hit(self):
+		return not any(self.targets)
 
 	#
 	# Block War
 	#
 
-	def block_war_start_callback(self):
-		ball_save_time = self.game.user_settings['Gameplay']['Block Wars ballsave time']
-		# 1 ball added already from launcher.  So ask ball_save to save
-		# new total of balls in play.
-		local_num_balls_to_save = self.game.trough.num_balls_in_play
-		self.game.ball_save.start(num_balls_to_save=local_num_balls_to_save, time=ball_save_time, now=False, allow_multiple_saves=True)
-
-	def setup_bw_shots_required(self, num):
-		for i in range(0,5):
-			self.bw_shots_required[i] = num
-
-	def all_bw_shots_hit(self):
-		for i in range(0,5):
-			if self.bw_shots_required[i]:
-				return False
-		return True
+	def block_war_round_complete(self):
+		self.game.score(10000)
+		self.game.lampctrl.play_show('advance_level', False, self.game.update_lamps)
+		self.start_bonus_round()
 
 	def end_multiball(self):
-		self.cancel_delayed('bonus_target')
+		self.cancel_delayed('rotate_bonus_target')
 		self.game.modes.remove(self.block_war)
 		self.mode = 'levels'
 		self.level += 1
@@ -239,81 +222,59 @@ class Crimescenes(Scoring_Mode):
 	# Level Complete
 	#
 
-	def level_complete(self, num_levels = 1):
-		self.num_levels_to_advance = num_levels
-		self.finish_level_complete()
-
-	def finish_level_complete(self):
+	def level_complete(self):
 		self.game.score(10000)
 		self.game.lampctrl.play_show('advance_level', False, self.game.update_lamps)
-		if self.mode == 'bonus':
-			self.mode = 'block_war'
-			if self.bw_shots < 4:
-				self.bw_shots += 1
-			self.setup_bw_shots_required(self.bw_shots)
-			self.block_war.bonus_hit()
-			#Play sound, lamp show, etc
+		self.total_levels += 1
+		self.level += 1
+		if self.level == self.extra_ball_level:
+			self.light_extra_ball_function()
 
-		elif self.mode == 'block_war':
-			self.start_bonus()
+		if (self.level % 4) == 3:
+			self.mode = 'block_war'
+			self.game.modes.add(self.block_war)
+			self.mb_start_callback()
 		else:
-			self.total_levels += self.num_levels_to_advance
-			for number in range(0, self.num_levels_to_advance):
-				if self.level + number == self.extra_ball_levels:
-					self.light_extra_ball_function()
-					break
-			if (self.level % 4) == 3:
-				# ensure flippers are enabled.  
-				# This is a workaround for when a mode is 
-				# starting (flippers disable during
-				# intro) just before block wars is started.
-				self.game.enable_flippers(True) 
-				self.game.modes.add(self.block_war)
-				self.mode = 'block_war'
-				self.bw_shots = 1
-				self.setup_bw_shots_required(self.bw_shots)
-				self.game.trough.launch_balls(1, self.block_war_start_callback)
-				self.mb_start_callback()
-			else:
-				self.display_level_complete(self.level,10000)
-				self.level += self.num_levels_to_advance
-				self.game.sound.play_voice('block complete ' + str(self.level))
-				self.init_level(self.level)
-				#Play sound, lamp show, etc
+			self.display_level_complete(self.level,10000)
+			self.game.sound.play_voice('block complete ' + str(self.level))
+			self.init_level(self.level)
 
 	def display_level_complete(self, level, points):
 		title_layer = TextLayer(128/2, 7, self.game.fonts['07x5'], "center").set_text("Advance Crimescene", 1.5);
-		level_layer = TextLayer(128/2, 14, self.game.fonts['07x5'], "center").set_text("Level " + str(level + 1) + " complete", 1.5);
+		level_layer = TextLayer(128/2, 14, self.game.fonts['07x5'], "center").set_text("Level " + str(level) + " complete", 1.5);
 		award_layer = TextLayer(128/2, 21, self.game.fonts['07x5'], "center").set_text("Award: " + locale.format("%d",points,True) + " points", 1.5);
 		self.layer = GroupedLayer(128, 32, [title_layer, level_layer, award_layer])
 
 	#
-	# Bonus Shots
+	# Bonus Round
 	#
 
-	def start_bonus(self):
+	def start_bonus_round(self):
 		self.mode = 'bonus'
-		#Play sound, lamp show, etc
-		self.bonus_num = 1
-		self.bonus_dir = 'up'
-		self.delay(name='bonus_target', event_type=None, delay=3, handler=self.bonus_target)
+		self.bonus_shot = 0
+		self.delay(name='rotate_bonus_target', event_type=None, delay=3, handler=self.rotate_bonus_target, param=1)
 		self.game.sound.play_voice('jackpot is lit')
 		self.update_lamps()
 
-	def bonus_target(self):
-		if self.bonus_num == 5:
-			self.bonus_dir = 'down'
-
-		if self.bonus_dir == 'down' and self.bonus_num == 1:
-			self.mode = 'block_war'
-			self.setup_bw_shots_required(self.bw_shots)
+	def rotate_bonus_target(self, bonus_step):
+		if self.bonus_shot == 5:
+			bonus_step = -1
+		self.bonus_shot += bonus_step
+		if self.bonus_shot == -1:
+			self.bonus_round_over(False)
 		else:
-			if self.bonus_dir == 'up':
-				self.bonus_num += 1
-			else:
-				self.bonus_num -= 1
-			self.delay(name='bonus_target', event_type=None, delay=3, handler=self.bonus_target)
+			self.delay(name='rotate_bonus_target', event_type=None, delay=3, handler=self.rotate_bonus_target, param=bonus_step)
 		self.update_lamps()
+
+	def bonus_round_collected(self):
+		self.game.score(10000)
+		self.game.lampctrl.play_show('advance_level', False, self.game.update_lamps)
+		self.bonus_round_over(True)
+
+	# called when the bonus round is finished because it completed or expired
+	def bonus_round_over(self, collect_bonus):
+		self.mode = 'block_war'
+		self.block_war.next_round(collect_bonus)
 
 	#
 	# Lamps
@@ -321,83 +282,55 @@ class Crimescenes(Scoring_Mode):
 
 	def update_lamps(self):
 		if self.mode == 'block_war':
-			self.update_block_war_lamps()
+			self.block_war.update_lamps()
 		elif self.mode == 'levels':
 			self.update_levels_lamps()
 		elif self.mode == 'bonus':
 			self.update_bonus_lamps()
 		elif self.mode == 'complete':
 			self.update_crimescenes_complete_lamps()
+		self.update_center_lamps()
 
 	def update_levels_lamps(self):
-		if self.num_advance_hits == 0:
-			style = 'on' 
-		elif self.num_advance_hits == 1:
-			style = 'slow'
-		elif self.num_advance_hits == 2:
-			style = 'fast'
-		else:
-			style = 'off'
+		styles = ['on', 'slow', 'fast', 'off']
+		style = styles[self.num_advance_hits] 
 		self.game.drive_lamp('advanceCrimeLevel', style)
 			
-		for i in range(0,5):
+		for i in range(0, 5):
 			lamp_color_num = self.level%4
-			for j in range(0,4):
-				lampname = 'perp' + str(i+1) + self.lamp_colors[j]
-				if self.targets[i] and lamp_color_num == j:
-					self.game.drive_lamp(lampname, 'medium')
-				else:
-					self.game.drive_lamp(lampname, 'off')
-		self.update_center_lamps()
+			for j in range(0, 4):
+				lampname = 'perp' + str(i+1) + lamp_colors[j]
+				style = 'medium' if self.targets[i] and lamp_color_num == j else 'off'
+				self.game.drive_lamp(lampname, style)
 
 	def update_bonus_lamps(self):
 		self.game.drive_lamp('advanceCrimeLevel', 'off')
-
 		for i in range(0,5):
-			for j in range(1,len(self.lamp_colors)):
-				lampname = 'perp' + str(i+1) + self.lamp_colors[j]
-				if self.bonus_num == i+1:
-					self.game.drive_lamp(lampname, 'medium')
-				else:
-					self.game.drive_lamp(lampname, 'off')
-
-		self.update_center_lamps()
+			for j in range(1, 4): # skip Green
+				lampname = 'perp' + str(i+1) + lamp_colors[j]
+				style = 'medium' if self.bonus_shot == i else 'off'
+				self.game.drive_lamp(lampname, style)
 
 	def update_crimescenes_complete_lamps(self):
-		for i in range(0,5):
+		for i in range(0, 5):
 			if self.targets[i]:
-				for j in range(0,4):
-					lampname = 'perp' + str(i+1) + self.lamp_colors[j]
+				for j in range(0, 4):
+					lampname = 'perp' + str(i+1) + lamp_colors[j]
 					self.game.drive_lamp(lampname, 'off')
-		self.update_center_lamps()
-
-	def update_block_war_lamps(self):
-		for i in range(0,5):
-			lamp_color_num = self.level%4
-			for j in range(0,4):
-				lampname = 'perp' + str(i+1) + self.lamp_colors[j]
-				if j < self.bw_shots_required[i]:
-					self.game.drive_lamp(lampname, 'medium')
-				else:
-					self.game.drive_lamp(lampname, 'off')
-		lampname = 'advanceCrimeLevel'
-		self.game.drive_lamp(lampname, 'off')
-		self.update_center_lamps()
 
 	def update_center_lamps(self):
 		# Use 4 center crimescene lamps to indicate block.
 		# 4 levels per block.
 		for i in range (1,5):
-			lampnum = self.level//4 + 1
+			lampnum = int(self.level / 4) + 1
 			lampname = 'crimeLevel' + str(i)
-			if i <= lampnum:
-				self.game.drive_lamp(lampname, 'on')
-			else:
-				self.game.drive_lamp(lampname, 'off')
+			style = 'on' if i <= lampnum else 'off'
+			self.game.drive_lamp(lampname, style)
 
 		
 class BlockWar(Mode):
 	"""Multiball activated by crime scenes"""
+
 	def __init__(self, game, priority):
 		super(BlockWar, self).__init__(game, priority)
 		self.countdown_layer = TextLayer(128/2, 7, self.game.fonts['jazz18'], "center")
@@ -410,29 +343,50 @@ class BlockWar(Mode):
 	def mode_started(self):
 		self.banner_layer.set_text("Block War!", 3)
 		self.game.sound.play_voice('block war start')
+		self.bw_shots = 1
+		self.shots_required = [1,1,1,1,1]
+		self.game.trough.launch_balls(1, self.start_callback)
 
 	def mode_stopped(self):
 		pass
 
-	def switch_hit(self, shot_index, num_remaining, multiplier):
-		score = 5000 * multiplier
-		self.score_value_layer.set_text(str(score), 2)
-		self.game.score(score)
-		self.game.sound.play('block_war_target')
-		if num_remaining == 0:
-			self.score_reason_layer.set_text("Block " + str(shot_index+1) + " secured!", 2)
-		#if shot_index == 0:
-		#	self.banner_layer.set_text("Pow!", 2)
-		#if shot_index == 1:
-		#	self.banner_layer.set_text("Bam!", 2)
-		#if shot_index == 2:
-		#	self.banner_layer.set_text("Boom!", 2)
-		#if shot_index == 3:
-		#	self.banner_layer.set_text("Zowie!", 2)
-		#if shot_index == 4:
-		#	self.banner_layer.set_text("Poof!", 2)
+	# trough callback
+	def start_callback(self):
+		ball_save_time = self.game.user_settings['Gameplay']['Block Wars ballsave time']
+		# 1 ball added already from launcher.  So ask ball_save to save
+		# new total of balls in play.
+		local_num_balls_to_save = self.game.trough.num_balls_in_play
+		self.game.ball_save.start(num_balls_to_save=local_num_balls_to_save, time=ball_save_time, now=False, allow_multiple_saves=True)
+
+	def next_round(self, collect_bonus):
+		if collect_bonus:
+			if self.bw_shots < 4:
+				self.bw_shots += 1
+			self.bonus_hit()
+		self.shots_required = [self.bw_shots] * 5
+
+	def all_shots_hit(self):
+		return not any(self.shots_required)
+
+	def switch_hit(self, shot, multiplier):
+		if self.shots_required[shot] > 0:
+			self.shots_required[shot] -= 1
+			score = 5000 * multiplier
+			self.score_value_layer.set_text(str(score), 2)
+			self.game.score(score)
+			self.game.sound.play('block_war_target')
+			if self.shots_required[shot] == 0:
+				self.score_reason_layer.set_text("Block " + str(shot+1) + " secured!", 2)
 
 	def bonus_hit(self):
 		self.banner_layer.set_text("Jackpot!", 2)
 		self.game.sound.play_voice('jackpot')
 		self.game.score(500000)
+
+	def update_lamps(self):
+		self.game.drive_lamp('advanceCrimeLevel', 'off')
+		for i in range(0, 5):
+			for j in range(0, 4):
+				lampname = 'perp' + str(i+1) + lamp_colors[j]
+				style = 'medium' if j < self.shots_required[i] else 'off'
+				self.game.drive_lamp(lampname, style)

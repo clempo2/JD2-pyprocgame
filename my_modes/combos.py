@@ -42,7 +42,7 @@ class Combos(Mode):
 				self.best_inner_loops = self.inner_loop_combos
 			score = 10000 * (self.inner_loop_combos)
 			self.game.score(score)
-			self.game.base_play.regular_play('inner loop: ' + str(self.inner_loop_combos), score, 'mid')
+			self.game.base_play.show_on_display('inner loop: ' + str(self.inner_loop_combos), score, 'mid')
 			anim = self.game.animations['bike_across_screen']
 			self.game.base_play.play_animation(anim, 'mid', repeat=False, hold=False, frame_time=3)
 			self.game.update_lamps()
