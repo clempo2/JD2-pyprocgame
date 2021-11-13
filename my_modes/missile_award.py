@@ -17,7 +17,7 @@ class MissileAwardMode(Mode):
 		self.title_layer.set_text("Missile Award")
 		self.element_layer.set_text("Left Fire btn collects:")
 		
-		self.initial_awards = ['Light Extra Ball', 'Advance Crimescenes', '30000 Points', 'Bonus +1X', 'Hold Bonus X']
+		self.initial_awards = ['Light Extra Ball', 'Advance Crime Scenes', '30000 Points', 'Bonus +1X', 'Hold Bonus X']
 		self.repeatable_award = [False, True, True, True, False]
 		self.current_award_ptr = 0
 

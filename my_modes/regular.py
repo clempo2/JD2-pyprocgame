@@ -3,7 +3,7 @@ from procgame.dmd import GroupedLayer, MarkupFrameGenerator, PanningLayer, TextL
 from procgame.game import Mode
 from procgame.modes import Scoring_Mode
 from chain import Chain
-from crimescenes import Crimescenes
+from crimescenes import BlockWar, BlockWarBonus, CrimeScenes
 from multiball import Multiball
 from boring import Boring
 from skillshot import SkillShot
@@ -24,14 +24,19 @@ class RegularPlay(Scoring_Mode):
 		self.skill_shot = SkillShot(self.game, priority + 5)
 		self.chain = Chain(self.game, priority)
 		
-		self.crimescenes = Crimescenes(game, priority + 1)
-		self.crimescenes.get_num_modes_completed = lambda: self.chain.num_modes_completed
-		self.crimescenes.crimescenes_completed = self.crimescenes_completed
-		self.crimescenes.mb_start_callback = self.multiball_started
-		self.crimescenes.mb_end_callback = self.multiball_ended
-		self.crimescenes.light_extra_ball_function = self.light_extra_ball
+		self.crime_scenes = CrimeScenes(game, priority + 1)
+		self.crime_scenes.start_block_war = self.start_block_war
+		self.crime_scenes.crime_scenes_completed = self.crime_scenes_completed
+		self.crime_scenes.light_extra_ball_function = self.light_extra_ball
 
-		self.multiball = Multiball(self.game, priority + 1, self.game.user_settings['Machine']['Deadworld mod installed'])
+		self.block_war = BlockWar(game, priority + 5)
+		self.block_war.end_block_war = self.end_block_war
+		self.block_war.start_block_war_bonus = self.start_block_war_bonus
+		
+		self.block_war_bonus = BlockWarBonus(game, priority + 5)
+		self.block_war_bonus.end_block_war_bonus = self.end_block_war_bonus
+		
+		self.multiball = Multiball(self.game, priority + 1)
 		self.multiball.start_callback = self.multiball_started
 		self.multiball.end_callback = self.multiball_ended
 
@@ -44,7 +49,7 @@ class RegularPlay(Scoring_Mode):
 	def reset_modes(self):
 		self.state = 'idle'
 		self.chain.reset()
-		self.crimescenes.reset()
+		self.crime_scenes.reset()
 		self.multiball.reset_jackpot_collected()
 		self.mystery_lit = False
 		self.disable_missile_award()
@@ -71,7 +76,7 @@ class RegularPlay(Scoring_Mode):
 
 		# Add modes that are always active
 		self.game.modes.add(self.chain)
-		self.game.modes.add(self.crimescenes)
+		self.game.modes.add(self.crime_scenes)
 		self.game.modes.add(self.multiball)
 
 		self.missile_award_lit_save = self.missile_award_lit
@@ -84,7 +89,7 @@ class RegularPlay(Scoring_Mode):
 
 	def mode_stopped(self):
 		# Remove modes from the mode Q
-		for mode in [self.boring, self.skill_shot, self.chain, self.crimescenes, self.multiball]:
+		for mode in [self.boring, self.skill_shot, self.chain, self.crime_scenes, self.block_war, self.block_war_bonus, self.multiball]:
 			self.game.modes.remove(mode)
 
 		# Disable all flashers.
@@ -100,6 +105,25 @@ class RegularPlay(Scoring_Mode):
 		p.setState('missile_award_lit', self.missile_award_lit or self.missile_award_lit_save)
 		p.setState('extra_balls_lit', self.extra_balls_lit)
 		p.setState('total_extra_balls_lit', self.total_extra_balls_lit)
+
+	def start_block_war(self):
+		self.game.modes.remove(self.crime_scenes)
+		self.block_war.reset()
+		self.game.modes.add(self.block_war)
+
+	def end_block_war(self):
+		self.game.modes.remove(self.block_war)
+		self.crime_scenes.next_level()
+		self.game.modes.add(self.crime_scenes)
+
+	def start_block_war_bonus(self):
+		self.game.modes.remove(self.block_war)
+		self.game.modes.add(self.block_war_bonus)
+
+	def end_block_war_bonus(self, bonus_collected):
+		self.game.modes.remove(self.block_war_bonus)
+		self.block_war.next_round(bonus_collected)
+		self.game.modes.add(self.block_war)
 
 	def sw_popperR_active_for_200ms(self, sw):
 		if not self.any_multiball_active():
@@ -133,7 +157,7 @@ class RegularPlay(Scoring_Mode):
 			else:
 				self.state = self.chain.setup_next_mode()
 
-	def crimescenes_completed(self):
+	def crime_scenes_completed(self):
 		self.setup_next_mode(True)
 
 	#
@@ -338,12 +362,14 @@ class RegularPlay(Scoring_Mode):
 	#
 	
 	def any_multiball_active(self):
-		return self.multiball.is_active() or self.crimescenes.is_multiball_active()
+		return (self.multiball.is_active() or
+			self.block_war in self.game.modes.modes or
+			self.block_war_bonus in self.game.modes.modes)
 
 	def multiball_started(self):
 		# Make sure no other multiball was already active before preparing for multiball.
 		# One multiball is the caller, so if both are active it means the other multiball was already active
-		if not (self.multiball.is_active() and self.crimescenes.is_multiball_active()):
+		if not (self.multiball.is_active() and self.crime_scenes.is_multiball_active()):
 			self.game.sound.fadeout_music()
 			self.game.sound.play_music('multiball', loops=-1)
 
@@ -394,8 +420,8 @@ class RegularPlay(Scoring_Mode):
 			self.game.set_status(award)
 		elif award == 'Light Extra Ball':
 			self.light_extra_ball()
-		elif award == 'Advance Crimescenes':
-			self.crimescenes.level_complete()
+		elif award == 'Advance Crime Scenes':
+			self.crime_scenes.level_complete()
 			self.game.base_play.show_on_display('Crimes Adv', None, 'mid')
 		elif award == 'Bonus +1X':
 			self.game.base_play.inc_bonus_x()
@@ -407,7 +433,7 @@ class RegularPlay(Scoring_Mode):
 			self.game.score(100000)
 
 		if award == 'all' or award == 'crimescenes':
-			self.crimescenes.level_complete()
+			self.crime_scenes.level_complete()
 
 	def video_mode_complete(self, success):
 		if self.state == 'mode':
@@ -427,7 +453,7 @@ class RegularPlay(Scoring_Mode):
 	def is_ultimate_challenge_ready(self):
 		# 3 Criteria for finale: jackpot, crimescenes, all modes attempted.
 		return self.multiball.jackpot_collected and \
-				self.crimescenes.complete and \
+				self.crime_scenes.is_complete() and \
 				len(self.chain.modes_not_attempted) == 0
 
 	def start_ultimate_challenge(self):
@@ -502,8 +528,8 @@ class RegularPlay(Scoring_Mode):
 		if self.game.trough.num_balls_in_play == 1:
 			if self.multiball.is_active():
 				self.multiball.end_multiball()
-			if self.crimescenes.is_multiball_active():
-				self.crimescenes.end_multiball()
+			if self.crime_scenes.is_multiball_active():
+				self.crime_scenes.end_multiball()
 
 
 class GameIntro(Mode):

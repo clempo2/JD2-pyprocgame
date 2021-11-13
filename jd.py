@@ -224,7 +224,7 @@ class JDGame(BasicGame):
 		self.highscore_categories.append(cat)
 		
 		cat = HighScoreCategory()
-		cat.game_data_key = 'CrimescenesHighScoreData'
+		cat.game_data_key = 'CrimeScenesHighScoreData'
 		cat.titles = ['Crimescene Champ']
 		cat.score_for_player = lambda player: player.getState('crimescenes_total_levels', 0)
 		cat.score_suffix_singular = ' level'
@@ -462,7 +462,7 @@ class JDGame(BasicGame):
 def main():
 	game = None
 	try:
-	 	game = JDGame()
+		game = JDGame()
 		game.run_loop()
 	finally:
 		del game

@@ -134,6 +134,7 @@ class Chain(Mode):
 			# mode was completed successfully, start hurry up award
 			self.modes_completed.append(self.mode)
 			self.num_modes_completed += 1
+			self.game.setPlayerState('num_modes_completed', self.num_modes_completed)
 			self.game.modes.add(self.mode_completed_hurryup)
 		else:
 			# mode not successful, skip the hurry up

@@ -4,16 +4,14 @@ from procgame.modes import BasicDropTargetBank, Scoring_Mode
 class Multiball(Scoring_Mode):
 	"""Multiball activated by locking balls in the Deadworld planet"""
 	
-	def __init__(self, game, priority, deadworld_mod_installed):
+	def __init__(self, game, priority):
 		super(Multiball, self).__init__(game, priority)
-		self.deadworld_mod_installed = deadworld_mod_installed
-		font = self.game.fonts['jazz18']
+		
+		self.deadworld_mod_installed = self.game.user_settings['Machine']['Deadworld mod installed']
 		self.lock_enabled = 0
 		self.num_balls_locked = 0
 		self.num_balls_to_eject = 0
 		self.virtual_locks_needed = 0
-		self.banner_layer = TextLayer(128/2, 7, font, "center")
-		self.layer = GroupedLayer(128, 32, [self.banner_layer])
 		self.state = 'load'
 		self.paused = False
 		self.num_locks_lit = 0
@@ -25,6 +23,10 @@ class Multiball(Scoring_Mode):
 		self.drops = BasicDropTargetBank(self.game, priority=priority+1, prefix='dropTarget', letters='JUDGE')
 		self.jackpot_collected = False
 		self.delay(name='voice instructions', event_type=None, delay=10, handler=self.voice_instructions)
+
+		font = self.game.fonts['jazz18']
+		self.banner_layer = TextLayer(128/2, 7, font, "center")
+		self.layer = GroupedLayer(128, 32, [self.banner_layer])
 
 	def voice_instructions(self):
 		self.delay(name='voice instructions', event_type=None, delay=10, handler=self.voice_instructions)
