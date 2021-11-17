@@ -58,7 +58,11 @@ class CrimeScenes(Mode):
 		self.game.modes.remove(self.block_war_bonus)
 		self.block_war.next_round(bonus_collected)
 		self.game.modes.add(self.block_war)
-		
+
+	def is_multiball_active(self):
+		return (self.block_war in self.game.modes.modes or
+				self.block_war_bonus in self.game.modes.modes)
+
 	def update_lamps(self):
 		# Use 4 center crime scene lamps to indicate fraction of required levels completed in quarters
 		level = self.game.getPlayerState('crimescenes_level', 0)

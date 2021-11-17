@@ -329,9 +329,7 @@ class RegularPlay(Scoring_Mode):
 	#
 	
 	def any_multiball_active(self):
-		return (self.multiball.is_active() or
-			self.block_war in self.game.modes.modes or
-			self.block_war_bonus in self.game.modes.modes)
+		return self.multiball.is_active() or self.crime_scenes.is_multiball_active()
 
 	def multiball_started(self):
 		# Make sure no other multiball was already active before preparing for multiball.

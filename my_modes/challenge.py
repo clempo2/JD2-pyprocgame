@@ -81,7 +81,7 @@ class UltimateIntro(Mode):
 		super(UltimateIntro, self).__init__(game, priority)
 		self.gen = MarkupFrameGenerator()
 		self.delay_time = 5
-		self.exit_function = None
+		self.exit_callback = None
 		self.instructions_frame = self.gen.frame_for_markup("") # empty
 
 	def mode_started(self):

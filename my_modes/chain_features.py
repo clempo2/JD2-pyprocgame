@@ -70,13 +70,15 @@ class ChainFeature(Scoring_Mode, ModeTimer):
 		self.completed = False
 		self.start_timer(self.mode_time)
 		self.play_music()
+		self.update_status()
+		self.update_lamps()
 
-	def get_difficulty(self, options):
+	def set_shots_required(self, options):
 		'''Return the number of required shots depending on the settings and the options for the mode'''
 		difficulty = self.game.user_settings['Gameplay']['Chain feature difficulty']
 		if not difficulty in ['easy', 'medium', 'hard']:
 			difficulty = 'medium'
-		return options[difficulty]
+		self.shots_required = options[difficulty]
 
 	def play_music(self):
 		self.game.sound.stop_music()
@@ -90,6 +92,15 @@ class ChainFeature(Scoring_Mode, ModeTimer):
 		layer22 = TextLayer(128/2, 24, font_small, 'center').set_text(self.instructions)
 		instruction_layers = [[layer1], [layer21, layer22]]
 		return instruction_layers
+
+	def update_status(self):
+		if self.num_shots > self.shots_required:
+			# only Impersonator can get extra hits
+			extra_shots = self.num_shots - self.shots_required
+			status = 'Shots made: ' + str(extra_shots) + ' extra'
+		else:
+			status = 'Shots made: ' + str(self.num_shots) + '/' + str(self.shots_required)
+		self.status_layer.set_text(status)
 
 	def mode_tick(self):
 		score = self.game.current_player().score
@@ -121,13 +132,11 @@ class Pursuit(ChainFeature):
 	
 	def __init__(self, game, priority):
 		super(Pursuit, self).__init__(game, priority, 'Pursuit', 'pursuit')
-		self.shots_required = self.get_difficulty({'easy':3, 'medium':4, 'hard':5})
+		self.set_shots_required({'easy':3, 'medium':4, 'hard':5})
 		self.instructions = 'Shoot ' + str(self.shots_required) + ' L/R ramp shots'
 
 	def mode_started(self):
 		super(Pursuit, self).mode_started()
-		self.update_status()
-		self.update_lamps()
 		time = self.game.sound.play_voice('pursuit intro')
 		self.delay(name='response', event_type=None, delay=time+0.5, handler=self.response)
 
@@ -137,10 +146,6 @@ class Pursuit(ChainFeature):
 	def update_lamps(self):
 		self.game.coils.flasherPursuitL.schedule(schedule=0x00030003, cycle_seconds=0, now=True)
 		self.game.coils.flasherPursuitR.schedule(schedule=0x03000300, cycle_seconds=0, now=True)
-
-	def update_status(self):
-		status = 'Shots made: ' + str(self.num_shots) + '/' + str(self.shots_required)
-		self.status_layer.set_text(status)
 
 	def mode_stopped(self):
 		self.game.coils.flasherPursuitL.disable()
@@ -181,24 +186,18 @@ class Blackout(ChainFeature):
 
 	def __init__(self, game, priority):
 		super(Blackout, self).__init__(game, priority, 'Blackout', 'blackout')
-		self.shots_required = self.get_difficulty({'easy':2, 'medium':2, 'hard':3})
+		self.set_shots_required({'easy':2, 'medium':2, 'hard':3})
 		self.instructions = 'Shoot center ramp'
 
 	def mode_started(self):
 		super(Blackout, self).mode_started()
-		self.update_status()
 		anim = self.game.animations['blackout']
 		self.game.base_play.play_animation(anim, 'high', repeat=False, hold=False, frame_time=3)
-		self.update_lamps()
 
 	def mode_stopped(self):
 		self.game.lamps.blackoutJackpot.disable()
 		self.game.coils.flasherBlackout.disable()
 		self.game.enable_gi(True)
-
-	def update_status(self):
-		status = 'Shots made: ' + str(self.num_shots) + '/' + str(self.shots_required)
-		self.status_layer.set_text(status)
 
 	def update_lamps(self):
 		self.game.enable_gi(False) # disable all gi except gi05
@@ -225,7 +224,7 @@ class Sniper(ChainFeature):
 
 	def __init__(self, game, priority):
 		super(Sniper, self).__init__(game, priority, 'Sniper', 'sniper')
-		self.shots_required = self.get_difficulty({'easy':2, 'medium':2, 'hard':3})
+		self.set_shots_required({'easy':2, 'medium':2, 'hard':3})
 		self.instructions = 'Shoot Sniper Tower 2 times'
 
 		# Sniper has extra animation on left and text right justified
@@ -236,18 +235,12 @@ class Sniper(ChainFeature):
 
 	def mode_started(self):
 		super(Sniper, self).mode_started()
-		self.update_status()
-		self.update_lamps()
 		time = randint(2,7)
 		self.delay(name='gunshot', event_type=None, delay=time, handler=self.gunshot)
 
 	def mode_stopped(self):
 		self.game.lamps.awardSniper.disable()
 		self.cancel_delayed('gunshot')
-
-	def update_status(self):
-		status = 'Shots made: ' + str(self.num_shots) + '/' + str(self.shots_required)
-		self.status_layer.set_text(status)
 
 	def update_lamps(self):
 		self.game.lamps.awardSniper.schedule(schedule=0x00FF00FF, cycle_seconds=0, now=True)
@@ -284,20 +277,14 @@ class BattleTank(ChainFeature):
 		self.shots_required = 3
 
 	def mode_started(self):
-		super(BattleTank, self).mode_started()
 		self.shots = {'left':False, 'center':False, 'right':False}
-		self.update_status()
-		self.update_lamps()
+		super(BattleTank, self).mode_started()
 		self.game.sound.play_voice('tank intro')
 
 	def mode_stopped(self):
 		self.game.lamps.tankCenter.disable()
 		self.game.lamps.tankLeft.disable()
 		self.game.lamps.tankRight.disable()
-
-	def update_status(self):
-		status = 'Shots made: ' + str(self.num_shots) + '/' + str(self.shots_required)
-		self.status_layer.set_text(status)
 
 	def update_lamps(self):
 		if not self.shots['center']:
@@ -308,8 +295,8 @@ class BattleTank(ChainFeature):
 			self.game.lamps.tankRight.schedule(schedule=0x00FF00FF, cycle_seconds=0, now=True)
 
 	def sw_topRightOpto_active(self, sw):
-		if not self.shots['left']:
-			if self.game.switches.leftRollover.time_since_change() < 1:
+		if self.game.switches.leftRollover.time_since_change() < 1:
+			if not self.shots['left']:
 				self.game.lamps.tankLeft.disable()
 				self.shots['left'] = True
 				self.game.score(10000)
@@ -348,36 +335,29 @@ class Meltdown(ChainFeature):
 
 	def __init__(self, game, priority):
 		super(Meltdown, self).__init__(game, priority, 'Meltdown', 'meltdown')
-		self.shots_required = self.get_difficulty({'easy':3, 'medium':4, 'hard':5})
+		self.set_shots_required({'easy':3, 'medium':4, 'hard':5})
 		self.instructions = 'Activate ' + str(self.shots_required) + ' captive ball switches'
 
 	def mode_started(self):
 		super(Meltdown, self).mode_started()
-		self.update_status()
-		self.update_lamps()
 		self.game.sound.play_voice('meltdown intro')
 
 	def mode_stopped(self):
 		self.game.lamps.stopMeltdown.disable()
 
-	def update_status(self):
-		status = 'Shots made: ' + str(self.num_shots) + '/' + str(self.shots_required)
-		self.status_layer.set_text(status)
-
 	def update_lamps(self):
 		self.game.lamps.stopMeltdown.schedule(schedule=0x00FF00FF, cycle_seconds=0, now=True)
 
 	def sw_captiveBall1_active(self, sw):
-		self.num_shots += 1
-		self.check_for_completion()
-		self.game.score(10000)
+		self.switch_hit()
 
 	def sw_captiveBall2_active(self, sw):
-		self.num_shots += 1
-		self.check_for_completion()
-		self.game.score(10000)
+		self.switch_hit()
 
 	def sw_captiveBall3_active(self, sw):
+		self.switch_hit()
+
+	def switch_hit(self):
 		self.num_shots += 1
 		self.check_for_completion()
 		self.game.score(10000)
@@ -402,23 +382,28 @@ class Impersonator(ChainFeature):
 
 	def __init__(self, game, priority):
 		super(Impersonator, self).__init__(game, priority, 'Impersonator', 'impersonator')
-		self.shots_required = self.get_difficulty({'easy':3, 'medium':5, 'hard':7})
+		self.set_shots_required({'easy':3, 'medium':5, 'hard':7})
 		self.instructions = 'Shoot ' + str(self.shots_required) + ' lit drop targets'
-		self.sound_active = False
-
-	def play_music(self):
-		pass
 
 	def mode_started(self):
 		super(Impersonator, self).mode_started()
+		self.sound_active = False
 		self.delay(name='moving_target', event_type=None, delay=1, handler=self.moving_target)
 		self.start_using_drops()
-		self.update_status()
-		self.update_lamps()
 		time = self.game.sound.play('bad impersonator')
 		self.delay(name='song_restart', event_type=None, delay=time+0.5, handler=self.song_restart)
 		self.delay(name='boo_restart', event_type=None, delay=time+4, handler=self.boo_restart)
 		self.delay(name='shutup_restart', event_type=None, delay=time+3, handler=self.shutup_restart)
+
+	def mode_stopped(self):
+		self.game.lamps.awardBadImpersonator.disable()
+		self.stop_using_drops()
+		self.cancel_delayed(['moving_target', 'song_restart', 'boo_restart', 'shutup_restart', 'end_sound'])
+		self.game.sound.stop('bi - song')
+		self.game.sound.stop('bi - boo')
+
+	def play_music(self):
+		pass
 
 	def song_restart(self):
 		self.game.sound.play('bi - song')
@@ -434,26 +419,51 @@ class Impersonator(ChainFeature):
 		self.game.sound.play('bi - shutup')
 		self.delay(name='shutup_restart', event_type=None, delay=time, handler=self.shutup_restart)
 
-	def mode_stopped(self):
-		self.game.lamps.awardBadImpersonator.disable()
-		self.stop_using_drops()
-		self.cancel_delayed(['moving_target', 'song_restart', 'boo_restart', 'shutup_restart', 'end_sound'])
-		self.game.sound.stop('bi - song')
-		self.game.sound.stop('bi - boo')
-
-	def update_status(self):
-		if self.num_shots > self.shots_required:
-			extra_shots = self.num_shots - self.shots_required
-			status = 'Shots made: ' + str(extra_shots) + ' extra'
-		else:
-			status = 'Shots made: ' + str(self.num_shots) + '/' + str(self.shots_required)
-		self.status_layer.set_text(status)
+	def end_sound(self):
+		self.sound_active = False
 
 	def update_lamps(self):
 		self.game.lamps.awardBadImpersonator.schedule(schedule=0x00FF00FF, cycle_seconds=0, now=True)
 
-	def end_sound(self):
-		self.sound_active = False
+	def sw_dropTargetJ_active(self, sw):
+		self.switch_hit([0])
+
+	def sw_dropTargetU_active(self, sw):
+		self.switch_hit([0, 1, 5])
+
+	def sw_dropTargetD_active(self, sw):
+		self.switch_hit([1, 2, 4, 5])
+
+	def sw_dropTargetG_active(self, sw):
+		self.switch_hit([2, 3, 4])
+
+	def sw_dropTargetE_active(self, sw):
+		self.switch_hit([3])
+
+	def switch_hit(self, matches):
+		if self.timer % 6 in matches:
+			self.num_shots += 1
+			self.game.score(10000)
+			self.check_for_completion()
+		self.game.coils.resetDropTarget.pulse(40)
+
+	def moving_target(self):
+		self.game.disable_drops()
+		# ModeTimer is continuously updating self.timer
+		time = self.timer % 6
+		if time == 0:
+			self.game.lamps.dropTargetJ.pulse(0)
+			self.game.lamps.dropTargetU.pulse(0)
+		elif time == 1 or time == 5:
+			self.game.lamps.dropTargetU.pulse(0)
+			self.game.lamps.dropTargetD.pulse(0)
+		elif time == 2 or time == 4:
+			self.game.lamps.dropTargetD.pulse(0)
+			self.game.lamps.dropTargetG.pulse(0)
+		elif time == 3:
+			self.game.lamps.dropTargetG.pulse(0)
+			self.game.lamps.dropTargetE.pulse(0)
+		self.delay(name='moving_target', event_type=None, delay=1, handler=self.moving_target)
 
 	def check_for_completion(self):
 		self.game.sound.stop('bi - song')
@@ -466,58 +476,6 @@ class Impersonator(ChainFeature):
 		if self.num_shots == self.shots_required:
 			self.completed = True
 			self.game.score(50000)
-
-	def sw_dropTargetJ_active(self,sw):
-		if self.timer%6 == 0:
-			self.num_shots += 1
-			self.game.score(10000)
-			self.check_for_completion()
-		self.game.coils.resetDropTarget.pulse(40)
-
-	def sw_dropTargetU_active(self,sw):
-		if self.timer%6 == 0 or self.timer%6 == 1 or self.timer%6 == 5:
-			self.num_shots += 1
-			self.game.score(10000)
-			self.check_for_completion()
-		self.game.coils.resetDropTarget.pulse(40)
-
-	def sw_dropTargetD_active(self,sw):
-		if self.timer%6 == 2 or self.timer%6 == 4 or self.timer%6 == 1 or self.timer%6 == 5:
-			self.num_shots += 1
-			self.game.score(10000)
-			self.check_for_completion()
-		self.game.coils.resetDropTarget.pulse(40)
-
-	def sw_dropTargetG_active(self,sw):
-		if self.timer%6 == 2 or self.timer%6 == 3 or self.timer%6 == 4:
-			self.num_shots += 1
-			self.game.score(10000)
-			self.check_for_completion()
-		self.game.coils.resetDropTarget.pulse(40)
-
-	def sw_dropTargetE_active(self,sw):
-		if self.timer%6 == 3:
-			self.num_shots += 1
-			self.game.score(10000)
-			self.check_for_completion()
-		self.game.coils.resetDropTarget.pulse(40)
-
-	def moving_target(self):
-		# ModeTimer is continuously updating self.timer
-		self.game.disable_drops()
-		if self.timer%6 == 0:
-			self.game.lamps.dropTargetJ.pulse(0)
-			self.game.lamps.dropTargetU.pulse(0)
-		elif self.timer%6 == 1 or self.timer%6==5:
-			self.game.lamps.dropTargetU.pulse(0)
-			self.game.lamps.dropTargetD.pulse(0)
-		elif self.timer%6 == 2 or self.timer%6==4:
-			self.game.lamps.dropTargetD.pulse(0)
-			self.game.lamps.dropTargetG.pulse(0)
-		elif self.timer%6 == 3:
-			self.game.lamps.dropTargetG.pulse(0)
-			self.game.lamps.dropTargetE.pulse(0)
-		self.delay(name='moving_target', event_type=None, delay=1, handler=self.moving_target)
 		
 
 class Safecracker(ChainFeature):
@@ -525,7 +483,7 @@ class Safecracker(ChainFeature):
 
 	def __init__(self, game, priority):
 		super(Safecracker, self).__init__(game, priority, 'Safe Cracker', 'safecracker')
-		self.shots_required = self.get_difficulty({'easy':2, 'medium':3, 'hard':4})
+		self.set_shots_required({'easy':2, 'medium':3, 'hard':4})
 		self.instructions = 'Shoot the subway ' + str(self.shots_required) + ' times'
 
 	def bad_guys(self):
@@ -537,17 +495,11 @@ class Safecracker(ChainFeature):
 		self.start_using_drops()
 		self.delay(name='trip_check', event_type=None, delay=1, handler=self.trip_check)
 		self.delay(name='bad guys', event_type=None, delay=randint(10,20), handler=self.bad_guys)
-		self.update_status()
-		self.update_lamps()
 
 	def mode_stopped(self):
 		self.cancel_delayed(['trip_check', 'bad guys'])
 		self.game.lamps.awardSafecracker.disable()
 		self.stop_using_drops()
-
-	def update_status(self):
-		status = 'Shots made: ' + str(self.num_shots) + '/' + str(self.shots_required)
-		self.status_layer.set_text(status)
 
 	def update_lamps(self):
 		self.game.lamps.awardSafecracker.schedule(schedule=0x00FF00FF, cycle_seconds=0, now=True)
@@ -560,6 +512,11 @@ class Safecracker(ChainFeature):
 	def sw_dropTargetD_inactive_for_400ms(self, sw):
 		self.game.coils.tripDropTarget.pulse(30)
 
+	def trip_check(self):
+		if self.game.switches.dropTargetD.is_inactive():
+			self.game.coils.tripDropTarget.pulse(40)
+			self.delay(name='trip_check', event_type=None, delay=.400, handler=self.trip_check)
+
 	def check_for_completion(self):
 		self.update_status()
 		if self.num_shots == self.shots_required:
@@ -570,32 +527,21 @@ class Safecracker(ChainFeature):
 		else:
 			self.game.sound.play_voice('shot')
 
-	def trip_check(self):
-		if self.game.switches.dropTargetD.is_inactive():
-			self.game.coils.tripDropTarget.pulse(40)
-			self.delay(name='trip_check', event_type=None, delay=.400, handler=self.trip_check)
-
 
 class ManhuntMillions(ChainFeature):
 	'''ManhuntMillions chain mode'''
 
 	def __init__(self, game, priority):
 		super(ManhuntMillions, self).__init__(game, priority, 'Manhunt', 'manhunt')
-		self.shots_required = self.get_difficulty({'easy':2, 'medium':3, 'hard':4})
+		self.set_shots_required({'easy':2, 'medium':3, 'hard':4})
 		self.instructions = 'Shoot the left ramp ' + str(self.shots_required) + ' times'
 
 	def mode_started(self):
 		super(ManhuntMillions, self).mode_started()
-		self.update_status()
-		self.update_lamps()
 		self.game.sound.play_voice('mm - intro')
 		
 	def mode_stopped(self):
 		self.game.coils.flasherPursuitL.disable()
-
-	def update_status(self):
-		status = 'Shots made: ' + str(self.num_shots) + '/' + str(self.shots_required)
-		self.status_layer.set_text(status)
 
 	def update_lamps(self):
 		self.game.coils.flasherPursuitL.schedule(schedule=0x000F000F, cycle_seconds=0, now=True)
@@ -604,14 +550,15 @@ class ManhuntMillions(ChainFeature):
 	# shot rather than one that just trickles in.
 	def sw_leftRampToLock_active(self, sw):
 		if self.game.switches.leftRampEnter.time_since_change() < 0.5:
-			self.num_shots += 1
-			self.game.score(10000)
-			self.check_for_completion()
+			self.switch_hit()
 
 	def sw_leftRampExit_active(self, sw):
+		self.switch_hit()
+
+	def switch_hit(self):
 		self.num_shots += 1
-		self.check_for_completion()
 		self.game.score(10000)
+		self.check_for_completion()
 
 	def check_for_completion(self):
 		self.update_status()
@@ -629,22 +576,16 @@ class Stakeout(ChainFeature):
 	
 	def __init__(self, game, priority):
 		super(Stakeout, self).__init__(game, priority, 'Stakeout', 'stakeout')
-		self.shots_required = self.get_difficulty({'easy':3, 'medium':4, 'hard':5})
+		self.set_shots_required({'easy':3, 'medium':4, 'hard':5})
 		self.instructions = 'Shoot the right ramp ' + str(self.shots_required) + ' times'
 
 	def mode_started(self):
 		super(Stakeout, self).mode_started()
-		self.update_status()
-		self.update_lamps()
 		self.delay(name='boring', event_type=None, delay=15, handler=self.boring_expired)
 
 	def mode_stopped(self):
 		self.cancel_delayed('boring')
 		self.game.coils.flasherPursuitR.disable()
-
-	def update_status(self):
-		status = 'Shots made: ' + str(self.num_shots) + '/' + str(self.shots_required)
-		self.status_layer.set_text(status)
 
 	def update_lamps(self):
 		self.game.coils.flasherPursuitR.schedule(schedule=0x000F000F, cycle_seconds=0, now=True)

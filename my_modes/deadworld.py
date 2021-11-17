@@ -1,8 +1,10 @@
-from procgame import *
-from procgame.game import SwitchStop
+from procgame.dmd import GroupedLayer, TextLayer
+from procgame.game import Mode, SwitchStop
+from procgame.service import ServiceModeSkeleton
 
-class Deadworld(game.Mode):
+class Deadworld(Mode):
 	"""Controls the dead world planet"""
+	
 	def __init__(self, game, priority, deadworld_mod_installed):
 		super(Deadworld, self).__init__(game, priority)
 		self.deadworld_mod_installed = deadworld_mod_installed
@@ -152,16 +154,18 @@ class Deadworld(game.Mode):
 		self.delay(name='debug', event_type=None, delay=1, handler=self.debug)
 		self.game.set_status(str(self.num_balls_to_eject) + "," + str(self.num_balls_locked))
 
-class DeadworldTest(service.ServiceModeSkeleton):
+
+class DeadworldTest(ServiceModeSkeleton):
 	"""Coil Test"""
+	
 	def __init__(self, game, priority, font):
 		super(DeadworldTest, self).__init__(game, priority, font)
 		self.name = "DeadWorld Test"
-		self.title_layer = dmd.TextLayer(1, 1, font, "left")
-		self.globe_layer = dmd.TextLayer(1, 9, font, "left")
-		self.arm_layer = dmd.TextLayer(1, 17, font, "left")
-		self.magnet_layer = dmd.TextLayer(1, 25, font, "left")
-		self.layer = dmd.GroupedLayer(128, 32, [self.title_layer, self.globe_layer, self.arm_layer, self.magnet_layer])
+		self.title_layer = TextLayer(1, 1, font, "left")
+		self.globe_layer = TextLayer(1, 9, font, "left")
+		self.arm_layer = TextLayer(1, 17, font, "left")
+		self.magnet_layer = TextLayer(1, 25, font, "left")
+		self.layer = GroupedLayer(128, 32, [self.title_layer, self.globe_layer, self.arm_layer, self.magnet_layer])
 
 		self.title_layer.set_text(self.name)
 		self.globe_layer.set_text( 'START BTN:      Globe:  Off')
@@ -201,7 +205,7 @@ class DeadworldTest(service.ServiceModeSkeleton):
 		self.game.modes.remove(self)
 		return SwitchStop
 
-	def sw_startButton_active(self,sw):
+	def sw_startButton_active(self, sw):
 		if self.globe_state:
 			self.globe_state = False
 			self.game.coils.globeMotor.disable()
@@ -211,7 +215,7 @@ class DeadworldTest(service.ServiceModeSkeleton):
 		self.set_texts()
 		return SwitchStop
 
-	def sw_superGame_active(self,sw):
+	def sw_superGame_active(self, sw):
 		if self.crane_state:
 			self.crane_state = False
 			self.game.coils.crane.disable()
@@ -221,43 +225,43 @@ class DeadworldTest(service.ServiceModeSkeleton):
 		self.set_texts()
 		return SwitchStop
 
-	def sw_buyIn_active(self,sw):
+	def sw_buyIn_active(self, sw):
 		self.magnet_state = True
 		self.game.coils.craneMagnet.pulse(0)
 		self.set_texts()
 		return SwitchStop
 
-	def sw_buyIn_inactive(self,sw):
+	def sw_buyIn_inactive(self, sw):
 		self.magnet_state = False
 		self.game.coils.craneMagnet.disable()
 		self.set_texts()
 		return SwitchStop
 
-	def sw_enter_active(self,sw):
+	def sw_enter_active(self, sw):
 		return SwitchStop
 
-	def sw_up_active(self,sw):
+	def sw_up_active(self, sw):
 		return SwitchStop
 
-	def sw_down_active(self,sw):
+	def sw_down_active(self, sw):
 		return SwitchStop
 
-	def sw_magnetOverRing_active(self,sw):
+	def sw_magnetOverRing_active(self, sw):
 		self.arm_layer.set_text('SUPERGAME BTN: Crane:  Ring')
 
-	def sw_magnetOverRing_inactive(self,sw):
+	def sw_magnetOverRing_inactive(self, sw):
 		self.set_texts()
 		
-	def sw_globePosition1_active(self,sw):
+	def sw_globePosition1_active(self, sw):
 		self.globe_layer.set_text('START BTN:      Globe:  P1')
 
-	def sw_globePosition1_inactive(self,sw):
+	def sw_globePosition1_inactive(self, sw):
 		self.set_texts()
 
-	def sw_globePosition2_active(self,sw):
+	def sw_globePosition2_active(self, sw):
 		self.globe_layer.set_text('START BTN:      Globe:  P2')
 
-	def sw_globePosition2_inactive(self,sw):
+	def sw_globePosition2_inactive(self, sw):
 		self.set_texts()
 
 	def set_texts(self):

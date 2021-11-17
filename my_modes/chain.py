@@ -170,17 +170,17 @@ class ChainIntro(Mode):
 		self.game.enable_gi(True)
 		self.game.enable_flippers(True) 
 
-	def setup(self, mode, exit_function):
+	def setup(self, mode, exit_callback):
 		self.mode = mode
-		self.exit_function = exit_function
+		self.exit_callback = exit_callback
 		self.instruction_layers = mode.get_instruction_layers()
 		self.layer = GroupedLayer(128, 32, self.instruction_layers[0])
 
 	def sw_flipperLwL_active(self, sw):
-		self.exit_function()
+		self.exit_callback()
 
 	def sw_flipperLwR_active(self, sw):
-		self.exit_function()
+		self.exit_callback()
 
 	def next_frame(self):
 		if self.frame_counter != len(self.instruction_layers):
@@ -188,7 +188,7 @@ class ChainIntro(Mode):
 			self.layer = GroupedLayer(128, 32, self.instruction_layers[self.frame_counter])
 			self.frame_counter += 1
 		else:
-			self.exit_function()	
+			self.exit_callback()
 
 
 class ModeCompletedHurryUp(Mode):
@@ -209,6 +209,10 @@ class ModeCompletedHurryUp(Mode):
 		self.delay(name='trip_check', event_type=None, delay=.400, handler=self.trip_check)
 		self.already_collected = False
 
+	def mode_stopped(self):
+		self.game.lamps.pickAPrize.disable()
+		self.cancel_delayed(['grace', 'countdown', 'trip_check'])
+
 	def trip_check(self):
 		if self.game.switches.dropTargetD.is_inactive():
 			self.game.coils.tripDropTarget.pulse(40)
@@ -220,26 +224,22 @@ class ModeCompletedHurryUp(Mode):
 
 	def update_lamps(self):
 		self.game.lamps.pickAPrize.schedule(schedule=0x33333333, cycle_seconds=0, now=True)
-
-	def mode_stopped(self):
-		self.game.lamps.pickAPrize.disable()
-		self.cancel_delayed(['grace', 'countdown', 'trip_check'])
 	
 	def sw_subwayEnter1_closed(self, sw):
 		self.collect_hurry_up()
 	
-	# Ball might jump over first switch.  Use 2nd switch as a catchall.
+	# Ball might jump over first switch.  Use 2nd switch as a catch all.
 	def sw_subwayEnter2_closed(self, sw):
 		if not self.already_collected:
 			self.collect_hurry_up()
 			
 	def collect_hurry_up(self):
-		self.collected_callback()
 		self.game.sound.play_voice('collected')
 		self.cancel_delayed(['grace', 'countdown', 'trip_check'])
 		self.already_collected = True
 		self.banner_layer.set_text('Well Done!')
 		self.layer = GroupedLayer(128, 32, [self.banner_layer])
+		self.collected_callback()
 	
 	def update_and_delay(self):
 		self.countdown_layer.set_text("%d seconds" % (self.seconds_remaining))

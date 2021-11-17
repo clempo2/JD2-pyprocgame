@@ -33,14 +33,14 @@ class Combos(Mode):
 		return [status_layer]
 
 	def sw_topRightOpto_active(self, sw):
-		#See if ball came around inner left loop
+		# See if ball came around inner left loop
 		if self.game.switches.topCenterRollover.time_since_change() < 1.5:
 			self.inner_loop_active = True
 			self.game.sound.play('inner_loop')
 			self.inner_loop_combos += 1
 			if self.inner_loop_combos > self.best_inner_loops:
 				self.best_inner_loops = self.inner_loop_combos
-			score = 10000 * (self.inner_loop_combos)
+			score = 10000 * self.inner_loop_combos
 			self.game.score(score)
 			self.game.base_play.show_on_display('inner loop: ' + str(self.inner_loop_combos), score, 'mid')
 			anim = self.game.animations['bike_across_screen']
@@ -50,14 +50,14 @@ class Combos(Mode):
 			self.delay(name='inner_loop', event_type=None, delay=3.0, handler=self.inner_loop_combo_expired)
 
 	def sw_leftRollover_active(self, sw):
-		#See if ball came around right loop
+		# See if ball came around right loop
 		if self.game.switches.topRightOpto.time_since_change() < 1:
 			self.outer_loop_active = True
 			self.game.sound.play('outer_loop')
 			self.outer_loop_combos += 1
 			if self.outer_loop_combos > self.best_outer_loops:
 				self.best_outer_loops = self.outer_loop_combos
-			score = 1000 * (self.outer_loop_combos)
+			score = 1000 * self.outer_loop_combos
 			self.game.score(score)
 			self.game.base_play.show_on_display('outer loop: ' + str(self.outer_loop_combos), score, 'mid')
 			anim = self.game.animations['bike_across_screen']
