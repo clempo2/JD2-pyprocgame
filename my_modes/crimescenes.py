@@ -1,7 +1,72 @@
 import locale
+from math import ceil
 from random import shuffle
 from procgame.dmd import GroupedLayer, TextLayer
+from procgame.game import Mode
 from procgame.modes import Scoring_Mode
+
+class CrimeScenes(Mode):
+	"""Controls the progress through the crime scene modes"""
+
+	def __init__(self, game, priority):
+		super(CrimeScenes, self).__init__(game, priority)
+
+		num_levels = int(self.game.user_settings['Gameplay']['Crimescene levels for finale'])
+		self.levels_required = min(16, 4 * ceil(num_levels / 4)) # a multiple of 4 less than or equal to 16
+		
+		self.crime_scene_levels = CrimeSceneLevels(game, priority + 1, self.levels_required)
+		self.crime_scene_levels.start_block_war = self.start_block_war
+		self.crime_scene_levels.crime_scenes_completed = self.crime_scene_levels_completed
+
+		self.block_war = BlockWar(game, priority + 5)
+		self.block_war.end_block_war = self.end_block_war
+		self.block_war.start_block_war_bonus = self.start_block_war_bonus
+		
+		self.block_war_bonus = BlockWarBonus(game, priority + 5)
+		self.block_war_bonus.end_block_war_bonus = self.end_block_war_bonus
+
+	def mode_started(self):
+		self.start_crime_scene_levels()
+	
+	def mode_stopped(self):
+		for mode in [self.crime_scene_levels, self.block_war, self.block_war_bonus]:
+			self.game.modes.remove(mode)
+
+	def start_crime_scene_levels(self):
+		if self.game.getPlayerState('crimescenes_level', 0) < self.levels_required:
+			self.game.modes.add(self.crime_scene_levels)
+
+	def crime_scene_levels_completed(self):
+		self.game.modes.remove(self.crime_scene_levels)
+		self.game.base_play.regular_play.crime_scenes_completed()
+		
+	def start_block_war(self):
+		self.game.modes.remove(self.crime_scene_levels)
+		self.block_war.reset()
+		self.game.modes.add(self.block_war)
+
+	def end_block_war(self):
+		self.game.modes.remove(self.block_war)
+		self.crime_scenes.next_level()
+		self.start_crime_scene_levels()
+
+	def start_block_war_bonus(self):
+		self.game.modes.remove(self.block_war)
+		self.game.modes.add(self.block_war_bonus)
+
+	def end_block_war_bonus(self, bonus_collected):
+		self.game.modes.remove(self.block_war_bonus)
+		self.block_war.next_round(bonus_collected)
+		self.game.modes.add(self.block_war)
+		
+	def update_lamps(self):
+		# Use 4 center crime scene lamps to indicate fraction of required levels completed in quarters
+		level = self.game.getPlayerState('crimescenes_level', 0)
+		num_quarters = int(level * 4 / self.levels_required)
+		for num in range (1, 5):
+			lamp_name = 'crimeLevel' + str(num)
+			style = 'on' if num <= num_quarters else 'off'
+			self.game.drive_lamp(lamp_name, style)
 
 class CrimeSceneBase(Scoring_Mode):
 	"""Base class for modes using the crime scene shots"""
@@ -35,17 +100,13 @@ class CrimeSceneBase(Scoring_Mode):
 		self.switch_hit(4)
 
 
-class CrimeScenes(CrimeSceneBase):
+class CrimeSceneLevels(CrimeSceneBase):
 	"""Crime scenes mode"""
 
-	def __init__(self, game, priority):
-		super(CrimeScenes, self).__init__(game, priority)
-
-		# multiple of 4 less than or equal to 16
-		num_levels = int(self.game.user_settings['Gameplay']['Crimescene levels for finale'])
-		num_levels4 = num_levels + (num_levels % 4)
-		self.levels_required = num_levels4 if num_levels4 <= 16 else 16
-
+	def __init__(self, game, priority, levels_required):
+		super(CrimeSceneLevels, self).__init__(game, priority)
+		self.levels_required = levels_required
+		
 		# we always award the most difficult target that remains in the current level
 		self.target_award_order = [1,3,0,2,4]
 		self.extra_ball_level = 4
@@ -94,7 +155,6 @@ class CrimeScenes(CrimeSceneBase):
 	def mode_stopped(self):
 		# save player state
 		p = self.game.current_player()
-		p.setState('crimescenes_level', self.level)
 		p.setState('crimescenes_total_levels', self.total_levels)
 		p.setState('crimescenes_targets', self.targets)
 
@@ -106,9 +166,6 @@ class CrimeScenes(CrimeSceneBase):
 		for lamp in range(1,5):
 			lamp_name = 'crimeLevel' + str(lamp)
 			self.game.drive_lamp(lamp_name, 'off')
-
-	def is_complete(self):
-		return self.level == self.levels_required
 
 	def get_status_layers(self):
 		tiny_font = self.game.fonts['tiny7']
@@ -133,7 +190,7 @@ class CrimeScenes(CrimeSceneBase):
 		for shot in self.target_award_order:
 			if self.targets[shot]:
 				self.switch_hit(shot)
-				return True
+				break
 
 	#
 	# Crime Scene Shots
@@ -144,8 +201,8 @@ class CrimeScenes(CrimeSceneBase):
 			self.targets[shot] = 0
 			self.game.score(1000)
 			
-			# are all targets hit already?
 			if not any(self.targets):
+				# all targets hit already
 				self.level_complete()
 			else:
 				self.game.sound.play_voice('crime')
@@ -158,7 +215,7 @@ class CrimeScenes(CrimeSceneBase):
 		self.level += 1
 		
 		if self.level == self.extra_ball_level:
-			self.light_extra_ball_function()
+			self.game.base_play.regular_play.light_extra_ball()
 
 		if (self.level % 4) == 3:
 			self.start_block_war()
@@ -168,25 +225,26 @@ class CrimeScenes(CrimeSceneBase):
 			self.next_level()
 
 	def next_level(self):
-		self.level += 1
-		if self.level >= self.levels_required:
-			self.level = self.levels_required
-			self.crimescenes_completed()
-		else:
-			# the level consists of num_to_pick many targets chosen among the targets listed in pick_from
-			# every selected target needs to be hit once
-			pick_from = self.level_pick_from[self.level]
-			shuffle(pick_from)
-
-			num_to_pick = self.level_num_shots[self.level]
-			if num_to_pick > len(pick_from):
-				raise ValueError("Number of targets necessary for level " + self.level + " exceeds the list of targets in the template")
-
-			# Now fill targets according to shuffled template
-			self.targets = [0] * 5
-			for i in range(0, num_to_pick):
-				self.targets[pick_from[i]] = 1
-		self.update_lamps()
+		if self.level < self.levels_required:
+			self.level += 1
+			self.game.setPlayerState('crimescenes_level', self.level)
+			if self.level == self.levels_required:
+				self.crimescenes_completed()
+			else:
+				# the level consists of num_to_pick many targets chosen among the targets listed in pick_from
+				# every selected target needs to be hit once
+				pick_from = self.level_pick_from[self.level]
+				shuffle(pick_from)
+	
+				num_to_pick = self.level_num_shots[self.level]
+				if num_to_pick > len(pick_from):
+					raise ValueError("Number of targets necessary for level " + self.level + " exceeds the list of targets in the template")
+	
+				# Now fill targets according to shuffled template
+				self.targets = [0] * 5
+				for i in range(0, num_to_pick):
+					self.targets[pick_from[i]] = 1
+			self.update_lamps()
 
 	def display_level_complete(self, level, points):
 		small_font = self.game.fonts['07x5']
@@ -210,13 +268,6 @@ class CrimeScenes(CrimeSceneBase):
 				lamp_name = 'perp' + str(shot+1) + self.lamp_colors[color]
 				style = 'medium' if self.targets[shot] and lamp_color == color else 'off'
 				self.game.drive_lamp(lamp_name, style)
-
-		# Use 4 center crime scene lamps to indicate fraction of required levels completed in quarters
-		num_quarters = int(self.level * 4 / self.levels_required)
-		for num in range (1, 5):
-			lamp_name = 'crimeLevel' + str(num)
-			style = 'on' if num <= num_quarters else 'off'
-			self.game.drive_lamp(lamp_name, style)
 
 		
 class BlockWar(CrimeSceneBase):
@@ -269,8 +320,8 @@ class BlockWar(CrimeSceneBase):
 			if self.shots_required[shot] == 0:
 				self.score_reason_layer.set_text("Block " + str(shot+1) + " secured!", 2)
 				
-			# are all shots hit already?
 			if not any(self.shots_required):
+				# all shots hit already
 				self.round_complete()
 		else:
 			self.game.sound.play_voice('good shot')

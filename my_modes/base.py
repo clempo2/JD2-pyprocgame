@@ -145,7 +145,6 @@ class BasePlay(Mode):
 		self.game.score(200)
 
 	def sw_dropTargetD_active(self, sw):
-		#self.game.sound.play('drop_target')
 		pass
 
 	def sw_dropTargetG_active(self, sw):

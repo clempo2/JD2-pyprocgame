@@ -417,17 +417,17 @@ class JDGame(BasicGame):
 		super(JDGame, self).enable_flippers(enable)
 		self.flipper_workaround_mode.enable_flippers(enable)
 
-	def drive_lamp(self, lampname, style='on'):
+	def drive_lamp(self, lamp_name, style='on'):
 		if style == 'slow':
-			self.lamps[lampname].schedule(schedule=0x00ff00ff, cycle_seconds=0, now=True)
+			self.lamps[lamp_name].schedule(schedule=0x00ff00ff, cycle_seconds=0, now=True)
 		elif style == 'medium':
-			self.lamps[lampname].schedule(schedule=0x0f0f0f0f, cycle_seconds=0, now=True)
+			self.lamps[lamp_name].schedule(schedule=0x0f0f0f0f, cycle_seconds=0, now=True)
 		elif style == 'fast':
-			self.lamps[lampname].schedule(schedule=0x55555555, cycle_seconds=0, now=True)
+			self.lamps[lamp_name].schedule(schedule=0x55555555, cycle_seconds=0, now=True)
 		elif style == 'on':
-			self.lamps[lampname].pulse(0)
+			self.lamps[lamp_name].pulse(0)
 		elif style == 'off':
-			self.lamps[lampname].disable()
+			self.lamps[lamp_name].disable()
 
 	def disable_drops(self):
 		self.lamps.dropTargetJ.disable()

@@ -3,7 +3,7 @@ from procgame.dmd import GroupedLayer, MarkupFrameGenerator, PanningLayer, TextL
 from procgame.game import Mode
 from procgame.modes import Scoring_Mode
 from chain import Chain
-from crimescenes import BlockWar, BlockWarBonus, CrimeScenes
+from crimescenes import CrimeScenes
 from multiball import Multiball
 from boring import Boring
 from skillshot import SkillShot
@@ -25,16 +25,6 @@ class RegularPlay(Scoring_Mode):
 		self.chain = Chain(self.game, priority)
 		
 		self.crime_scenes = CrimeScenes(game, priority + 1)
-		self.crime_scenes.start_block_war = self.start_block_war
-		self.crime_scenes.crime_scenes_completed = self.crime_scenes_completed
-		self.crime_scenes.light_extra_ball_function = self.light_extra_ball
-
-		self.block_war = BlockWar(game, priority + 5)
-		self.block_war.end_block_war = self.end_block_war
-		self.block_war.start_block_war_bonus = self.start_block_war_bonus
-		
-		self.block_war_bonus = BlockWarBonus(game, priority + 5)
-		self.block_war_bonus.end_block_war_bonus = self.end_block_war_bonus
 		
 		self.multiball = Multiball(self.game, priority + 1)
 		self.multiball.start_callback = self.multiball_started
@@ -105,25 +95,6 @@ class RegularPlay(Scoring_Mode):
 		p.setState('missile_award_lit', self.missile_award_lit or self.missile_award_lit_save)
 		p.setState('extra_balls_lit', self.extra_balls_lit)
 		p.setState('total_extra_balls_lit', self.total_extra_balls_lit)
-
-	def start_block_war(self):
-		self.game.modes.remove(self.crime_scenes)
-		self.block_war.reset()
-		self.game.modes.add(self.block_war)
-
-	def end_block_war(self):
-		self.game.modes.remove(self.block_war)
-		self.crime_scenes.next_level()
-		self.game.modes.add(self.crime_scenes)
-
-	def start_block_war_bonus(self):
-		self.game.modes.remove(self.block_war)
-		self.game.modes.add(self.block_war_bonus)
-
-	def end_block_war_bonus(self, bonus_collected):
-		self.game.modes.remove(self.block_war_bonus)
-		self.block_war.next_round(bonus_collected)
-		self.game.modes.add(self.block_war)
 
 	def sw_popperR_active_for_200ms(self, sw):
 		if not self.any_multiball_active():
@@ -331,16 +302,12 @@ class RegularPlay(Scoring_Mode):
 
 		if self.state != 'ultimate_challenge':
 			style = 'slow' if self.game.base_play.combos.inner_loop_active else 'off'
-			self.game.drive_lamp('perp2W', style)
-			self.game.drive_lamp('perp2R', style)
-			self.game.drive_lamp('perp2Y', style)
-			self.game.drive_lamp('perp2G', style)
+			for lamp_name in ['perp2W', 'perp2R', 'perp2Y', 'perp2G']:
+				self.game.drive_lamp(lamp_name, style)
 
 			style = 'slow' if self.game.base_play.combos.outer_loop_active else 'off'
-			self.game.drive_lamp('perp4W', style)
-			self.game.drive_lamp('perp4R', style)
-			self.game.drive_lamp('perp4Y', style)
-			self.game.drive_lamp('perp4G', style)
+			for lamp_name in ['perp4W', 'perp4R', 'perp4Y', 'perp4G']:
+				self.game.drive_lamp(lamp_name, style)
 
 		if self.state == 'pre_ultimate_challenge':
 			self.game.disable_drops()

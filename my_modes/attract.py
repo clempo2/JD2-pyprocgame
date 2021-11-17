@@ -11,10 +11,8 @@ class Attract(Mode):
 		self.lampshow_keys = ['attract0', 'attract1']
 
 	def mode_started(self):
-		self.emptying_deadworld = False
 		if self.game.deadworld.num_balls_locked > 0:
 			self.game.deadworld.eject_balls(self.game.deadworld.num_balls_locked)
-			self.emptying_deadworld = True
 			self.delay(name='deadworld_empty', event_type=None, delay=10, handler=self.check_deadworld_empty)
 
 		# Blink the start buttons in alternation to notify player about starting a game.
@@ -54,6 +52,9 @@ class Attract(Mode):
 
 [Tools and Framework:]
 [Adam Preble]
+
+[Software:]
+[Clement Pellerin]
 
 [Sound and Music:]
 [Rob Keller]
@@ -175,5 +176,3 @@ class Attract(Mode):
 	def check_deadworld_empty(self):
 		if self.game.deadworld.num_balls_locked > 0:
 			self.delay(name='deadworld_empty', event_type=None, delay=10, handler=self.check_deadworld_empty)
-		else:
-			self.emptying_deadworld = False
