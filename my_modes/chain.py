@@ -60,6 +60,9 @@ class Chain(Mode):
 		p.setState('modes_attempted', [])
 		p.setState('modes_completed', [])
 
+	def is_complete(self):
+		return len(self.modes_not_attempted) == 0
+	
 	def get_status_layers(self):
 		tiny_font = self.game.fonts['tiny7']
 		attempted_layer = TextLayer(128/2, 9, tiny_font, "center").set_text('Modes attempted: ' + str(self.num_modes_attempted))
@@ -125,12 +128,12 @@ class Chain(Mode):
 		self.game.base_play.flash_then_pop('flashersRtRamp', 'popperR', 20)
 
 	# called when the mode has completed or expired but before the hurry up
-	def chain_mode_over(self):
+	def chain_mode_over(self, completed):
 		self.game.modes.remove(self.mode)
 		# Turn on mode lamp to show it has been attempted
 		self.game.drive_lamp(self.mode.lamp_name, 'on')
 		
-		if self.mode.completed:
+		if completed:
 			# mode was completed successfully, start hurry up award
 			self.modes_completed.append(self.mode)
 			self.num_modes_completed += 1
@@ -151,6 +154,12 @@ class Chain(Mode):
 	def hurryup_over(self):
 		self.game.modes.remove(self.mode_completed_hurryup)
 		self.game.base_play.regular_play.setup_next_mode()
+		
+	def update_lamps(self):
+		for mode in self.modes_not_attempted:
+			self.game.drive_lamp(mode.lamp_name, 'off')
+		for mode in self.modes_attempted:
+			self.game.drive_lamp(mode.lamp_name, 'on')
 
 
 class ChainIntro(Mode):

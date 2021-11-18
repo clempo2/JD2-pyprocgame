@@ -12,7 +12,7 @@ from shooting_gallery import ShootingGallery
 
 class RegularPlay(Scoring_Mode):
 	"""Controls all play except ultimate challenge"""
-	
+
 	def __init__(self, game, priority):
 		super(RegularPlay, self).__init__(game, priority)
 
@@ -79,7 +79,7 @@ class RegularPlay(Scoring_Mode):
 
 	def mode_stopped(self):
 		# Remove modes from the mode Q
-		for mode in [self.boring, self.skill_shot, self.chain, self.crime_scenes, self.block_war, self.block_war_bonus, self.multiball]:
+		for mode in [self.boring, self.skill_shot, self.chain, self.crime_scenes, self.multiball]:
 			self.game.modes.remove(mode)
 
 		# Disable all flashers.
@@ -269,17 +269,17 @@ class RegularPlay(Scoring_Mode):
 	#
 
 	def update_lamps(self):
+		style = 'on' if self.mystery_lit else 'off'
+		self.game.drive_lamp('mystery', style)
+
+		style = 'medium' if self.missile_award_lit else 'off'
+		self.game.drive_lamp('airRaid', style)
+
 		style = 'on' if self.game.current_player().extra_balls > 0 else 'off'
 		self.game.drive_lamp('judgeAgain', style)
 
 		style = 'off' if self.extra_balls_lit == 0 else 'slow'
 		self.game.drive_lamp('extraBall2', style)
-
-		if self.state != 'ultimate_challenge':
-			for mode in self.chain.modes_not_attempted:
-				self.game.drive_lamp(mode.lamp_name, 'off')
-			for mode in self.chain.modes_attempted:
-				self.game.drive_lamp(mode.lamp_name, 'on')
 
 		if self.state == 'idle' or self.state == 'mode' or self.state == 'modes_complete':
 			if self.state == 'mode':
@@ -293,23 +293,6 @@ class RegularPlay(Scoring_Mode):
 			self.game.drive_lamp('ultChallenge', 'slow') 
 			if not self.any_multiball_active() and not self.intro_playing:
 				self.game.lamps.rightStartFeature.schedule(schedule=0x00ff00ff, cycle_seconds=0, now=True)
-
-		style = 'on' if self.mystery_lit else 'off'
-		self.game.drive_lamp('mystery', style)
-
-		style = 'medium' if self.missile_award_lit else 'off'
-		self.game.drive_lamp('airRaid', style)
-
-		if self.state != 'ultimate_challenge':
-			style = 'slow' if self.game.base_play.combos.inner_loop_active else 'off'
-			for lamp_name in ['perp2W', 'perp2R', 'perp2Y', 'perp2G']:
-				self.game.drive_lamp(lamp_name, style)
-
-			style = 'slow' if self.game.base_play.combos.outer_loop_active else 'off'
-			for lamp_name in ['perp4W', 'perp4R', 'perp4Y', 'perp4G']:
-				self.game.drive_lamp(lamp_name, style)
-
-		if self.state == 'pre_ultimate_challenge':
 			self.game.disable_drops()
 			self.game.lamps.advanceCrimeLevel.disable()
 			self.game.lamps.mystery.disable()
@@ -417,14 +400,15 @@ class RegularPlay(Scoring_Mode):
 	
 	def is_ultimate_challenge_ready(self):
 		# 3 Criteria for finale: jackpot, crimescenes, all modes attempted.
-		return self.multiball.jackpot_collected and \
-				self.crime_scenes.is_complete() and \
-				len(self.chain.modes_not_attempted) == 0
+		return (self.multiball.jackpot_collected and
+				self.crime_scenes.is_complete() and
+				self.chain.is_complete())
 
 	def start_ultimate_challenge(self):
 		self.game.lamps.rightStartFeature.disable()
 		self.reset_modes()
-		self.game.modes.remove(self)
+		for mode in [self, self.boring, self.chain, self.crime_scenes, self.multiball]:
+			self.game.modes.remove(mode)
 		self.game.base_play.start_ultimate_challenge(True)
 
 	#
@@ -439,18 +423,16 @@ class RegularPlay(Scoring_Mode):
 		else:
 			self.extra_balls_lit += 1
 			self.total_extra_balls_lit += 1
-			self.enable_extra_ball_lamp()
+			self.game.drive_lamp('extraBall2', 'on')
 			self.game.base_play.show_on_display("Extra Ball Lit!", None, 'high')
 
-	def enable_extra_ball_lamp(self):
-		self.game.drive_lamp('extraBall2', 'on')
-
 	def sw_leftScorePost_active(self, sw):
-		self.game.sound.play('extra_ball_target')
-		if self.extra_balls_lit > 0:
-			self.award_extra_ball()
+		self.extra_ball_switch_hit()
 
 	def sw_rightTopPost_active(self, sw):
+		self.extra_ball_switch_hit()
+
+	def extra_ball_switch_hit(self):
 		self.game.sound.play('extra_ball_target')
 		if self.extra_balls_lit > 0:
 			self.award_extra_ball()
@@ -468,12 +450,12 @@ class RegularPlay(Scoring_Mode):
 	#
 
 	def sw_outlaneL_active(self, sw):
-		self.outlane_active()
+		self.outlane_hit()
 
 	def sw_outlaneR_active(self, sw):
-		self.outlane_active()
+		self.outlane_hit()
 		
-	def outlane_active(self):
+	def outlane_hit(self):
 		self.game.score(1000)
 		if self.any_multiball_active() or self.game.trough.ball_save_active:
 			self.game.sound.play('outlane')

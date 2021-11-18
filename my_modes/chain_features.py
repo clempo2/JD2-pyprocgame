@@ -40,10 +40,9 @@ class ModeTimer(Mode):
 			self.delay(name='decrement timer', event_type=None, delay=1, handler=self.decrement_timer)
 			self.timer_update(self.timer)
 		else:
-			self.failed()
-			self.exit_callback()
+			self.expired()
 
-	def failed(self):
+	def expired(self):
 		pass
 
 	def timer_update(self, time):
@@ -67,7 +66,6 @@ class ChainFeature(Scoring_Mode, ModeTimer):
 
 	def mode_started(self):
 		self.num_shots = 0
-		self.completed = False
 		self.start_timer(self.mode_time)
 		self.play_music()
 		self.update_status()
@@ -109,6 +107,12 @@ class ChainFeature(Scoring_Mode, ModeTimer):
 
 	def timer_update(self, timer):
 		self.countdown_layer.set_text(str(timer))
+
+	def is_complete(self):
+		return self.num_shots >= self.shots_required
+
+	def expired(self):
+		self.exit_callback(self.is_complete())
 		
 	def start_using_drops(self):
 		self.game.base_play.regular_play.multiball.drops.paused = True
@@ -172,15 +176,16 @@ class Pursuit(ChainFeature):
 		self.update_status()
 		if self.num_shots == self.shots_required:
 			self.game.sound.play_voice('complete')
-			self.completed = True
 			self.game.score(50000)
-			self.exit_callback()
+			self.exit_callback(True)
 		else:
 			self.game.sound.play_voice('good shot')
 
-	def failed(self):
+	def expired(self):
 		self.game.sound.play_voice('failed')
-	
+		super(Pursuit, self).expired()
+
+
 class Blackout(ChainFeature):
 	'''Blackout chain mode'''
 
@@ -215,9 +220,8 @@ class Blackout(ChainFeature):
 			self.game.coils.flasherBlackout.schedule(schedule=0x000F000F, cycle_seconds=0, now=True)
 			self.game.score(50000)
 		elif self.num_shots == self.shots_required:
-			self.completed = True
 			self.game.score(110000)
-			self.exit_callback()
+			self.exit_callback(True)
 
 class Sniper(ChainFeature):
 	'''Sniper chain mode'''
@@ -261,9 +265,8 @@ class Sniper(ChainFeature):
 		self.update_status()
 		if self.num_shots == self.shots_required:
 			self.game.sound.play_voice('sniper - hit')
-			self.completed = True
 			self.game.score(50000)
-			self.exit_callback()
+			self.exit_callback(True)
 		else:
 			self.game.sound.play_voice('sniper - miss')
 
@@ -275,59 +278,48 @@ class BattleTank(ChainFeature):
 		super(BattleTank, self).__init__(game, priority, 'Battle Tank', 'battleTank')
 		self.instructions = 'Shoot all 3 battle tank shots'
 		self.shots_required = 3
+		self.lamp_names = ['tankLeft', 'tankCenter', 'tankRight']
 
 	def mode_started(self):
-		self.shots = {'left':False, 'center':False, 'right':False}
+		self.shots = [1, 1, 1]
 		super(BattleTank, self).mode_started()
 		self.game.sound.play_voice('tank intro')
 
 	def mode_stopped(self):
-		self.game.lamps.tankCenter.disable()
-		self.game.lamps.tankLeft.disable()
-		self.game.lamps.tankRight.disable()
+		for lamp_name in self.lamp_names:
+			self.game.lamps[lamp_name].disable()
 
 	def update_lamps(self):
-		if not self.shots['center']:
-			self.game.lamps.tankCenter.schedule(schedule=0x00FF00FF, cycle_seconds=0, now=True)
-		if not self.shots['left']:
-			self.game.lamps.tankLeft.schedule(schedule=0x00FF00FF, cycle_seconds=0, now=True)
-		if not self.shots['right']:
-			self.game.lamps.tankRight.schedule(schedule=0x00FF00FF, cycle_seconds=0, now=True)
+		for shot in range(0,3):
+			if self.shots[shot]:
+				self.game.lamps[self.lamp_names[shot]].schedule(schedule=0x00FF00FF, cycle_seconds=0, now=True)
 
 	def sw_topRightOpto_active(self, sw):
 		if self.game.switches.leftRollover.time_since_change() < 1:
-			if not self.shots['left']:
-				self.game.lamps.tankLeft.disable()
-				self.shots['left'] = True
-				self.game.score(10000)
-				self.num_shots += 1
-				self.check_for_completion()
+			self.switch_hit(0)
 
 	def sw_centerRampExit_active(self, sw):
-		if not self.shots['center']:
-			self.game.lamps.tankCenter.disable()
-			self.shots['center'] = True
-			self.game.score(10000)
-			self.num_shots += 1
-			self.check_for_completion()
+		self.switch_hit(1)
 
 	def sw_threeBankTargets_active(self, sw):
-		if not self.shots['right']:
-			self.game.lamps.tankRight.disable()
-			self.shots['right'] = True
-			self.game.score(10000)
+		self.switch_hit(2)
+
+	def switch_hit(self, shot):
+		if self.shots[shot]:
+			self.shots[shot] = False
+			self.game.lamps[self.lamp_names[shot]].disable()
+			if self.num_shots > 0:
+				self.game.sound.stop('tank hit ' + str(self.num_shots))
 			self.num_shots += 1
+			self.game.sound.play_voice('tank hit ' + str(self.num_shots))
+			self.game.score(10000)
 			self.check_for_completion()
 
 	def check_for_completion(self):
 		self.update_status()
-		for i in range(1,4):
-			self.game.sound.stop('tank hit ' + str(i))
-		self.game.sound.play_voice('tank hit ' + str(self.num_shots))
-		if self.shots['right'] and self.shots['left'] and self.shots['center']:
-			self.completed = True
+		if self.num_shots == self.shots_required:
 			self.game.score(50000)
-			self.exit_callback()
+			self.exit_callback(True)
 
 
 class Meltdown(ChainFeature):
@@ -358,23 +350,20 @@ class Meltdown(ChainFeature):
 		self.switch_hit()
 
 	def switch_hit(self):
+		if self.num_shots > 0:
+			self.game.sound.stop('meltdown ' + str(self.num_shots))
 		self.num_shots += 1
-		self.check_for_completion()
+		if self.num_shots <= 4:
+			self.game.sound.play_voice('meltdown ' + str(self.num_shots))
 		self.game.score(10000)
+		self.check_for_completion()
 
 	def check_for_completion(self):
 		self.update_status()
-
-		for m in ['1','2','3','4','all']:
-			self.game.sound.stop('meltdown ' + m)	
-
-		if self.num_shots >= self.shots_required:
+		if self.num_shots == self.shots_required:
 			self.game.sound.play_voice('meltdown all')
-			self.completed = True
 			self.game.score(50000)
-			self.exit_callback()
-		elif self.num_shots <= 4:
-			self.game.sound.play_voice('meltdown ' + str(self.num_shots))
+			self.exit_callback(True)
 
 
 class Impersonator(ChainFeature):
@@ -444,8 +433,13 @@ class Impersonator(ChainFeature):
 		if self.timer % 6 in matches:
 			self.num_shots += 1
 			self.game.score(10000)
-			self.check_for_completion()
+		self.game.sound.stop('bi - song')
+		if not self.sound_active:
+			self.sound_active = True
+			self.game.sound.play('bi - ouch')
+			self.delay(name='end_sound', event_type=None, delay=1, handler=self.end_sound)
 		self.game.coils.resetDropTarget.pulse(40)
+		self.check_for_completion()
 
 	def moving_target(self):
 		self.game.disable_drops()
@@ -466,16 +460,10 @@ class Impersonator(ChainFeature):
 		self.delay(name='moving_target', event_type=None, delay=1, handler=self.moving_target)
 
 	def check_for_completion(self):
-		self.game.sound.stop('bi - song')
-		if not self.sound_active:
-			self.sound_active = True
-			self.game.sound.play('bi - ouch')
-			self.delay(name='end_sound', event_type=None, delay=1, handler=self.end_sound)
-	
 		self.update_status()
 		if self.num_shots == self.shots_required:
-			self.completed = True
 			self.game.score(50000)
+			# keep playing for extra shots until the timer expires
 		
 
 class Safecracker(ChainFeature):
@@ -506,8 +494,8 @@ class Safecracker(ChainFeature):
 
 	def sw_subwayEnter2_active(self, sw):
 		self.num_shots += 1
-		self.check_for_completion()
 		self.game.score(10000)
+		self.check_for_completion()
 
 	def sw_dropTargetD_inactive_for_400ms(self, sw):
 		self.game.coils.tripDropTarget.pulse(30)
@@ -521,9 +509,8 @@ class Safecracker(ChainFeature):
 		self.update_status()
 		if self.num_shots == self.shots_required:
 			self.game.sound.play_voice('complete')
-			self.completed = True
 			self.game.score(50000)
-			self.exit_callback()
+			self.exit_callback(True)
 		else:
 			self.game.sound.play_voice('shot')
 
@@ -564,9 +551,8 @@ class ManhuntMillions(ChainFeature):
 		self.update_status()
 		if self.num_shots == self.shots_required:
 			self.game.sound.play_voice('mm - done')
-			self.completed = True
 			self.game.score(50000)
-			self.exit_callback()
+			self.exit_callback(True)
 		else:
 			self.game.sound.play_voice('mm - shot')
 
@@ -596,20 +582,19 @@ class Stakeout(ChainFeature):
 
 	def sw_rightRampExit_active(self, sw):
 		self.num_shots += 1
-		self.check_for_completion()
 		self.game.score(10000)
-
-	def check_for_completion(self):
 		self.cancel_delayed('boring')
-		self.update_status()
 		self.game.sound.stop('so - boring')
-		if self.num_shots == self.shots_required:
-			self.completed = True
-			self.game.score(50000)
-			self.exit_callback()
-		elif self.num_shots == 1:
+		if self.num_shots == 1:
 			self.game.sound.play_voice('so - over there')
 		elif self.num_shots == 2:
 			self.game.sound.play_voice('so - surrounded')
 		elif self.num_shots == 3:
 			self.game.sound.play_voice('so - move in')
+		self.check_for_completion()
+
+	def check_for_completion(self):
+		self.update_status()
+		if self.num_shots == self.shots_required:
+			self.game.score(50000)
+			self.exit_callback(True)
