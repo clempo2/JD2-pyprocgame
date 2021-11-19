@@ -30,35 +30,35 @@ class Chain(Mode):
 
 	def mode_started(self):
 		# restore player state
-		p = self.game.current_player()
-		self.modes_not_attempted = p.getState('modes_not_attempted', self.all_chain_modes[:])
-		self.modes_not_attempted_ptr = p.getState('modes_not_attempted_ptr', 0)
-		self.modes_attempted = p.getState('modes_attempted', [])
-		self.modes_completed = p.getState('modes_completed', [])
-		self.num_modes_attempted = p.getState('num_modes_attempted', 0)
-		self.num_modes_completed = p.getState('num_modes_completed', 0)
+		player = self.game.current_player()
+		self.modes_not_attempted = player.getState('modes_not_attempted', self.all_chain_modes[:])
+		self.modes_not_attempted_ptr = player.getState('modes_not_attempted_ptr', 0)
+		self.modes_attempted = player.getState('modes_attempted', [])
+		self.modes_completed = player.getState('modes_completed', [])
+		self.num_modes_attempted = player.getState('num_modes_attempted', 0)
+		self.num_modes_completed = player.getState('num_modes_completed', 0)
 		
 		self.mode = None
 
 	def mode_stopped(self):
 		# save player state
-		p = self.game.current_player()
-		p.setState('modes_not_attempted', self.modes_not_attempted)
-		p.setState('modes_not_attempted_ptr', self.modes_not_attempted_ptr)
-		p.setState('modes_attempted', self.modes_attempted)
-		p.setState('modes_completed', self.modes_completed)
-		p.setState('num_modes_completed', self.num_modes_completed)
-		p.setState('num_modes_attempted', self.num_modes_attempted)
+		player = self.game.current_player()
+		player.setState('modes_not_attempted', self.modes_not_attempted)
+		player.setState('modes_not_attempted_ptr', self.modes_not_attempted_ptr)
+		player.setState('modes_attempted', self.modes_attempted)
+		player.setState('modes_completed', self.modes_completed)
+		player.setState('num_modes_completed', self.num_modes_completed)
+		player.setState('num_modes_attempted', self.num_modes_attempted)
 		
 		if self.mode != None:
 			self.game.modes.remove(self.mode)
 
 	def reset(self):
-		p = self.game.current_player()
-		p.setState('modes_not_attempted', self.all_chain_modes[:])
-		p.setState('modes_not_attempted_ptr', 0)
-		p.setState('modes_attempted', [])
-		p.setState('modes_completed', [])
+		player = self.game.current_player()
+		player.setState('modes_not_attempted', self.all_chain_modes[:])
+		player.setState('modes_not_attempted_ptr', 0)
+		player.setState('modes_attempted', [])
+		player.setState('modes_completed', [])
 
 	def is_complete(self):
 		return len(self.modes_not_attempted) == 0
@@ -96,7 +96,7 @@ class Chain(Mode):
 		if len(self.modes_not_attempted) == 0:
 			return 'modes_complete'
 		else:
-			self.game.drive_lamp(self.modes_not_attempted[self.modes_not_attempted_ptr].lamp_name,'slow')
+			self.game.drive_lamp(self.modes_not_attempted[self.modes_not_attempted_ptr].lamp_name, 'slow')
 			self.game.lamps.rightStartFeature.schedule(schedule=0x00ff00ff, cycle_seconds=0, now=True)
 			return 'idle'
 

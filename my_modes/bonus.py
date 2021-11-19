@@ -18,20 +18,20 @@ class Bonus(Mode):
 		self.exit_callback = exit_callback
 		self.title_layer.set_text('BONUS', self.delay_time)
 		
-		p = self.game.current_player()
-		num_modes_attempted = p.getState("num_modes_attempted")
+		player = self.game.current_player()
+		num_modes_attempted = player.getState("num_modes_attempted")
 		attempted = ['Modes Attempted: ' + str(num_modes_attempted), num_modes_attempted * 4000]
 		
-		num_modes_completed = p.getState("num_modes_completed")
+		num_modes_completed = player.getState("num_modes_completed")
 		completed = ['Modes Completed: ' + str(num_modes_completed), num_modes_completed * 12000]
 
-		crimescenes_total_levels = p.getState("crimescenes_total_levels")
+		crimescenes_total_levels = player.getState("crimescenes_total_levels")
 		crimescenes = ['Crimescene Levels: ' + str(crimescenes_total_levels), crimescenes_total_levels * 2000]
 
 		base = attempted[1] + completed[1] + crimescenes[1]
 		total_base = ['Total Base:', base]
 		
-		bonus_x = p.getState('bonus_x')
+		bonus_x = player.getState('bonus_x')
 		multiplier = ['Multiplier:', bonus_x]
 
 		self.total = base * bonus_x

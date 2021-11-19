@@ -39,10 +39,13 @@ class BasePlay(Mode):
 
 	def mode_started(self):
 		# init player state
-		p = self.game.current_player()
-		bonus_x = p.getState('bonus_x', 1) if p.getState('hold_bonus_x', False) else 1
-		p.setState('bonus_x', bonus_x)
-		p.setState('hold_bonus_x', False)
+		player = self.game.current_player()
+		self.extra_balls_lit = player.getState('extra_balls_lit', 0)
+		self.total_extra_balls_lit = player.getState('total_extra_balls_lit', 0)
+
+		bonus_x = player.getState('bonus_x', 1) if player.getState('hold_bonus_x', False) else 1
+		player.setState('bonus_x', bonus_x)
+		player.setState('hold_bonus_x', False)
 
 		# Disable any previously active lamp
 		for lamp in self.game.lamps:
@@ -68,7 +71,7 @@ class BasePlay(Mode):
 		for mode in self.priority_modes:
 			self.game.modes.add(mode)
 
-		if p.getState('supergame', self.game.supergame):
+		if player.getState('supergame', self.game.supergame):
 			self.start_ultimate_challenge(False)
 		else:
 			self.game.modes.add(self.regular_play)
@@ -79,6 +82,10 @@ class BasePlay(Mode):
 
 		self.game.enable_flippers(False) 
 		self.game.ball_search.disable()
+
+		player = self.game.current_player()
+		player.setState('extra_balls_lit', self.extra_balls_lit)
+		player.setState('total_extra_balls_lit', self.total_extra_balls_lit)
 
 	#
 	# Priority Display
@@ -107,6 +114,48 @@ class BasePlay(Mode):
 			self.game.modes.add(self.status_report)
 
 	#
+	# Extra ball
+	#
+	
+	def light_extra_ball(self):
+		if self.total_extra_balls_lit == self.game.user_settings['Gameplay']['Max extra balls per game']:
+			self.game.set_status('No more extras this game.')
+		elif self.extra_balls_lit == self.game.user_settings['Gameplay']['Max extra balls lit']:
+			self.game.set_status('Extra balls lit maxed.')
+		else:
+			self.extra_balls_lit += 1
+			self.total_extra_balls_lit += 1
+			self.game.drive_lamp('extraBall2', 'on')
+			self.game.base_play.show_on_display("Extra Ball Lit!", None, 'high')
+
+	def sw_leftScorePost_active(self, sw):
+		self.extra_ball_switch_hit()
+
+	def sw_rightTopPost_active(self, sw):
+		self.extra_ball_switch_hit()
+
+	def extra_ball_switch_hit(self):
+		self.game.sound.play('extra_ball_target')
+		if self.extra_balls_lit > 0:
+			self.extra_balls_lit -= 1
+			self.extra_ball()
+	
+	def extra_ball(self):
+		player = self.current_player()
+		player.extra_balls += 1
+		self.game.base_play.show_on_display("Extra Ball!", None,'high')
+		anim = self.game.animations['EBAnim']
+		self.game.base_play.play_animation(anim, 'high', repeat=False, hold=False)
+		self.game.update_lamps()
+
+	def update_lamps(self):
+		style = 'on' if self.game.current_player().extra_balls > 0 else 'off'
+		self.game.drive_lamp('judgeAgain', style)
+
+		style = 'off' if self.extra_balls_lit == 0 else 'slow'
+		self.game.drive_lamp('extraBall2', style)
+
+	#
 	# Ultimate Challenge
 	#
 
@@ -129,7 +178,7 @@ class BasePlay(Mode):
 		self.game.coils.knocker.pulse(50)
 		self.show_on_display('Replay', None, 'mid')
 		if award == 'Extra Ball':
-			self.game.extra_ball()
+			self.extra_ball()
 		#else add a credit in your head
 
 	#
@@ -268,9 +317,9 @@ class BasePlay(Mode):
 	#
 	
 	def inc_bonus_x(self):
-		p = self.game.current_player()
-		bonus_x = p.getState('bonus_x') + 1
-		p.setState('bonus_x', bonus_x)
+		player = self.game.current_player()
+		bonus_x = player.getState('bonus_x') + 1
+		player.setState('bonus_x', bonus_x)
 		self.show_on_display('Bonus at ' + str(bonus_x) + 'X', None, 'mid')
 
 	def hold_bonus_x(self):

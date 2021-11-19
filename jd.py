@@ -290,18 +290,18 @@ class JDGame(BasicGame):
 	def request_additional_player(self):
 		""" attempt to add an additional player, but honor the max number of players """
 		if len(self.players) < 4:
-			p = self.add_player()
-			self.set_status(p.name + " added!")
+			player = self.add_player()
+			self.set_status(player.name + " added!")
 		else:
 			self.logger.info("Cannot add more than 4 players.")
 
 	def getPlayerState(self, key, default = None):
-		p = self.current_player()
-		return p.getState(key, default)
+		player = self.current_player()
+		return player.getState(key, default)
 
 	def setPlayerState(self, key, val):
-		p = self.current_player()
-		p.setState(key, val)
+		player = self.current_player()
+		player.setState(key, val)
 
 	def start_game(self, supergame):
 		super(JDGame, self).start_game()
@@ -317,10 +317,6 @@ class JDGame(BasicGame):
 	def ball_starting(self):
 		super(JDGame, self).ball_starting()
 		self.modes.add(self.base_play)
-	
-	def extra_ball(self):
-		p = self.current_player()
-		p.extra_balls += 1
 
 	# Override to create a flag signaling extra ball.
 	def shoot_again(self):

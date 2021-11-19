@@ -47,13 +47,11 @@ class RegularPlay(Scoring_Mode):
 
 	def mode_started(self):
 		# restore player state
-		p = self.game.current_player()
-		self.state = p.getState('state', 'idle')
-		self.mystery_lit = p.getState('mystery_lit', False)
-		self.missile_award_lit = p.getState('missile_award_lit', False)
-		self.video_mode_lit = p.getState('video_mode_lit', True)
-		self.extra_balls_lit = p.getState('extra_balls_lit', 0)
-		self.total_extra_balls_lit = p.getState('total_extra_balls_lit', 0)
+		player = self.game.current_player()
+		self.state = player.getState('state', 'idle')
+		self.mystery_lit = player.getState('mystery_lit', False)
+		self.missile_award_lit = player.getState('missile_award_lit', False)
+		self.video_mode_lit = player.getState('video_mode_lit', True)
 
 		# disable auto-plunging for the start of ball
 		# Force player to hit the right Fire button.
@@ -88,13 +86,11 @@ class RegularPlay(Scoring_Mode):
 				coil.disable()
 
 		# save player state
-		p = self.game.current_player()
-		p.setState('state', self.state)
-		p.setState('video_mode_lit', self.video_mode_lit)
-		p.setState('mystery_lit', self.mystery_lit)
-		p.setState('missile_award_lit', self.missile_award_lit or self.missile_award_lit_save)
-		p.setState('extra_balls_lit', self.extra_balls_lit)
-		p.setState('total_extra_balls_lit', self.total_extra_balls_lit)
+		player = self.game.current_player()
+		player.setState('state', self.state)
+		player.setState('video_mode_lit', self.video_mode_lit)
+		player.setState('mystery_lit', self.mystery_lit)
+		player.setState('missile_award_lit', self.missile_award_lit or self.missile_award_lit_save)
 
 	def sw_popperR_active_for_200ms(self, sw):
 		if not self.any_multiball_active():
@@ -275,12 +271,6 @@ class RegularPlay(Scoring_Mode):
 		style = 'medium' if self.missile_award_lit else 'off'
 		self.game.drive_lamp('airRaid', style)
 
-		style = 'on' if self.game.current_player().extra_balls > 0 else 'off'
-		self.game.drive_lamp('judgeAgain', style)
-
-		style = 'off' if self.extra_balls_lit == 0 else 'slow'
-		self.game.drive_lamp('extraBall2', style)
-
 		if self.state == 'idle' or self.state == 'mode' or self.state == 'modes_complete':
 			if self.state == 'mode':
 				self.game.drive_lamp(self.chain.mode.lamp_name, 'slow')
@@ -367,7 +357,7 @@ class RegularPlay(Scoring_Mode):
 			self.game.base_play.show_on_display(str(award_words[0]) + ' Points', None, 'mid')
 			self.game.set_status(award)
 		elif award == 'Light Extra Ball':
-			self.light_extra_ball()
+			self.game.base_play.light_extra_ball()
 		elif award == 'Advance Crime Scenes':
 			self.crime_scenes.level_complete()
 			self.game.base_play.show_on_display('Crimes Adv', None, 'mid')
@@ -392,7 +382,7 @@ class RegularPlay(Scoring_Mode):
 		self.game.modes.remove(self.video_mode)
 		self.game.coils.shooterL.pulse()
 		if success:
-			self.light_extra_ball()
+			self.game.base_play.light_extra_ball()
 
 	#
 	# Ultimate Challenge
@@ -406,44 +396,10 @@ class RegularPlay(Scoring_Mode):
 
 	def start_ultimate_challenge(self):
 		self.game.lamps.rightStartFeature.disable()
-		self.reset_modes()
 		for mode in [self, self.boring, self.chain, self.crime_scenes, self.multiball]:
 			self.game.modes.remove(mode)
+		self.reset_modes()
 		self.game.base_play.start_ultimate_challenge(True)
-
-	#
-	# Extra ball
-	#
-	
-	def light_extra_ball(self):
-		if self.total_extra_balls_lit == self.game.user_settings['Gameplay']['Max extra balls per game']:
-			self.game.set_status('No more extras this game.')
-		elif self.extra_balls_lit == self.game.user_settings['Gameplay']['Max extra balls lit']:
-			self.game.set_status('Extra balls lit maxed.')
-		else:
-			self.extra_balls_lit += 1
-			self.total_extra_balls_lit += 1
-			self.game.drive_lamp('extraBall2', 'on')
-			self.game.base_play.show_on_display("Extra Ball Lit!", None, 'high')
-
-	def sw_leftScorePost_active(self, sw):
-		self.extra_ball_switch_hit()
-
-	def sw_rightTopPost_active(self, sw):
-		self.extra_ball_switch_hit()
-
-	def extra_ball_switch_hit(self):
-		self.game.sound.play('extra_ball_target')
-		if self.extra_balls_lit > 0:
-			self.award_extra_ball()
-
-	def award_extra_ball(self):
-		self.game.extra_ball()
-		self.extra_balls_lit -= 1
-		self.game.base_play.show_on_display("Extra Ball!", None,'high')
-		anim = self.game.animations['EBAnim']
-		self.game.base_play.play_animation(anim, 'high', repeat=False, hold=False)
-		self.game.update_lamps()
 
 	#
 	# End of ball

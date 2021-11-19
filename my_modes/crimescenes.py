@@ -147,10 +147,10 @@ class CrimeSceneLevels(CrimeSceneBase):
 
 	def mode_started(self):
 		# restore player state
-		p = self.game.current_player()
-		self.level = p.getState('crimescenes_level', -1)
-		self.total_levels = p.getState('crimescenes_total_levels', 0)
-		self.targets = p.getState('crimescenes_targets', None)
+		player = self.game.current_player()
+		self.level = player.getState('crimescenes_level', -1)
+		self.total_levels = player.getState('crimescenes_total_levels', 0)
+		self.targets = player.getState('crimescenes_targets', None)
 
 		self.num_advance_hits = 0
 		if self.level == -1:
@@ -158,9 +158,9 @@ class CrimeSceneLevels(CrimeSceneBase):
 
 	def mode_stopped(self):
 		# save player state
-		p = self.game.current_player()
-		p.setState('crimescenes_total_levels', self.total_levels)
-		p.setState('crimescenes_targets', self.targets)
+		player = self.game.current_player()
+		player.setState('crimescenes_total_levels', self.total_levels)
+		player.setState('crimescenes_targets', self.targets)
 
 		for lamp in range(1,6):
 			for color in range(0,4):
@@ -219,7 +219,7 @@ class CrimeSceneLevels(CrimeSceneBase):
 		self.level += 1
 		
 		if self.level == self.extra_ball_level:
-			self.game.base_play.regular_play.light_extra_ball()
+			self.game.base_play.light_extra_ball()
 
 		if (self.level % 4) == 3:
 			self.start_block_war()

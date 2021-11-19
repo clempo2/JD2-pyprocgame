@@ -8,9 +8,9 @@ class Combos(Mode):
 		super(Combos, self).__init__(game, priority)
 
 	def mode_started(self):
-		p = self.game.current_player()
-		self.best_inner_loops = p.getState('best_inner_loops', 0)
-		self.best_outer_loops = p.getState('best_outer_loops', 0)
+		player = self.game.current_player()
+		self.best_inner_loops = player.getState('best_inner_loops', 0)
+		self.best_outer_loops = player.getState('best_outer_loops', 0)
 
 		self.outer_loop_active = False
 		self.inner_loop_active = False
@@ -18,9 +18,9 @@ class Combos(Mode):
 		self.outer_loop_combos = 0
 		
 	def mode_stopped(self):
-		p = self.game.current_player()
-		p.setState('best_inner_loops', self.best_inner_loops)
-		p.setState('best_outer_loops', self.best_outer_loops)
+		player = self.game.current_player()
+		player.setState('best_inner_loops', self.best_inner_loops)
+		player.setState('best_outer_loops', self.best_outer_loops)
 		
 		self.cancel_delayed(['inner_loop', 'outer_loop'])
 

@@ -51,13 +51,13 @@ class Multiball(Scoring_Mode):
 		self.game.modes.add(self.drops)
 		
 		# restore player state
-		p = self.game.current_player()
-		self.state = p.getState('multiball_state', 'load')
-		self.num_balls_locked = p.getState('multiball_num_balls_locked', 0)
-		self.num_locks_lit = p.getState('multiball_num_locks_lit', 0)
-		self.num_times_played = p.getState('multiball_num_times_played', 0)
-		self.lock_level = p.getState('multiball_lock_level', 1)
-		self.jackpot_collected = p.getState('multiball_jackpot_collected', False)
+		player = self.game.current_player()
+		self.state = player.getState('multiball_state', 'load')
+		self.num_balls_locked = player.getState('multiball_num_balls_locked', 0)
+		self.num_locks_lit = player.getState('multiball_num_locks_lit', 0)
+		self.num_times_played = player.getState('multiball_num_times_played', 0)
+		self.lock_level = player.getState('multiball_lock_level', 1)
+		self.jackpot_collected = player.getState('multiball_jackpot_collected', False)
 
 		# Virtual locks are needed when there are more balls physically locked 
 		# than the player has locked through play.  This happens when
@@ -87,13 +87,13 @@ class Multiball(Scoring_Mode):
 
 	def mode_stopped(self):
 		# save player state
-		p = self.game.current_player()
-		p.setState('multiball_state',  self.state)
-		p.setState('multiball_num_balls_locked',  self.num_balls_locked)
-		p.setState('multiball_num_locks_lit',  self.num_locks_lit)
-		p.setState('multiball_num_times_played',  self.num_times_played)
-		p.setState('multiball_lock_level',  self.lock_level)
-		p.setState('multiball_jackpot_collected',  self.jackpot_collected)
+		player = self.game.current_player()
+		player.setState('multiball_state',  self.state)
+		player.setState('multiball_num_balls_locked',  self.num_balls_locked)
+		player.setState('multiball_num_locks_lit',  self.num_locks_lit)
+		player.setState('multiball_num_times_played',  self.num_times_played)
+		player.setState('multiball_lock_level',  self.lock_level)
+		player.setState('multiball_jackpot_collected',  self.jackpot_collected)
 
 		self.cancel_delayed(name='voice instructions')
 		self.game.coils.flasherGlobe.disable()
