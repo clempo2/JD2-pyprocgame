@@ -59,13 +59,14 @@ class RegularPlay(Scoring_Mode):
 
 		self.ball_starting = True
 		self.skill_shot_added = False
-		self.intro_playing = False
 		self.mystery_lit = True
 
 		# Add modes that are always active
 		self.game.modes.add(self.chain)
 		self.game.modes.add(self.crime_scenes)
-		self.game.modes.add(self.multiball)
+		
+		if self.state != 'challenge_ready':
+			self.game.modes.add(self.multiball)
 
 		self.missile_award_lit_save = self.missile_award_lit
 		self.setup_next_mode(True)
@@ -96,7 +97,7 @@ class RegularPlay(Scoring_Mode):
 		if not self.any_multiball_active():
 			if self.state == 'idle':
 				self.chain.start_chain_mode()
-			elif self.state == 'pre_ultimate_challenge':
+			elif self.state == 'challenge_ready':
 				self.start_ultimate_challenge()
 			else:
 				self.popperR_eject()
@@ -104,25 +105,28 @@ class RegularPlay(Scoring_Mode):
 			self.popperR_eject()
 		self.game.update_lamps()
 
-	# called right after a mode has ended
-	# show next available mode if no mode is currently running
+	# called right after a mode has ended to decide what to do next
 	def setup_next_mode(self, after_multiball=False):
+		# don't offer a new mode when multiball is still running
 		if not self.any_multiball_active():
-			# all multiballs finished so we can decide what happens next
 			self.game.sound.fadeout_music()
 			self.game.sound.play_music('background', loops=-1)
 			
 			if after_multiball:
-				# the last multiball that was still running just ended
 				self.restore_missile_award()
 
 			if self.is_ultimate_challenge_ready():
-				# you have reached the finale, shoot the right popper to start it
-				self.state = 'pre_ultimate_challenge'
+				# shoot the right popper to start the finale 
+				self.state = 'challenge_ready'
+				self.game.modes.remove(self.multiball)
 				self.game.lamps.ultChallenge.schedule(schedule=0x00ff00ff, cycle_seconds=0, now=True)
 				self.game.lamps.rightStartFeature.schedule(schedule=0x00ff00ff, cycle_seconds=0, now=True)
+			elif not self.chain.is_complete():
+				# shoot the right popper to start the next chain mode 
+				self.state = 'idle'
+				self.game.lamps.rightStartFeature.schedule(schedule=0x00ff00ff, cycle_seconds=0, now=True)
 			else:
-				self.state = self.chain.setup_next_mode()
+				self.state = 'chain_complete'
 
 	def crime_scenes_completed(self):
 		self.setup_next_mode(True)
@@ -271,19 +275,13 @@ class RegularPlay(Scoring_Mode):
 		style = 'medium' if self.missile_award_lit else 'off'
 		self.game.drive_lamp('airRaid', style)
 
-		if self.state == 'idle' or self.state == 'mode' or self.state == 'modes_complete':
-			if self.state == 'mode':
-				self.game.drive_lamp(self.chain.mode.lamp_name, 'slow')
-			else:
-				if self.game.switches.popperR.is_inactive() and not self.any_multiball_active() and not self.intro_playing and len(self.chain.modes_not_attempted) > 0:
-					self.game.lamps.rightStartFeature.schedule(schedule=0x00ff00ff, cycle_seconds=0, now=True)
-				if len(self.chain.modes_not_attempted) > 0:
-					self.game.drive_lamp(self.chain.modes_not_attempted[self.chain.modes_not_attempted_ptr].lamp_name, 'slow')
-		elif self.state == 'pre_ultimate_challenge':
-			self.game.drive_lamp('ultChallenge', 'slow') 
-			if not self.any_multiball_active() and not self.intro_playing:
+		if self.state == 'idle':
+			if self.game.switches.popperR.is_inactive() and not self.any_multiball_active():
 				self.game.lamps.rightStartFeature.schedule(schedule=0x00ff00ff, cycle_seconds=0, now=True)
-			self.game.disable_drops()
+		elif self.state == 'challenge_ready':
+			self.game.drive_lamp('ultChallenge', 'slow') 
+			self.game.lamps.rightStartFeature.schedule(schedule=0x00ff00ff, cycle_seconds=0, now=True)
+			self.game.disable_drop_lamps()
 			self.game.lamps.advanceCrimeLevel.disable()
 			self.game.lamps.mystery.disable()
 

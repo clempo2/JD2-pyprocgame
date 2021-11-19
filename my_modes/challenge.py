@@ -89,7 +89,7 @@ class UltimateIntro(Mode):
 		self.game.enable_flippers(False) 
 		self.game.enable_gi(False)
 		self.game.lamps.rightStartFeature.disable()
-		self.game.disable_drops()
+		self.game.disable_drop_lamps()
 
 		self.layer = PanningLayer(width=128, height=32, frame=self.instruction_frame, origin=(0,0), translate=(0,1), bounce=False)
 		self.delay(name='finish', event_type=None, delay=self.delay_time, handler=self.finish )

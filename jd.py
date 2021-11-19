@@ -425,7 +425,7 @@ class JDGame(BasicGame):
 		elif style == 'off':
 			self.lamps[lamp_name].disable()
 
-	def disable_drops(self):
+	def disable_drop_lamps(self):
 		self.lamps.dropTargetJ.disable()
 		self.lamps.dropTargetU.disable()
 		self.lamps.dropTargetD.disable()

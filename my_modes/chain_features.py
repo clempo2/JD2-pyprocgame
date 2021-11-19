@@ -442,7 +442,7 @@ class Impersonator(ChainFeature):
 		self.check_for_completion()
 
 	def moving_target(self):
-		self.game.disable_drops()
+		self.game.disable_drop_lamps()
 		# ModeTimer is continuously updating self.timer
 		time = self.timer % 6
 		if time == 0:
