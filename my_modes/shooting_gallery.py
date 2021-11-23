@@ -3,9 +3,9 @@ from procgame.game import Mode
 from random import randint
 
 class ShootingGallery(Mode):
-	def __init__(self, game, priority, cow_mode):
+	def __init__(self, game, priority):
 		super(ShootingGallery, self).__init__(game, priority)
-		self.cow_mode = cow_mode
+		self.cow_mode = self.game.user_settings['Gameplay']['Cow video mode']
 		
 		gallery_anim = self.game.animations['jdpeople']
 		self.image_frames = gallery_anim.frames[0].create_frames_from_grid(6, 2)
@@ -18,7 +18,7 @@ class ShootingGallery(Mode):
 	def mode_started(self):
 		self.gallery_index = 0
 		self.scope_pos = 0
-		self.targets = ['empty', 'empty', 'empty', 'empty']
+		self.targets = ['empty'] * 4
 		self.num_enemies = 0
 		self.num_enemies_old = 0
 		self.num_enemies_shot = 0
@@ -57,7 +57,7 @@ class ShootingGallery(Mode):
 		self.status_layer_5 = TextLayer(128/2, 7, self.game.fonts['jazz18'], "center", opaque=False).set_text("Video Mode").set_text("Begin!")
 		self.intro_layer_5 = GroupedLayer(128, 32, [self.anim_layer, self.status_layer_5])
 
-		self.layer = ScriptedLayer(128, 32, [\
+		self.layer = ScriptedLayer(128, 32, [
 			{'seconds':3.0, 'layer':self.intro_layer_0},
 			{'seconds':3.0, 'layer':self.intro_layer_1},
 			{'seconds':3.0, 'layer':self.intro_layer_2},
@@ -95,7 +95,6 @@ class ShootingGallery(Mode):
 			self.shot_layers += [new_layer]
 
 		self.result_layer = TextLayer(128/2, 26, self.game.fonts['07x5'], "center", opaque=True)
-		#self.result_layer.composite_op = 'blacksrc'
 
 		# Add all of the layers to a GroupedLayer.
 		self.layer = GroupedLayer(128, 32, [self.pos_layers[0], self.pos_layers[1], self.pos_layers[2], self.pos_layers[3], self.scope_layer, self.shot_layers[0], self.shot_layers[1],self.shot_layers[2], self.shot_layers[3], self.status_layer, self.result_layer])
@@ -164,15 +163,10 @@ class ShootingGallery(Mode):
 			self.targets[position] = 'empty'
 			self.pos_layers[position].transition.in_out = 'out'
 			self.pos_layers[position].transition.start()
-			#self.pos_layers[position].frame = None
 
 	def show_friend(self, position, target_index=-1):
 		if target_index == -1:
-			if self.cow_mode:
-				target_index = 0
-			else:
-				target_index = randint(6,11)
-
+			target_index = 0 if self.cow_mode else randint(6, 11)
 		self.show_target(position, target_index)
 		self.targets[position] = 'friend'
 	
@@ -189,42 +183,40 @@ class ShootingGallery(Mode):
 
 	def show_target(self, position, target_index):
 		new_frame = Frame(128,32)
-		if self.cow_mode:
-			Frame.copy_rect(dst=new_frame, dst_x=position*32, dst_y=0, src=self.cow_image_frames[target_index], src_x=0, src_y=0, width=32, height=32, op='blacksrc')
-		else:
-			Frame.copy_rect(dst=new_frame, dst_x=position*32, dst_y=0, src=self.image_frames[target_index], src_x=0, src_y=0, width=32, height=32, op='blacksrc')
+		src_frames = self.cow_image_frames if self.cow_mode else self.image_frames
+		Frame.copy_rect(dst=new_frame, dst_x=position*32, dst_y=0, src=src_frames[target_index], src_x=0, src_y=0, width=32, height=32, op='blacksrc')
 		self.pos_layers[position].frame = new_frame
 		self.pos_layers[position].transition.in_out = 'in'
 		self.pos_layers[position].transition.start()
 
 	def sw_flipperLwL_active(self, sw):
-		if self.intro_active:
-			if self.game.switches.flipperLwR.is_active():
-				self.layer.force_next(True)
-		elif self.state == 'active':
-			if self.scope_pos != 0:
-				self.scope_pos -= 1
-			self.update_scope_pos()
+		self.flipper_active('flipperLwR', -1)
 
 	def sw_flipperLwR_active(self, sw):
+		self.flipper_active('flipperLwL', 1)
+		
+	def flipper_active(self, other_flipper, pos_delta):
 		if self.intro_active:
-			if self.game.switches.flipperLwL.is_active():
-				self.layer.force_next(True)	
+			if self.game.switches[other_flipper].is_active():
+				self.layer.force_next(True)
 		elif self.state == 'active':
-			if self.scope_pos != 3:
-				self.scope_pos += 1
-			self.update_scope_pos()
-
-	def sw_fireL_active(self, sw):
-		if not self.intro_active:
-			self.shoot()
-
-	def sw_fireR_active(self, sw):
-		if not self.intro_active:
-			self.shoot()
+			new_pos = self.scope_pos + pos_delta
+			if 0 <= new_pos <= 3:
+				self.scope_pos = new_pos
+				self.update_scope_pos()
 
 	def update_scope_pos(self):
 		self.scope_layer.frame = self.scope_and_shot_anim.frames[self.scope_pos]
+
+	def sw_fireL_active(self, sw):
+		self.fire_active()
+
+	def sw_fireR_active(self, sw):
+		self.fire_active()
+		
+	def fire_active(self):
+		if not self.intro_active:
+			self.shoot()
 
 	def shoot(self):
 		self.shot_layers[self.scope_pos].frame = self.scope_and_shot_anim.frames[self.scope_pos + 4]
@@ -237,7 +229,7 @@ class ShootingGallery(Mode):
 		elif self.targets[self.scope_pos] == 'empty':
 			self.delay(name='empty_shot', event_type=None, delay=0.5, handler=self.empty_shot, param=self.scope_pos)
 		elif self.targets[self.scope_pos] == 'friend':
-			self.friend_shot(self.scope_pos)
+			self.friend_shot()
 
 	def enemy_shot(self, position):
 		self.pos_layers[position].blink_frames = 2
@@ -251,7 +243,7 @@ class ShootingGallery(Mode):
 		self.pos_layers[position].blink_frames = 0
 		self.shot_layers[position].blink_frames = 0
 
-	def friend_shot(self, position):
+	def friend_shot(self):
 		self.game.sound.play('good guy shot')
 		self.state = 'complete'
 		self.status_layer.set_text("Failed!")

@@ -16,8 +16,6 @@ class RegularPlay(Scoring_Mode):
 	def __init__(self, game, priority):
 		super(RegularPlay, self).__init__(game, priority)
 
-		self.cow_video_mode_lit = False # TODO: this should be a game settings
-
 		# Instantiate sub-modes
 		self.game_intro = GameIntro(self.game, priority + 1)
 		self.boring = Boring(self.game, priority + 1)
@@ -30,7 +28,7 @@ class RegularPlay(Scoring_Mode):
 		self.multiball.start_callback = self.multiball_started
 		self.multiball.end_callback = self.multiball_ended
 
-		self.video_mode = ShootingGallery(self.game, priority + 11, self.cow_video_mode_lit)
+		self.video_mode = ShootingGallery(self.game, priority + 11)
 		self.video_mode.on_complete = self.video_mode_complete
 		
 		self.missile_award_mode = MissileAwardMode(game, priority + 10)
@@ -179,7 +177,7 @@ class RegularPlay(Scoring_Mode):
 					self.game.set_status('save ' + str(self.game.trough.num_balls_in_play) + ' balls')
 					self.game.ball_save.start(num_balls_to_save=self.game.trough.num_balls_in_play, time=10, now=True, allow_multiple_saves=True)
 
-			elif self.state == 'mode':
+			elif self.chain.is_active():
 				self.chain.mode.add(10)
 				self.game.set_status('Adding 10 seconds')
 			else:
@@ -247,7 +245,7 @@ class RegularPlay(Scoring_Mode):
 			self.game.coils.shooterR.pulse(50)
 
 	def sw_shooterL_active_for_500ms(self, sw):
-		if self.any_multiball_active() or self.state == 'mode':
+		if self.any_multiball_active() or self.chain.is_active():
 			self.game.coils.shooterL.pulse()
 		elif self.missile_award_lit:
 			self.game.sound.stop_music()
@@ -364,7 +362,7 @@ class RegularPlay(Scoring_Mode):
 		elif award == 'Hold Bonus X':
 			self.game.base_play.hold_bonus_x()
 
-	def award_hurryup_award(self, award):
+	def award_hurry_up_award(self, award):
 		if award == 'all' or award == '100000 points':
 			self.game.score(100000)
 
@@ -372,7 +370,7 @@ class RegularPlay(Scoring_Mode):
 			self.crime_scenes.level_complete()
 
 	def video_mode_complete(self, success):
-		if self.state == 'mode':
+		if self.chain.is_active():
 			self.chain.mode.play_music()
 		else:
 			self.game.sound.stop_music()
@@ -397,7 +395,7 @@ class RegularPlay(Scoring_Mode):
 		for mode in [self, self.boring, self.chain, self.crime_scenes, self.multiball]:
 			self.game.modes.remove(mode)
 		self.reset_modes()
-		self.game.base_play.start_ultimate_challenge(True)
+		self.game.base_play.start_ultimate_challenge()
 
 	#
 	# End of ball
@@ -454,7 +452,7 @@ class GameIntro(Mode):
 	def shoot_again(self):
 		self.game.sound.play_voice('shoot again ' + str(self.game.current_player_index+1))
 		big_font = self.game.fonts['jazz18']
-		self.again_layer = TextLayer(128/2, 9, big_font, "center").set_text('Shoot Again',3)
+		self.again_layer = TextLayer(128/2, 9, big_font, "center").set_text('Shoot Again', 3)
 		self.layer = GroupedLayer(128, 32, [self.again_layer])
 
 	def play_intro(self):

@@ -72,7 +72,7 @@ class BasePlay(Mode):
 			self.game.modes.add(mode)
 
 		if player.getState('supergame', self.game.supergame):
-			self.start_ultimate_challenge(False)
+			self.start_ultimate_challenge()
 		else:
 			self.game.modes.add(self.regular_play)
 
@@ -159,11 +159,11 @@ class BasePlay(Mode):
 	# Ultimate Challenge
 	#
 
-	def start_ultimate_challenge(self, eject):
+	def start_ultimate_challenge(self):
 		# eject is True if ball is in popperR, False if ball is in shooterR
 		self.game.modes.remove(self.regular_play)
 		self.game.modes.add(self.ultimate_challenge)
-		self.ultimate_challenge.start_challenge(eject)
+		self.ultimate_challenge.start_challenge()
 
 	def ultimate_challenge_over(self):
 		self.game.modes.remove(self.ultimate_challenge)	

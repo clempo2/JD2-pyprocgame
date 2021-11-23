@@ -1,9 +1,10 @@
-from procgame.dmd import GroupedLayer, MarkupFrameGenerator, PanningLayer, TextLayer
-from procgame.game import Mode, SwitchStop
+from procgame.dmd import GroupedLayer, MarkupFrameGenerator, PanningLayer, ScriptedLayer, TextLayer
+from procgame.game import SwitchStop
 from procgame.modes import Scoring_Mode
 from random import shuffle
 import locale
 from crimescenes import CrimeSceneBase
+from intro import Introduction
 
 class UltimateChallenge(Scoring_Mode):
 	"""Wizard mode or start of supergame"""
@@ -11,7 +12,9 @@ class UltimateChallenge(Scoring_Mode):
 	def __init__(self, game, priority):
 		super(UltimateChallenge, self).__init__(game, priority)
 
-		self.mode_intro = UltimateIntro(self.game, self.priority+1)
+		self.mode_intro = Introduction(self.game, self.priority+1)
+		self.mode_intro.exit_callback = self.start_level
+		self.frame_gen = MarkupFrameGenerator()
 
 		fire = Fire(game, self.priority+1)
 		mortis = Mortis(game, self.priority+1)
@@ -35,17 +38,25 @@ class UltimateChallenge(Scoring_Mode):
 		self.game.modes.remove(self.mode_list[self.active_mode])
 		self.game.lamps.ultChallenge.disable()
 
-	def start_challenge(self, eject):
+	def start_challenge(self):
 		# called by base play supergame or regular play
-		self.start_intro(eject)
+		self.start_intro()
 		
-	def start_intro(self, eject):
-		self.mode_intro.setup(self.mode_list[self.active_mode], self.start_level, eject)
+	def start_intro(self):
+		self.game.sound.stop_music()
+		self.game.enable_gi(False)
+		self.game.lamps.rightStartFeature.disable()
+		self.game.disable_drop_lamps()
+
+		self.mode_intro.setup(self.mode_list[self.active_mode])
 		self.game.modes.add(self.mode_intro)
 		self.game.enable_flippers(True)
 		self.game.trough.drain_callback = self.game.base_play.ball_drained_callback
 
 	def start_level(self):
+		if self.game.switches.popperR.is_active():
+			# we were started from regular mode, put the ball back in play
+			self.game.base_play.flash_then_pop('flashersRtRamp', 'popperR', 20)
 		self.game.modes.add(self.mode_list[self.active_mode])
 		self.game.sound.play_music('mode', loops=-1)
 
@@ -60,7 +71,7 @@ class UltimateChallenge(Scoring_Mode):
 			if self.active_mode < 4: # fire to death
 				self.game.modes.remove(self.mode_list[self.active_mode])
 				self.active_mode += 1
-				self.start_intro(eject=False)
+				self.start_intro()
 		if self.game.trough.num_balls_in_play <= 1 and self.active_mode == 4: # celebration
 			# wizard mode completed successfully, revert to regular play
 			self.game.modes.remove(self.mode_celebration)
@@ -74,53 +85,22 @@ class UltimateChallenge(Scoring_Mode):
 		return SwitchStop	
 
 
-class UltimateIntro(Mode):
-	"""Display instructions for a wizard mode"""
+class ChallengeBase(Scoring_Mode):
+	"""Base class for all wizard modes"""
 	
 	def __init__(self, game, priority):
-		super(UltimateIntro, self).__init__(game, priority)
-		self.gen = MarkupFrameGenerator()
-		self.delay_time = 5
-		self.exit_callback = None
-		self.instructions_frame = self.gen.frame_for_markup("") # empty
+		super(ChallengeBase, self).__init__(game, priority)
 
-	def mode_started(self):
-		self.game.sound.stop_music()
-		self.game.enable_flippers(False) 
-		self.game.enable_gi(False)
-		self.game.lamps.rightStartFeature.disable()
-		self.game.disable_drop_lamps()
-
-		self.layer = PanningLayer(width=128, height=32, frame=self.instruction_frame, origin=(0,0), translate=(0,1), bounce=False)
-		self.delay(name='finish', event_type=None, delay=self.delay_time, handler=self.finish )
-
-	def mode_stopped(self):
-		self.cancel_delayed('finish')
-		# Leave GI off for Ultimate Challenge
-		self.game.enable_flippers(True) 
-
-	def setup(self, mode, exit_callback, eject):
+	def get_instruction_layer(self, mode):
 		instructions = mode.instructions()
-		self.delay_time = len(instructions) / 16
-		self.instruction_frame = self.gen.frame_for_markup(instructions)
-		self.exit_callback = exit_callback
-		self.eject = eject
-
-	def sw_flipperLwL_active(self, sw):
-		self.finish()
-
-	def sw_flipperLwR_active(self, sw):
-		self.finish()
-
-	def finish(self):
-		self.game.modes.remove(self)
-		if self.eject:
-			# we were started from regular mode, put the ball back in play
-			self.game.base_play.flash_then_pop('flashersRtRamp', 'popperR', 20)
-		self.exit_callback()
+		instruction_frame = self.frame_gen.frame_for_markup(instructions)
+		panning_layer = PanningLayer(width=128, height=32, frame=instruction_frame, origin=(0,0), translate=(0,1), bounce=False)
+		duration = len(instructions) / 16
+		script = [{'seconds':duration, 'layer':panning_layer}]
+		return ScriptedLayer(width=128, height=32, script=script)
 
 
-class DarkJudge(Scoring_Mode):
+class DarkJudge(ChallengeBase):
 	"""Base class for dark judge wizard modes"""
 	
 	def __init__(self, game, priority):
@@ -148,6 +128,7 @@ class DarkJudge(Scoring_Mode):
 		score = self.game.current_player().score
 		text = '00' if score == 0 else locale.format("%d", score, True)
 		self.score_layer.set_text(text)
+
 
 class Fire(DarkJudge, CrimeSceneBase):
 	"""Fire wizard mode"""
@@ -616,7 +597,7 @@ Banish him by shooting the lit crimescene shots before time expires.  Shots slow
 			self.complete_callback()
 
 
-class Celebration(Scoring_Mode):
+class Celebration(ChallengeBase):
 	"""Final multiball wizard mode after all dark judges have been defeated"""
 
 	def __init__(self, game, priority):

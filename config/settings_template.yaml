@@ -91,6 +91,8 @@ Gameplay:
   'Crimescene shot difficulty':
     options: ['easy', 'medium', 'hard']
     default: 'medium'
+  'Cow video mode':
+    options: [false, true]
   'Max extra balls per game':
     options: [0,1,2,3,4,5,99]
     default: 99
