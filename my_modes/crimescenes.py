@@ -346,7 +346,6 @@ class BlockWar(CrimeSceneBase):
 				lamp_name = 'perp' + str(shot+1) + self.lamp_colors[color]
 				style = 'medium' if color < self.shots_required[shot] else 'off'
 				self.game.drive_lamp(lamp_name, style)
-		self.update_center_lamps()
 
 
 class BlockWarBonus(CrimeSceneBase):
@@ -394,4 +393,3 @@ class BlockWarBonus(CrimeSceneBase):
 				lamp_name = 'perp' + str(shot+1) + self.lamp_colors[color]
 				style = 'medium' if self.bonus_shot == shot else 'off'
 				self.game.drive_lamp(lamp_name, style)
-		self.update_center_lamps()

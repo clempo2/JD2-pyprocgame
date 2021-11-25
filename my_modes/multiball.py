@@ -8,21 +8,11 @@ class Multiball(Scoring_Mode):
 		super(Multiball, self).__init__(game, priority)
 		
 		self.deadworld_mod_installed = self.game.user_settings['Machine']['Deadworld mod installed']
-		self.lock_enabled = 0
-		self.num_balls_locked = 0
-		self.num_balls_to_eject = 0
-		self.virtual_locks_needed = 0
-		self.state = 'load'
-		self.paused = False
-		self.num_locks_lit = 0
-		self.num_times_played = 0
-		self.num_left_ramp_shots_hit = 0
-		self.num_left_ramp_shots_needed = 1
-		self.jackpot_lit = False
-		self.lock_level = 1
+
 		self.drops = BasicDropTargetBank(self.game, priority=priority+1, prefix='dropTarget', letters='JUDGE')
-		self.jackpot_collected = False
-		self.delay(name='voice instructions', event_type=None, delay=10, handler=self.voice_instructions)
+		self.drops.on_advance = self.on_drops_advance
+		self.drops.on_completed = self.possibly_light_lock
+		self.drops.auto_reset = True
 
 		font = self.game.fonts['jazz18']
 		self.banner_layer = TextLayer(128/2, 7, font, "center")
@@ -37,19 +27,6 @@ class Multiball(Scoring_Mode):
 				self.game.sound.play_voice('shoot the left ramp')
 
 	def mode_started(self):
-		self.game.coils.globeMotor.disable()
-		self.game.deadworld.initialize()
-		switch_num = self.game.switches['leftRampEnter'].number
-		#self.game.install_switch_rule_coil_pulse(switch_num, 'closed_debounced', 'diverter', 255, True, False)
-		self.game.install_switch_rule_coil_schedule(switch_num, 'closed_debounced', 'diverter', 0x00000fff, 1, True, True, False)
-		switch_num = self.game.switches['leftRampEnterAlt'].number
-		#self.game.install_switch_rule_coil_pulse(switch_num, 'closed_debounced', 'diverter', 255, True, False)
-		self.game.install_switch_rule_coil_schedule(switch_num, 'closed_debounced', 'diverter', 0x00000fff, 1, True, True, False)
-		self.drops.on_advance = self.on_drops_advance
-		self.drops.on_completed = self.possibly_light_lock
-		self.drops.auto_reset = True
-		self.game.modes.add(self.drops)
-		
 		# restore player state
 		player = self.game.current_player()
 		self.state = player.getState('multiball_state', 'load')
@@ -58,6 +35,20 @@ class Multiball(Scoring_Mode):
 		self.num_times_played = player.getState('multiball_num_times_played', 0)
 		self.lock_level = player.getState('multiball_lock_level', 1)
 		self.jackpot_collected = player.getState('multiball_jackpot_collected', False)
+
+		self.lock_enabled = 0
+		self.num_balls_to_eject = 0
+		self.virtual_locks_needed = 0
+		self.paused = False
+		self.num_left_ramp_shots_hit = 0
+		self.num_left_ramp_shots_needed = 1
+		self.jackpot_lit = False
+
+		self.delay(name='voice instructions', event_type=None, delay=10, handler=self.voice_instructions)
+		self.game.coils.globeMotor.disable()
+		self.game.deadworld.initialize()
+		self.install_rule(enable=False)
+		self.game.modes.add(self.drops)
 
 		# Virtual locks are needed when there are more balls physically locked 
 		# than the player has locked through play.  This happens when
@@ -98,6 +89,14 @@ class Multiball(Scoring_Mode):
 		self.cancel_delayed(name='voice instructions')
 		self.game.coils.flasherGlobe.disable()
 		self.game.modes.remove(self.drops)
+
+	def install_rule(self, enable):
+		switch_num = self.game.switches['leftRampEnter'].number
+		#self.game.install_switch_rule_coil_pulse(switch_num, 'closed_debounced', 'diverter', 255, True, enable)
+		self.game.install_switch_rule_coil_schedule(switch_num, 'closed_debounced', 'diverter', 0x00000fff, 1, True, True, enable)
+		switch_num = self.game.switches['leftRampEnterAlt'].number
+		#self.game.install_switch_rule_coil_pulse(switch_num, 'closed_debounced', 'diverter', 255, True, enable)
+		self.game.install_switch_rule_coil_schedule(switch_num, 'closed_debounced', 'diverter', 0x00000fff, 1, True, True, enable)
 
 	def on_drops_advance(self, mode):
 		pass
@@ -179,24 +178,14 @@ class Multiball(Scoring_Mode):
 	def disable_lock(self):
 		self.game.deadworld.disable_lock()
 		self.lock_enabled = 0
-		switch_num = self.game.switches['leftRampEnter'].number
-		#self.game.install_switch_rule_coil_pulse(switch_num, 'closed_debounced', 'diverter', 255, True, False)
-		self.game.install_switch_rule_coil_schedule(switch_num, 'closed_debounced', 'diverter', 0x00000fff, 1, True, True, False)
-		switch_num = self.game.switches['leftRampEnterAlt'].number
-		#self.game.install_switch_rule_coil_pulse(switch_num, 'closed_debounced', 'diverter', 255, True, False)
-		self.game.install_switch_rule_coil_schedule(switch_num, 'closed_debounced', 'diverter', 0x00000fff, 1, True, True, False)
+		self.install_rule(enable=False)
 
 	def enable_lock(self):
 		self.game.sound.play_voice('locks lit')
 		self.game.deadworld.enable_lock()
 		self.game.coils.flasherGlobe.schedule(schedule=0x0000AAAA, cycle_seconds=2, now=True)
 		self.lock_enabled = True
-		switch_num = self.game.switches['leftRampEnter'].number
-		#self.game.install_switch_rule_coil_pulse(switch_num, 'closed_debounced', 'diverter', 255, True, True)
-		self.game.install_switch_rule_coil_schedule(switch_num, 'closed_debounced', 'diverter', 0x00000fff, 1, True, True, True)
-		switch_num = self.game.switches['leftRampEnterAlt'].number
-		#self.game.install_switch_rule_coil_pulse(switch_num, 'closed_debounced', 'diverter', 255, True, True)
-		self.game.install_switch_rule_coil_schedule(switch_num, 'closed_debounced', 'diverter', 0x00000fff, 1, True, True, True)
+		self.install_rule(enable=True)
 		
 	def enable_virtual_lock(self):
 		self.game.deadworld.enable_lock()
@@ -252,7 +241,7 @@ class Multiball(Scoring_Mode):
 				if self.deadworld_mod_installed:
 					# Use stealth launch so another ball isn't counted in play.
 					self.game.ball_save.callback = None
-					self.game.trough.launch_balls(1,None,stealth=True)
+					self.game.trough.launch_balls(1, None, stealth=True)
 				else:
 					self.game.deadworld.eject_balls(1)
 				
@@ -261,7 +250,7 @@ class Multiball(Scoring_Mode):
 			elif self.deadworld_mod_installed:
 				# Use stealth launch so another ball isn't counted in play.
 				self.game.ball_save.callback = None
-				self.game.trough.launch_balls(1,None,stealth=True)
+				self.game.trough.launch_balls(1, None, stealth=True)
 			else:
 				self.game.deadworld.eject_balls(1)
 
@@ -282,9 +271,7 @@ class Multiball(Scoring_Mode):
 				if self.lock_level == 1:
 					self.num_locks_lit = 3
 					if self.deadworld_mod_installed:
-						self.virtual_locks_needed = \
-						(self.game.deadworld.num_balls_locked -
-							dw_balls_locked_adj)
+						self.virtual_locks_needed = (self.game.deadworld.num_balls_locked - dw_balls_locked_adj)
 				else:
 					self.num_locks_lit += 1
 					# Use calculations if deadwolrd is installed.
@@ -311,10 +298,9 @@ class Multiball(Scoring_Mode):
 			if self.virtual_locks_needed > 0:
 				self.num_balls_locked += 1
 				self.virtual_locks_needed -= 1
-				if self.virtual_locks_needed == 0 and \
-					self.num_balls_locked < self.num_locks_lit:
+				if (self.virtual_locks_needed == 0 and
+						self.num_balls_locked < self.num_locks_lit):
 					self.enable_lock()
-
 		elif self.state == 'multiball':
 			if not self.jackpot_lit:
 				self.num_left_ramp_shots_hit += 1
@@ -335,10 +321,8 @@ class Multiball(Scoring_Mode):
 				if self.num_locks_lit >= i and not self.paused:
 					if self.num_balls_locked >= i:
 						self.game.lamps[lampname].pulse(0)
-					elif self.num_balls_locked < i:
-						self.game.lamps[lampname].schedule(schedule=0x00ff00ff, cycle_seconds=0, now=True)
 					else:
-						self.game.lamps[lampname].disable()
+						self.game.lamps[lampname].schedule(schedule=0x00ff00ff, cycle_seconds=0, now=True)
 				else:
 					self.game.lamps[lampname].disable()
 	

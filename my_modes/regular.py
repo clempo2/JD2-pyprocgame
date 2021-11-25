@@ -8,7 +8,6 @@ from multiball import Multiball
 from boring import Boring
 from skillshot import SkillShot
 from missile_award import MissileAwardMode
-from shooting_gallery import ShootingGallery
 
 class RegularPlay(Scoring_Mode):
 	"""Controls all play except ultimate challenge"""
@@ -27,20 +26,16 @@ class RegularPlay(Scoring_Mode):
 		self.multiball = Multiball(self.game, priority + 1)
 		self.multiball.start_callback = self.multiball_started
 		self.multiball.end_callback = self.multiball_ended
-
-		self.video_mode = ShootingGallery(self.game, priority + 11)
-		self.video_mode.on_complete = self.video_mode_complete
 		
 		self.missile_award_mode = MissileAwardMode(game, priority + 10)
-		self.missile_award_mode.callback = self.award_missile_award
 
 	def reset_modes(self):
 		self.state = 'idle'
 		self.chain.reset()
 		self.crime_scenes.reset()
 		self.multiball.reset_jackpot_collected()
+		self.missile_award_mode.reset()
 		self.mystery_lit = False
-		self.disable_missile_award()
 		self.game.update_lamps()
 
 	def mode_started(self):
@@ -48,8 +43,6 @@ class RegularPlay(Scoring_Mode):
 		player = self.game.current_player()
 		self.state = player.getState('state', 'idle')
 		self.mystery_lit = player.getState('mystery_lit', False)
-		self.missile_award_lit = player.getState('missile_award_lit', False)
-		self.video_mode_lit = player.getState('video_mode_lit', True)
 
 		# disable auto-plunging for the start of ball
 		# Force player to hit the right Fire button.
@@ -59,15 +52,13 @@ class RegularPlay(Scoring_Mode):
 		self.skill_shot_added = False
 		self.mystery_lit = True
 
-		# Add modes that are always active
-		self.game.modes.add(self.chain)
-		self.game.modes.add(self.crime_scenes)
+		for mode in [self.chain, self.crime_scenes, self.missile_award_mode]:
+			self.game.modes.add(mode)
 		
 		if self.state != 'challenge_ready':
 			self.game.modes.add(self.multiball)
 
-		self.missile_award_lit_save = self.missile_award_lit
-		self.setup_next_mode(True)
+		self.setup_next_mode()
 
 		for flasher in ['flasherFear', 'flasherMortis', 'flasherDeath', 'flasherFire']:
 			self.game.coils[flasher].disable()
@@ -87,9 +78,7 @@ class RegularPlay(Scoring_Mode):
 		# save player state
 		player = self.game.current_player()
 		player.setState('state', self.state)
-		player.setState('video_mode_lit', self.video_mode_lit)
 		player.setState('mystery_lit', self.mystery_lit)
-		player.setState('missile_award_lit', self.missile_award_lit or self.missile_award_lit_save)
 
 	def sw_popperR_active_for_200ms(self, sw):
 		if not self.any_multiball_active():
@@ -104,14 +93,11 @@ class RegularPlay(Scoring_Mode):
 		self.game.update_lamps()
 
 	# called right after a mode has ended to decide what to do next
-	def setup_next_mode(self, after_multiball=False):
+	def setup_next_mode(self):
 		# don't offer a new mode when multiball is still running
 		if not self.any_multiball_active():
 			self.game.sound.fadeout_music()
 			self.game.sound.play_music('background', loops=-1)
-			
-			if after_multiball:
-				self.restore_missile_award()
 
 			if self.is_ultimate_challenge_ready():
 				# shoot the right popper to start the finale 
@@ -127,7 +113,7 @@ class RegularPlay(Scoring_Mode):
 				self.state = 'chain_complete'
 
 	def crime_scenes_completed(self):
-		self.setup_next_mode(True)
+		self.setup_next_mode()
 
 	#
 	# Message
@@ -184,7 +170,7 @@ class RegularPlay(Scoring_Mode):
 				self.game.ball_save.callback = self.ball_save_callback
 				self.game.ball_save.start(num_balls_to_save=1, time=10, now=True, allow_multiple_saves=True)
 				self.game.set_status('+10 second ball saver')
-				self.light_missile_award()
+				self.missile_award_mode.light_missile_award()
 
 	#
 	# Fire Buttons
@@ -196,11 +182,6 @@ class RegularPlay(Scoring_Mode):
 			if self.ball_starting:
 				self.game.sound.stop_music()
 				self.game.sound.play_music('background', loops=-1)
-
-	def sw_fireL_active(self, sw):
-		if (self.game.switches.shooterL.is_active() and
-		        not self.any_multiball_active() and self.missile_award_mode.active):
-			self.game.coils.shooterL.pulse(50)
 
 	#
 	# Shooter Lanes
@@ -245,18 +226,7 @@ class RegularPlay(Scoring_Mode):
 			self.game.coils.shooterR.pulse(50)
 
 	def sw_shooterL_active_for_500ms(self, sw):
-		if self.any_multiball_active() or self.chain.is_active():
-			self.game.coils.shooterL.pulse()
-		elif self.missile_award_lit:
-			self.game.sound.stop_music()
-			self.disable_missile_award()
-			if self.video_mode_lit:
-				self.game.modes.add(self.video_mode)
-				self.video_mode_lit = False
-			else:
-				self.game.modes.add(self.missile_award_mode)
-		else:
-			self.light_missile_award()
+		if self.any_multiball_active():
 			self.game.coils.shooterL.pulse()
 
 	def sw_shooterL_inactive_for_200ms(self, sw):
@@ -269,9 +239,6 @@ class RegularPlay(Scoring_Mode):
 	def update_lamps(self):
 		style = 'on' if self.mystery_lit else 'off'
 		self.game.drive_lamp('mystery', style)
-
-		style = 'medium' if self.missile_award_lit else 'off'
-		self.game.drive_lamp('airRaid', style)
 
 		if self.state == 'idle':
 			if self.game.switches.popperR.is_inactive() and not self.any_multiball_active():
@@ -312,55 +279,16 @@ class RegularPlay(Scoring_Mode):
 			# Light mystery once for free.
 			self.game.drive_lamp('mystery', 'on')
 			self.mystery_lit = True
-			self.save_missile_award()
+			self.game.modes.remove(self.missile_award_mode)
 
 	def multiball_ended(self):
-		self.setup_next_mode(True)
+		if not self.any_multiball_active():
+			self.game.modes.add(self.missile_award_mode)
+		self.setup_next_mode()
 	
 	#
 	# Awards
 	#
-
-	def light_missile_award(self):
-		self.missile_award_lit_save = False
-		self.missile_award_lit = True
-		self.game.drive_lamp('airRaid', 'medium')
-	
-	# Disable missile award and don't save it for later
-	def disable_missile_award(self):
-		self.missile_award_lit_save = False
-		self.missile_award_lit = False
-		self.game.drive_lamp('airRaid', 'off')
-
-	# Disable missile award but save it for later if lit.
-	def save_missile_award(self):
-		if self.missile_award_lit:
-			self.missile_award_lit_save = True
-			self.missile_award_lit = False
-			self.game.drive_lamp('airRaid', 'off')
-
-	# Re-enable missile_award if it was lit before multiball started
-	def restore_missile_award(self):
-		if self.missile_award_lit_save:
-			self.light_missile_award()
-
-	# Award missile award indicated by award param.
-	def award_missile_award(self, award):
-		self.game.sound.play_music('background', loops=-1)
-		if award.endswith('Points', 0) != -1:
-			award_words = award.rsplit(' ')
-			self.game.score(int(award_words[0]))
-			self.game.base_play.show_on_display(str(award_words[0]) + ' Points', None, 'mid')
-			self.game.set_status(award)
-		elif award == 'Light Extra Ball':
-			self.game.base_play.light_extra_ball()
-		elif award == 'Advance Crime Scenes':
-			self.crime_scenes.level_complete()
-			self.game.base_play.show_on_display('Crimes Adv', None, 'mid')
-		elif award == 'Bonus +1X':
-			self.game.base_play.inc_bonus_x()
-		elif award == 'Hold Bonus X':
-			self.game.base_play.hold_bonus_x()
 
 	def award_hurry_up_award(self, award):
 		if award == 'all' or award == '100000 points':
@@ -368,17 +296,6 @@ class RegularPlay(Scoring_Mode):
 
 		if award == 'all' or award == 'crimescenes':
 			self.crime_scenes.level_complete()
-
-	def video_mode_complete(self, success):
-		if self.chain.is_active():
-			self.chain.mode.play_music()
-		else:
-			self.game.sound.stop_music()
-		self.game.sound.play_music('background', loops=-1)
-		self.game.modes.remove(self.video_mode)
-		self.game.coils.shooterL.pulse()
-		if success:
-			self.game.base_play.light_extra_ball()
 
 	#
 	# Ultimate Challenge

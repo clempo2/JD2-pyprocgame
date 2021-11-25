@@ -3,15 +3,16 @@ from procgame.game import Mode
 from random import randint
 
 class ShootingGallery(Mode):
-	def __init__(self, game, priority):
+	def __init__(self, game, priority, video_mode_setting):
 		super(ShootingGallery, self).__init__(game, priority)
-		self.cow_mode = self.game.user_settings['Gameplay']['Cow video mode']
-		
-		gallery_anim = self.game.animations['jdpeople']
-		self.image_frames = gallery_anim.frames[0].create_frames_from_grid(6, 2)
-		cows_anim = self.game.animations['cows']
-		self.cow_image_frames = cows_anim.frames[0].create_frames_from_grid(4, 1)
-		self.scopeandshot_anim = self.game.animations['scopeandshot'].frames
+
+		self.cow_mode = video_mode_setting == 'cow'
+		if self.cow_mode:
+			cows_anim = self.game.animations['cows']
+			self.cow_image_frames = cows_anim.frames[0].create_frames_from_grid(4, 1)
+		else:
+			gallery_anim = self.game.animations['jdpeople']
+			self.image_frames = gallery_anim.frames[0].create_frames_from_grid(6, 2)
 
 		self.on_complete = None
 
