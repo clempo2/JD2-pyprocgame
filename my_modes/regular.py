@@ -7,7 +7,7 @@ from crimescenes import CrimeScenes
 from multiball import Multiball
 from boring import Boring
 from skillshot import SkillShot
-from missile_award import MissileAwardMode
+from missile import MissileAwardMode
 
 class RegularPlay(Scoring_Mode):
 	"""Controls all play except ultimate challenge"""

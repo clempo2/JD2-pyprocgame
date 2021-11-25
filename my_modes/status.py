@@ -15,16 +15,17 @@ class StatusReport(Mode):
 		extra_ball_layer = TextLayer(128/2, 19, tiny_font, "center").set_text('Extra Balls: ' + str(player.extra_balls))
 		main_title_layer = GroupedLayer(128, 32, [report_title_layer, extra_ball_layer])
 
-		self.report_layers = [main_title_layer]
-		self.report_layers.extend(self.game.base_play.regular_play.chain.get_status_layers())
-		self.report_layers.extend(self.game.base_play.regular_play.crimescenes.get_status_layers())
-		self.report_layers.extend(self.game.base_play.combos.get_status_layers())
+		self.report_layers = ([main_title_layer] +
+			self.game.base_play.regular_play.chain.get_status_layers() +
+			self.game.base_play.regular_play.crimescenes.get_status_layers() +
+			self.game.base_play.combos.get_status_layers())
 		
 		self.index = 0
 		self.index_max = len(self.report_layers) - 1
 		self.update_display()
 		
 	def mode_stopped(self):
+		self.cancel_delayed('delayed_progression')
 		self.report_layers = []
 
 	def update_display(self):
@@ -57,5 +58,4 @@ class StatusReport(Mode):
 			self.exit()
 
 	def exit(self):
-		self.cancel_delayed('delayed_progression')
 		self.game.modes.remove(self)

@@ -1,7 +1,7 @@
 from procgame.dmd import GroupedLayer, TextLayer
 from procgame.game import Mode
 from random import randint
-from shooting_gallery import ShootingGallery
+from videomode import ShootingGallery
 
 class MissileAwardMode(Mode):
 	"""Choose an award while the ball sits in the left shooter lane"""
