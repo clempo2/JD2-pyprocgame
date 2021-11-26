@@ -1,36 +1,68 @@
-from procgame.dmd import GroupedLayer, TextLayer
-from procgame.game import Mode
+# Copied from PyProcGameHD-SkeletonGame
+# Copyright (c) 2014-2015 Michael Ocean and Josh Kugler
+
+from procgame.game import Mode, SwitchStop
+import time
+
+class Tilted(Mode):
+	""" Consumes all switch events to block scoring """
+	def __init__(self, game):
+		super(Tilted, self).__init__(game, priority=99999)
+		always_seen_switches = self.game.switches.items_tagged('tilt_visible')
+		always_seen_switches.append(self.game.switches.items_tagged('trough'))
+		for sw in [x for x in self.game.switches if x.name not in self.game.trough.position_switchnames and x.name not in always_seen_switches]:
+			self.add_switch_handler(name=sw.name, event_type='active', delay=None, handler=self.ignore_switch)
+
+	def ignore_switch(self, sw):
+		return SwitchStop
+
+	def mode_stopped(self):
+		self.game.game_tilted = False
+		self.game.tilt_mode.tilt_reset()
 
 class TiltMonitorMode(Mode):
 	"""Monitor tilt warnings and slam tilt"""
 
 	def __init__(self, game, priority, tilt_sw=None, slam_tilt_sw=None):
 		super(TiltMonitorMode, self).__init__(game, priority)
-		font_big = self.game.fonts['jazz18']
-		self.text_layer = TextLayer(128/2, 7, font_big, "center")
+		self.tilt_sw = tilt_sw
+		self.slam_tilt_sw = slam_tilt_sw
+		self.game.tilted_mode = Tilted(game)
+
 		if tilt_sw:
 			self.add_switch_handler(name=tilt_sw, event_type='active', delay=None, handler=self.tilt_handler)
 		if slam_tilt_sw:
 			self.add_switch_handler(name=slam_tilt_sw, event_type='active', delay=None, handler=self.slam_tilt_handler)
-		self.num_tilt_warnings = 0
+		self.num_tilt_warnings = 2
+		self.tilt_bob_settle_time = 2.0
 		self.tilted = False
+
+	def tilt_reset(self):
+		self.times_warned = 0
+		self.tilted = False
+		self.previous_warning_time = None
 
 	def mode_started(self):
-		self.times_warned = 0
-		self.layer = None
-		self.tilted = False
+		self.tilt_reset()
+		
+	def mode_stopped(self):
+		self.game.modes.remove(self.tilted_mode)
 
 	def tilt_handler(self, sw):
+		now = time.time()
+		if(self.previous_warning_time is not None) and ((now - self.previous_warning_time) < self.tilt_bob_settle_time):
+			# tilt bob still swinging from previous warning
+			return
+		else:
+			self.previous_warning_time = now
+
 		if self.times_warned == self.num_tilt_warnings:
 			if not self.tilted:
 				self.tilted = True
 				self.tilt_callback()
 		else:
-			self.game.sound.stop('tilt warning')
 			self.times_warned += 1
-			self.game.sound.play('tilt warning')
-			self.text_layer.set_text('Warning', 3)
-		self.layer = GroupedLayer(128, 32, [self.text_layer])
+			self.game.tilt_warning(self.times_warned)
 
 	def slam_tilt_handler(self, sw):
 		self.slam_tilt_callback()
@@ -39,33 +71,55 @@ class TiltMonitorMode(Mode):
 		""" calls the specified `fn` if it has been at least `secs_since_bob_tilt`
 			(make sure the tilt isn't still swaying)
 		"""
+
 		if self.tilt_sw.time_since_change() < secs_since_bob_tilt:
 			self.delay(name='tilt_bob_settle', event_type=None, delay=secs_since_bob_tilt, handler=self.tilt_delay, param=fn)
 		else:
 			return fn()
 
-	def tilt_callback(self):
-		self.game.sound.fadeout_music()
-		self.game.sound.play('tilt')
-		self.text_layer.set_text('TILT')
-		self.game.enable_flippers(False) 
-		self.game.ball_save.disable()
-		self.game.ball_search.disable()
+	# Reset game on slam tilt
+	def slam_tilt_callback(self):
+		# Disable flippers so the ball will drain.
+		self.game.enable_flippers(enable=False)
 
-		# all lamps off.
+		# Make sure ball won't be saved when it drains.
+		self.game.ball_save.disable()
+
+		# Ensure all lamps are off.
 		for lamp in self.game.lamps:
 			lamp.disable()
 
 		# Kick balls out of places it could be stuck.
-		if self.game.switches.shooterR.is_active():
-			self.game.coils.shooterR.pulse(50)
-		if self.game.switches.shooterL.is_active():
-			self.game.coils.shooterL.pulse(20)
-		
-	def slam_tilt_callback(self):
-		self.game.sound.play('slam_tilt')
-		self.text_layer.set_text('SLAM TILT')
-		self.layer = GroupedLayer(128, 32, [self.text_layer])
+		# TODO: ball search!!
+		self.tilted = True
 
-		self.game.sound.fadeout_music()
-		self.game.reset()
+		self.game.modes.add(self.game.tilted_mode)
+		#play sound
+		#play video
+		self.game.slam_tilted()
+
+		return True
+
+	def tilt_callback(self):
+		# Process tilt.
+		# First check to make sure tilt hasn't already been processed once.
+		# No need to do this stuff again if for some reason tilt already occurred.
+		if not self.tilted:
+			# Disable flippers so the ball will drain.
+			self.game.enable_flippers(enable=False)
+
+			# Make sure ball won't be saved when it drains.
+			self.game.ball_save.disable()
+
+			# Ensure all lamps are off.
+			for lamp in self.game.lamps:
+				lamp.disable()
+
+			# Kick balls out of places it could be stuck.
+			# TODO: ball search!!
+			self.tilted = True
+
+			self.game.modes.add(self.game.tilted_mode)
+			#play sound
+			#play video
+			self.game.tilted()

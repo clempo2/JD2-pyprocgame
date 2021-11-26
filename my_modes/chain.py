@@ -103,11 +103,9 @@ class Chain(Mode):
 		self.mode = self.modes_not_attempted[self.modes_not_attempted_ptr]
 		self.mode_intro.setup(self.mode)
 		self.game.modes.add(self.mode_intro)
-		self.game.base_play.regular_play.intro_playing = True
 
 	# activate a chain mode after showing the instructions
 	def activate_chain_mode(self):
-		self.game.base_play.regular_play.intro_playing = False
 		self.game.enable_gi(True)
 
 		# Update the mode lists.

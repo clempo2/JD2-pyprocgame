@@ -190,13 +190,9 @@ class JDGame(BasicGame):
 		self.shooting_again = False
 
 		# Add the basic modes to the mode queue
-		self.modes.add(self.switch_monitor)
-		self.modes.add(self.attract_mode)
-		self.modes.add(self.ball_search)
-		self.modes.add(self.deadworld)
-		self.modes.add(self.ball_save)
-		self.modes.add(self.trough)
-		self.modes.add(self.flipper_workaround_mode)
+		for mode in [self.switch_monitor, self.attract_mode, self.ball_search,
+						self.deadworld, self.ball_save, self.trough, self.flipper_workaround_mode]:
+			self.modes.add(mode)
 
 		self.ball_search.disable()
 		self.ball_save.disable()
@@ -204,6 +200,10 @@ class JDGame(BasicGame):
 
 		# Make sure flippers are off, especially for user initiated resets.
 		self.enable_flippers(enable=False)
+
+	def remove_all_modes(self):
+		for m in self.modes:
+			self.modes.remove(m)
 		
 	def load_settings_and_stats(self):
 		self.load_settings(settings_template_path, settings_path)
@@ -213,42 +213,28 @@ class JDGame(BasicGame):
 		self.load_game_data(game_data_template_path, game_data_path)
 
 		self.balls_per_game = self.user_settings['Gameplay']['Balls per game']
-
 		self.score_display.set_left_players_justify(self.user_settings['Display']['Left side score justify'])
 
 		# High Score stuff
-		self.highscore_categories = []
+		classicCategory = HighScoreCategory()
+		classicCategory.game_data_key = 'ClassicHighScoreData'
 		
-		cat = HighScoreCategory()
-		cat.game_data_key = 'ClassicHighScoreData'
-		self.highscore_categories.append(cat)
-		
-		cat = HighScoreCategory()
-		cat.game_data_key = 'CrimeScenesHighScoreData'
-		cat.titles = ['Crimescene Champ']
-		cat.score_for_player = lambda player: player.getState('crimescenes_total_levels', 0)
-		cat.score_suffix_singular = ' level'
-		cat.score_suffix_plural = ' levels'
-		self.highscore_categories.append(cat)
-		
-		cat = HighScoreCategory()
-		cat.game_data_key = 'InnerLoopsHighScoreData'
-		cat.titles = ['Inner Loop Champ']
-		cat.score_for_player = lambda player: player.getState('best_inner_loops', 0)
-		cat.score_suffix_singular = ' loop'
-		cat.score_suffix_plural = ' loops'
-		self.highscore_categories.append(cat)
+		crimeScenesCategory = self.createHighScoreCategory('CrimeScenesHighScoreData', 'Crimescene Champ', 'crimescenes_total_levels', ' level')
+		innerLoopsCategory = self.createHighScoreCategory('InnerLoopsHighScoreData', 'Inner Loop Champ', 'best_inner_loops', ' loop')
+		outerLoopsCategory = self.createHighScoreCategory('OuterLoopsHighScoreData', 'Outer Loop Champ', 'best_outer_loops', ' loop')
 
-		cat = HighScoreCategory()
-		cat.game_data_key = 'OuterLoopsHighScoreData'
-		cat.titles = ['Outer Loop Champ']
-		cat.score_for_player = lambda player: player.getState('best_outer_loops', 0)
-		cat.score_suffix_singular = ' loop'
-		cat.score_suffix_plural = ' loops'
-		self.highscore_categories.append(cat)
-		
+		self.highscore_categories = [classicCategory, crimeScenesCategory, innerLoopsCategory, outerLoopsCategory]
 		for category in self.highscore_categories:
 			category.load_from_game(self)
+
+	def createHighScoreCategory(self, key, title, stateKey, suffix):
+		category = HighScoreCategory()
+		category.game_data_key = key
+		category.titles = [title]
+		category.score_for_player = lambda player: player.getState(stateKey, 0)
+		category.score_suffix_singular = suffix
+		category.score_suffix_plural = suffix + 's'
+		return category
 
 	def save_settings(self):
 		super(JDGame, self).save_settings(settings_path)
@@ -261,8 +247,8 @@ class JDGame(BasicGame):
 			stop music, stop lampshows, disable flippers
 			then add the service mode.
 		"""
-		for m in self.modes:
-			self.modes.remove(m)
+
+		self.remove_all_modes()
 
 		self.lampctrl.stop_show()
 		for lamp in self.lamps:
@@ -348,6 +334,28 @@ class JDGame(BasicGame):
 		seq_manager.logic = CategoryLogic(game=self, categories=self.highscore_categories)
 		seq_manager.ready_handler = self.highscore_entry_ready_to_prompt
 		self.modes.add(seq_manager)
+
+	def tilt_warning(self, times_warned):
+		self.sound.play('tilt warning')
+		self.set_status('Warning')
+
+	def slam_tilted(self):
+		self.sound.fadeout_music()
+		self.sound.play('slam_tilt')
+		self.set_status('SLAM TILT')
+		self.remove_all_modes()
+		self.reset()
+
+	def tilted(self):
+		self.sound.fadeout_music()
+		self.sound.play('tilt')
+		self.set_status('TILT')
+
+		# Kick balls out of places it could be stuck.
+		if self.switches.shooterR.is_active():
+			self.coils.shooterR.pulse(50)
+		if self.switches.shooterL.is_active():
+			self.coils.shooterL.pulse(20)
 
 	def highscore_entry_ready_to_prompt(self, mode, prompt):
 		self.sound.play_voice('high score')
