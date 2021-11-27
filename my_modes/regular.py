@@ -30,90 +30,34 @@ class RegularPlay(Scoring_Mode):
 		self.missile_award_mode = MissileAwardMode(game, priority + 10)
 
 	def reset_modes(self):
-		self.state = 'idle'
-		self.chain.reset()
-		self.crime_scenes.reset()
-		self.multiball.reset_jackpot_collected()
-		self.missile_award_mode.reset()
-		self.mystery_lit = False
+		for mode in [self.chain, self.crime_scenes, self.multiball, self.missile_award_mode]:
+			mode.reset()
+		
+		# reset RegularPlay itself
+		self.game.setPlayerState('mystery_lit', False)
 		self.game.update_lamps()
 
 	def mode_started(self):
-		# restore player state
-		player = self.game.current_player()
-		self.mystery_lit = player.getState('mystery_lit', False)
+		self.mystery_lit = self.game.getPlayerState('mystery_lit', False)
 
-		# disable auto-plunging for the start of ball
-		# Force player to hit the right Fire button.
+		# Force player to hit the right Fire button for the start of ball
 		self.auto_plunge = False
-
 		self.ball_starting = True
 		self.skill_shot_added = False
-		self.mystery_lit = True
 
 		for mode in [self.chain, self.crime_scenes, self.multiball, self.missile_award_mode]:
 			self.game.modes.add(mode)
 
 		self.setup_next_mode()
 
-		for flasher in ['flasherFear', 'flasherMortis', 'flasherDeath', 'flasherFire']:
-			self.game.coils[flasher].disable()
 		self.game.enable_gi(True)
 		self.game.update_lamps()
 
 	def mode_stopped(self):
-		# Remove modes from the mode Q
 		for mode in [self.boring, self.skill_shot, self.chain, self.crime_scenes, self.multiball]:
 			self.game.modes.remove(mode)
 
-		# Disable all flashers.
-		for coil in self.game.coils:
-			if coil.name.startswith('flasher', 0):
-				coil.disable()
-
-		# save player state
-		player = self.game.current_player()
-		player.setState('mystery_lit', self.mystery_lit)
-
-	def sw_popperR_active_for_200ms(self, sw):
-		if not self.any_multiball_active():
-			if self.state == 'idle':
-				self.state = 'busy'
-				self.chain.start_chain_mode()
-			elif self.state == 'challenge_ready':
-				self.state = 'busy'
-				self.start_ultimate_challenge()
-			else:
-				self.popperR_eject()
-		else:
-			self.popperR_eject()
-		self.game.update_lamps()
-
-	# called right after a mode has ended to decide the next state
-	def setup_next_mode(self):
-		if self.any_multiball_active() or self.chain.is_active():
-			# don't offer a new mode when multiball or chain mode still running
-			# this happens when multiball and chain mode were stacked and one of them just ended
-			self.state = 'busy'
-		else:
-			self.game.sound.fadeout_music()
-			self.game.sound.play_music('background', loops=-1)
-
-			if self.is_ultimate_challenge_ready():
-				# player needs to shoot the right popper to start the finale 
-				self.state = 'challenge_ready'
-				self.game.modes.remove(self.multiball)
-				self.game.lamps.ultChallenge.schedule(schedule=0x00ff00ff, cycle_seconds=0, now=True)
-				self.game.lamps.rightStartFeature.schedule(schedule=0x00ff00ff, cycle_seconds=0, now=True)
-			elif not self.chain.is_complete():
-				# player needs to shoot the right popper to start the next chain mode 
-				self.state = 'idle'
-				self.game.lamps.rightStartFeature.schedule(schedule=0x00ff00ff, cycle_seconds=0, now=True)
-			else:
-				self.state = 'chain_complete'
-
-	def crime_scenes_completed(self):
-		self.setup_next_mode()
+		self.game.setPlayerState('mystery_lit', self.mystery_lit)
 
 	#
 	# Message
@@ -134,8 +78,97 @@ class RegularPlay(Scoring_Mode):
 			self.game.base_play.show_on_display(text, score, 'high')
 
 	#
+	# submodes
+	#
+	
+	# called right after a mode has ended to decide the next state
+	def setup_next_mode(self):
+		# a mode could still be running if modes were stacked, in that case do nothing and stay 'busy'
+		if not (self.any_multiball_active() or self.chain.is_active()):
+			self.game.sound.fadeout_music()
+			self.game.sound.play_music('background', loops=-1)
+
+			if self.is_ultimate_challenge_ready():
+				# player needs to shoot the right popper to start the finale 
+				self.state = 'challenge_ready'
+				self.game.modes.remove(self.multiball)
+				self.game.lamps.ultChallenge.schedule(schedule=0x00ff00ff, cycle_seconds=0, now=True)
+				self.game.lamps.rightStartFeature.schedule(schedule=0x00ff00ff, cycle_seconds=0, now=True)
+			elif not self.chain.is_complete():
+				# player needs to shoot the right popper to start the next chain mode 
+				self.state = 'chain_ready'
+				self.game.lamps.rightStartFeature.schedule(schedule=0x00ff00ff, cycle_seconds=0, now=True)
+			else:
+				self.state = 'chain_complete'
+
+	# starts a mode if a mode is available
+	def sw_popperR_active_for_200ms(self, sw):
+		if self.state == 'chain_ready':
+			self.state = 'busy'
+			self.chain.start_chain_mode()
+		elif self.state == 'challenge_ready':
+			self.state = 'busy'
+			self.start_ultimate_challenge()
+		else: # state 'busy' or 'chain_complete'
+			self.popperR_eject()
+		self.game.update_lamps()
+
+	def crime_scenes_completed(self):
+		self.setup_next_mode()
+
+	def chain_mode_completed(self):
+		self.setup_next_mode()
+
+	#
+	# Multiball
+	#
+	
+	def any_multiball_active(self):
+		return self.multiball.is_active() or self.crime_scenes.is_multiball_active()
+
+	def multiball_started(self):
+		# Make sure no other multiball was already active before preparing for multiball.
+		# One multiball is the caller, so if both are active it means the other multiball was already active
+		if not (self.multiball.is_active() and self.crime_scenes.is_multiball_active()):
+			self.state = 'busy'
+			self.game.sound.fadeout_music()
+			self.game.sound.play_music('multiball', loops=-1)
+
+			# No modes can be started when multiball is active
+			self.game.lamps.rightStartFeature.disable()
+			# Light mystery once for free.
+			self.light_mystery()
+			self.game.modes.remove(self.missile_award_mode)
+
+	def multiball_ended(self):
+		if not self.any_multiball_active():
+			self.game.modes.add(self.missile_award_mode)
+		self.setup_next_mode()
+
+	#
+	# Ultimate Challenge
+	#
+	
+	def is_ultimate_challenge_ready(self):
+		# 3 Criteria for finale
+		return (self.multiball.jackpot_collected and
+				self.crime_scenes.is_complete() and
+				self.chain.is_complete())
+
+	def start_ultimate_challenge(self):
+		self.game.lamps.rightStartFeature.disable()
+		for mode in [self.boring, self.chain, self.crime_scenes, self.multiball, self]:
+			self.game.modes.remove(mode)
+		self.reset_modes()
+		self.game.base_play.start_ultimate_challenge()
+
+	#
 	# Mystery
 	#
+
+	def light_mystery(self):
+		self.game.drive_lamp('mystery', 'on')
+		self.mystery_lit = True
 	
 	def sw_captiveBall1_active(self, sw):
 		self.game.sound.play('meltdown')
@@ -145,8 +178,7 @@ class RegularPlay(Scoring_Mode):
 
 	def sw_captiveBall3_active(self, sw):
 		self.game.sound.play('meltdown')
-		self.game.drive_lamp('mystery', 'on')
-		self.mystery_lit = True
+		self.light_mystery()
 		self.game.base_play.inc_bonus_x()
 
 	def sw_mystery_active(self, sw):
@@ -189,7 +221,6 @@ class RegularPlay(Scoring_Mode):
 	
 	def sw_shooterR_inactive_for_300ms(self,sw):
 		self.game.sound.play('ball_launch')
-
 		anim = self.game.animations['bikeacrosscity']
 		self.game.base_play.play_animation(anim, 'high', repeat=False, hold=False, frame_time=5)
 
@@ -221,7 +252,7 @@ class RegularPlay(Scoring_Mode):
 				self.high_score_mention()
 			self.game.sound.play_music('ball_launch',loops=-1)
 
-	def sw_shooterR_closed_for_700ms(self,sw):
+	def sw_shooterR_closed_for_700ms(self, sw):
 		if self.auto_plunge:
 			self.game.coils.shooterR.pulse(50)
 
@@ -240,7 +271,7 @@ class RegularPlay(Scoring_Mode):
 		style = 'on' if self.mystery_lit else 'off'
 		self.game.drive_lamp('mystery', style)
 
-		if self.state == 'idle':
+		if self.state == 'chain_ready':
 			if self.game.switches.popperR.is_inactive() and not self.any_multiball_active():
 				self.game.lamps.rightStartFeature.schedule(schedule=0x00ff00ff, cycle_seconds=0, now=True)
 		elif self.state == 'challenge_ready':
@@ -259,60 +290,6 @@ class RegularPlay(Scoring_Mode):
 	
 	def popperR_eject(self):
 		self.game.base_play.flash_then_pop('flashersRtRamp', 'popperR', 20)
-
-	#
-	# Multiball
-	#
-	
-	def any_multiball_active(self):
-		return self.multiball.is_active() or self.crime_scenes.is_multiball_active()
-
-	def multiball_started(self):
-		# Make sure no other multiball was already active before preparing for multiball.
-		# One multiball is the caller, so if both are active it means the other multiball was already active
-		if not (self.multiball.is_active() and self.crime_scenes.is_multiball_active()):
-			self.game.sound.fadeout_music()
-			self.game.sound.play_music('multiball', loops=-1)
-
-			# No modes can be started when multiball is active
-			self.game.lamps.rightStartFeature.disable()
-			# Light mystery once for free.
-			self.game.drive_lamp('mystery', 'on')
-			self.mystery_lit = True
-			self.game.modes.remove(self.missile_award_mode)
-
-	def multiball_ended(self):
-		if not self.any_multiball_active():
-			self.game.modes.add(self.missile_award_mode)
-		self.setup_next_mode()
-	
-	#
-	# Awards
-	#
-
-	def award_hurry_up_award(self, award):
-		if award == 'all' or award == '100000 points':
-			self.game.score(100000)
-
-		if award == 'all' or award == 'crimescenes':
-			self.crime_scenes.level_complete()
-
-	#
-	# Ultimate Challenge
-	#
-	
-	def is_ultimate_challenge_ready(self):
-		# 3 Criteria for finale: jackpot, crimescenes, all modes attempted.
-		return (self.multiball.jackpot_collected and
-				self.crime_scenes.is_complete() and
-				self.chain.is_complete())
-
-	def start_ultimate_challenge(self):
-		self.game.lamps.rightStartFeature.disable()
-		for mode in [self, self.boring, self.chain, self.crime_scenes, self.multiball]:
-			self.game.modes.remove(mode)
-		self.reset_modes()
-		self.game.base_play.start_ultimate_challenge()
 
 	#
 	# End of ball

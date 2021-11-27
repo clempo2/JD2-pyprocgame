@@ -14,7 +14,6 @@ class UltimateChallenge(Scoring_Mode):
 
 		self.mode_intro = Introduction(self.game, self.priority+1)
 		self.mode_intro.exit_callback = self.start_level
-		self.frame_gen = MarkupFrameGenerator()
 
 		fire = Fire(game, self.priority+1)
 		mortis = Mortis(game, self.priority+1)
@@ -32,11 +31,12 @@ class UltimateChallenge(Scoring_Mode):
 		self.game.lamps.ultChallenge.enable()
 
 	def mode_stopped(self):
-		# next challenge starts from the beginning when celebration was awarded 
+		# when celebration was awarded, the next challenge starts from the beginning 
 		self.game.setPlayerState('challenge_mode', self.active_mode if self.active_mode < 4 else 0)
 		self.game.modes.remove(self.mode_intro) # in case of tilt
 		self.game.modes.remove(self.mode_list[self.active_mode])
 		self.game.lamps.ultChallenge.disable()
+		self.game.trough.drain_callback = self.game.base_play.ball_drained_callback
 
 	def start_challenge(self):
 		# called by base play supergame or regular play
@@ -51,7 +51,6 @@ class UltimateChallenge(Scoring_Mode):
 		self.mode_intro.setup(self.mode_list[self.active_mode])
 		self.game.modes.add(self.mode_intro)
 		self.game.enable_flippers(True)
-		self.game.trough.drain_callback = self.game.base_play.ball_drained_callback
 
 	def start_level(self):
 		if self.game.switches.popperR.is_active():
@@ -71,6 +70,7 @@ class UltimateChallenge(Scoring_Mode):
 			if self.active_mode < 4: # fire to death
 				self.game.modes.remove(self.mode_list[self.active_mode])
 				self.active_mode += 1
+				self.game.trough.drain_callback = self.game.base_play.ball_drained_callback
 				self.start_intro()
 		if self.game.trough.num_balls_in_play <= 1 and self.active_mode == 4: # celebration
 			# wizard mode completed successfully, revert to regular play
@@ -90,9 +90,10 @@ class ChallengeBase(Scoring_Mode):
 	
 	def __init__(self, game, priority):
 		super(ChallengeBase, self).__init__(game, priority)
+		self.frame_gen = MarkupFrameGenerator()
 
-	def get_instruction_layer(self, mode):
-		instructions = mode.instructions()
+	def get_instruction_layer(self):
+		instructions = self.instructions()
 		instruction_frame = self.frame_gen.frame_for_markup(instructions)
 		panning_layer = PanningLayer(width=128, height=32, frame=instruction_frame, origin=(0,0), translate=(0,1), bounce=False)
 		duration = len(instructions) / 16
@@ -587,8 +588,8 @@ Banish him by shooting the lit crimescene shots before time expires.  Shots slow
 		self.cancel_delayed(['taunt', 'countdown'])
 		self.layer = TextLayer(128/2, 13, self.game.fonts['tiny7'], "center", True).set_text('Death Defeated!')
 		self.game.enable_flippers(False)
-
 		self.game.coils.flasherDeath.disable()
+
 		for lamp in ['perp1W', 'perp1R', 'perp1Y', 'perp1G', 'perp3W', 'perp3R', 'perp3Y', 'perp3G', 
 		             'perp5W', 'perp5R', 'perp5Y', 'perp5G', 'mystery', 'stopMeltdown']: 
 			self.game.lamps[lamp].disable()

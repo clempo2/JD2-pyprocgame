@@ -18,7 +18,7 @@ class Tilted(Mode):
 
 	def mode_stopped(self):
 		self.game.game_tilted = False
-		self.game.tilt_mode.tilt_reset()
+		self.game.base_play.tilt.tilt_reset()
 
 class TiltMonitorMode(Mode):
 	"""Monitor tilt warnings and slam tilt"""

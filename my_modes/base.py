@@ -14,8 +14,6 @@ class BasePlay(Mode):
 	def __init__(self, game):
 		super(BasePlay, self).__init__(game, 2)
 		self.flipper_enable_workaround_active = False
-
-		self.game.trough.drain_callback = self.ball_drained_callback
 		
 		# Instantiate sub-modes
 		self.tilt = TiltMonitorMode(self.game, 1000, 'tilt', 'slamTilt')
@@ -59,6 +57,7 @@ class BasePlay(Mode):
 
 		# Always start the ball with no launch callback.
 		self.game.trough.launch_balls(1, self.empty_ball_launch_callback)
+		self.game.trough.drain_callback = self.ball_drained_callback
 
 		# Enable ball search in case a ball gets stuck during gameplay.
 		self.game.ball_search.enable()
@@ -82,6 +81,8 @@ class BasePlay(Mode):
 
 		self.game.enable_flippers(False) 
 		self.game.ball_search.disable()
+
+		self.game.trough.drain_callback = self.game.drain_callback
 
 		player = self.game.current_player()
 		player.setState('extra_balls_lit', self.extra_balls_lit)
@@ -160,7 +161,6 @@ class BasePlay(Mode):
 	#
 
 	def start_ultimate_challenge(self):
-		# eject is True if ball is in popperR, False if ball is in shooterR
 		self.game.modes.remove(self.regular_play)
 		self.game.modes.add(self.ultimate_challenge)
 		self.ultimate_challenge.start_challenge()
