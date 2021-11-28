@@ -65,7 +65,7 @@ class Chain(Mode):
 		player.setState('modes_completed', [])
 
 	def is_active(self):
-		return self.mode
+		return self.mode != None
 
 	def is_complete(self):
 		return len(self.modes_not_attempted) == 0
@@ -551,7 +551,7 @@ class Meltdown(ChainFeature):
 	def __init__(self, game, priority):
 		super(Meltdown, self).__init__(game, priority, 'Meltdown', 'meltdown')
 		self.set_shots_required({'easy':3, 'medium':4, 'hard':5})
-		self.instructions = 'Activate ' + str(self.shots_required) + ' captive ball switches'
+		self.instructions = 'Hit ' + str(self.shots_required) + ' captive ball switches'
 
 	def mode_started(self):
 		super(Meltdown, self).mode_started()

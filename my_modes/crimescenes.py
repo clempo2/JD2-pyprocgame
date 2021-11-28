@@ -148,9 +148,9 @@ class CrimeSceneLevels(CrimeSceneBase):
 	def mode_started(self):
 		# restore player state
 		player = self.game.current_player()
-		self.level = player.getState('crimescenes_level', -1)
-		self.total_levels = player.getState('crimescenes_total_levels', 0)
 		self.targets = player.getState('crimescenes_targets', None)
+		self.total_levels = player.getState('crimescenes_total_levels', 0)
+		self.level = player.getState('crimescenes_level', -1)
 
 		self.num_advance_hits = 0
 		if self.level == -1:
@@ -159,12 +159,13 @@ class CrimeSceneLevels(CrimeSceneBase):
 	def mode_stopped(self):
 		# save player state
 		player = self.game.current_player()
-		player.setState('crimescenes_total_levels', self.total_levels)
 		player.setState('crimescenes_targets', self.targets)
+		player.setState('crimescenes_total_levels', self.total_levels)
+		# 'crimescenes_level' is always kept up to date in the player's state
 
-		for lamp in range(1,6):
+		for shot in range(0,5):
 			for color in range(0,4):
-				lamp_name = 'perp' + str(lamp) + self.lamp_colors[color]
+				lamp_name = 'perp' + str(shot+1) + self.lamp_colors[color]
 				self.game.drive_lamp(lamp_name, 'off')
 
 		for lamp in range(1,5):
@@ -233,7 +234,7 @@ class CrimeSceneLevels(CrimeSceneBase):
 			self.level += 1
 			self.game.setPlayerState('crimescenes_level', self.level)
 			if self.level == self.levels_required:
-				self.crimescenes_completed()
+				self.crime_scenes_completed()
 			else:
 				# the level consists of num_to_pick many targets chosen among the targets listed in pick_from
 				# every selected target needs to be hit once

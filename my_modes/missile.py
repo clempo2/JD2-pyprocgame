@@ -14,8 +14,8 @@ class MissileAwardMode(Mode):
 			self.video_mode = ShootingGallery(self.game, priority + 11, self.video_mode_setting)
 			self.video_mode.on_complete = self.video_mode_complete
 		
-		self.initial_awards = ['Light Extra Ball', 'Advance Crime Scenes', '30000 Points', 'Bonus +1X', 'Hold Bonus X']
-		self.repeatable_award = [False, True, True, True, False]
+		self.initial_awards = ['Advance Crime Scenes', 'Light Extra Ball', '30000 Points', 'Bonus +1X', 'Hold Bonus X']
+		self.repeatable_award = [True, False, True, True, False]
 		self.current_award_ptr = 0
 
 		self.delay_time = 0.200
@@ -72,6 +72,8 @@ class MissileAwardMode(Mode):
 			self.game.coils.shooterL.pulse(50)
 
 	def start_selection(self):
+		scenes_complete = self.game.base_play.regular_play.crime_scenes.is_complete()
+		self.available_awards[0] = '50000 Points' if scenes_complete else 'Advance Crime Scenes'
 		self.rotate_awards()
 		self.layer = self.selection_layer
 		self.timer = 70
