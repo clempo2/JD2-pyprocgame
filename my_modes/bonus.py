@@ -44,7 +44,7 @@ class Bonus(Mode):
 
 	def show_bonus_items(self):
 		if self.index == len(self.bonus_items):
-			# wait till the end to update score, no bonus if player tilts early
+			# no more item to show, tilting before we reach here gets you no bonus!
 			self.game.score(self.total)
 			self.exit_callback()
 

@@ -96,10 +96,7 @@ class Attract(Mode):
 			{'seconds':3.0, 'layer':self.scores_layer}
 		]
 
-		for frame in generate_highscore_frames(self.game.highscore_categories):
-			new_layer = FrameLayer(frame=frame)
-			new_layer.transition = PushTransition(direction='north')
-			script.append({'seconds':2.0, 'layer':new_layer})
+		self.append_high_score_layers(script)
 
 		script.extend([
 			{'seconds':20.0, 'layer':self.credits_layer},
@@ -121,11 +118,7 @@ class Attract(Mode):
 			{'seconds':3.0, 'layer':self.scores_layer}
 		]
 		
-		for frame in generate_highscore_frames(self.game.highscore_categories):
-			new_layer = FrameLayer(frame=frame)
-			new_layer.transition = PushTransition(direction='north')
-			script.append({'seconds':2.0, 'layer':new_layer})
-
+		self.append_high_score_layers(script)
 		self.layer = ScriptedLayer(width=128, height=32, script=script)
 
 	def game_over_display(self):
@@ -135,13 +128,15 @@ class Attract(Mode):
 			{'seconds':3.0, 'layer':self.scores_layer}
 		]
 
+		self.append_high_score_layers(script)
+		self.layer = ScriptedLayer(width=128, height=32, script=script)
+		self.layer.on_complete = self.post_game_display
+
+	def append_high_score_layers(self, script):
 		for frame in generate_highscore_frames(self.game.highscore_categories):
 			new_layer = FrameLayer(frame=frame)
 			new_layer.transition = PushTransition(direction='north')
 			script.append({'seconds':2.0, 'layer':new_layer})
-
-		self.layer = ScriptedLayer(width=128, height=32, script=script)
-		self.layer.on_complete = self.post_game_display
 
 	def change_lampshow(self):
 		shuffle(self.lampshow_keys)

@@ -19,7 +19,6 @@ class CrimeScenes(Mode):
 		self.crime_scene_levels.crime_scenes_completed = self.crime_scene_levels_completed
 
 		self.block_war = BlockWar(game, priority + 5)
-		self.block_war.end_block_war = self.end_block_war
 		self.block_war.start_block_war_bonus = self.start_block_war_bonus
 		
 		self.block_war_bonus = BlockWarBonus(game, priority + 5)
@@ -44,11 +43,7 @@ class CrimeScenes(Mode):
 		self.game.modes.remove(self.crime_scene_levels)
 		self.block_war.reset()
 		self.game.modes.add(self.block_war)
-
-	def end_block_war(self):
-		self.game.modes.remove(self.block_war)
-		self.crime_scenes.next_level()
-		self.start_crime_scene_levels()
+		self.start_multiball_callback()
 
 	def start_block_war_bonus(self):
 		self.game.modes.remove(self.block_war)
@@ -58,6 +53,13 @@ class CrimeScenes(Mode):
 		self.game.modes.remove(self.block_war_bonus)
 		self.block_war.next_round(bonus_collected)
 		self.game.modes.add(self.block_war)
+
+	def end_multiball(self):
+		self.game.modes.remove(self.block_war)
+		self.game.modes.remove(self.block_war_bonus)
+		self.crime_scenes.next_level()
+		self.start_crime_scene_levels()
+		self.end_multiball_callback()
 
 	def is_multiball_active(self):
 		return (self.block_war in self.game.modes.modes or
@@ -337,9 +339,6 @@ class BlockWar(CrimeSceneBase):
 		self.game.lampctrl.play_show('advance_level', False, self.game.update_lamps)
 		self.start_block_war_bonus()
 
-	def end_multiball(self):
-		self.end_block_war()
-
 	def update_lamps(self):
 		self.game.drive_lamp('advanceCrimeLevel', 'off')
 		for shot in range(0, 5):
@@ -390,7 +389,7 @@ class BlockWarBonus(CrimeSceneBase):
 	def update_lamps(self):
 		self.game.drive_lamp('advanceCrimeLevel', 'off')
 		for shot in range(0,5):
-			for color in range(1, 4): # skip Green
+			for color in range(0, 4):
 				lamp_name = 'perp' + str(shot+1) + self.lamp_colors[color]
 				style = 'medium' if self.bonus_shot == shot else 'off'
 				self.game.drive_lamp(lamp_name, style)

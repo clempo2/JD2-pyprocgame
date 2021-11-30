@@ -1,4 +1,4 @@
-# Copied from PyProcGameHD-SkeletonGame
+# Originally copied from PyProcGameHD-SkeletonGame
 # Copyright (c) 2014-2015 Michael Ocean and Josh Kugler
 
 from procgame.game import Mode, SwitchStop
@@ -27,7 +27,7 @@ class TiltMonitorMode(Mode):
 		super(TiltMonitorMode, self).__init__(game, priority)
 		self.tilt_sw = tilt_sw
 		self.slam_tilt_sw = slam_tilt_sw
-		self.game.tilted_mode = Tilted(game)
+		self.tilted_mode = Tilted(game)
 
 		if tilt_sw:
 			self.add_switch_handler(name=tilt_sw, event_type='active', delay=None, handler=self.tilt_handler)
@@ -93,7 +93,7 @@ class TiltMonitorMode(Mode):
 		# TODO: ball search!!
 		self.tilted = True
 
-		self.game.modes.add(self.game.tilted_mode)
+		self.game.modes.add(self.tilted_mode)
 		#play sound
 		#play video
 		self.game.slam_tilted()
@@ -119,7 +119,7 @@ class TiltMonitorMode(Mode):
 			# TODO: ball search!!
 			self.tilted = True
 
-			self.game.modes.add(self.game.tilted_mode)
+			self.game.modes.add(self.tilted_mode)
 			#play sound
 			#play video
 			self.game.tilted()

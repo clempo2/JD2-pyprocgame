@@ -22,6 +22,8 @@ class RegularPlay(Scoring_Mode):
 		self.chain = Chain(self.game, priority)
 		
 		self.crime_scenes = CrimeScenes(game, priority + 1)
+		self.crime_scenes.start_multiball_callback = self.multiball_started
+		self.crime_scenes.end_multiball_callback = self.multiball_ended
 		
 		self.multiball = Multiball(self.game, priority + 1)
 		self.multiball.start_callback = self.multiball_started
@@ -82,6 +84,7 @@ class RegularPlay(Scoring_Mode):
 	#
 	
 	# called right after a mode has ended to decide the next state
+	# the rule is: multiball can be stacked with a running mode, you cannot start a new mode during multiball
 	def setup_next_mode(self):
 		# a mode could still be running if modes were stacked, in that case do nothing and stay 'busy'
 		if not (self.any_multiball_active() or self.chain.is_active()):
@@ -323,7 +326,6 @@ class RegularPlay(Scoring_Mode):
 				self.multiball.end_multiball()
 			if self.crime_scenes.is_multiball_active():
 				self.crime_scenes.end_multiball()
-
 
 class GameIntro(Mode):
 	"""Welcome on first ball or shoot again"""

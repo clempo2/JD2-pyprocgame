@@ -11,7 +11,7 @@ class AssetLoader:
 	def load_assets(self, curr_file_path):
 		
 		animations_files = [
-			{'key': 'cityscape', 'file': 'cityscape.dmd', 'repeatAnim':True, 'frame_time':1},
+			{'key': 'cityscape', 'file': 'cityscape.dmd', 'repeatAnim':True, 'frame_time':2},
 			{'key': 'Splash', 'file': 'Splash.dmd', 'holdLastFrame':True, 'frame_time':1},
 			{'key': 'guntech', 'file': 'guntech.dmd', 'frame_time':4},
 			{'key': 'darkjudges_no_bg', 'file': 'darkjudges_no_bg.dmd', 'repeatAnim':True, 'frame_time':4},
