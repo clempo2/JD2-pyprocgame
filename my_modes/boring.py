@@ -79,7 +79,7 @@ class Boring(Mode):
 	def sw_outlaneL_active(self, sw):
 		self.reset()
 
-	def sw_craneRelease_active(self,sw):
+	def sw_craneRelease_active(self, sw):
 		self.reset()
 
 	def sw_leftRampToLock_active(self, sw):

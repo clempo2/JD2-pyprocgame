@@ -107,19 +107,19 @@ class DarkJudge(ChallengeBase):
 	def __init__(self, game, priority):
 		super(DarkJudge, self).__init__(game, priority)
 
-	def sw_dropTargetJ_active_for_250ms(self,sw):
+	def sw_dropTargetJ_active_for_250ms(self, sw):
 		self.reset_drops()
 
-	def sw_dropTargetU_active_for_250ms(self,sw):
+	def sw_dropTargetU_active_for_250ms(self, sw):
 		self.reset_drops()
 
-	def sw_dropTargetD_active_for_250ms(self,sw):
+	def sw_dropTargetD_active_for_250ms(self, sw):
 		self.reset_drops()
 
-	def sw_dropTargetG_active_for_250ms(self,sw):
+	def sw_dropTargetG_active_for_250ms(self, sw):
 		self.reset_drops()
 
-	def sw_dropTargetE_active_for_250ms(self,sw):
+	def sw_dropTargetE_active_for_250ms(self, sw):
 		self.reset_drops()
 
 	def reset_drops(self):
@@ -436,7 +436,7 @@ Banish him by shooting the lit ramp shots and then the subway before time runs o
 		if self.state == 'subway':
 			self.game.coils.tripDropTarget.pulse(60)
 
-	def sw_dropTargetD_active_for_250ms(self,sw):
+	def sw_dropTargetD_active_for_250ms(self, sw):
 		if self.state == 'ramps':
 			self.reset_drops()
 		else:

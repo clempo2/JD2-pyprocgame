@@ -98,7 +98,7 @@ class Deadworld(Mode):
 			switch_num = self.game.switches['globePosition2'].number
 			self.game.install_switch_rule_coil_disable(switch_num, 'closed_debounced', 'globeMotor', True, True)
 
-	def sw_craneRelease_active(self,sw):
+	def sw_craneRelease_active(self, sw):
 		if not self.crane_delay_active:
 			self.delay(name='crane_delay', event_type=None, delay=2, handler=self.end_crane_delay)
 			self.crane_delay_active = True
@@ -111,7 +111,7 @@ class Deadworld(Mode):
 	def end_crane_delay(self):
 		self.crane_delay_active = False
 		
-	def sw_magnetOverRing_open(self,sw):
+	def sw_magnetOverRing_open(self, sw):
 		if self.ball_eject_in_progress:
 			self.game.coils.craneMagnet.pulse(0)
 			self.delay(name='crane_release', event_type=None, delay=2, handler=self.crane_release)
@@ -201,7 +201,7 @@ class DeadworldTest(ServiceModeSkeleton):
 		self.game.lamps.superGame.disable()
 		self.game.lamps.buyIn.disable()
 
-	def sw_exit_active(self,sw):
+	def sw_exit_active(self, sw):
 		self.game.modes.remove(self)
 		return SwitchStop
 

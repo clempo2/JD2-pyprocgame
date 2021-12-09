@@ -3,6 +3,16 @@ from procgame.game import Mode
 from procgame.highscore import generate_highscore_frames
 from random import shuffle
 
+class FastPanningLayer(PanningLayer):
+	"""Pans faster than the regular PanningLayer"""
+	def __init__(self, width, height, frame, origin, translate, bounce=True):
+		super(FastPanningLayer, self).__init__(width, height, frame, origin, translate, bounce)
+
+	def next_frame(self):
+		self.tick += 2
+		return super(FastPanningLayer, self).next_frame()
+
+
 class Attract(Mode):
 	"""Attract mode and start buttons"""
 
@@ -73,7 +83,7 @@ class Attract(Mode):
 [Rob Anthony]
 """)
 
-		self.credits_layer = PanningLayer(width=128, height=32, frame=credits_frame, origin=(0,0), translate=(0,1), bounce=False)
+		self.credits_layer = FastPanningLayer(width=128, height=32, frame=credits_frame, origin=(0,0), translate=(0,1), bounce=False)
 		self.guntech_layer = self.game.animations['guntech']
 		self.judges_layer = self.game.animations['darkjudges_no_bg']
 		self.longwalk_layer = self.game.animations['longwalk']
@@ -99,9 +109,8 @@ class Attract(Mode):
 		self.append_high_score_layers(script)
 
 		script.extend([
-			{'seconds':20.0, 'layer':self.credits_layer},
-			{'seconds':3.0, 'layer':self.judges_layer},
-			{'seconds':4.0, 'layer':self.cityscape_layer}])
+			{'seconds':7.2, 'layer':self.credits_layer},
+			{'seconds':3.0, 'layer':self.judges_layer}])
 
 		self.layer = ScriptedLayer(width=128, height=32, script=script)
 
@@ -111,7 +120,7 @@ class Attract(Mode):
 			{'seconds':4.0, 'layer':self.cityscape_layer},
 			{'seconds':3.0, 'layer':self.proc_splash_layer},
 			{'seconds':3.0, 'layer':self.pyprocgame_layer},
-			{'seconds':20.0, 'layer':self.credits_layer},
+			{'seconds':7.2, 'layer':self.credits_layer},
 			{'seconds':3.0, 'layer':self.judges_layer},
 			{'seconds':4.0, 'layer':self.cityscape_layer},
 			{'seconds':3.0, 'layer':None},

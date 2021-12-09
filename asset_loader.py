@@ -11,15 +11,15 @@ class AssetLoader:
 	def load_assets(self, curr_file_path):
 		
 		animations_files = [
-			{'key': 'cityscape', 'file': 'cityscape.dmd', 'repeatAnim':True, 'frame_time':2},
+			{'key': 'cityscape', 'file': 'cityscape.dmd', 'repeat':True, 'frame_time':2},
 			{'key': 'Splash', 'file': 'Splash.dmd', 'holdLastFrame':True, 'frame_time':1},
 			{'key': 'guntech', 'file': 'guntech.dmd', 'frame_time':4},
-			{'key': 'darkjudges_no_bg', 'file': 'darkjudges_no_bg.dmd', 'repeatAnim':True, 'frame_time':4},
+			{'key': 'darkjudges_no_bg', 'file': 'darkjudges_no_bg.dmd', 'repeat':True, 'frame_time':4},
 			{'key': 'longwalk', 'file': 'longwalk.dmd', 'frame_time':7},
 			{'key': 'blackout', 'file': 'blackout.dmd', 'frame_time':3},
-			{'key': 'scope', 'file': 'scope.dmd', 'repeatAnim':True, 'frame_time':8},
+			{'key': 'scope', 'file': 'scope.dmd', 'repeat':True, 'frame_time':8},
 			{'key': 'dredd_shoot_at_sniper', 'file': 'dredd_shoot_at_sniper.dmd', 'frame_time':5},
-			{'key': 'blockwars', 'file': 'blockwars.dmd', 'repeatAnim':True, 'frame_time':3},
+			{'key': 'blockwars', 'file': 'blockwars.dmd', 'repeat':True, 'frame_time':3},
 			{'key': 'jdpeople', 'file': 'jdpeople.dmd', 'frame_time':1},
 			{'key': 'cows', 'file': 'cows.dmd', 'frame_time':1},
 			{'key': 'scopeandshot', 'file': 'scopeandshot.dmd', 'frame_time':1},

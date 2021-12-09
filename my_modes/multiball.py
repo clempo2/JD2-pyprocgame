@@ -147,7 +147,7 @@ class Multiball(Scoring_Mode):
 			self.game.coils.tripDropTarget.pulse(40)
 			self.delay(name='trip_check', event_type=None, delay=.400, handler=self.trip_check)
 
-	def sw_subwayEnter2_active(self,sw):
+	def sw_subwayEnter2_active(self, sw):
 		if self.jackpot_lit:
 			self.display_text("Jackpot!")
 			self.game.sound.play_voice('jackpot')
@@ -293,7 +293,7 @@ class Multiball(Scoring_Mode):
 
 			self.update_lamps()
 
-	def sw_leftRampExit_active(self,sw):
+	def sw_leftRampExit_active(self, sw):
 		if self.state == 'load':
 			if self.virtual_locks_needed > 0:
 				self.num_balls_locked += 1

@@ -2,6 +2,7 @@ from procgame.dmd import AnimatedLayer, GroupedLayer, TextLayer
 from procgame.game import Mode
 from procgame.modes import Replay
 from bonus import Bonus
+from boring import Boring
 from challenge import UltimateChallenge
 from combos import Combos
 from regular import RegularPlay
@@ -19,14 +20,14 @@ class BasePlay(Mode):
 		self.tilt = TiltMonitorMode(self.game, 1000, 'tilt', 'slamTilt')
 		self.tilt.num_tilt_warnings = self.game.user_settings['Gameplay']['Number of tilt warnings']
 		
+		self.boring = Boring(self.game, 9)
 		self.combos = Combos(self.game, 28)
 		self.status_report = StatusReport(self.game, 28)
 		self.regular_play = RegularPlay(self.game, 8)
+		self.bonus = Bonus(self.game, 8)
 		
 		self.ultimate_challenge = UltimateChallenge(game, 8)
 		self.ultimate_challenge.exit_callback = self.ultimate_challenge_over
-
-		self.bonus = Bonus(self.game, 8)
 
 		self.replay = Replay(self.game, 18)
 		self.replay.replay_callback = self.replay_callback
@@ -52,15 +53,18 @@ class BasePlay(Mode):
 		# Do a quick lamp show
 		self.game.coils.flasherPursuitL.schedule(0x00001010, cycle_seconds=1, now=False)
 		self.game.coils.flasherPursuitR.schedule(0x00000101, cycle_seconds=1, now=False)
-
 		self.game.enable_gi(True)
 
 		# Always start the ball with no launch callback.
 		self.game.trough.launch_balls(1, self.empty_ball_launch_callback)
 		self.game.trough.drain_callback = self.ball_drained_callback
+		self.ball_starting = True
 
 		# Enable ball search in case a ball gets stuck during gameplay.
 		self.game.ball_search.enable()
+		
+		# Force player to hit the right Fire button for the start of ball
+		self.auto_plunge = False
 
 		# Start modes
 		self.game.enable_flippers(True)
@@ -113,6 +117,57 @@ class BasePlay(Mode):
 	def display_status_report(self):
 		if not self.status_report in self.game.modes:
 			self.game.modes.add(self.status_report)
+
+	#
+	# Fire Buttons
+	#
+	
+	def sw_fireR_active(self, sw):
+		if self.game.switches.shooterR.is_active():
+			self.game.coils.shooterR.pulse(50)
+			if self.ball_starting:
+				self.game.sound.stop_music()
+				self.game.sound.play_music('background', loops=-1)
+
+
+	#
+	# Shooter Lanes
+	#
+	
+	def sw_shooterR_inactive_for_300ms(self, sw):
+		self.game.sound.play('ball_launch')
+		anim = self.game.animations['bikeacrosscity']
+		self.game.base_play.play_animation(anim, 'high', repeat=False, hold=False, frame_time=5)
+
+	# Enable auto-plunge soon after the new ball is launched (by the player).
+	def sw_shooterR_inactive_for_1s(self, sw):
+		self.auto_plunge = True
+
+		if self.ball_starting and not self.game.base_play.tilt.tilted:
+			self.skill_shot.begin()
+			ball_save_time = self.game.user_settings['Gameplay']['New ball ballsave time']
+			self.game.ball_save.callback = self.ball_save_callback
+			self.game.ball_save.start(num_balls_to_save=1, time=ball_save_time, now=True, allow_multiple_saves=False)
+			self.game.modes.add(self.boring)
+			# Tell game to save ball start time now, since ball is now in play.
+			self.game.save_ball_start_time()
+		self.ball_starting = False
+		self.game.modes.remove(self.game_intro)
+
+	def sw_shooterR_active(self, sw):
+		if self.ball_starting: 
+			self.game.sound.play_music('ball_launch',loops=-1)
+
+	def sw_shooterR_closed_for_700ms(self, sw):
+		if self.auto_plunge:
+			self.game.coils.shooterR.pulse(50)
+
+	def sw_shooterL_active_for_500ms(self, sw):
+		if self.any_multiball_active():
+			self.game.coils.shooterL.pulse()
+
+	def sw_shooterL_inactive_for_200ms(self, sw):
+		self.game.sound.play('shooterL_launch')
 
 	#
 	# Extra ball
@@ -263,6 +318,10 @@ class BasePlay(Mode):
 	# End of Ball
 	#
 	
+	def ball_save_callback(self):
+		if self.regular_play in self.game.modes:
+			self.regular_play.ball_save_callback()
+
 	def empty_ball_launch_callback(self):
 		pass
 
@@ -283,11 +342,9 @@ class BasePlay(Mode):
 		# Make sure the motor isn't spinning between balls.
 		self.game.coils.globeMotor.disable()
 
-		self.game.modes.remove(self.combos)
-		self.game.modes.remove(self.tilt)
-		self.game.modes.remove(self.regular_play)
-		self.game.modes.remove(self.ultimate_challenge)
-
+		for mode in [self.boring, self.combos, self.tilt, self.regular_play, self.ultimate_challenge]:
+			self.game.modes.remove(mode)
+		
 		self.game.enable_flippers(False) 
 
 		if self.tilt.tilted:

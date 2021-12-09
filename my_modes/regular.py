@@ -5,7 +5,6 @@ from procgame.modes import Scoring_Mode
 from chain import Chain
 from crimescenes import CrimeScenes
 from multiball import Multiball
-from boring import Boring
 from skillshot import SkillShot
 from missile import MissileAwardMode
 
@@ -17,7 +16,6 @@ class RegularPlay(Scoring_Mode):
 
 		# Instantiate sub-modes
 		self.game_intro = GameIntro(self.game, priority + 1)
-		self.boring = Boring(self.game, priority + 1)
 		self.skill_shot = SkillShot(self.game, priority + 5)
 		self.chain = Chain(self.game, priority)
 		
@@ -41,10 +39,6 @@ class RegularPlay(Scoring_Mode):
 
 	def mode_started(self):
 		self.mystery_lit = self.game.getPlayerState('mystery_lit', False)
-
-		# Force player to hit the right Fire button for the start of ball
-		self.auto_plunge = False
-		self.ball_starting = True
 		self.skill_shot_added = False
 
 		for mode in [self.chain, self.crime_scenes, self.multiball, self.missile_award_mode]:
@@ -56,7 +50,7 @@ class RegularPlay(Scoring_Mode):
 		self.game.update_lamps()
 
 	def mode_stopped(self):
-		for mode in [self.boring, self.skill_shot, self.chain, self.crime_scenes, self.multiball]:
+		for mode in [self.skill_shot, self.chain, self.crime_scenes, self.multiball]:
 			self.game.modes.remove(mode)
 
 		self.game.setPlayerState('mystery_lit', self.mystery_lit)
@@ -64,6 +58,18 @@ class RegularPlay(Scoring_Mode):
 	#
 	# Message
 	#
+
+	def sw_shooterR_active(self, sw):
+		if self.game.base_play.ball_starting: 
+			# Start skill shot, but not if already started.  Ball
+			# might bounce on shooterR switch.  Don't want to
+			# use a delayed switch handler because player
+			# could launch ball immediately (before delay expires).
+			if not self.skill_shot_added:
+				self.game.modes.add(self.skill_shot)
+				self.skill_shot_added = True
+				self.welcome()
+				self.high_score_mention()
 
 	def welcome(self):
 		if self.game.ball == 1 or self.game.shooting_again:
@@ -160,7 +166,7 @@ class RegularPlay(Scoring_Mode):
 
 	def start_ultimate_challenge(self):
 		self.game.lamps.rightStartFeature.disable()
-		for mode in [self.boring, self.chain, self.crime_scenes, self.multiball, self]:
+		for mode in [self.chain, self.crime_scenes, self.multiball, self]:
 			self.game.modes.remove(mode)
 		self.reset_modes()
 		self.game.base_play.start_ultimate_challenge()
@@ -208,65 +214,6 @@ class RegularPlay(Scoring_Mode):
 				self.missile_award_mode.light_missile_award()
 
 	#
-	# Fire Buttons
-	#
-	
-	def sw_fireR_active(self, sw):
-		if self.game.switches.shooterR.is_active():
-			self.game.coils.shooterR.pulse(50)
-			if self.ball_starting:
-				self.game.sound.stop_music()
-				self.game.sound.play_music('background', loops=-1)
-
-	#
-	# Shooter Lanes
-	#
-	
-	def sw_shooterR_inactive_for_300ms(self,sw):
-		self.game.sound.play('ball_launch')
-		anim = self.game.animations['bikeacrosscity']
-		self.game.base_play.play_animation(anim, 'high', repeat=False, hold=False, frame_time=5)
-
-	# Enable auto-plunge soon after the new ball is launched (by the player).
-	def sw_shooterR_inactive_for_1s(self,sw):
-		self.auto_plunge = True
-
-		if self.ball_starting and not self.game.base_play.tilt.tilted:
-			self.skill_shot.begin()
-			ball_save_time = self.game.user_settings['Gameplay']['New ball ballsave time']
-			self.game.ball_save.callback = self.ball_save_callback
-			self.game.ball_save.start(num_balls_to_save=1, time=ball_save_time, now=True, allow_multiple_saves=False)
-			self.game.modes.add(self.boring)
-			# Tell game to save ball start time now, since ball is now in play.
-			self.game.save_ball_start_time()
-		self.ball_starting = False
-		self.game.modes.remove(self.game_intro)
-
-	def sw_shooterR_active(self,sw):
-		if self.ball_starting: 
-			# Start skill shot, but not if already started.  Ball
-			# might bounce on shooterR switch.  Don't want to
-			# use a delayed switch handler because player
-			# could launch ball immediately (before delay expires).
-			if not self.skill_shot_added:
-				self.game.modes.add(self.skill_shot)
-				self.skill_shot_added = True
-				self.welcome()
-				self.high_score_mention()
-			self.game.sound.play_music('ball_launch',loops=-1)
-
-	def sw_shooterR_closed_for_700ms(self, sw):
-		if self.auto_plunge:
-			self.game.coils.shooterR.pulse(50)
-
-	def sw_shooterL_active_for_500ms(self, sw):
-		if self.any_multiball_active():
-			self.game.coils.shooterL.pulse()
-
-	def sw_shooterL_inactive_for_200ms(self, sw):
-		self.game.sound.play('shooterL_launch')
-
-	#
 	# Lamps
 	#
 
@@ -293,6 +240,7 @@ class RegularPlay(Scoring_Mode):
 	
 	def popperR_eject(self):
 		self.game.base_play.flash_then_pop('flashersRtRamp', 'popperR', 20)
+
 
 	#
 	# End of ball

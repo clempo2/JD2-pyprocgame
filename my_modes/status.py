@@ -41,19 +41,19 @@ class StatusReport(Mode):
 			self.index = 0
 		self.update_display()
 
-	def sw_flipperLwL_active(self,sw):
+	def sw_flipperLwL_active(self, sw):
 		if self.game.switches.flipperLwR.is_active():
 			self.progress(-1)
 
-	def sw_flipperLwR_active(self,sw):
+	def sw_flipperLwR_active(self, sw):
 		if self.game.switches.flipperLwL.is_active():
 			self.progress(1)
 
-	def sw_flipperLwL_inactive(self,sw):
+	def sw_flipperLwL_inactive(self, sw):
 		if self.game.switches.flipperLwR.is_inactive():
 			self.exit()
 
-	def sw_flipperLwR_inactive(self,sw):
+	def sw_flipperLwR_inactive(self, sw):
 		if self.game.switches.flipperLwL.is_inactive():
 			self.exit()
 
