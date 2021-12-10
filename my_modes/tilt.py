@@ -1,125 +1,125 @@
 # Originally copied from PyProcGameHD-SkeletonGame
 # Copyright (c) 2014-2015 Michael Ocean and Josh Kugler
 
-from procgame.game import Mode, SwitchStop
 import time
+from procgame.game import Mode, SwitchStop
 
 class Tilted(Mode):
-	""" Consumes all switch events to block scoring """
-	def __init__(self, game):
-		super(Tilted, self).__init__(game, priority=99999)
-		always_seen_switches = self.game.switches.items_tagged('tilt_visible')
-		always_seen_switches.append(self.game.switches.items_tagged('trough'))
-		for sw in [x for x in self.game.switches if x.name not in self.game.trough.position_switchnames and x.name not in always_seen_switches]:
-			self.add_switch_handler(name=sw.name, event_type='active', delay=None, handler=self.ignore_switch)
+    """ Consumes all switch events to block scoring """
+    def __init__(self, game):
+        super(Tilted, self).__init__(game, priority=99999)
+        always_seen_switches = self.game.switches.items_tagged('tilt_visible')
+        always_seen_switches.append(self.game.switches.items_tagged('trough'))
+        for sw in [x for x in self.game.switches if x.name not in self.game.trough.position_switchnames and x.name not in always_seen_switches]:
+            self.add_switch_handler(name=sw.name, event_type='active', delay=None, handler=self.ignore_switch)
 
-	def ignore_switch(self, sw):
-		return SwitchStop
+    def ignore_switch(self, sw):
+        return SwitchStop
 
-	def mode_stopped(self):
-		self.game.game_tilted = False
-		self.game.base_play.tilt.tilt_reset()
+    def mode_stopped(self):
+        self.game.game_tilted = False
+        self.game.base_play.tilt.tilt_reset()
 
 class TiltMonitorMode(Mode):
-	"""Monitor tilt warnings and slam tilt"""
+    """Monitor tilt warnings and slam tilt"""
 
-	def __init__(self, game, priority, tilt_sw=None, slam_tilt_sw=None):
-		super(TiltMonitorMode, self).__init__(game, priority)
-		self.tilt_sw = tilt_sw
-		self.slam_tilt_sw = slam_tilt_sw
-		self.tilted_mode = Tilted(game)
+    def __init__(self, game, priority, tilt_sw=None, slam_tilt_sw=None):
+        super(TiltMonitorMode, self).__init__(game, priority)
+        self.tilt_sw = tilt_sw
+        self.slam_tilt_sw = slam_tilt_sw
+        self.tilted_mode = Tilted(game)
 
-		if tilt_sw:
-			self.add_switch_handler(name=tilt_sw, event_type='active', delay=None, handler=self.tilt_handler)
-		if slam_tilt_sw:
-			self.add_switch_handler(name=slam_tilt_sw, event_type='active', delay=None, handler=self.slam_tilt_handler)
-		self.num_tilt_warnings = 2
-		self.tilt_bob_settle_time = 2.0
-		self.tilted = False
+        if tilt_sw:
+            self.add_switch_handler(name=tilt_sw, event_type='active', delay=None, handler=self.tilt_handler)
+        if slam_tilt_sw:
+            self.add_switch_handler(name=slam_tilt_sw, event_type='active', delay=None, handler=self.slam_tilt_handler)
+        self.num_tilt_warnings = 2
+        self.tilt_bob_settle_time = 2.0
+        self.tilted = False
 
-	def tilt_reset(self):
-		self.times_warned = 0
-		self.tilted = False
-		self.previous_warning_time = None
+    def tilt_reset(self):
+        self.times_warned = 0
+        self.tilted = False
+        self.previous_warning_time = None
 
-	def mode_started(self):
-		self.tilt_reset()
-		
-	def mode_stopped(self):
-		self.game.modes.remove(self.tilted_mode)
+    def mode_started(self):
+        self.tilt_reset()
 
-	def tilt_handler(self, sw):
-		now = time.time()
-		if(self.previous_warning_time is not None) and ((now - self.previous_warning_time) < self.tilt_bob_settle_time):
-			# tilt bob still swinging from previous warning
-			return
-		else:
-			self.previous_warning_time = now
+    def mode_stopped(self):
+        self.game.modes.remove(self.tilted_mode)
 
-		if self.times_warned == self.num_tilt_warnings:
-			if not self.tilted:
-				self.tilted = True
-				self.tilt_callback()
-		else:
-			self.times_warned += 1
-			self.game.tilt_warning(self.times_warned)
+    def tilt_handler(self, sw):
+        now = time.time()
+        if(self.previous_warning_time is not None) and ((now - self.previous_warning_time) < self.tilt_bob_settle_time):
+            # tilt bob still swinging from previous warning
+            return
+        else:
+            self.previous_warning_time = now
 
-	def slam_tilt_handler(self, sw):
-		self.slam_tilt_callback()
+        if self.times_warned == self.num_tilt_warnings:
+            if not self.tilted:
+                self.tilted = True
+                self.tilt_callback()
+        else:
+            self.times_warned += 1
+            self.game.tilt_warning(self.times_warned)
 
-	def tilt_delay(self, fn, secs_since_bob_tilt=2.0):
-		""" calls the specified `fn` if it has been at least `secs_since_bob_tilt`
-			(make sure the tilt isn't still swaying)
-		"""
+    def slam_tilt_handler(self, sw):
+        self.slam_tilt_callback()
 
-		if self.tilt_sw.time_since_change() < secs_since_bob_tilt:
-			self.delay(name='tilt_bob_settle', event_type=None, delay=secs_since_bob_tilt, handler=self.tilt_delay, param=fn)
-		else:
-			return fn()
+    def tilt_delay(self, fn, secs_since_bob_tilt=2.0):
+        """ calls the specified `fn` if it has been at least `secs_since_bob_tilt`
+            (make sure the tilt isn't still swaying)
+        """
 
-	# Reset game on slam tilt
-	def slam_tilt_callback(self):
-		# Disable flippers so the ball will drain.
-		self.game.enable_flippers(enable=False)
+        if self.tilt_sw.time_since_change() < secs_since_bob_tilt:
+            self.delay(name='tilt_bob_settle', event_type=None, delay=secs_since_bob_tilt, handler=self.tilt_delay, param=fn)
+        else:
+            return fn()
 
-		# Make sure ball won't be saved when it drains.
-		self.game.ball_save.disable()
+    # Reset game on slam tilt
+    def slam_tilt_callback(self):
+        # Disable flippers so the ball will drain.
+        self.game.enable_flippers(enable=False)
 
-		# Ensure all lamps are off.
-		for lamp in self.game.lamps:
-			lamp.disable()
+        # Make sure ball won't be saved when it drains.
+        self.game.ball_save.disable()
 
-		# Kick balls out of places it could be stuck.
-		# TODO: ball search!!
-		self.tilted = True
+        # Ensure all lamps are off.
+        for lamp in self.game.lamps:
+            lamp.disable()
 
-		self.game.modes.add(self.tilted_mode)
-		#play sound
-		#play video
-		self.game.slam_tilted()
+        # Kick balls out of places it could be stuck.
+        # TODO: ball search!!
+        self.tilted = True
 
-		return True
+        self.game.modes.add(self.tilted_mode)
+        #play sound
+        #play video
+        self.game.slam_tilted()
 
-	def tilt_callback(self):
-		# Process tilt.
-		# First check to make sure tilt hasn't already been processed once.
-		# No need to do this stuff again if for some reason tilt already occurred.
-		if not self.tilted:
-			# Disable flippers so the ball will drain.
-			self.game.enable_flippers(enable=False)
+        return True
 
-			# Make sure ball won't be saved when it drains.
-			self.game.ball_save.disable()
+    def tilt_callback(self):
+        # Process tilt.
+        # First check to make sure tilt hasn't already been processed once.
+        # No need to do this stuff again if for some reason tilt already occurred.
+        if not self.tilted:
+            # Disable flippers so the ball will drain.
+            self.game.enable_flippers(enable=False)
 
-			# Ensure all lamps are off.
-			for lamp in self.game.lamps:
-				lamp.disable()
+            # Make sure ball won't be saved when it drains.
+            self.game.ball_save.disable()
 
-			# Kick balls out of places it could be stuck.
-			# TODO: ball search!!
-			self.tilted = True
+            # Ensure all lamps are off.
+            for lamp in self.game.lamps:
+                lamp.disable()
 
-			self.game.modes.add(self.tilted_mode)
-			#play sound
-			#play video
-			self.game.tilted()
+            # Kick balls out of places it could be stuck.
+            # TODO: ball search!!
+            self.tilted = True
+
+            self.game.modes.add(self.tilted_mode)
+            #play sound
+            #play video
+            self.game.tilted()

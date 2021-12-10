@@ -2,65 +2,65 @@ from procgame.dmd import GroupedLayer, TextLayer
 from procgame.game import Mode
 
 class Bonus(Mode):
-	"""Display end of ball bonus"""
-	
-	def __init__(self, game, priority):
-		super(Bonus, self).__init__(game, priority)
-		font_big = self.game.fonts['jazz18']
-		font_small = self.game.fonts['tiny7']
-		self.title_layer = TextLayer(128/2, 7, font_big, "center")
-		self.name_layer = TextLayer(128/2, 7, font_small, "center")
-		self.value_layer = TextLayer(128/2, 20, font_small, "center")
-		self.layer = GroupedLayer(128, 32, [self.title_layer, self.name_layer, self.value_layer])
+    """Display end of ball bonus"""
 
-	def compute(self, exit_callback):
-		self.game.sound.play('drain')
-		self.exit_callback = exit_callback
-		self.title_layer.set_text('BONUS', self.delay_time)
-		
-		player = self.game.current_player()
-		num_modes_attempted = player.getState("num_modes_attempted")
-		attempted = ['Modes Attempted: ' + str(num_modes_attempted), num_modes_attempted * 4000]
-		
-		num_modes_completed = player.getState("num_modes_completed")
-		completed = ['Modes Completed: ' + str(num_modes_completed), num_modes_completed * 12000]
+    def __init__(self, game, priority):
+        super(Bonus, self).__init__(game, priority)
+        font_big = self.game.fonts['jazz18']
+        font_small = self.game.fonts['tiny7']
+        self.title_layer = TextLayer(128/2, 7, font_big, "center")
+        self.name_layer = TextLayer(128/2, 7, font_small, "center")
+        self.value_layer = TextLayer(128/2, 20, font_small, "center")
+        self.layer = GroupedLayer(128, 32, [self.title_layer, self.name_layer, self.value_layer])
 
-		crimescenes_total_levels = player.getState("crimescenes_total_levels")
-		crimescenes = ['Crimescene Levels: ' + str(crimescenes_total_levels), crimescenes_total_levels * 2000]
+    def compute(self, exit_callback):
+        self.game.sound.play('drain')
+        self.exit_callback = exit_callback
+        self.title_layer.set_text('BONUS', self.delay_time)
 
-		base = attempted[1] + completed[1] + crimescenes[1]
-		total_base = ['Total Base:', base]
-		
-		bonus_x = player.getState('bonus_x')
-		multiplier = ['Multiplier:', bonus_x]
+        player = self.game.current_player()
+        num_modes_attempted = player.getState("num_modes_attempted")
+        attempted = ['Modes Attempted: ' + str(num_modes_attempted), num_modes_attempted * 4000]
 
-		self.total = base * bonus_x
-		total_bonus = ['Total Bonus:', self.total]
-		
-		self.item_index = 0
-		self.delay_time = 1
-		self.bonus_items = [attempted, completed, crimescenes, total_base, multiplier, total_bonus]
-		self.delay(name='show_bonus', event_type=None, delay=self.delay_time, handler=self.show_bonus_item)
+        num_modes_completed = player.getState("num_modes_completed")
+        completed = ['Modes Completed: ' + str(num_modes_completed), num_modes_completed * 12000]
 
-	def show_bonus_items(self):
-		if self.index == len(self.bonus_items):
-			# no more item to show, tilting before we reach here gets you no bonus!
-			self.game.score(self.total)
-			self.exit_callback()
+        crimescenes_total_levels = player.getState("crimescenes_total_levels")
+        crimescenes = ['Crimescene Levels: ' + str(crimescenes_total_levels), crimescenes_total_levels * 2000]
 
-		self.game.sound.play('bonus')
-		
-		text, value = self.bonus_items[self.item_index]
-		self.name_layer.set_text(text)
-		self.value_layer.set_text(str(value))
+        base = attempted[1] + completed[1] + crimescenes[1]
+        total_base = ['Total Base:', base]
 
-		self.item_index += 1
-		self.delay(name='show_bonus', event_type=None, delay=self.delay_time, handler=self.show_bonus_items)
+        bonus_x = player.getState('bonus_x')
+        multiplier = ['Multiplier:', bonus_x]
 
-	def sw_flipperLwL_active(self, sw):
-		# speed up
-		self.delay_time = 0.2
+        self.total = base * bonus_x
+        total_bonus = ['Total Bonus:', self.total]
 
-	def sw_flipperLwR_active(self, sw):
-		# skip to total
-		self.item_index = len(self.bonus_items) - 1
+        self.item_index = 0
+        self.delay_time = 1
+        self.bonus_items = [attempted, completed, crimescenes, total_base, multiplier, total_bonus]
+        self.delay(name='show_bonus', event_type=None, delay=self.delay_time, handler=self.show_bonus_items)
+
+    def show_bonus_items(self):
+        if self.item_index == len(self.bonus_items):
+            # no more item to show, tilting before we reach here gets you no bonus!
+            self.game.score(self.total)
+            self.exit_callback()
+
+        self.game.sound.play('bonus')
+
+        text, value = self.bonus_items[self.item_index]
+        self.name_layer.set_text(text)
+        self.value_layer.set_text(str(value))
+
+        self.item_index += 1
+        self.delay(name='show_bonus', event_type=None, delay=self.delay_time, handler=self.show_bonus_items)
+
+    def sw_flipperLwL_active(self, sw):
+        # speed up
+        self.delay_time = 0.2
+
+    def sw_flipperLwR_active(self, sw):
+        # skip to total
+        self.item_index = len(self.bonus_items) - 1
