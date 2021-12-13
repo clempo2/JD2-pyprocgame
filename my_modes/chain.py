@@ -148,9 +148,9 @@ class Chain(Mode):
 
     # called when the mode is over including the hurry up
     def hurry_up_over(self):
+        self.mode = None
         self.game.modes.remove(self.hurry_up)
         self.game.base_play.regular_play.setup_next_mode()
-        self.mode = None
 
     def update_lamps(self):
         if len(self.modes_not_attempted) > 0:

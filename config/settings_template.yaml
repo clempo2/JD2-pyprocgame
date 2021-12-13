@@ -38,23 +38,23 @@ Replay:
     options: [1,2,3,4]
     default: 1
   'Replay Level 1':
-    options: [50000,5000000]
+    options: [50000,10000000]
     increments: 50000
-    default: 100000
+    default: 500000
   'Replay Level 2':
-    options: [100000,5000000]
+    options: [50000,10000000]
     increments: 50000
-    default: 200000
+    default: 1000000
   'Replay Level 3':
-    options: [150000,5000000]
+    options: [50000,10000000]
     increments: 50000
-    default: 300000
+    default: 2000000
   'Replay Level 4':
-    options: [200000,5000000]
+    options: [50000,10000000]
     increments: 50000
-    default: 400000
+    default: 3000000
   'Replay Boost':
-    options: [50000,5000000]
+    options: [50000,10000000]
     increments: 50000
     default: 100000
 Gameplay:
