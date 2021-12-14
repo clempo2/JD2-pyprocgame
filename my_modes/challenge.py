@@ -22,13 +22,14 @@ class UltimateChallenge(Scoring_Mode):
         self.celebration = Celebration(game, self.priority+1)
 
         self.mode_list = [self.fire, self.fear, self.mortis, self.death, self.celebration]
-        for mode in self.mode_list:
+        for mode in self.mode_list[0:4]:
             mode.complete_callback = self.level_complete_callback
 
     def mode_started(self):
         self.active_mode = self.game.getPlayerState('challenge_mode', 0)
         self.game.coils.resetDropTarget.pulse(40)
         self.game.lamps.ultChallenge.enable()
+        self.intentional_drain = False
 
     def mode_stopped(self):
         # when celebration was awarded, the next challenge starts from the beginning
@@ -36,7 +37,6 @@ class UltimateChallenge(Scoring_Mode):
         self.game.modes.remove(self.mode_intro) # in case of tilt
         self.game.modes.remove(self.mode_list[self.active_mode])
         self.game.lamps.ultChallenge.disable()
-        self.game.trough.drain_callback = self.game.base_play.ball_drained_callback
 
     def start_challenge(self):
         # called by base play supergame or regular play
@@ -60,24 +60,24 @@ class UltimateChallenge(Scoring_Mode):
         self.game.sound.play_music('mode', loops=-1)
 
     def level_complete_callback(self):
-        # level successful, move on to the next level
+        # level successful, drain intentionally before starting next mode
         self.game.ball_save.disable()
         self.game.sound.fadeout_music()
-        self.game.trough.drain_callback = self.end_level_drain_callback
+        self.intentional_drain = True
 
-    def end_level_drain_callback(self):
-        if self.game.trough.num_balls_in_play == 0:
-            if self.active_mode < 4: # fire to death
-                self.game.modes.remove(self.mode_list[self.active_mode])
-                self.active_mode += 1
-                self.game.trough.drain_callback = self.game.base_play.ball_drained_callback
-                self.start_intro()
+    def ball_drained(self):
+        if self.intentional_drain and self.game.trough.num_balls_in_play == 0:
+            # all balls have intentionally drained, move to the next mode
+            self.intentional_drain = False
+            self.game.modes.remove(self.mode_list[self.active_mode])
+            self.active_mode += 1 # next mode
+            self.start_intro()
+            return True # tell base_play to ignore this drain
+        
         if self.game.trough.num_balls_in_play <= 1 and self.active_mode == 4: # celebration
             # wizard mode completed successfully, revert to regular play
             self.game.modes.remove(self.celebration)
             self.game.modes.remove(self)
-            self.game.enable_flippers(True)
-            self.game.base_play.ball_drained_callback()
             self.exit_callback()
 
     def sw_shooterL_active_for_200ms(self, sw):
@@ -605,9 +605,6 @@ Normal play resumes when only 1 ball remains.
 """
 
     def mode_started(self):
-        # Call callback now to set up drain callback, which will decide
-        # when multiball should end... probably when 1 ball is left.
-        self.complete_callback()
         # This player reached the end of supergame, his next ball is regular play
         # do this early now in case the game tilts
         self.game.setPlayerState('supergame', False)

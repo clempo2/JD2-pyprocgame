@@ -14,7 +14,7 @@ class StatusReport(Mode):
 
         self.report_layers = ([main_title_layer] +
             self.game.base_play.regular_play.chain.get_status_layers() +
-            self.game.base_play.regular_play.crimescenes.get_status_layers() +
+            self.game.base_play.regular_play.crime_scenes.crime_scene_levels.get_status_layers() +
             self.game.base_play.combos.get_status_layers())
 
         self.index = 0

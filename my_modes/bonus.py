@@ -34,8 +34,9 @@ class Bonus(Mode):
         bonus_x = player.getState('bonus_x')
         multiplier = ['Multiplier:', bonus_x]
 
-        self.total = base * bonus_x
-        total_bonus = ['Total Bonus:', self.total]
+        total = base * bonus_x
+        total_bonus = ['Total Bonus:', total]
+        self.game.score(total)
 
         self.item_index = 0
         self.delay_time = 1
@@ -44,8 +45,6 @@ class Bonus(Mode):
 
     def show_bonus_items(self):
         if self.item_index == len(self.bonus_items):
-            # no more item to show, tilting before we reach here gets you no bonus!
-            self.game.score(self.total)
             self.exit_callback()
 
         self.game.sound.play('bonus')

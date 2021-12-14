@@ -119,7 +119,6 @@ class JDGame(BasicGame):
         self.logging_enabled = False
 
         self.load_config('config/JD.yaml')
-        self.setup_ball_search()
 
         # Assets
         asset_loader = AssetLoader(self)
@@ -170,14 +169,28 @@ class JDGame(BasicGame):
         deadworld_test = DeadworldTest(self, 200, self.fonts['tiny7'])
         self.service_mode = JDServiceMode(self, 100, self.fonts['tiny7'], [deadworld_test])
 
+        # Currently there are no special ball search handlers.  The deadworld
+        # could be one, but running it while balls are locked would screw up
+        # the multiball logic.  There is already logic in the multiball
+        # to eject balls that enter the deadworld when lock isn't lit; so it
+        # shouldn't be necessary to search the deadworld.  (unless a ball jumps
+        # onto the ring rather than entering through the feeder.)
+        self.ball_search = BallSearch(self, priority=100, countdown_time=10,
+                     coils=self.ballsearch_coils, reset_switches=self.ballsearch_resetSwitches,
+                     stop_switches=self.ballsearch_stopSwitches, special_handler_modes=[])
+        self.ball_search.disable()
+        
         # Trough
         trough_switchnames = ['trough1', 'trough2', 'trough3', 'trough4', 'trough5', 'trough6']
         early_save_switchnames = ['outlaneR', 'outlaneL']
         self.trough = Trough(self, trough_switchnames, 'trough6', 'trough', early_save_switchnames, 'shooterR', self.drain_callback)
+        self.trough.drain_callback = self.drain_callback
+
         self.ball_save = BallSave(self, self.lamps.drainShield, 'shooterR')
         self.trough.ball_save_callback = self.ball_save.launch_callback
         self.trough.num_balls_to_save = self.ball_save.get_num_balls_to_save
         self.ball_save.trough_enable_ball_save = self.trough.enable_ball_save
+        self.ball_save.disable()
 
         # Instantiate basic game features
         self.attract_mode = Attract(self)
@@ -191,10 +204,6 @@ class JDGame(BasicGame):
         for mode in [self.switch_monitor, self.attract_mode, self.ball_search,
                      self.deadworld, self.ball_save, self.trough, self.flipper_workaround_mode]:
             self.modes.add(mode)
-
-        self.ball_search.disable()
-        self.ball_save.disable()
-        self.trough.drain_callback = self.drain_callback
 
         # Make sure flippers are off, especially for user initiated resets.
         self.enable_flippers(enable=False)
@@ -310,14 +319,10 @@ class JDGame(BasicGame):
 
     def ball_ended(self):
         self.modes.remove(self.base_play)
-        super(JDGame, self).ball_ended()
+        self.trough.drain_callback = self.drain_callback
 
     def game_ended(self):
         super(JDGame, self).game_ended()
-        # Make sure nothing unexpected happens if a ball drains
-        # after a game ends (due possibly to a ball search).
-        self.trough.drain_callback = self.drain_callback
-        self.modes.remove(self.base_play)
         self.deadworld.mode_stopped()
 
         # High Score Stuff
@@ -383,21 +388,6 @@ class JDGame(BasicGame):
 
     def set_status(self, text):
         self.dmd.set_message(text, 3)
-
-    def setup_ball_search(self):
-
-        # Currently there are no special ball search handlers.  The deadworld
-        # could be one, but running it while balls are locked would screw up
-        # the multiball logic.  There is already logic in the multiball
-        # to eject balls that enter the deadworld when lock isn't lit; so it
-        # shouldn't be necessary to search the deadworld.  (unless a ball jumps
-        # onto the ring rather than entering through the feeder.)
-        special_handler_modes = []
-        self.ball_search = BallSearch(self, priority=100, \
-                     countdown_time=10, coils=self.ballsearch_coils, \
-                     reset_switches=self.ballsearch_resetSwitches, \
-                     stop_switches=self.ballsearch_stopSwitches, \
-                     special_handler_modes=special_handler_modes)
 
     def perform_ball_search(self):
         self.set_status("Ball Search!")

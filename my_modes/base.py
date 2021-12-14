@@ -57,7 +57,7 @@ class BasePlay(Mode):
 
         # Always start the ball with no launch callback.
         self.game.trough.launch_balls(1, self.empty_ball_launch_callback)
-        self.game.trough.drain_callback = self.ball_drained_callback
+        self.game.trough.drain_callback = self.drain_callback
         self.ball_starting = True
 
         # Enable ball search in case a ball gets stuck during gameplay.
@@ -315,9 +315,14 @@ class BasePlay(Mode):
     def empty_ball_launch_callback(self):
         pass
 
-    def ball_drained_callback(self):
-        # Tell regular_play a ball has drained (but this might not be the last ball).
-        self.regular_play.ball_drained()
+    def drain_callback(self):
+        if not self.tilt.tilted:
+            for mode in self.game.modes:
+                # does it implement ball_drained
+                if mode.getattr(mode, "ball_drained", None):
+                    if mode.ball_drained():
+                        # drain was intentional, ignore it
+                        return
 
         if self.game.trough.num_balls_in_play == 0:
             # End the ball
