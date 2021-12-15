@@ -40,12 +40,8 @@ class RegularPlay(Scoring_Mode):
     def mode_started(self):
         self.mystery_lit = self.game.getPlayerState('mystery_lit', False)
         self.skill_shot_added = False
-
-        for mode in [self.chain, self.crime_scenes, self.multiball, self.missile_award_mode]:
-            self.game.modes.add(mode)
-
+        self.game.add_modes([self.chain, self.crime_scenes, self.multiball, self.missile_award_mode])
         self.setup_next_mode()
-
         self.game.enable_gi(True)
         self.game.update_lamps()
 
@@ -83,7 +79,7 @@ class RegularPlay(Scoring_Mode):
             else:
                 text = 'Replay'
                 score = locale.format("%d", self.base_play.replay.replay_scores[0], True)
-            self.game.base_play.show_on_display(text, score, 'high')
+            self.game.base_play.show_on_display(text, score)
 
     def sw_shooterL_active_for_500ms(self, sw):
         if self.any_multiball_active():
@@ -274,7 +270,7 @@ class RegularPlay(Scoring_Mode):
     def ball_save_callback(self):
         if not self.any_multiball_active():
             self.game.sound.play_voice('ball saved')
-            self.game.base_play.show_on_display("Ball Saved!", None, 'mid')
+            self.game.base_play.show_on_display("Ball Saved!")
             self.skill_shot.skill_shot_expired()
 
     def ball_drained(self):

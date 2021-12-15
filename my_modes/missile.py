@@ -4,7 +4,7 @@ from procgame.game import Mode
 from videomode import ShootingGallery
 
 class MissileAwardMode(Mode):
-    """Choose an award while the ball sits in the left shooter lane"""
+    """Choose an award while the only ball sits in the left shooter lane"""
 
     def __init__(self, game, priority):
         super(MissileAwardMode, self).__init__(game, priority)
@@ -19,7 +19,6 @@ class MissileAwardMode(Mode):
         self.current_award_ptr = 0
 
         self.delay_time = 0.200
-        self.active = False
 
         font = self.game.fonts['tiny7']
         self.title_layer = TextLayer(128/2, 7, font, "center")
@@ -36,6 +35,7 @@ class MissileAwardMode(Mode):
         self.video_mode_lit = player.getState('video_mode_lit', self.video_mode_setting != "off")
         self.missile_award_lit = player.getState('missile_award_lit', False)
         self.available_awards = player.getState('available_awards', self.initial_awards[:])
+        self.active = False
 
     def mode_stopped(self):
         player = self.game.current_player()
@@ -54,22 +54,39 @@ class MissileAwardMode(Mode):
     def sw_shooterL_active_for_500ms(self, sw):
         if self.missile_award_lit:
             self.missile_award_lit = False
-            self.game.sound.stop_music()
-            if self.video_mode_lit:
-                # first award is always video if video mode is enabled in the settings
-                self.game.modes.add(self.video_mode)
-                self.video_mode_lit = False
-            else:
-                self.start_selection()
+            self.start_missile_award()
         else:
             self.missile_award_lit = True
             self.game.coils.shooterL.pulse()
 
     def sw_fireL_active(self, sw):
         if self.active:
+            self.cancel_delayed('missile_update')
             self.timer = 3
+            self.update()
         else:
             self.game.coils.shooterL.pulse(50)
+
+    def start_missile_award(self):
+        self.game.sound.stop_music()
+        self.game.base_play.regular_play.chain.pause()
+        # first award is always video if video mode is enabled in the settings
+        if self.video_mode_lit:
+            self.video_mode_lit = False
+            self.game.modes.add(self.video_mode)
+        else:
+            self.start_selection()
+
+    def end_missile_award(self):
+        self.game.sound.play_music('background', loops=-1)
+        self.game.base_play.regular_play.chain.resume()
+
+    def video_mode_complete(self, success):
+        self.game.modes.remove(self.video_mode)
+        self.game.coils.shooterL.pulse()
+        if success:
+            self.game.base_play.light_extra_ball()
+        self.end_missile_award()
 
     def start_selection(self):
         scenes_complete = self.game.base_play.regular_play.crime_scenes.is_complete()
@@ -91,26 +108,22 @@ class MissileAwardMode(Mode):
             self.rotate_awards()
 
         if self.timer > 0:
-            self.delay(name='missile_update', event_type=None, delay=self.delay_time, handler=self.update)
             self.timer -= 1
+            self.delay(name='missile_update', event_type=None, delay=self.delay_time, handler=self.update)
 
     def rotate_awards(self):
         self.current_award_ptr = (self.current_award_ptr + randint(1, 4)) % len(self.available_awards)
         self.value_layer.set_text(self.available_awards[self.current_award_ptr])
 
     def award(self):
-        self.game.sound.play_music('background', loops=-1)
         award = self.available_awards[self.current_award_ptr]
         if award.endswith('Points', 0) != -1:
             award_words = award.rsplit(' ')
             self.game.score(int(award_words[0]))
-            self.game.base_play.show_on_display(str(award_words[0]) + ' Points', None, 'mid')
-            self.game.set_status(award)
         elif award == 'Light Extra Ball':
             self.game.base_play.light_extra_ball()
         elif award == 'Advance Crime Scenes':
             self.game.base_play.regular_play.crime_scenes.crime_scene_levels.level_complete()
-            self.game.base_play.show_on_display('Crimes Adv', None, 'mid')
         elif award == 'Bonus +1X':
             self.game.base_play.inc_bonus_x()
         elif award == 'Hold Bonus X':
@@ -118,15 +131,9 @@ class MissileAwardMode(Mode):
 
         if not self.repeatable_award[self.current_award_ptr]:
             self.available_awards[self.current_award_ptr] = str(10000*(self.current_award_ptr + 1)) + ' Points'
+            
+        self.end_missile_award()
 
     def update_lamps(self):
         style = 'medium' if self.missile_award_lit else 'off'
         self.game.drive_lamp('airRaid', style)
-
-    def video_mode_complete(self, success):
-        self.game.sound.stop_music()
-        self.game.sound.play_music('background', loops=-1)
-        self.game.modes.remove(self.video_mode)
-        self.game.coils.shooterL.pulse()
-        if success:
-            self.game.base_play.light_extra_ball()

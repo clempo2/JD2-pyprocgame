@@ -39,9 +39,8 @@ class Combos(Mode):
                 self.best_inner_loops = self.inner_loop_combos
             score = 10000 * self.inner_loop_combos
             self.game.score(score)
-            self.game.base_play.show_on_display('inner loop: ' + str(self.inner_loop_combos), score, 'mid')
-            anim = self.game.animations['bike_across_screen']
-            self.game.base_play.play_animation(anim, 'mid', repeat=False, hold=False, frame_time=3)
+            self.game.base_play.show_on_display('inner loop: ' + str(self.inner_loop_combos), score)
+            self.game.base_play.play_animation('bike_across_screen', frame_time=3)
             self.game.update_lamps()
             self.cancel_delayed('inner_loop')
             self.delay(name='inner_loop', event_type=None, delay=3.0, handler=self.inner_loop_combo_expired)
@@ -56,9 +55,9 @@ class Combos(Mode):
                 self.best_outer_loops = self.outer_loop_combos
             score = 1000 * self.outer_loop_combos
             self.game.score(score)
-            self.game.base_play.show_on_display('outer loop: ' + str(self.outer_loop_combos), score, 'mid')
-            anim = self.game.animations['bike_across_screen']
-            self.game.base_play.play_animation(anim, 'mid', repeat=False, hold=False, frame_time=3)
+            self.game.base_play.show_on_display('outer loop: ' + str(self.outer_loop_combos), score)
+            anim = self.game.animations['']
+            self.game.base_play.play_animation('bike_across_screen', frame_time=3)
             self.game.update_lamps()
             self.cancel_delayed('outer_loop')
             self.delay(name='outer_loop', event_type=None, delay=3.0, handler=self.outer_loop_combo_expired)

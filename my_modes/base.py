@@ -32,9 +32,8 @@ class BasePlay(Mode):
         self.replay = Replay(self.game, 18)
         self.replay.replay_callback = self.replay_callback
 
-        self.priority_display = {'low': ModesDisplay(self.game, 18), 'mid': ModesDisplay(self.game, 21), 'high': ModesDisplay(self.game, 200)}
-        self.priority_animation = {'low': ModesAnimation(self.game, 18), 'mid': ModesAnimation(self.game, 22), 'high': ModesAnimation(self.game, 210)}
-        self.priority_modes = self.priority_display.values() + self.priority_animation.values()
+        self.display_mode = ModesDisplay(self.game, 210)
+        self.animation_mode = ModesAnimation(self.game, 200)
 
     def mode_started(self):
         # init player state
@@ -68,11 +67,7 @@ class BasePlay(Mode):
 
         # Start modes
         self.game.enable_flippers(True)
-        self.game.modes.add(self.tilt)
-        self.game.modes.add(self.combos)
-        self.game.modes.add(self.replay)
-        for mode in self.priority_modes:
-            self.game.modes.add(mode)
+        self.game.add_modes([self.tilt, self.combos, self.replay, self.display_mode, self.animation_mode])
 
         if player.getState('supergame', self.game.supergame):
             self.start_ultimate_challenge()
@@ -80,12 +75,9 @@ class BasePlay(Mode):
             self.game.modes.add(self.regular_play)
 
     def mode_stopped(self):
-        for mode in self.priority_modes:
-            self.game.modes.remove(mode)
-
+        self.game.modes.remove([self.display_mode, self.animation_mode])
         self.game.enable_flippers(False)
         self.game.ball_search.disable()
-
         self.game.trough.drain_callback = self.game.drain_callback
 
         player = self.game.current_player()
@@ -93,16 +85,15 @@ class BasePlay(Mode):
         player.setState('total_extra_balls_lit', self.total_extra_balls_lit)
 
     #
-    # Priority Display
+    # Display text or animation
     #
 
-    def show_on_display(self, text=None, score=None, priority='low'):
-        display_mode = self.priority_display[priority]
-        display_mode.display(text, score)
+    def show_on_display(self, text=None, score=None):
+        self.display_mode.display(text, score)
 
-    def play_animation(self, anim, priority='low', repeat=False, hold=False, frame_time=1):
-        animation_mode = self.priority_animation[priority]
-        animation_mode.play(anim, repeat, hold, frame_time)
+    def play_animation(self, anim_name, frame_time=1):
+        anim = self.game.animations[anim_name]
+        self.animation_mode.play(anim, repeat=False, hold=False, frame_time=frame_time)
 
     #
     # Status Report
@@ -136,8 +127,7 @@ class BasePlay(Mode):
 
     def sw_shooterR_inactive_for_300ms(self, sw):
         self.game.sound.play('ball_launch')
-        anim = self.game.animations['bikeacrosscity']
-        self.game.base_play.play_animation(anim, 'high', repeat=False, hold=False, frame_time=5)
+        self.game.base_play.play_animation('bikeacrosscity', frame_time=5)
 
     # Enable auto-plunge soon after the new ball is launched (by the player).
     def sw_shooterR_inactive_for_1s(self, sw):
@@ -172,7 +162,7 @@ class BasePlay(Mode):
             self.extra_balls_lit += 1
             self.total_extra_balls_lit += 1
             self.game.drive_lamp('extraBall2', 'on')
-            self.game.base_play.show_on_display("Extra Ball Lit!", None, 'high')
+            self.game.base_play.show_on_display("Extra Ball Lit!")
 
     def sw_leftScorePost_active(self, sw):
         self.extra_ball_switch_hit()
@@ -189,9 +179,8 @@ class BasePlay(Mode):
     def extra_ball(self):
         player = self.game.current_player()
         player.extra_balls += 1
-        self.game.base_play.show_on_display("Extra Ball!", None, 'high')
-        anim = self.game.animations['EBAnim']
-        self.game.base_play.play_animation(anim, 'high', repeat=False, hold=False)
+        self.game.base_play.show_on_display("Extra Ball!")
+        self.game.base_play.play_animation('EBAnim')
         self.game.update_lamps()
 
     def update_lamps(self):
@@ -221,7 +210,7 @@ class BasePlay(Mode):
     def replay_callback(self):
         award = self.game.user_settings['Replay']['Replay Award']
         self.game.coils.knocker.pulse(50)
-        self.show_on_display('Replay', None, 'mid')
+        self.show_on_display('Replay')
         if award == 'Extra Ball':
             self.extra_ball()
         #else add a credit in your head
@@ -372,11 +361,11 @@ class BasePlay(Mode):
         player = self.game.current_player()
         bonus_x = player.getState('bonus_x') + 1
         player.setState('bonus_x', bonus_x)
-        self.show_on_display('Bonus at ' + str(bonus_x) + 'X', None, 'mid')
+        self.show_on_display('Bonus at ' + str(bonus_x) + 'X')
 
     def hold_bonus_x(self):
         self.game.setPlayerState('hold_bonus_x', True)
-        self.game.base_play.show_on_display('Hold Bonus X', None, 'mid')
+        self.game.base_play.show_on_display('Hold Bonus X')
 
 
 class ModesDisplay(Mode):

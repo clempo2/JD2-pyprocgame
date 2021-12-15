@@ -96,6 +96,14 @@ class Chain(Mode):
             self.modes_not_attempted_ptr = (self.modes_not_attempted_ptr + step + length) % length
         self.game.update_lamps()
 
+    def pause(self):
+        if self.mode:
+            self.mode.pause()
+
+    def resume(self):
+        if self.mode:
+            self.mode.resume()
+
     # start a chain mode by showing the instructions
     def start_chain_mode(self):
         self.game.lamps.rightStartFeature.disable()
@@ -349,6 +357,7 @@ class ChainFeature(Scoring_Mode, ModeTimer):
         self.game.base_play.regular_play.multiball.drops.animated_reset(.1)
         self.game.base_play.regular_play.multiball.reset_active_drops()
 
+
 class Pursuit(ChainFeature):
     '''Pursuit chain mode'''
 
@@ -414,8 +423,7 @@ class Blackout(ChainFeature):
 
     def mode_started(self):
         super(Blackout, self).mode_started()
-        anim = self.game.animations['blackout']
-        self.game.base_play.play_animation(anim, 'high', repeat=False, hold=False, frame_time=3)
+        self.game.base_play.play_animation('blackout', frame_time=3)
 
     def mode_stopped(self):
         self.game.lamps.blackoutJackpot.disable()
@@ -475,8 +483,7 @@ class Sniper(ChainFeature):
     def sw_popperR_active_for_300ms(self, sw):
         self.num_shots += 1
         self.game.score(10000)
-        anim = self.game.animations['dredd_shoot_at_sniper']
-        self.game.base_play.play_animation(anim, 'high', repeat=False, hold=False, frame_time=5)
+        self.game.base_play.play_animation('dredd_shoot_at_sniper', frame_time=5)
         self.check_for_completion()
 
     def check_for_completion(self):

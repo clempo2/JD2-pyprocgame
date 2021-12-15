@@ -201,13 +201,16 @@ class JDGame(BasicGame):
         self.shooting_again = False
 
         # Add the basic modes to the mode queue
-        for mode in [self.switch_monitor, self.attract_mode, self.ball_search,
-                     self.deadworld, self.ball_save, self.trough, self.flipper_workaround_mode]:
-            self.modes.add(mode)
+        self.add_modes([self.switch_monitor, self.attract_mode, self.ball_search,
+                        self.deadworld, self.ball_save, self.trough, self.flipper_workaround_mode])
 
         # Make sure flippers are off, especially for user initiated resets.
         self.enable_flippers(enable=False)
 
+    def add_modes(self, mode_list):
+        for mode in mode_list:
+            self.modes.add(mode)
+            
     def remove_all_modes(self):
         for m in self.modes:
             self.modes.remove(m)
