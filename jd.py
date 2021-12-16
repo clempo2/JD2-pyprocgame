@@ -17,15 +17,15 @@ from my_modes.base import BasePlay
 from my_modes.deadworld import Deadworld, DeadworldTest
 
 import logging
-logging.basicConfig(level=logging.ERROR, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+logging.basicConfig(level=logging.ERROR, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 
-locale.setlocale(locale.LC_ALL, "") # Used to put commas in the score.
+locale.setlocale(locale.LC_ALL, '') # Used to put commas in the score.
 
 curr_file_path = os.path.dirname(os.path.abspath(__file__))
-settings_path = curr_file_path + "/config/settings.yaml"
-game_data_path = curr_file_path + "/config/game_data.yaml"
-game_data_template_path = curr_file_path + "/config/game_data_template.yaml"
-settings_template_path = curr_file_path + "/config/settings_template.yaml"
+settings_path = curr_file_path + '/config/settings.yaml'
+game_data_path = curr_file_path + '/config/game_data.yaml'
+game_data_template_path = curr_file_path + '/config/game_data_template.yaml'
+settings_template_path = curr_file_path + '/config/settings_template.yaml'
 
 # Workaround to deal with latency of flipper rule programming.
 # Need to make sure flippers deativate when the flipper buttons are
@@ -210,7 +210,11 @@ class JDGame(BasicGame):
     def add_modes(self, mode_list):
         for mode in mode_list:
             self.modes.add(mode)
-            
+
+    def remove_modes(self, mode_list):
+        for m in mode_list:
+            self.modes.remove(m)
+
     def remove_all_modes(self):
         for m in self.modes:
             self.modes.remove(m)
@@ -268,11 +272,11 @@ class JDGame(BasicGame):
 
     def volume_down(self):
         volume = self.sound.volume_down()
-        self.set_status("Volume Down : " + str(volume))
+        self.set_status('Volume Down : ' + str(volume))
 
     def volume_up(self):
         volume = self.sound.volume_up()
-        self.set_status("Volume Up : " + str(volume))
+        self.set_status('Volume Up : ' + str(volume))
 
     def create_player(self, name):
         return JDPlayer(name)
@@ -281,9 +285,9 @@ class JDGame(BasicGame):
         """ attempt to add an additional player, but honor the max number of players """
         if len(self.players) < 4:
             player = self.add_player()
-            self.set_status(player.name + " added!")
+            self.set_status(player.name + ' added!')
         else:
-            self.logger.info("Cannot add more than 4 players.")
+            self.logger.info('Cannot add more than 4 players.')
 
     def getPlayerState(self, key, default=None):
         player = self.current_player()
@@ -393,9 +397,10 @@ class JDGame(BasicGame):
         self.dmd.set_message(text, 3)
 
     def perform_ball_search(self):
-        self.set_status("Ball Search!")
+        self.set_status('Ball Search!')
         self.ball_search.perform_search(5)
-        self.deadworld.perform_ball_search()
+        if self.deadworld.num_balls_locked > 0:
+            self.deadworld.perform_ball_search()
 
     # Empty callback just in case a ball drains into the trough before another
     # drain_callback can be installed by a gameplay mode.
@@ -414,7 +419,7 @@ class JDGame(BasicGame):
         elif style == 'fast':
             self.lamps[lamp_name].schedule(schedule=0x55555555, cycle_seconds=0, now=True)
         elif style == 'on':
-            self.lamps[lamp_name].pulse(0)
+            self.lamps[lamp_name].enable()
         elif style == 'off':
             self.lamps[lamp_name].disable()
 
@@ -428,7 +433,7 @@ class JDGame(BasicGame):
     def enable_gi(self, on):
         for gi in ['gi01', 'gi02', 'gi03', 'gi04', 'gi05']:
             if on:
-                self.lamps[gi].pulse(0)
+                self.lamps[gi].enable()
             else:
                 self.lamps[gi].disable()
 

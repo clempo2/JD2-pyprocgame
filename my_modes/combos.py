@@ -23,9 +23,9 @@ class Combos(Mode):
 
     def get_status_layers(self):
         tiny_font = self.game.fonts['tiny7']
-        title_layer = TextLayer(128/2, 7, tiny_font, "center").set_text('Best Combos')
-        inner_loops_layer = TextLayer(128/2, 16, tiny_font, "center").set_text('Inner Loops: ' + str(self.best_inner_loops).rjust(3))
-        outer_loops_layer = TextLayer(128/2, 25, tiny_font, "center").set_text('Outer Loops: ' + str(self.best_outer_loops).rjust(3))
+        title_layer = TextLayer(128/2, 7, tiny_font, 'center').set_text('Best Combos')
+        inner_loops_layer = TextLayer(128/2, 16, tiny_font, 'center').set_text('Inner Loops: ' + str(self.best_inner_loops).rjust(3))
+        outer_loops_layer = TextLayer(128/2, 25, tiny_font, 'center').set_text('Outer Loops: ' + str(self.best_outer_loops).rjust(3))
         status_layer = GroupedLayer(128, 32, [title_layer, inner_loops_layer, outer_loops_layer])
         return [status_layer]
 

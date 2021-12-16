@@ -8,8 +8,8 @@ class StatusReport(Mode):
         tiny_font = self.game.fonts['tiny7']
         player = self.game.current_player()
 
-        report_title_layer = TextLayer(128/2, 9, tiny_font, "center").set_text('Status Report')
-        extra_ball_layer = TextLayer(128/2, 19, tiny_font, "center").set_text('Extra Balls: ' + str(player.extra_balls))
+        report_title_layer = TextLayer(128/2, 9, tiny_font, 'center').set_text('Status Report')
+        extra_ball_layer = TextLayer(128/2, 19, tiny_font, 'center').set_text('Extra Balls: ' + str(player.extra_balls))
         main_title_layer = GroupedLayer(128, 32, [report_title_layer, extra_ball_layer])
 
         self.report_layers = ([main_title_layer] +

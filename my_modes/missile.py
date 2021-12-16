@@ -10,7 +10,7 @@ class MissileAwardMode(Mode):
         super(MissileAwardMode, self).__init__(game, priority)
 
         self.video_mode_setting = self.game.user_settings['Gameplay']['Video mode']
-        if self.video_mode_setting != "off":
+        if self.video_mode_setting != 'off':
             self.video_mode = ShootingGallery(self.game, priority + 11, self.video_mode_setting)
             self.video_mode.on_complete = self.video_mode_complete
 
@@ -21,18 +21,18 @@ class MissileAwardMode(Mode):
         self.delay_time = 0.200
 
         font = self.game.fonts['tiny7']
-        self.title_layer = TextLayer(128/2, 7, font, "center")
-        self.title_layer.set_text("Missile Award")
+        self.title_layer = TextLayer(128/2, 7, font, 'center')
+        self.title_layer.set_text('Missile Award')
 
-        self.element_layer = TextLayer(128/2, 15, font, "center")
-        self.element_layer.set_text("Left Fire btn collects:")
+        self.element_layer = TextLayer(128/2, 15, font, 'center')
+        self.element_layer.set_text('Left Fire btn collects:')
 
-        self.value_layer = TextLayer(128/2, 22, font, "center")
+        self.value_layer = TextLayer(128/2, 22, font, 'center')
         self.selection_layer = GroupedLayer(128, 32, [self.title_layer, self.element_layer, self.value_layer])
 
     def mode_started(self):
         player = self.game.current_player()
-        self.video_mode_lit = player.getState('video_mode_lit', self.video_mode_setting != "off")
+        self.video_mode_lit = player.getState('video_mode_lit', self.video_mode_setting != 'off')
         self.missile_award_lit = player.getState('missile_award_lit', False)
         self.available_awards = player.getState('available_awards', self.initial_awards[:])
         self.active = False

@@ -125,7 +125,7 @@ class DarkJudge(ChallengeBase):
     def show_score(self):
         if self.score_layer:
             score = self.game.current_player().score
-            text = '00' if score == 0 else locale.format("%d", score, True)
+            text = '00' if score == 0 else locale.format('%d', score, True)
             self.score_layer.set_text(text)
 
 
@@ -202,7 +202,7 @@ Extinguish fires and banish Judge Fire by shooting the lit crimescene shots.
             self.finish()
 
     def finish(self):
-        self.layer = TextLayer(128/2, 13, self.game.fonts['tiny7'], "center", True).set_text('Fire Defeated!')
+        self.layer = TextLayer(128/2, 13, self.game.fonts['tiny7'], 'center', True).set_text('Fire Defeated!')
         self.game.enable_flippers(False)
         self.game.coils.flasherFire.disable()
         self.mystery_lit = False
@@ -305,7 +305,7 @@ Banish him by shooting each lit shot twice.
 
     def finish(self):
         self.cancel_delayed('taunt')
-        self.layer = TextLayer(128/2, 13, self.game.fonts['tiny7'], "center", True).set_text('Mortis Defeated!')
+        self.layer = TextLayer(128/2, 13, self.game.fonts['tiny7'], 'center', True).set_text('Mortis Defeated!')
         self.game.enable_flippers(False)
         self.game.coils.flasherMortis.disable()
         self.update_lamps()
@@ -332,10 +332,10 @@ Banish him by shooting the lit ramp shots and then the subway before time runs o
 
     def __init__(self, game, priority):
         super(Fear, self).__init__(game, priority)
-        self.countdown_layer = TextLayer(127, 1, self.game.fonts['tiny7'], "right")
-        self.name_layer = TextLayer(1, 1, self.game.fonts['tiny7'], "left").set_text('Fear')
-        self.score_layer = TextLayer(128/2, 10, self.game.fonts['num_14x10'], "center")
-        self.status_layer = TextLayer(128/2, 26, self.game.fonts['tiny7'], "center")
+        self.countdown_layer = TextLayer(127, 1, self.game.fonts['tiny7'], 'right')
+        self.name_layer = TextLayer(1, 1, self.game.fonts['tiny7'], 'left').set_text('Fear')
+        self.score_layer = TextLayer(128/2, 10, self.game.fonts['num_14x10'], 'center')
+        self.status_layer = TextLayer(128/2, 26, self.game.fonts['tiny7'], 'center')
         self.layer = GroupedLayer(128, 32, [self.countdown_layer, self.name_layer, self.score_layer, self.status_layer])
 
     def mode_started(self):
@@ -471,7 +471,7 @@ Banish him by shooting the lit ramp shots and then the subway before time runs o
         self.game.coils.flasherFear.disable()
         self.update_lamps()
         text = 'Fear Defeated' if success else 'You lose!'
-        self.layer = TextLayer(128/2, 13, self.game.fonts['tiny7'], "center", True).set_text(text)
+        self.layer = TextLayer(128/2, 13, self.game.fonts['tiny7'], 'center', True).set_text(text)
         if success:
             self.complete_callback()
 
@@ -481,10 +481,10 @@ class Death(DarkJudge, CrimeSceneBase):
 
     def __init__(self, game, priority):
         super(Death, self).__init__(game, priority)
-        self.countdown_layer = TextLayer(127, 1, self.game.fonts['tiny7'], "right")
-        self.name_layer = TextLayer(1, 1, self.game.fonts['tiny7'], "left").set_text('Death')
-        self.score_layer = TextLayer(128/2, 10, self.game.fonts['num_14x10'], "center")
-        self.status_layer = TextLayer(128/2, 26, self.game.fonts['tiny7'], "center")
+        self.countdown_layer = TextLayer(127, 1, self.game.fonts['tiny7'], 'right')
+        self.name_layer = TextLayer(1, 1, self.game.fonts['tiny7'], 'left').set_text('Death')
+        self.score_layer = TextLayer(128/2, 10, self.game.fonts['num_14x10'], 'center')
+        self.status_layer = TextLayer(128/2, 26, self.game.fonts['tiny7'], 'center')
         self.layer = GroupedLayer(128, 32, [self.countdown_layer, self.name_layer, self.score_layer, self.status_layer])
 
     def instructions(self):
@@ -577,7 +577,7 @@ Banish him by shooting the lit crimescene shots before time expires.  Shots slow
 
     def finish(self, success):
         self.cancel_delayed(['taunt', 'countdown'])
-        self.layer = TextLayer(128/2, 13, self.game.fonts['tiny7'], "center", True).set_text('Death Defeated!')
+        self.layer = TextLayer(128/2, 13, self.game.fonts['tiny7'], 'center', True).set_text('Death Defeated!')
         self.game.enable_flippers(False)
         self.game.coils.flasherDeath.disable()
 

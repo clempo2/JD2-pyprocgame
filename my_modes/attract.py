@@ -20,35 +20,15 @@ class Attract(Mode):
         super(Attract, self).__init__(game, 1)
         self.lampshow_keys = ['attract0', 'attract1']
 
-    def mode_started(self):
-        if self.game.deadworld.num_balls_locked > 0:
-            self.game.deadworld.eject_balls(self.game.deadworld.num_balls_locked)
-            self.delay(name='deadworld_empty', event_type=None, delay=10, handler=self.check_deadworld_empty)
-
-        # Blink the start buttons in alternation to notify player about starting a game.
-        self.game.lamps.startButton.schedule(schedule=0x00ff00ff, cycle_seconds=0, now=False)
-        self.game.lamps.superGame.schedule(schedule=0xff00ff00, cycle_seconds=0, now=False)
-
-        # Turn on minimal GI lamps
-        self.game.enable_gi(False)
-        self.game.lamps.gi01.pulse(0)
-
-        # Release the ball from places it could be stuck.
-        for name in ['popperL', 'popperR', 'shooterL', 'shooterR']:
-            if self.game.switches[name].is_active():
-                self.game.coils[name].pulse()
-
-        self.change_lampshow()
-
         self.cityscape_layer = self.game.animations['cityscape']
-        self.jd_layer = TextLayer(128/2, 7, self.game.fonts['jazz18'], "center", opaque=True).set_text("Judge Dredd")
+        self.jd_layer = TextLayer(128/2, 7, self.game.fonts['jazz18'], 'center', opaque=True).set_text('Judge Dredd')
         self.jd_layer.transition = PushTransition(direction='south')
         self.proc_splash_layer = self.game.animations['Splash']
         self.proc_splash_layer.transition = PushTransition(direction='south')
-        self.pyprocgame_layer = TextLayer(128/2, 7, self.game.fonts['jazz18'], "center", opaque=True).set_text("pyprocgame")
+        self.pyprocgame_layer = TextLayer(128/2, 7, self.game.fonts['jazz18'], 'center', opaque=True).set_text('pyprocgame')
         self.pyprocgame_layer.transition = PushTransition(direction='west')
-        self.press_start_layer = TextLayer(128/2, 7, self.game.fonts['jazz18'], "center", opaque=True).set_text("Press Start", seconds=None, blink_frames=1)
-        self.scores_layer = TextLayer(128/2, 7, self.game.fonts['jazz18'], "center", opaque=True).set_text("High Scores")
+        self.press_start_layer = TextLayer(128/2, 7, self.game.fonts['jazz18'], 'center', opaque=True).set_text('Press Start', seconds=None, blink_frames=1)
+        self.scores_layer = TextLayer(128/2, 7, self.game.fonts['jazz18'], 'center', opaque=True).set_text('High Scores')
         self.scores_layer.transition = PushTransition(direction='north')
 
         gen = MarkupFrameGenerator()
@@ -88,11 +68,29 @@ class Attract(Mode):
         self.judges_layer = self.game.animations['darkjudges_no_bg']
         self.longwalk_layer = self.game.animations['longwalk']
 
+    def mode_started(self):
+        if self.game.deadworld.num_balls_locked > 0:
+            self.game.deadworld.eject_balls(self.game.deadworld.num_balls_locked)
+
+        # Blink the start buttons in alternation to notify player about starting a game.
+        self.game.lamps.startButton.schedule(schedule=0x00ff00ff, cycle_seconds=0, now=False)
+        self.game.lamps.superGame.schedule(schedule=0xff00ff00, cycle_seconds=0, now=False)
+
+        # Turn on minimal GI lamps
+        self.game.enable_gi(False)
+        self.game.lamps.gi01.enable()
+
+        # Release the ball from places it could be stuck.
+        for name in ['popperL', 'popperR', 'shooterL', 'shooterR']:
+            if self.game.switches[name].is_active():
+                self.game.coils[name].pulse()
+
+        self.change_lampshow()
         self.pre_game_display()
 
     def mode_stopped(self):
-        self.game.lamps.startButton.pulse(0)
-        self.game.lamps.superGame.pulse(0)
+        self.game.lamps.startButton.enable()
+        self.game.lamps.superGame.enable()
         self.cancel_delayed(name='lampshow')
         self.game.lampctrl.stop_show()
 
@@ -176,7 +174,3 @@ class Attract(Mode):
 
     def sw_shooterR_active_for_500ms(self, sw):
         self.game.coils.shooterR.pulse(40)
-
-    def check_deadworld_empty(self):
-        if self.game.deadworld.num_balls_locked > 0:
-            self.delay(name='deadworld_empty', event_type=None, delay=10, handler=self.check_deadworld_empty)

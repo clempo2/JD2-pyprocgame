@@ -46,14 +46,8 @@ class RegularPlay(Scoring_Mode):
         self.game.update_lamps()
 
     def mode_stopped(self):
-        for mode in [self.skill_shot, self.chain, self.crime_scenes, self.multiball]:
-            self.game.modes.remove(mode)
-
+        self.game.remove_modes([self.skill_shot, self.chain, self.crime_scenes, self.multiball])
         self.game.setPlayerState('mystery_lit', self.mystery_lit)
-
-    #
-    # Message
-    #
 
     def sw_shooterR_active(self, sw):
         if self.game.base_play.ball_starting:
@@ -67,6 +61,10 @@ class RegularPlay(Scoring_Mode):
                 self.welcome()
                 self.high_score_mention()
 
+    #
+    # Message
+    #
+
     def welcome(self):
         if self.game.ball == 1 or self.game.shooting_again:
             self.game.modes.add(self.game_intro)
@@ -75,10 +73,10 @@ class RegularPlay(Scoring_Mode):
         if self.game.ball == self.game.balls_per_game:
             if self.base_play.replay.replay_achieved[0]:
                 text = 'Highest Score'
-                score = str(self.game.game_data['ClassicHighScoreData'][0]['inits']) + locale.format("  %d",self.game.game_data['ClassicHighScoreData'][0]['score'],True)
+                score = str(self.game.game_data['ClassicHighScoreData'][0]['inits']) + locale.format('  %d',self.game.game_data['ClassicHighScoreData'][0]['score'],True)
             else:
                 text = 'Replay'
-                score = locale.format("%d", self.base_play.replay.replay_scores[0], True)
+                score = locale.format('%d', self.base_play.replay.replay_scores[0], True)
             self.game.base_play.show_on_display(text, score)
 
     def sw_shooterL_active_for_500ms(self, sw):
@@ -119,7 +117,10 @@ class RegularPlay(Scoring_Mode):
                 self.state = 'chain_complete'
 
     # starts a mode if a mode is available
-    def sw_popperR_active_for_200ms(self, sw):
+    # the 300ms delay must be the same or longer than the popperR handler in crimescenes
+    # If that shot starts block war multiball, we want crimescenes to go first and change the state to busy
+    # so we don't start something else here
+    def sw_popperR_active_for_300ms(self, sw):
         if self.state == 'chain_ready':
             self.state = 'busy'
             self.chain.start_chain_mode()
@@ -174,8 +175,7 @@ class RegularPlay(Scoring_Mode):
 
     def start_ultimate_challenge(self):
         self.game.lamps.rightStartFeature.disable()
-        for mode in [self.chain, self.crime_scenes, self.multiball, self]:
-            self.game.modes.remove(mode)
+        self.game.remove_modes([self.chain, self.crime_scenes, self.multiball, self])
         self.reset_modes()
         self.game.base_play.start_ultimate_challenge()
 
@@ -270,7 +270,7 @@ class RegularPlay(Scoring_Mode):
     def ball_save_callback(self):
         if not self.any_multiball_active():
             self.game.sound.play_voice('ball saved')
-            self.game.base_play.show_on_display("Ball Saved!")
+            self.game.base_play.show_on_display('Ball Saved!')
             self.skill_shot.skill_shot_expired()
 
     def ball_drained(self):
@@ -304,7 +304,7 @@ class GameIntro(Mode):
     def shoot_again(self):
         self.game.sound.play_voice('shoot again ' + str(self.game.current_player_index+1))
         big_font = self.game.fonts['jazz18']
-        self.again_layer = TextLayer(128/2, 9, big_font, "center").set_text('Shoot Again', 3)
+        self.again_layer = TextLayer(128/2, 9, big_font, 'center').set_text('Shoot Again', 3)
         self.layer = GroupedLayer(128, 32, [self.again_layer])
 
     def play_intro(self):

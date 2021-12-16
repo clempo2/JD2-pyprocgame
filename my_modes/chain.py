@@ -72,8 +72,8 @@ class Chain(Mode):
 
     def get_status_layers(self):
         tiny_font = self.game.fonts['tiny7']
-        attempted_layer = TextLayer(128/2, 9, tiny_font, "center").set_text('Modes attempted: ' + str(self.num_modes_attempted))
-        completed_layer = TextLayer(128/2, 19, tiny_font, "center").set_text('Modes completed: ' + str(self.num_modes_completed))
+        attempted_layer = TextLayer(128/2, 9, tiny_font, 'center').set_text('Modes attempted: ' + str(self.num_modes_attempted))
+        completed_layer = TextLayer(128/2, 19, tiny_font, 'center').set_text('Modes completed: ' + str(self.num_modes_completed))
         status_layer = GroupedLayer(128, 32, [attempted_layer, completed_layer])
         return [status_layer]
 
@@ -158,7 +158,7 @@ class Chain(Mode):
     def hurry_up_over(self):
         self.mode = None
         self.game.modes.remove(self.hurry_up)
-        self.game.base_play.regular_play.setup_next_mode()
+        self.game.base_play.regular_play.chain_mode_completed()
 
     def update_lamps(self):
         if len(self.modes_not_attempted) > 0:
@@ -175,12 +175,12 @@ class ChainHurryUp(Mode):
 
     def __init__(self, game, priority):
         super(ChainHurryUp, self).__init__(game, priority)
-        self.countdown_layer = TextLayer(128/2, 7, self.game.fonts['jazz18'], "center")
-        self.banner_layer = TextLayer(128/2, 7, self.game.fonts['jazz18'], "center")
+        self.countdown_layer = TextLayer(128/2, 7, self.game.fonts['jazz18'], 'center')
+        self.banner_layer = TextLayer(128/2, 7, self.game.fonts['jazz18'], 'center')
         self.layer = GroupedLayer(128, 32, [self.countdown_layer, self.banner_layer])
 
     def mode_started(self):
-        self.banner_layer.set_text("HURRY-UP!", 3)
+        self.banner_layer.set_text('HURRY-UP!', 3)
         self.seconds_remaining = 13
         self.update_and_delay()
         self.update_lamps()
@@ -221,7 +221,7 @@ class ChainHurryUp(Mode):
         self.collected_callback()
 
     def update_and_delay(self):
-        self.countdown_layer.set_text("%d seconds" % (self.seconds_remaining))
+        self.countdown_layer.set_text('%d seconds' % (self.seconds_remaining))
         self.delay(name='countdown', event_type=None, delay=1, handler=self.one_less_second)
 
     def one_less_second(self):
@@ -236,7 +236,7 @@ class ChainHurryUp(Mode):
 
 
 class ModeTimer(Mode):
-    '''timer for a timed mode'''
+    """timer for a timed mode"""
 
     def __init__(self, game, priority):
         super(ModeTimer, self).__init__(game, priority)
@@ -281,7 +281,7 @@ class ModeTimer(Mode):
 
 
 class ChainFeature(Scoring_Mode, ModeTimer):
-    '''Base class for the chain modes'''
+    """Base class for the chain modes"""
 
     def __init__(self, game, priority, name, lamp_name):
         super(ChainFeature, self).__init__(game, priority)
@@ -303,7 +303,7 @@ class ChainFeature(Scoring_Mode, ModeTimer):
         self.update_lamps()
 
     def set_shots_required(self, options):
-        '''Return the number of required shots depending on the settings and the options for the mode'''
+        """Return the number of required shots depending on the settings and the options for the mode"""
         difficulty = self.game.user_settings['Gameplay']['Chain feature difficulty']
         if not difficulty in ['easy', 'medium', 'hard']:
             difficulty = 'medium'
@@ -359,7 +359,7 @@ class ChainFeature(Scoring_Mode, ModeTimer):
 
 
 class Pursuit(ChainFeature):
-    '''Pursuit chain mode'''
+    """Pursuit chain mode"""
 
     def __init__(self, game, priority):
         super(Pursuit, self).__init__(game, priority, 'Pursuit', 'pursuit')
@@ -414,7 +414,7 @@ class Pursuit(ChainFeature):
 
 
 class Blackout(ChainFeature):
-    '''Blackout chain mode'''
+    """Blackout chain mode"""
 
     def __init__(self, game, priority):
         super(Blackout, self).__init__(game, priority, 'Blackout', 'blackout')
@@ -432,7 +432,7 @@ class Blackout(ChainFeature):
 
     def update_lamps(self):
         self.game.enable_gi(False) # disable all gi except gi05
-        self.game.lamps.gi05.pulse(0)
+        self.game.lamps.gi05.enable()
         self.game.lamps.blackoutJackpot.schedule(schedule=0x000F000F, cycle_seconds=0, now=True)
 
     def sw_centerRampExit_active(self, sw):
@@ -450,7 +450,7 @@ class Blackout(ChainFeature):
             self.exit_callback(True)
 
 class Sniper(ChainFeature):
-    '''Sniper chain mode'''
+    """Sniper chain mode"""
 
     def __init__(self, game, priority):
         super(Sniper, self).__init__(game, priority, 'Sniper', 'sniper')
@@ -497,7 +497,7 @@ class Sniper(ChainFeature):
 
 
 class BattleTank(ChainFeature):
-    '''Battle tank chain mode'''
+    """Battle tank chain mode"""
 
     def __init__(self, game, priority):
         super(BattleTank, self).__init__(game, priority, 'Battle Tank', 'battleTank')
@@ -548,7 +548,7 @@ class BattleTank(ChainFeature):
 
 
 class Meltdown(ChainFeature):
-    '''Meltdown chain mode'''
+    """Meltdown chain mode"""
 
     def __init__(self, game, priority):
         super(Meltdown, self).__init__(game, priority, 'Meltdown', 'meltdown')
@@ -592,7 +592,7 @@ class Meltdown(ChainFeature):
 
 
 class Impersonator(ChainFeature):
-    '''Bad impersonator chain mode'''
+    """Bad impersonator chain mode"""
 
     def __init__(self, game, priority):
         super(Impersonator, self).__init__(game, priority, 'Impersonator', 'impersonator')
@@ -671,17 +671,17 @@ class Impersonator(ChainFeature):
         # ModeTimer is continuously updating self.timer
         time = self.timer % 6
         if time == 0:
-            self.game.lamps.dropTargetJ.pulse(0)
-            self.game.lamps.dropTargetU.pulse(0)
+            self.game.lamps.dropTargetJ.enable()
+            self.game.lamps.dropTargetU.enable()
         elif time == 1 or time == 5:
-            self.game.lamps.dropTargetU.pulse(0)
-            self.game.lamps.dropTargetD.pulse(0)
+            self.game.lamps.dropTargetU.enable()
+            self.game.lamps.dropTargetD.enable()
         elif time == 2 or time == 4:
-            self.game.lamps.dropTargetD.pulse(0)
-            self.game.lamps.dropTargetG.pulse(0)
+            self.game.lamps.dropTargetD.enable()
+            self.game.lamps.dropTargetG.enable()
         elif time == 3:
-            self.game.lamps.dropTargetG.pulse(0)
-            self.game.lamps.dropTargetE.pulse(0)
+            self.game.lamps.dropTargetG.enable()
+            self.game.lamps.dropTargetE.enable()
         self.delay(name='moving_target', event_type=None, delay=1, handler=self.moving_target)
 
     def check_for_completion(self):
@@ -692,7 +692,7 @@ class Impersonator(ChainFeature):
 
 
 class Safecracker(ChainFeature):
-    '''Safecracker chain mode'''
+    """Safecracker chain mode"""
 
     def __init__(self, game, priority):
         super(Safecracker, self).__init__(game, priority, 'Safe Cracker', 'safecracker')
@@ -741,7 +741,7 @@ class Safecracker(ChainFeature):
 
 
 class ManhuntMillions(ChainFeature):
-    '''ManhuntMillions chain mode'''
+    """ManhuntMillions chain mode"""
 
     def __init__(self, game, priority):
         super(ManhuntMillions, self).__init__(game, priority, 'Manhunt', 'manhunt')
@@ -783,7 +783,7 @@ class ManhuntMillions(ChainFeature):
 
 
 class Stakeout(ChainFeature):
-    '''Stakeout chain mode'''
+    """Stakeout chain mode"""
 
     def __init__(self, game, priority):
         super(Stakeout, self).__init__(game, priority, 'Stakeout', 'stakeout')

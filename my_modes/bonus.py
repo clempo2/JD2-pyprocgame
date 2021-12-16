@@ -8,9 +8,9 @@ class Bonus(Mode):
         super(Bonus, self).__init__(game, priority)
         font_big = self.game.fonts['jazz18']
         font_small = self.game.fonts['tiny7']
-        self.title_layer = TextLayer(128/2, 7, font_big, "center")
-        self.name_layer = TextLayer(128/2, 7, font_small, "center")
-        self.value_layer = TextLayer(128/2, 20, font_small, "center")
+        self.title_layer = TextLayer(128/2, 7, font_big, 'center')
+        self.name_layer = TextLayer(128/2, 7, font_small, 'center')
+        self.value_layer = TextLayer(128/2, 20, font_small, 'center')
         self.layer = GroupedLayer(128, 32, [self.title_layer, self.name_layer, self.value_layer])
 
     def compute(self, exit_callback):
@@ -19,13 +19,13 @@ class Bonus(Mode):
         self.title_layer.set_text('BONUS', self.delay_time)
 
         player = self.game.current_player()
-        num_modes_attempted = player.getState("num_modes_attempted")
+        num_modes_attempted = player.getState('num_modes_attempted')
         attempted = ['Modes Attempted: ' + str(num_modes_attempted), num_modes_attempted * 4000]
 
-        num_modes_completed = player.getState("num_modes_completed")
+        num_modes_completed = player.getState('num_modes_completed')
         completed = ['Modes Completed: ' + str(num_modes_completed), num_modes_completed * 12000]
 
-        crimescenes_total_levels = player.getState("crimescenes_total_levels")
+        crimescenes_total_levels = player.getState('crimescenes_total_levels')
         crimescenes = ['Crimescene Levels: ' + str(crimescenes_total_levels), crimescenes_total_levels * 2000]
 
         base = attempted[1] + completed[1] + crimescenes[1]

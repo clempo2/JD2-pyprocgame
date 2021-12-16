@@ -34,28 +34,28 @@ class ShootingGallery(Mode):
 
     def intro(self):
         self.game.enable_flippers(False)
-        self.status_layer = TextLayer(128/2, 7, self.game.fonts['jazz18'], "center", opaque=False).set_text("Video Mode")
+        self.status_layer = TextLayer(128/2, 7, self.game.fonts['jazz18'], 'center', opaque=False).set_text('Video Mode')
         self.intro_layer_0 = GroupedLayer(128, 32, [self.status_layer])
 
         if self.cow_mode:
-            enemy_text = "Shoot mean cows"
-            friend_text = "Do NOT shoot nice cows"
+            enemy_text = 'Shoot mean cows'
+            friend_text = 'Do NOT shoot nice cows'
         else:
-            enemy_text = "Shoot enemies"
-            friend_text = "Do NOT shoot friends"
+            enemy_text = 'Shoot enemies'
+            friend_text = 'Do NOT shoot friends'
 
-        self.instruction_layer_11 = TextLayer(128/2, 7, self.game.fonts['07x5'], "center").set_text(enemy_text)
-        self.instruction_layer_12 = TextLayer(128/2, 17, self.game.fonts['07x5'], "center").set_text(friend_text)
+        self.instruction_layer_11 = TextLayer(128/2, 7, self.game.fonts['07x5'], 'center').set_text(enemy_text)
+        self.instruction_layer_12 = TextLayer(128/2, 17, self.game.fonts['07x5'], 'center').set_text(friend_text)
         self.intro_layer_1 = GroupedLayer(128, 32, [self.instruction_layer_11, self.instruction_layer_12])
 
-        self.instruction_layer_21 = TextLayer(128/2, 7, self.game.fonts['07x5'], "center").set_text("Flipper buttons aim")
-        self.instruction_layer_22 = TextLayer(128/2, 17, self.game.fonts['07x5'], "center").set_text("Fire buttons shoot")
+        self.instruction_layer_21 = TextLayer(128/2, 7, self.game.fonts['07x5'], 'center').set_text('Flipper buttons aim')
+        self.instruction_layer_22 = TextLayer(128/2, 17, self.game.fonts['07x5'], 'center').set_text('Fire buttons shoot')
         self.intro_layer_2 = GroupedLayer(128, 32, [self.instruction_layer_21, self.instruction_layer_22])
 
-        self.intro_layer_3 = TextLayer(128/2, 7, self.game.fonts['jazz18'], "center", opaque=False).set_text("Video Mode").set_text("Ready...")
+        self.intro_layer_3 = TextLayer(128/2, 7, self.game.fonts['jazz18'], 'center', opaque=False).set_text('Video Mode').set_text('Ready...')
 
         self.anim_layer = self.game.animations['gun_powerup']
-        self.status_layer_4 = TextLayer(128/2, 7, self.game.fonts['jazz18'], "center", opaque=False).set_text("Video Mode").set_text("Begin!")
+        self.status_layer_4 = TextLayer(128/2, 7, self.game.fonts['jazz18'], 'center', opaque=False).set_text('Video Mode').set_text('Begin!')
         self.intro_layer_4 = GroupedLayer(128, 32, [self.anim_layer, self.status_layer_4])
 
         self.layer = ScriptedLayer(128, 32, [
@@ -70,7 +70,7 @@ class ShootingGallery(Mode):
     def start(self):
 
         self.intro_active = False
-        self.status_layer.set_text("")
+        self.status_layer.set_text('')
 
         # Create the layers for each target
         self.pos_layers = []
@@ -92,7 +92,7 @@ class ShootingGallery(Mode):
             new_layer.composite_op = 'blacksrc'
             self.shot_layers += [new_layer]
 
-        self.result_layer = TextLayer(128/2, 26, self.game.fonts['07x5'], "center", opaque=True)
+        self.result_layer = TextLayer(128/2, 26, self.game.fonts['07x5'], 'center', opaque=True)
 
         # Add all of the layers to a GroupedLayer.
         all_layers = self.pos_layers + [self.scope_layer] + self.shot_layers + [self.status_layer, self.result_layer]
@@ -129,15 +129,15 @@ class ShootingGallery(Mode):
 
     def finish(self):
         self.state = 'complete'
-        self.status_layer.set_text("Completed!")
-        self.instruction_layer_21.set_text("Completion Bonus:")
+        self.status_layer.set_text('Completed!')
+        self.instruction_layer_21.set_text('Completion Bonus:')
         self.instruction_layer_22.set_text(str(100000))
         self.layer = self.intro_layer_2
         self.delay(name='show_num_shot', event_type=None, delay=2.0, handler=self.show_num_shot)
 
     def show_num_shot(self):
-        self.instruction_layer_21.set_text("Enemies Shot:")
-        self.instruction_layer_22.set_text(str(self.num_enemies_shot) + " of " + str(self.num_enemies))
+        self.instruction_layer_21.set_text('Enemies Shot:')
+        self.instruction_layer_22.set_text(str(self.num_enemies_shot) + ' of ' + str(self.num_enemies))
         self.success = self.num_enemies_shot == self.num_enemies
         if self.success:
             self.delay(name='perfect', event_type=None, delay=3.0, handler=self.perfect)
@@ -145,7 +145,7 @@ class ShootingGallery(Mode):
             self.delay(name='wrap_up', event_type=None, delay=3.0, handler=self.wrap_up)
 
     def perfect(self):
-        self.status_layer.set_text("Perfect!")
+        self.status_layer.set_text('Perfect!')
         self.layer = self.status_layer
         self.layer.opaque = True
         self.delay(name='wrap_up', event_type=None, delay=2.0, handler=self.wrap_up)
@@ -222,7 +222,7 @@ class ShootingGallery(Mode):
         if self.targets[self.scope_pos] == 'enemy':
             self.delay(name='enemy_shot', event_type=None, delay=1.5, handler=self.enemy_shot, param=self.scope_pos)
             self.targets[self.scope_pos] = 'shot'
-            self.result_layer.set_text("Good Shot", 1)
+            self.result_layer.set_text('Good Shot', 1)
             self.num_enemies_shot += 1
             self.game.sound.play('bad guy shot')
         elif self.targets[self.scope_pos] == 'empty':
@@ -245,7 +245,7 @@ class ShootingGallery(Mode):
     def friend_shot(self):
         self.game.sound.play('good guy shot')
         self.state = 'complete'
-        self.status_layer.set_text("Failed!")
+        self.status_layer.set_text('Failed!')
         self.cancel_delayed(['empty_shot', 'enemy_shot', 'enemy_remove', 'friend_shot', 'add', 'finish'])
         self.delay(name='wrap_up', event_type=None, delay=2.0, handler=self.wrap_up)
         self.success = False

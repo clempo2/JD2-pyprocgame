@@ -152,7 +152,7 @@ class Deadworld(Mode):
 
     def debug(self):
         self.delay(name='debug', event_type=None, delay=1, handler=self.debug)
-        self.game.set_status(str(self.num_balls_to_eject) + "," + str(self.num_balls_locked))
+        self.game.set_status(str(self.num_balls_to_eject) + ',' + str(self.num_balls_locked))
 
 
 class DeadworldTest(ServiceModeSkeleton):
@@ -160,11 +160,11 @@ class DeadworldTest(ServiceModeSkeleton):
 
     def __init__(self, game, priority, font):
         super(DeadworldTest, self).__init__(game, priority, font)
-        self.name = "DeadWorld Test"
-        self.title_layer = TextLayer(1, 1, font, "left")
-        self.globe_layer = TextLayer(1, 9, font, "left")
-        self.arm_layer = TextLayer(1, 17, font, "left")
-        self.magnet_layer = TextLayer(1, 25, font, "left")
+        self.name = 'DeadWorld Test'
+        self.title_layer = TextLayer(1, 1, font, 'left')
+        self.globe_layer = TextLayer(1, 9, font, 'left')
+        self.arm_layer = TextLayer(1, 17, font, 'left')
+        self.magnet_layer = TextLayer(1, 25, font, 'left')
         self.layer = GroupedLayer(128, 32, [self.title_layer, self.globe_layer, self.arm_layer, self.magnet_layer])
 
         self.title_layer.set_text(self.name)

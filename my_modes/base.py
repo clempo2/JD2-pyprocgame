@@ -75,7 +75,7 @@ class BasePlay(Mode):
             self.game.modes.add(self.regular_play)
 
     def mode_stopped(self):
-        self.game.modes.remove([self.display_mode, self.animation_mode])
+        self.game.remove_modes([self.display_mode, self.animation_mode])
         self.game.enable_flippers(False)
         self.game.ball_search.disable()
         self.game.trough.drain_callback = self.game.drain_callback
@@ -162,7 +162,7 @@ class BasePlay(Mode):
             self.extra_balls_lit += 1
             self.total_extra_balls_lit += 1
             self.game.drive_lamp('extraBall2', 'on')
-            self.game.base_play.show_on_display("Extra Ball Lit!")
+            self.game.base_play.show_on_display('Extra Ball Lit!')
 
     def sw_leftScorePost_active(self, sw):
         self.extra_ball_switch_hit()
@@ -179,7 +179,7 @@ class BasePlay(Mode):
     def extra_ball(self):
         player = self.game.current_player()
         player.extra_balls += 1
-        self.game.base_play.show_on_display("Extra Ball!")
+        self.game.base_play.show_on_display('Extra Ball!')
         self.game.base_play.play_animation('EBAnim')
         self.game.update_lamps()
 
@@ -308,7 +308,7 @@ class BasePlay(Mode):
         if not self.tilt.tilted:
             for mode in self.game.modes:
                 # does it implement ball_drained
-                if mode.getattr(mode, "ball_drained", None):
+                if mode.getattr(mode, 'ball_drained', None):
                     if mode.ball_drained():
                         # drain was intentional, ignore it
                         return
@@ -325,10 +325,7 @@ class BasePlay(Mode):
 
         # Make sure the motor isn't spinning between balls.
         self.game.coils.globeMotor.disable()
-
-        for mode in [self.boring, self.combos, self.tilt, self.regular_play, self.ultimate_challenge]:
-            self.game.modes.remove(mode)
-
+        self.game.remove_modes([self.boring, self.combos, self.tilt, self.regular_play, self.ultimate_challenge])
         self.game.enable_flippers(False)
 
         if self.tilt.tilted:
@@ -373,9 +370,9 @@ class ModesDisplay(Mode):
 
     def __init__(self, game, priority):
         super(ModesDisplay, self).__init__(game, priority)
-        self.big_text_layer = TextLayer(128/2, 7, self.game.fonts['jazz18'], "center")
-        self.small_text_layer = TextLayer(128/2, 7, self.game.fonts['07x5'], "center")
-        self.score_layer = TextLayer(128/2, 17, self.game.fonts['num_14x10'], "center")
+        self.big_text_layer = TextLayer(128/2, 7, self.game.fonts['jazz18'], 'center')
+        self.small_text_layer = TextLayer(128/2, 7, self.game.fonts['07x5'], 'center')
+        self.score_layer = TextLayer(128/2, 17, self.game.fonts['num_14x10'], 'center')
 
     def display(self, text=None, score=None):
         layers = []
