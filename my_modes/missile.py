@@ -61,9 +61,10 @@ class MissileAwardMode(Mode):
 
     def sw_fireL_active(self, sw):
         if self.active:
-            self.cancel_delayed('missile_update')
-            self.timer = 3
-            self.update()
+            if self.timer > 3:
+                self.timer = 3
+                self.cancel_delayed('missile_update')
+                self.update()
         else:
             self.game.coils.shooterL.pulse(50)
 

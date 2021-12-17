@@ -226,10 +226,11 @@ class ChainHurryUp(Mode):
 
     def one_less_second(self):
         self.seconds_remaining -= 1
-        if self.seconds_remaining >= 0:
+        if self.seconds_remaining > 0:
             self.update_and_delay()
         else:
-            self.delay(name='grace', event_type=None, delay=2, handler=self.delayed_removal)
+            self.countdown_layer.set_text('')
+            self.delay(name='grace', event_type=None, delay=1, handler=self.delayed_removal)
 
     def delayed_removal(self):
         self.expired_callback()

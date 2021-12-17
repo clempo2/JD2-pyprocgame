@@ -1,9 +1,9 @@
 import locale
-from procgame.dmd import GroupedLayer, MarkupFrameGenerator, PanningLayer, TextLayer
-from procgame.game import Mode
+from procgame.dmd import MarkupFrameGenerator, PanningLayer, ScriptedLayer, TextLayer
 from procgame.modes import Scoring_Mode
 from chain import Chain
 from crimescenes import CrimeScenes
+from intro import Introduction
 from multiball import Multiball
 from skillshot import SkillShot
 from missile import MissileAwardMode
@@ -15,7 +15,18 @@ class RegularPlay(Scoring_Mode):
         super(RegularPlay, self).__init__(game, priority)
 
         # Instantiate sub-modes
-        self.game_intro = GameIntro(self.game, priority + 1)
+        self.game_intro = Introduction(self.game, priority + 1, delay=1.0)
+        instruct_frame = MarkupFrameGenerator().frame_for_markup(self.get_instructions())
+        instruct_layer = PanningLayer(width=128, height=32, frame=instruct_frame, origin=(0,0), translate=(0,1), bounce=False)
+        script = [{'seconds':25.0, 'layer':instruct_layer}]
+        self.game_intro.layer = ScriptedLayer(width=128, height=32, script=script)
+
+        self.shoot_again_intro = Introduction(self.game, priority + 1, delay=1.0)
+        big_font = self.game.fonts['jazz18']
+        shoot_again_layer = TextLayer(128/2, 9, big_font, 'center').set_text('Shoot Again', 3)
+        script = [{'seconds':99999999.0, 'layer':shoot_again_layer}]
+        self.shoot_again_intro.layer = ScriptedLayer(width=128, height=32, script=script)
+        
         self.skill_shot = SkillShot(self.game, priority + 5)
         self.chain = Chain(self.game, priority)
 
@@ -66,8 +77,36 @@ class RegularPlay(Scoring_Mode):
     #
 
     def welcome(self):
-        if self.game.ball == 1 or self.game.shooting_again:
+        if self.game.ball == 1:
+            self.game.sound.play_voice('welcome')
             self.game.modes.add(self.game_intro)
+        elif self.game.shooting_again:
+            self.game.sound.play_voice('shoot again ' + str(self.game.current_player_index+1))
+            self.game.modes.add(self.shoot_again_intro)
+
+    def get_instructions(self):
+        return """
+
+#INSTRUCTIONS#
+
+Hit Right Fire to abort
+
+To light Ultimate Challenge:
+Attempt all chain features
+Complete 16 crimescene levels
+Collect a multiball jackpot
+
+Start chain features by shooting the Build Up Chain Feature shot when lit
+
+Chain feature instructions are displayed when starting each feature
+
+Complete crimescene levels by shooting lit crimescene shots
+
+Light locks by completing JUDGE target bank
+
+During multiball, shoot left ramp to light jackpot then shoot subway to collect
+
+"""
 
     def high_score_mention(self):
         if self.game.ball == self.game.balls_per_game:
@@ -89,7 +128,7 @@ class RegularPlay(Scoring_Mode):
             ball_save_time = self.game.user_settings['Gameplay']['New ball ballsave time']
             self.game.ball_save.callback = self.ball_save_callback
             self.game.ball_save.start(num_balls_to_save=1, time=ball_save_time, now=True, allow_multiple_saves=False)
-        self.game.modes.remove(self.game_intro)
+        self.game.remove_modes([self.game_intro, self.shoot_again_intro])
 
     #
     # submodes
@@ -282,63 +321,3 @@ class RegularPlay(Scoring_Mode):
                 self.multiball.end_multiball()
             if self.crime_scenes.is_multiball_active():
                 self.crime_scenes.end_multiball()
-
-class GameIntro(Mode):
-    """Welcome on first ball or shoot again"""
-
-    def __init__(self, game, priority):
-        super(GameIntro, self).__init__(game, priority)
-
-    def mode_started(self):
-        self.delay(name='start', event_type=None, delay=1.0, handler=self.start )
-
-    def mode_stopped(self):
-        self.cancel_delayed(['finish', 'start'])
-
-    def start(self):
-        if self.game.shooting_again:
-            self.shoot_again()
-        else:
-            self.play_intro()
-
-    def shoot_again(self):
-        self.game.sound.play_voice('shoot again ' + str(self.game.current_player_index+1))
-        big_font = self.game.fonts['jazz18']
-        self.again_layer = TextLayer(128/2, 9, big_font, 'center').set_text('Shoot Again', 3)
-        self.layer = GroupedLayer(128, 32, [self.again_layer])
-
-    def play_intro(self):
-        self.game.sound.play_voice('welcome')
-        gen = MarkupFrameGenerator()
-        if self.game.supergame:
-            # each wizard mode has its own intro
-            self.finish()
-        else:
-            self.delay(name='finish', event_type=None, delay=25.0, handler=self.finish)
-            instructions = gen.frame_for_markup("""
-
-#INSTRUCTIONS#
-
-Hit Right Fire to abort
-
-To light Ultimate Challenge:
-Attempt all chain features
-Complete 16 crimescene levels
-Collect a multiball jackpot
-
-Start chain features by shooting the Build Up Chain Feature shot when lit
-
-Chain feature instructions are displayed when starting each feature
-
-Complete crimescene levels by shooting lit crimescene shots
-
-Light locks by completing JUDGE target bank
-
-During multiball, shoot left ramp to light jackpot then shoot subway to collect
-
-""")
-
-        self.layer = PanningLayer(width=128, height=32, frame=instructions, origin=(0,0), translate=(0,1), bounce=False)
-
-    def finish(self):
-        self.game.modes.remove(self)

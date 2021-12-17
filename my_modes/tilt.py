@@ -72,7 +72,7 @@ class TiltMonitorMode(Mode):
             (make sure the tilt isn't still swaying)
         """
 
-        if self.tilt_sw.time_since_change() < secs_since_bob_tilt:
+        if self.game.switches[self.tilt_sw].time_since_change() < secs_since_bob_tilt:
             self.delay(name='tilt_bob_settle', event_type=None, delay=secs_since_bob_tilt, handler=self.tilt_delay, param=fn)
         else:
             return fn()

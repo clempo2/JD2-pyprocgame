@@ -30,6 +30,7 @@ class Attract(Mode):
         self.press_start_layer = TextLayer(128/2, 7, self.game.fonts['jazz18'], 'center', opaque=True).set_text('Press Start', seconds=None, blink_frames=1)
         self.scores_layer = TextLayer(128/2, 7, self.game.fonts['jazz18'], 'center', opaque=True).set_text('High Scores')
         self.scores_layer.transition = PushTransition(direction='north')
+        self.game_over_layer = TextLayer(128/2, 7, self.game.fonts['jazz18'], 'center', opaque=True).set_text('Game Over')
 
         gen = MarkupFrameGenerator()
         credits_frame = gen.frame_for_markup("""
@@ -86,7 +87,7 @@ class Attract(Mode):
                 self.game.coils[name].pulse()
 
         self.change_lampshow()
-        self.pre_game_display()
+        self.display()
 
     def mode_stopped(self):
         self.game.lamps.startButton.enable()
@@ -94,34 +95,17 @@ class Attract(Mode):
         self.cancel_delayed(name='lampshow')
         self.game.lampctrl.stop_show()
 
-    def pre_game_display(self):
+    def display(self):
+        self.game.score_display.update_layer()
         script = [
             {'seconds':3.0, 'layer':self.jd_layer},
             {'seconds':4.0, 'layer':self.cityscape_layer},
             {'seconds':3.0, 'layer':self.proc_splash_layer},
             {'seconds':3.0, 'layer':self.pyprocgame_layer},
             {'seconds':3.0, 'layer':self.press_start_layer},
-            {'seconds':3.0, 'layer':self.scores_layer}
-        ]
-
-        self.append_high_score_layers(script)
-
-        script.extend([
-            {'seconds':7.2, 'layer':self.credits_layer},
-            {'seconds':3.0, 'layer':self.judges_layer}])
-
-        self.layer = ScriptedLayer(width=128, height=32, script=script)
-
-    def post_game_display(self):
-        script = [
-            {'seconds':3.0, 'layer':self.jd_layer},
-            {'seconds':4.0, 'layer':self.cityscape_layer},
-            {'seconds':3.0, 'layer':self.proc_splash_layer},
-            {'seconds':3.0, 'layer':self.pyprocgame_layer},
+            {'seconds':3.0, 'layer':self.game.score_display.layer},
             {'seconds':7.2, 'layer':self.credits_layer},
             {'seconds':3.0, 'layer':self.judges_layer},
-            {'seconds':4.0, 'layer':self.cityscape_layer},
-            {'seconds':3.0, 'layer':None},
             {'seconds':3.0, 'layer':self.scores_layer}
         ]
 
@@ -129,15 +113,17 @@ class Attract(Mode):
         self.layer = ScriptedLayer(width=128, height=32, script=script)
 
     def game_over_display(self):
+        self.game.score_display.update_layer()
         script = [
             {'seconds':6.0, 'layer':self.longwalk_layer},
-            {'seconds':3.0, 'layer':None},
+            {'seconds':3.0, 'layer':self.game_over_layer},
+            {'seconds':3.0, 'layer':self.game.score_display.layer},
             {'seconds':3.0, 'layer':self.scores_layer}
         ]
 
         self.append_high_score_layers(script)
         self.layer = ScriptedLayer(width=128, height=32, script=script)
-        self.layer.on_complete = self.post_game_display
+        self.layer.on_complete = self.display
 
     def append_high_score_layers(self, script):
         for frame in generate_highscore_frames(self.game.highscore_categories):
