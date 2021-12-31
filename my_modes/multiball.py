@@ -74,7 +74,7 @@ class Multiball(Scoring_Mode):
             self.enable_lock()
             self.display_text('Lock is Lit!')
 
-        self.update_lamps()
+        self.game.update_lamps()
 
     def mode_stopped(self):
         # save player state
@@ -113,7 +113,7 @@ class Multiball(Scoring_Mode):
         self.num_left_ramp_shots_hit = 0
         self.num_left_ramp_shots_needed = 1
         self.jackpot_lit = False
-        self.update_lamps()
+        self.game.update_lamps()
 
     def end_multiball(self):
         self.cancel_delayed(name='trip_check')
@@ -124,7 +124,7 @@ class Multiball(Scoring_Mode):
         self.reset_active_drops()
         self.num_locks_lit = 0
         self.lock_level += 1
-        self.update_lamps()
+        self.game.update_lamps()
 
     def reset_active_drops(self):
         if (self.game.switches.dropTargetJ.is_active() or
@@ -141,7 +141,7 @@ class Multiball(Scoring_Mode):
 
     def jackpot(self):
         self.game.score(100000)
-        self.update_lamps()
+        self.game.update_lamps()
         self.num_left_ramp_shots_needed += 1
         #self.jackpot_callback()
 
@@ -158,7 +158,7 @@ class Multiball(Scoring_Mode):
             self.delay(name='jackpot', event_type=None, delay=1.5, handler=self.jackpot)
             self.num_left_ramp_shots_hit = 0
             self.jackpot_collected = True
-            self.update_lamps()
+            self.game.update_lamps()
             self.game.lampctrl.play_show('jackpot', False, self.game.update_lamps)
 
     def reset_jackpot_collected(self):
@@ -260,7 +260,7 @@ class Multiball(Scoring_Mode):
         else:
             #if self.deadworld_mod_installed:
             self.game.deadworld.eject_balls(1)
-        self.update_lamps()
+        self.game.update_lamps()
 
     def possibly_light_lock(self, mode):
         dw_balls_locked_adj = 0
@@ -294,7 +294,7 @@ class Multiball(Scoring_Mode):
                     self.enable_virtual_lock()
                     self.display_text('Lock is Lit!')
 
-            self.update_lamps()
+            self.game.update_lamps()
 
     def sw_leftRampExit_active(self, sw):
         if self.state == 'load':
@@ -315,7 +315,7 @@ class Multiball(Scoring_Mode):
                 if self.game.switches.dropTargetD.is_inactive():
                     self.game.coils.tripDropTarget.pulse(40)
                     self.delay(name='trip_check', event_type=None, delay=.400, handler=self.trip_check)
-        self.update_lamps()
+        self.game.update_lamps()
 
     def update_lamps(self):
         if self.state == 'load':

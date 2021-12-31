@@ -156,10 +156,9 @@ class CrimeSceneLevels(CrimeSceneBase):
         player = self.game.current_player()
         self.targets = player.getState('crimescenes_targets', None)
         self.total_levels = player.getState('crimescenes_total_levels', 0)
-        self.level = player.getState('crimescenes_level', -1)
 
         self.num_advance_hits = 0
-        if self.level == -1:
+        if player.getState('crimescenes_level', -1) == -1:
             self.next_level()
 
     def mode_stopped(self):
@@ -167,22 +166,14 @@ class CrimeSceneLevels(CrimeSceneBase):
         player = self.game.current_player()
         player.setState('crimescenes_targets', self.targets)
         player.setState('crimescenes_total_levels', self.total_levels)
-        # 'crimescenes_level' is always kept up to date in the player's state
-
-        for shot in range(0, 5):
-            for color in range(0, 4):
-                lamp_name = 'perp' + str(shot+1) + self.lamp_colors[color]
-                self.game.drive_lamp(lamp_name, 'off')
-
-        for lamp in range(1, 5):
-            lamp_name = 'crimeLevel' + str(lamp)
-            self.game.drive_lamp(lamp_name, 'off')
+        # 'crimescenes_level' is always kept up to date in the player's state for other modes to see
 
     def get_status_layers(self):
         tiny_font = self.game.fonts['tiny7']
+        level = self.game.getPlayerState('crimescenes_level', -1)
         title_layer = TextLayer(128/2, 7, tiny_font, 'center').set_text('Crime Scenes')
-        level_layer = TextLayer(128/2, 16, tiny_font, 'center').set_text('Current Level: ' + str(self.level + 1) + '/' + str(self.levels_required))
-        block_layer = TextLayer(128/2, 25, tiny_font, 'center').set_text('Block War in ' + str(4-(self.level % 4)) + ' levels')
+        level_layer = TextLayer(128/2, 16, tiny_font, 'center').set_text('Current Level: ' + str(level + 1) + '/' + str(self.levels_required))
+        block_layer = TextLayer(128/2, 25, tiny_font, 'center').set_text('Block War in ' + str(4-(level % 4)) + ' levels')
         status_layer = GroupedLayer(128, 32, [title_layer, level_layer, block_layer])
         return [status_layer]
 
@@ -195,7 +186,7 @@ class CrimeSceneLevels(CrimeSceneBase):
         if self.num_advance_hits == 3:
             self.award_one_hit()
             self.num_advance_hits = 0
-        self.update_lamps()
+        self.game.update_lamps()
 
     def award_one_hit(self):
         for shot in self.target_award_order:
@@ -217,45 +208,48 @@ class CrimeSceneLevels(CrimeSceneBase):
                 self.level_complete()
             else:
                 self.game.sound.play_voice('crime')
-            self.update_lamps()
+            self.game.update_lamps()
 
     def level_complete(self):
         self.game.score(10000)
         self.game.lampctrl.play_show('advance_level', False, self.game.update_lamps)
         self.total_levels += 1
-        self.level += 1
+        level = self.game.getPlayerState('crimescenes_level', -1)
+        level += 1
+        self.game.setPlayerState('crimescenes_level', level)
 
-        if self.level == self.extra_ball_level:
+        if level == self.extra_ball_level:
             self.game.base_play.light_extra_ball()
 
-        if (self.level % 4) == 3:
+        if (level % 4) == 3:
             self.start_block_war()
         else:
-            self.display_level_complete(self.level, 10000)
-            self.game.sound.play_voice('block complete ' + str(self.level))
+            self.display_level_complete(level, 10000)
+            self.game.sound.play_voice('block complete ' + str(level))
             self.next_level()
 
     def next_level(self):
-        if self.level < self.levels_required:
-            self.level += 1
-            self.game.setPlayerState('crimescenes_level', self.level)
-            if self.level == self.levels_required:
+        level = self.game.getPlayerState('crimescenes_level', -1)
+        if level < self.levels_required:
+            level += 1
+            self.game.setPlayerState('crimescenes_level', level)
+            if level == self.levels_required:
                 self.crime_scenes_completed()
             else:
                 # the level consists of num_to_pick many targets chosen among the targets listed in pick_from
                 # every selected target needs to be hit once
-                pick_from = self.level_pick_from[self.level]
+                pick_from = self.level_pick_from[level]
                 shuffle(pick_from)
 
-                num_to_pick = self.level_num_shots[self.level]
+                num_to_pick = self.level_num_shots[level]
                 if num_to_pick > len(pick_from):
-                    raise ValueError('Number of targets necessary for level ' + self.level + ' exceeds the list of targets in the template')
+                    raise ValueError('Number of targets necessary for level ' + level + ' exceeds the list of targets in the template')
 
                 # Now fill targets according to shuffled template
                 self.targets = [0] * 5
                 for i in range(0, num_to_pick):
                     self.targets[pick_from[i]] = 1
-            self.update_lamps()
+            self.game.update_lamps()
 
     def display_level_complete(self, level, points):
         small_font = self.game.fonts['07x5']
@@ -273,7 +267,8 @@ class CrimeSceneLevels(CrimeSceneBase):
         style = styles[self.num_advance_hits]
         self.game.drive_lamp('advanceCrimeLevel', style)
 
-        lamp_color = self.level % 4
+        level = self.game.getPlayerState('crimescenes_level', -1)
+        lamp_color = level % 4
         for shot in range(0, 5):
             for color in range(0, 4):
                 lamp_name = 'perp' + str(shot+1) + self.lamp_colors[color]
@@ -336,7 +331,7 @@ class BlockWar(CrimeSceneBase):
                 self.round_complete()
         else:
             self.game.sound.play_voice('good shot')
-            self.update_lamps()
+            self.game.update_lamps()
 
     def round_complete(self):
         self.game.score(10000)
@@ -363,7 +358,7 @@ class BlockWarBonus(CrimeSceneBase):
         self.bonus_shot = 0
         self.delay(name='rotate_bonus_target', event_type=None, delay=3, handler=self.rotate_bonus_target, param=1)
         self.game.sound.play_voice('jackpot is lit')
-        self.update_lamps()
+        self.game.update_lamps()
 
     def mode_stopped(self):
         self.cancel_delayed('rotate_bonus_target')
@@ -377,7 +372,7 @@ class BlockWarBonus(CrimeSceneBase):
             self.end_block_war_bonus(False)
         else:
             self.delay(name='rotate_bonus_target', event_type=None, delay=3, handler=self.rotate_bonus_target, param=bonus_step)
-        self.update_lamps()
+        self.game.update_lamps()
 
     def switch_hit(self, shot):
         if shot == self.bonus_shot:

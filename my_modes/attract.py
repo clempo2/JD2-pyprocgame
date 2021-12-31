@@ -5,9 +5,6 @@ from procgame.highscore import generate_highscore_frames
 
 class FastPanningLayer(PanningLayer):
     """Pans faster than the regular PanningLayer"""
-    def __init__(self, width, height, frame, origin, translate, bounce=True):
-        super(FastPanningLayer, self).__init__(width, height, frame, origin, translate, bounce)
-
     def next_frame(self):
         self.tick += 2
         return super(FastPanningLayer, self).next_frame()
@@ -62,6 +59,8 @@ class Attract(Mode):
 
 [Special thanks to:]
 [Rob Anthony]
+[Michael Ocean]
+[Josh Kugler]
 """)
 
         self.credits_layer = FastPanningLayer(width=128, height=32, frame=credits_frame, origin=(0, 0), translate=(0, 1), bounce=False)

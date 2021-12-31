@@ -5,14 +5,18 @@ from procgame.game import Mode
 from procgame.modes import Scoring_Mode
 from intro import Introduction
 
+class ChainIntro(Introduction):
+    def update_lamps(self):
+        self.game.enable_gi(False)
+
 class Chain(Mode):
     """Controls the progress through the chain modes"""
 
     def __init__(self, game, priority):
         super(Chain, self).__init__(game, priority)
 
-        self.mode_intro = Introduction(self.game, self.priority+1)
-        self.mode_intro.exit_callback = self.activate_chain_mode
+        self.intro = ChainIntro(self.game, self.priority+1)
+        self.intro.exit_callback = self.activate_chain_mode
 
         pursuit = Pursuit(game, priority+1)
         blackout = Blackout(game, priority+1)
@@ -106,16 +110,12 @@ class Chain(Mode):
 
     # start a chain mode by showing the instructions
     def start_chain_mode(self):
-        self.game.lamps.rightStartFeature.disable()
-        self.game.enable_gi(False)
         self.mode = self.modes_not_attempted[self.modes_not_attempted_ptr]
-        self.mode_intro.setup(self.mode)
-        self.game.modes.add(self.mode_intro)
+        self.intro.setup(self.mode)
+        self.game.modes.add(self.intro)
 
     # activate a chain mode after showing the instructions
     def activate_chain_mode(self):
-        self.game.enable_gi(True)
-
         # Update the mode lists.
         self.modes_not_attempted.remove(self.mode)
         self.modes_attempted.append(self.mode)
@@ -133,8 +133,6 @@ class Chain(Mode):
     # called when the mode has completed or expired but before the hurry up
     def chain_mode_over(self, completed):
         self.game.modes.remove(self.mode)
-        # Turn on mode lamp to show it has been attempted
-        self.game.drive_lamp(self.mode.lamp_name, 'on')
 
         if completed:
             # mode was completed successfully, start hurry up award
@@ -142,6 +140,7 @@ class Chain(Mode):
             self.num_modes_completed += 1
             self.game.setPlayerState('num_modes_completed', self.num_modes_completed)
             self.game.modes.add(self.hurry_up)
+            self.game.update_lamps()
         else:
             # mode not successful, skip the hurry up
             self.hurry_up_over()
@@ -159,14 +158,17 @@ class Chain(Mode):
         self.mode = None
         self.game.modes.remove(self.hurry_up)
         self.game.base_play.regular_play.chain_mode_completed()
+        self.game.update_lamps()
 
     def update_lamps(self):
+        self.game.enable_gi(True)
+
         if len(self.modes_not_attempted) > 0:
             blinking_mode = self.mode if self.mode else self.modes_not_attempted[self.modes_not_attempted_ptr]
             for mode in self.modes_not_attempted:
                 style = 'slow' if mode is blinking_mode else 'off'
                 self.game.drive_lamp(mode.lamp_name, style)
-        for mode in self.modes_completed:
+        for mode in self.modes_attempted:
             self.game.drive_lamp(mode.lamp_name, 'on')
 
 
@@ -183,13 +185,12 @@ class ChainHurryUp(Mode):
         self.banner_layer.set_text('HURRY-UP!', 3)
         self.seconds_remaining = 13
         self.update_and_delay()
-        self.update_lamps()
+        self.game.update_lamps()
         self.game.coils.tripDropTarget.pulse(40)
         self.delay(name='trip_check', event_type=None, delay=.400, handler=self.trip_check)
         self.already_collected = False
 
     def mode_stopped(self):
-        self.game.lamps.pickAPrize.disable()
         self.cancel_delayed(['grace', 'countdown', 'trip_check'])
 
     def trip_check(self):
@@ -301,7 +302,7 @@ class ChainFeature(Scoring_Mode, ModeTimer):
         self.start_timer(self.mode_time)
         self.play_music()
         self.update_status()
-        self.update_lamps()
+        self.game.update_lamps()
 
     def set_shots_required(self, options):
         """Return the number of required shots depending on the settings and the options for the mode"""
@@ -427,7 +428,6 @@ class Blackout(ChainFeature):
         self.game.base_play.play_animation('blackout', frame_time=3)
 
     def mode_stopped(self):
-        self.game.lamps.blackoutJackpot.disable()
         self.game.coils.flasherBlackout.disable()
         self.game.enable_gi(True)
 
@@ -450,6 +450,7 @@ class Blackout(ChainFeature):
             self.game.score(110000)
             self.exit_callback(True)
 
+
 class Sniper(ChainFeature):
     """Sniper chain mode"""
 
@@ -470,7 +471,6 @@ class Sniper(ChainFeature):
         self.delay(name='gunshot', event_type=None, delay=time, handler=self.gunshot)
 
     def mode_stopped(self):
-        self.game.lamps.awardSniper.disable()
         self.cancel_delayed('gunshot')
 
     def update_lamps(self):
@@ -511,14 +511,10 @@ class BattleTank(ChainFeature):
         super(BattleTank, self).mode_started()
         self.game.sound.play_voice('tank intro')
 
-    def mode_stopped(self):
-        for lamp_name in self.lamp_names:
-            self.game.lamps[lamp_name].disable()
-
     def update_lamps(self):
         for shot in range(0, 3):
-            if self.shots[shot]:
-                self.game.lamps[self.lamp_names[shot]].schedule(schedule=0x00FF00FF, cycle_seconds=0, now=True)
+            style = 'slow' if self.shots[shot] else 'off'
+            self.game.drive_lamp(self.lamp_names[shot], style)
 
     def sw_topRightOpto_active(self, sw):
         if self.game.switches.leftRollover.time_since_change() < 1:
@@ -533,7 +529,7 @@ class BattleTank(ChainFeature):
     def switch_hit(self, shot):
         if self.shots[shot]:
             self.shots[shot] = False
-            self.game.lamps[self.lamp_names[shot]].disable()
+            self.game.update_lamps()
             if self.num_shots > 0:
                 self.game.sound.stop('tank hit ' + str(self.num_shots))
             self.num_shots += 1
@@ -559,9 +555,6 @@ class Meltdown(ChainFeature):
     def mode_started(self):
         super(Meltdown, self).mode_started()
         self.game.sound.play_voice('meltdown intro')
-
-    def mode_stopped(self):
-        self.game.lamps.stopMeltdown.disable()
 
     def update_lamps(self):
         self.game.lamps.stopMeltdown.schedule(schedule=0x00FF00FF, cycle_seconds=0, now=True)
@@ -603,7 +596,6 @@ class Impersonator(ChainFeature):
     def mode_started(self):
         super(Impersonator, self).mode_started()
         self.sound_active = False
-        self.delay(name='moving_target', event_type=None, delay=1, handler=self.moving_target)
         self.start_using_drops()
         time = self.game.sound.play('bad impersonator')
         self.delay(name='song_restart', event_type=None, delay=time+0.5, handler=self.song_restart)
@@ -611,9 +603,8 @@ class Impersonator(ChainFeature):
         self.delay(name='shutup_restart', event_type=None, delay=time+3, handler=self.shutup_restart)
 
     def mode_stopped(self):
-        self.game.lamps.awardBadImpersonator.disable()
         self.stop_using_drops()
-        self.cancel_delayed(['moving_target', 'song_restart', 'boo_restart', 'shutup_restart', 'end_sound'])
+        self.cancel_delayed(['song_restart', 'boo_restart', 'shutup_restart', 'end_sound'])
         self.game.sound.stop('bi - song')
         self.game.sound.stop('bi - boo')
 
@@ -639,6 +630,21 @@ class Impersonator(ChainFeature):
 
     def update_lamps(self):
         self.game.lamps.awardBadImpersonator.schedule(schedule=0x00FF00FF, cycle_seconds=0, now=True)
+        self.game.disable_drop_lamps()
+        # ModeTimer is continuously updating self.timer
+        time = self.timer % 6
+        if time == 0:
+            self.game.lamps.dropTargetJ.enable()
+            self.game.lamps.dropTargetU.enable()
+        elif time == 1 or time == 5:
+            self.game.lamps.dropTargetU.enable()
+            self.game.lamps.dropTargetD.enable()
+        elif time == 2 or time == 4:
+            self.game.lamps.dropTargetD.enable()
+            self.game.lamps.dropTargetG.enable()
+        elif time == 3:
+            self.game.lamps.dropTargetG.enable()
+            self.game.lamps.dropTargetE.enable()
 
     def sw_dropTargetJ_active(self, sw):
         self.switch_hit([0])
@@ -667,23 +673,9 @@ class Impersonator(ChainFeature):
         self.game.coils.resetDropTarget.pulse(40)
         self.check_for_completion()
 
-    def moving_target(self):
-        self.game.disable_drop_lamps()
-        # ModeTimer is continuously updating self.timer
-        time = self.timer % 6
-        if time == 0:
-            self.game.lamps.dropTargetJ.enable()
-            self.game.lamps.dropTargetU.enable()
-        elif time == 1 or time == 5:
-            self.game.lamps.dropTargetU.enable()
-            self.game.lamps.dropTargetD.enable()
-        elif time == 2 or time == 4:
-            self.game.lamps.dropTargetD.enable()
-            self.game.lamps.dropTargetG.enable()
-        elif time == 3:
-            self.game.lamps.dropTargetG.enable()
-            self.game.lamps.dropTargetE.enable()
-        self.delay(name='moving_target', event_type=None, delay=1, handler=self.moving_target)
+    def timer_update(self, time):
+        super(Impersonator, self).timer_update(time)
+        self.game.update_lamps()
 
     def check_for_completion(self):
         self.update_status()
@@ -712,7 +704,6 @@ class Safecracker(ChainFeature):
 
     def mode_stopped(self):
         self.cancel_delayed(['trip_check', 'bad guys'])
-        self.game.lamps.awardSafecracker.disable()
         self.stop_using_drops()
 
     def update_lamps(self):

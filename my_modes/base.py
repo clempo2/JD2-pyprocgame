@@ -6,6 +6,7 @@ from boring import Boring
 from challenge import UltimateChallenge
 from combos import Combos
 from regular import RegularPlay
+from skillshot import SkillShot
 from status import StatusReport
 from tilt import TiltMonitorMode
 
@@ -24,6 +25,7 @@ class BasePlay(Mode):
         self.combos = Combos(self.game, 28)
         self.status_report = StatusReport(self.game, 28)
         self.regular_play = RegularPlay(self.game, 8)
+        self.skill_shot = SkillShot(self.game, 13)
         self.bonus = Bonus(self.game, 8)
 
         self.ultimate_challenge = UltimateChallenge(game, 8)
@@ -45,19 +47,15 @@ class BasePlay(Mode):
         player.setState('bonus_x', bonus_x)
         player.setState('hold_bonus_x', False)
 
-        # Disable any previously active lamp
-        for lamp in self.game.lamps:
-            lamp.disable()
-
         # Do a quick lamp show
         self.game.coils.flasherPursuitL.schedule(0x00001010, cycle_seconds=1, now=False)
         self.game.coils.flasherPursuitR.schedule(0x00000101, cycle_seconds=1, now=False)
-        self.game.enable_gi(True)
 
         # Always start the ball with no launch callback.
         self.game.trough.launch_balls(1, self.empty_ball_launch_callback)
         self.game.trough.drain_callback = self.drain_callback
         self.ball_starting = True
+        self.skill_shot_added = False
 
         # Enable ball search in case a ball gets stuck during gameplay.
         self.game.ball_search.enable()
@@ -74,15 +72,31 @@ class BasePlay(Mode):
         else:
             self.game.modes.add(self.regular_play)
 
+        self.game.update_lamps()
+
     def mode_stopped(self):
-        self.game.remove_modes([self.display_mode, self.animation_mode])
+        self.game.remove_modes([self.skill_shot, self.display_mode, self.animation_mode])
         self.game.enable_flippers(False)
         self.game.ball_search.disable()
         self.game.trough.drain_callback = self.game.drain_callback
+        self.cancel_show_status_timer()
 
         player = self.game.current_player()
         player.setState('extra_balls_lit', self.extra_balls_lit)
         player.setState('total_extra_balls_lit', self.total_extra_balls_lit)
+
+    def update_lamps(self):
+        # Disable all lamps
+        for lamp in self.game.lamps:
+            lamp.disable()
+
+        self.game.enable_gi(True)
+
+        style = 'on' if self.game.current_player().extra_balls > 0 else 'off'
+        self.game.drive_lamp('judgeAgain', style)
+
+        style = 'off' if self.extra_balls_lit == 0 else 'slow'
+        self.game.drive_lamp('extraBall2', style)
 
     #
     # Display text or animation
@@ -99,11 +113,24 @@ class BasePlay(Mode):
     # Status Report
     #
 
-    def sw_flipperLwL_active_for_6s(self, sw):
-        self.display_status_report()
+    def sw_flipperLwL_active(self, sw):
+        self.start_show_status_timer()
 
-    def sw_flipperLwR_active_for_6s(self, sw):
-        self.display_status_report()
+    def sw_flipperLwR_active(self, sw):
+        self.start_show_status_timer()
+
+    def sw_flipperLwL_inactive(self, sw):
+        self.cancel_show_status_timer()
+
+    def sw_flipperLwR_inactive(self, sw):
+        self.cancel_show_status_timer()
+
+    def cancel_show_status_timer(self):
+        self.cancel_delayed("show_status")
+
+    def start_show_status_timer(self):
+        self.cancel_show_status_timer()
+        self.delay("show_status", event_type=None, delay=6.0, handler=self.display_status_report)
 
     def display_status_report(self):
         if not self.status_report in self.game.modes:
@@ -134,6 +161,7 @@ class BasePlay(Mode):
         self.auto_plunge = True
         self.ball_starting = False
         if self.game.base_play.ball_starting and not self.game.base_play.tilt.tilted:
+            self.skill_shot.begin()
             self.game.modes.add(self.boring)
             # Tell game to save ball start time now, since ball is now in play.
             self.game.save_ball_start_time()
@@ -141,6 +169,13 @@ class BasePlay(Mode):
     def sw_shooterR_active(self, sw):
         if self.ball_starting:
             self.game.sound.play_music('ball_launch', loops=-1)
+            # Start skill shot, but not if already started.  Ball
+            # might bounce on shooterR switch.  Don't want to
+            # use a delayed switch handler because player
+            # could launch ball immediately (before delay expires).
+            if not self.skill_shot_added:
+                self.game.modes.add(self.skill_shot)
+                self.skill_shot_added = True
 
     def sw_shooterR_closed_for_700ms(self, sw):
         if self.auto_plunge:
@@ -161,7 +196,7 @@ class BasePlay(Mode):
         else:
             self.extra_balls_lit += 1
             self.total_extra_balls_lit += 1
-            self.game.drive_lamp('extraBall2', 'on')
+            self.game.update_lamps()
             self.game.base_play.show_on_display('Extra Ball Lit!')
 
     def sw_leftScorePost_active(self, sw):
@@ -182,13 +217,6 @@ class BasePlay(Mode):
         self.game.base_play.show_on_display('Extra Ball!')
         self.game.base_play.play_animation('EBAnim')
         self.game.update_lamps()
-
-    def update_lamps(self):
-        style = 'on' if self.game.current_player().extra_balls > 0 else 'off'
-        self.game.drive_lamp('judgeAgain', style)
-
-        style = 'off' if self.extra_balls_lit == 0 else 'slow'
-        self.game.drive_lamp('extraBall2', style)
 
     #
     # Ultimate Challenge
@@ -298,6 +326,7 @@ class BasePlay(Mode):
     #
 
     def ball_save_callback(self):
+        self.skill_shot.skill_shot_expired()
         if self.regular_play in self.game.modes:
             self.regular_play.ball_save_callback()
 
@@ -308,7 +337,7 @@ class BasePlay(Mode):
         if not self.tilt.tilted:
             for mode in self.game.modes:
                 # does it implement ball_drained
-                if mode.getattr(mode, 'ball_drained', None):
+                if getattr(mode, 'ball_drained', None):
                     if mode.ball_drained():
                         # drain was intentional, ignore it
                         return

@@ -13,11 +13,11 @@ class SkillShot(Mode):
 
     def mode_started(self):
         self.shots_hit = 0
-        self.update_lamps()
+        self.game.update_lamps()
 
     def begin(self):
         self.delay(name='skill_shot_delay', event_type=None, delay=7.0, handler=self.skill_shot_expired)
-        self.update_lamps()
+        self.game.update_lamps()
 
     def update_lamps(self):
         for lamp_name in ['perm4W', 'perp4R', 'perp4Y', 'perp4G']:
@@ -33,14 +33,13 @@ class SkillShot(Mode):
         self.award_layer.set_text(locale.format('%d', score, True), 3)
         self.cancel_delayed('skill_shot_delay')
         self.delay(name='skill_shot_delay', event_type=None, delay=3.0, handler=self.skill_shot_expired)
-        self.update_lamps()
+        self.game.update_lamps()
 
     def skill_shot_expired(self):
         # timer expired or external caller cancels the skillshot (for example after a ball save)
         self.cancel_delayed('skill_shot_delay')
-        for lamp_name in ['perm4W', 'perp4R', 'perp4Y', 'perp4G']:
-            self.game.lamps[lamp_name].disable()
         self.game.modes.remove(self)
+        self.game.update_lamps()
 
     def sw_leftRollover_active(self, sw):
         # See if ball came around right loop

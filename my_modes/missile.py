@@ -49,7 +49,7 @@ class MissileAwardMode(Mode):
 
     def light_missile_award(self):
         self.missile_award_lit = True
-        self.update_lamps()
+        self.game.update_lamps()
 
     def sw_shooterL_active_for_500ms(self, sw):
         if self.missile_award_lit:

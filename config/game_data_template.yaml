@@ -1,4 +1,5 @@
-# This file is a template for all of the statistical data to be kept for the game.# The game code will load this file along with a game_data.yaml file.  
+# This file is a template for all of the statistical data to be kept for the game.
+# The game code will load this file along with a game_data.yaml file.  
 # Any items not present in the game_data.yaml file will default to the 
 # value specified here.  When game ends or when defaults are restored, 
 # game_data will be written and will then contain every item here.
@@ -12,11 +13,11 @@ Audits:
   Games Started: 0
   Balls Played: 0
 ClassicHighScoreData:
-- {date: 'Sun Oct  3 17:38:46 2010', inits: GSS, score: 500000}
-- {date: 'Sun Oct  3 17:44:49 2010', inits: ASP, score: 400000}
-- {date: 'Sun Oct  3 16:22:47 2010', inits: JRP, score: 300000}
-- {date: 'Sun Oct  3 15:04:27 2010', inits: JAT, score: 200000}
-- {date: 'Sun Oct  3 22:05:01 2010', inits: JTW, score: 100000}
+- {date: 'Sun Oct  3 17:38:46 2010', inits: GSS, score: 5000000}
+- {date: 'Sun Oct  3 17:44:49 2010', inits: ASP, score: 4000000}
+- {date: 'Sun Oct  3 16:22:47 2010', inits: JRP, score: 3000000}
+- {date: 'Sun Oct  3 15:04:27 2010', inits: JAT, score: 2000000}
+- {date: 'Sun Oct  3 22:05:01 2010', inits: JTW, score: 1000000}
 InnerLoopsHighScoreData:
 - {date: 'Sun Oct  3 17:38:46 2010', inits: GSS, score: 2}
 OuterLoopsHighScoreData:

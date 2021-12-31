@@ -6,14 +6,20 @@ from procgame.modes import Scoring_Mode
 from crimescenes import CrimeSceneBase
 from intro import Introduction
 
+class ChallengeIntro(Introduction):
+    def update_lamps(self):
+        self.game.enable_gi(False)
+        self.game.disable_drop_lamps()
+
+
 class UltimateChallenge(Scoring_Mode):
     """Wizard mode or start of supergame"""
 
     def __init__(self, game, priority):
         super(UltimateChallenge, self).__init__(game, priority)
 
-        self.mode_intro = Introduction(self.game, self.priority+1)
-        self.mode_intro.exit_callback = self.start_level
+        self.intro = ChallengeIntro(self.game, self.priority+1)
+        self.intro.exit_callback = self.start_level
 
         self.fire = Fire(game, self.priority+1)
         self.mortis = Mortis(game, self.priority+1)
@@ -28,28 +34,26 @@ class UltimateChallenge(Scoring_Mode):
     def mode_started(self):
         self.active_mode = self.game.getPlayerState('challenge_mode', 0)
         self.game.coils.resetDropTarget.pulse(40)
-        self.game.lamps.ultChallenge.enable()
         self.intentional_drain = False
+        self.game.update_lamps()
 
     def mode_stopped(self):
         # when celebration was awarded, the next challenge starts from the beginning
         self.game.setPlayerState('challenge_mode', self.active_mode if self.active_mode < 4 else 0)
-        self.game.modes.remove(self.mode_intro) # in case of tilt
+        self.game.modes.remove(self.intro) # in case of tilt
         self.game.modes.remove(self.mode_list[self.active_mode])
-        self.game.lamps.ultChallenge.disable()
 
+    def update_lamps(self):
+        self.game.lamps.ultChallenge.enable()
+        
     def start_challenge(self):
         # called by base play supergame or regular play
         self.start_intro()
 
     def start_intro(self):
         self.game.sound.stop_music()
-        self.game.enable_gi(False)
-        self.game.lamps.rightStartFeature.disable()
-        self.game.disable_drop_lamps()
-
-        self.mode_intro.setup(self.mode_list[self.active_mode])
-        self.game.modes.add(self.mode_intro)
+        self.intro.setup(self.mode_list[self.active_mode])
+        self.game.modes.add(self.intro)
         self.game.enable_flippers(True)
 
     def start_level(self):
@@ -153,7 +157,7 @@ Extinguish fires and banish Judge Fire by shooting the lit crimescene shots.
         self.mystery_lit = True
         self.game.coils.flasherFire.schedule(schedule=0x80808080, cycle_seconds=0, now=True)
         self.targets = [1, 1, 1, 1, 1]
-        self.update_lamps()
+        self.game.update_lamps()
 
         num_balls_locked = self.game.deadworld.num_balls_locked  # 0, 1 or 2 balls
         if num_balls_locked > 0:
@@ -206,7 +210,7 @@ Extinguish fires and banish Judge Fire by shooting the lit crimescene shots.
         self.game.enable_flippers(False)
         self.game.coils.flasherFire.disable()
         self.mystery_lit = False
-        self.update_lamps()
+        self.game.update_lamps()
         self.complete_callback()
 
 
@@ -231,7 +235,7 @@ Banish him by shooting each lit shot twice.
     def mode_started(self):
         self.state = 'ramps'
         self.shots_required = [2, 2, 2, 2, 2]
-        self.update_lamps()
+        self.game.update_lamps()
         num_launch_balls = 1 if self.game.switches.popperR.is_active() else 2
         self.game.trough.launch_balls(num_launch_balls, self.launch_callback)
         self.game.coils.flasherMortis.schedule(schedule=0x80808080, cycle_seconds=0, now=True)
@@ -308,7 +312,7 @@ Banish him by shooting each lit shot twice.
         self.layer = TextLayer(128/2, 13, self.game.fonts['tiny7'], 'center', True).set_text('Mortis Defeated!')
         self.game.enable_flippers(False)
         self.game.coils.flasherMortis.disable()
-        self.update_lamps()
+        self.game.update_lamps()
         self.complete_callback()
 
 
@@ -345,7 +349,7 @@ Banish him by shooting the lit ramp shots and then the subway before time runs o
         self.ramp_shots_hit = 0
         self.active_ramp = 'left'
         self.timer = 20
-        self.update_lamps()
+        self.game.update_lamps()
         if self.game.switches.popperR.is_inactive():
             self.game.trough.launch_balls(1, self.launch_callback)
         self.game.coils.flasherFear.schedule(schedule=0x80808080, cycle_seconds=0, now=True)
@@ -414,7 +418,7 @@ Banish him by shooting the lit ramp shots and then the subway before time runs o
         else:
             self.switch_ramps()
         self.timer = 20
-        self.update_lamps()
+        self.game.update_lamps()
 
     def switch_ramps(self):
         self.game.lampctrl.play_show('shot_hit', False, self.game.update_lamps)
@@ -432,7 +436,7 @@ Banish him by shooting the lit ramp shots and then the subway before time runs o
         if self.state == 'ramps':
             self.reset_drops()
         else:
-            self.update_lamps()
+            self.game.update_lamps()
 
     def reset_drops(self):
         if self.state != 'subway':
@@ -469,7 +473,7 @@ Banish him by shooting the lit ramp shots and then the subway before time runs o
         self.state = 'finished'
         self.game.enable_flippers(False)
         self.game.coils.flasherFear.disable()
-        self.update_lamps()
+        self.game.update_lamps()
         text = 'Fear Defeated' if success else 'You lose!'
         self.layer = TextLayer(128/2, 13, self.game.fonts['tiny7'], 'center', True).set_text(text)
         if success:
@@ -509,7 +513,7 @@ Banish him by shooting the lit crimescene shots before time expires.  Shots slow
         self.timer = 10
         self.active_shots = [1, 1, 1, 1, 1]
         self.shot_order = [4, 2, 0, 3, 1] # from easiest to hardest
-        self.update_lamps()
+        self.game.update_lamps()
         if self.game.switches.popperR.is_inactive():
             self.game.trough.launch_balls(1, self.launch_callback)
         self.game.coils.flasherDeath.schedule(schedule=0x80808080, cycle_seconds=0, now=True)
@@ -546,14 +550,14 @@ Banish him by shooting the lit crimescene shots before time expires.  Shots slow
             self.game.score(10000)
             self.timer += 10
             self.check_for_completion()
-            self.update_lamps()
+            self.game.update_lamps()
 
     def add_shot(self):
         for shot in self.shot_order:
             if not self.active_shots[shot]:
                 self.active_shots[shot] = 1
                 break
-        self.update_lamps()
+        self.game.update_lamps()
 
     def mode_tick(self):
         self.show_score()
@@ -580,11 +584,8 @@ Banish him by shooting the lit crimescene shots before time expires.  Shots slow
         self.layer = TextLayer(128/2, 13, self.game.fonts['tiny7'], 'center', True).set_text('Death Defeated!')
         self.game.enable_flippers(False)
         self.game.coils.flasherDeath.disable()
-
-        for lamp in ['perp1W', 'perp1R', 'perp1Y', 'perp1G', 'perp3W', 'perp3R', 'perp3Y', 'perp3G',
-                     'perp5W', 'perp5R', 'perp5Y', 'perp5G', 'mystery', 'stopMeltdown']:
-            self.game.lamps[lamp].disable()
-
+        self.active_shots = [0, 0, 0, 0, 0]
+        self.game.update_lamps()
         if success:
             self.complete_callback()
 
@@ -614,18 +615,11 @@ Normal play resumes when only 1 ball remains.
             self.game.deadworld.eject_balls(num_balls_locked)
         balls_to_launch = 6 - num_balls_locked
         self.game.trough.launch_balls(balls_to_launch, self.launch_callback)
-        self.update_lamps()
+        self.game.update_lamps()
 
     def launch_callback(self):
         ball_save_time = 20
         self.game.ball_save.start(num_balls_to_save=6, time=ball_save_time, now=False, allow_multiple_saves=True)
-
-    def mode_stopped(self):
-        for lamp in self.game.lamps:
-            if lamp.name.startswith('gi0'):
-                lamp.enable()
-            else:
-                lamp.disable()
 
     def update_lamps(self):
         self.game.enable_gi(True)

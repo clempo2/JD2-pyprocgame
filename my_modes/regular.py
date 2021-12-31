@@ -5,7 +5,6 @@ from chain import Chain
 from crimescenes import CrimeScenes
 from intro import Introduction
 from multiball import Multiball
-from skillshot import SkillShot
 from missile import MissileAwardMode
 
 class RegularPlay(Scoring_Mode):
@@ -27,7 +26,6 @@ class RegularPlay(Scoring_Mode):
         script = [{'seconds':99999999.0, 'layer':shoot_again_layer}]
         self.shoot_again_intro.layer = ScriptedLayer(width=128, height=32, script=script)
         
-        self.skill_shot = SkillShot(self.game, priority + 5)
         self.chain = Chain(self.game, priority)
 
         self.crime_scenes = CrimeScenes(game, priority + 1)
@@ -45,30 +43,23 @@ class RegularPlay(Scoring_Mode):
             mode.reset()
 
         # reset RegularPlay itself
-        self.game.setPlayerState('mystery_lit', False)
-        self.game.update_lamps()
+        self.light_mystery(False)
 
     def mode_started(self):
         self.mystery_lit = self.game.getPlayerState('mystery_lit', False)
-        self.skill_shot_added = False
+        self.welcomed = False
+        self.state = 'init'
         self.game.add_modes([self.chain, self.crime_scenes, self.multiball, self.missile_award_mode])
         self.setup_next_mode()
-        self.game.enable_gi(True)
-        self.game.update_lamps()
 
     def mode_stopped(self):
-        self.game.remove_modes([self.skill_shot, self.chain, self.crime_scenes, self.multiball])
+        self.game.remove_modes([self.chain, self.crime_scenes, self.multiball])
         self.game.setPlayerState('mystery_lit', self.mystery_lit)
 
     def sw_shooterR_active(self, sw):
-        if self.game.base_play.ball_starting:
-            # Start skill shot, but not if already started.  Ball
-            # might bounce on shooterR switch.  Don't want to
-            # use a delayed switch handler because player
-            # could launch ball immediately (before delay expires).
-            if not self.skill_shot_added:
-                self.game.modes.add(self.skill_shot)
-                self.skill_shot_added = True
+        if self.ball_starting:
+            if not self.welcomed:
+                self.welcomed = True
                 self.welcome()
                 self.high_score_mention()
 
@@ -124,7 +115,6 @@ During multiball, shoot left ramp to light jackpot then shoot subway to collect
 
     def sw_shooterR_inactive_for_1s(self, sw):
         if self.game.base_play.ball_starting and not self.game.base_play.tilt.tilted:
-            self.skill_shot.begin()
             ball_save_time = self.game.user_settings['Gameplay']['New ball ballsave time']
             self.game.ball_save.callback = self.ball_save_callback
             self.game.ball_save.start(num_balls_to_save=1, time=ball_save_time, now=True, allow_multiple_saves=False)
@@ -146,14 +136,14 @@ During multiball, shoot left ramp to light jackpot then shoot subway to collect
                 # player needs to shoot the right popper to start the finale
                 self.state = 'challenge_ready'
                 self.game.modes.remove(self.multiball)
-                self.game.lamps.ultChallenge.schedule(schedule=0x00ff00ff, cycle_seconds=0, now=True)
-                self.game.lamps.rightStartFeature.schedule(schedule=0x00ff00ff, cycle_seconds=0, now=True)
+                self.light_mystery(False)
             elif not self.chain.is_complete():
                 # player needs to shoot the right popper to start the next chain mode
                 self.state = 'chain_ready'
-                self.game.lamps.rightStartFeature.schedule(schedule=0x00ff00ff, cycle_seconds=0, now=True)
             else:
                 self.state = 'chain_complete'
+                
+        self.game.update_lamps()
 
     # starts a mode if a mode is available
     # the 300ms delay must be the same or longer than the popperR handler in crimescenes
@@ -190,12 +180,9 @@ During multiball, shoot left ramp to light jackpot then shoot subway to collect
             self.state = 'busy'
             self.game.sound.fadeout_music()
             self.game.sound.play_music('multiball', loops=-1)
-
-            # No modes can be started when multiball is active
-            self.game.lamps.rightStartFeature.disable()
+            self.game.modes.remove(self.missile_award_mode)
             # Light mystery once for free.
             self.light_mystery()
-            self.game.modes.remove(self.missile_award_mode)
 
     def multiball_ended(self):
         if not self.any_multiball_active():
@@ -213,7 +200,6 @@ During multiball, shoot left ramp to light jackpot then shoot subway to collect
                 self.chain.is_complete())
 
     def start_ultimate_challenge(self):
-        self.game.lamps.rightStartFeature.disable()
         self.game.remove_modes([self.chain, self.crime_scenes, self.multiball, self])
         self.reset_modes()
         self.game.base_play.start_ultimate_challenge()
@@ -222,9 +208,9 @@ During multiball, shoot left ramp to light jackpot then shoot subway to collect
     # Mystery
     #
 
-    def light_mystery(self):
-        self.game.drive_lamp('mystery', 'on')
-        self.mystery_lit = True
+    def light_mystery(self, lit=True):
+        self.mystery_lit = lit
+        self.game.update_lamps()
 
     def sw_captiveBall1_active(self, sw):
         self.game.sound.play('meltdown')
@@ -234,14 +220,13 @@ During multiball, shoot left ramp to light jackpot then shoot subway to collect
 
     def sw_captiveBall3_active(self, sw):
         self.game.sound.play('meltdown')
-        self.light_mystery()
         self.game.base_play.inc_bonus_x()
+        self.light_mystery()
 
     def sw_mystery_active(self, sw):
         self.game.sound.play('mystery')
         if self.mystery_lit:
-            self.mystery_lit = False
-            self.game.drive_lamp('mystery', 'off')
+            self.light_mystery(False)
             if self.any_multiball_active():
                 if self.game.ball_save.timer > 0:
                     self.game.set_status('+10 second ball saver')
@@ -265,18 +250,16 @@ During multiball, shoot left ramp to light jackpot then shoot subway to collect
     #
 
     def update_lamps(self):
+        self.game.enable_gi(True)
+
         style = 'on' if self.mystery_lit else 'off'
         self.game.drive_lamp('mystery', style)
 
-        if self.state == 'chain_ready':
-            if self.game.switches.popperR.is_inactive() and not self.any_multiball_active():
-                self.game.lamps.rightStartFeature.schedule(schedule=0x00ff00ff, cycle_seconds=0, now=True)
-        elif self.state == 'challenge_ready':
-            self.game.drive_lamp('ultChallenge', 'slow')
-            self.game.lamps.rightStartFeature.schedule(schedule=0x00ff00ff, cycle_seconds=0, now=True)
-            self.game.disable_drop_lamps()
-            self.game.lamps.advanceCrimeLevel.disable()
-            self.game.lamps.mystery.disable()
+        style = 'slow' if self.state == 'chain_ready' or self.state == 'challenge_ready' else 'off'
+        self.game.drive_lamp('rightStartFeature', style)
+        
+        style = 'slow' if self.state == 'challenge_ready' else 'off'
+        self.game.drive_lamp('ultChallenge', style)
 
     #
     # Coils
@@ -287,7 +270,6 @@ During multiball, shoot left ramp to light jackpot then shoot subway to collect
 
     def popperR_eject(self):
         self.game.base_play.flash_then_pop('flashersRtRamp', 'popperR', 20)
-
 
     #
     # End of ball
@@ -310,7 +292,6 @@ During multiball, shoot left ramp to light jackpot then shoot subway to collect
         if not self.any_multiball_active():
             self.game.sound.play_voice('ball saved')
             self.game.base_play.show_on_display('Ball Saved!')
-            self.skill_shot.skill_shot_expired()
 
     def ball_drained(self):
         # Called as a result of a ball draining into the trough.
