@@ -74,8 +74,6 @@ class Multiball(Scoring_Mode):
             self.enable_lock()
             self.display_text('Lock is Lit!')
 
-        self.game.update_lamps()
-
     def mode_stopped(self):
         # save player state
         player = self.game.current_player()
@@ -87,7 +85,6 @@ class Multiball(Scoring_Mode):
         player.setState('multiball_jackpot_collected', self.jackpot_collected)
 
         self.cancel_delayed(name='voice instructions')
-        self.game.coils.flasherGlobe.disable()
         self.game.modes.remove(self.drops)
 
     def install_rule(self, enable):
@@ -141,9 +138,8 @@ class Multiball(Scoring_Mode):
 
     def jackpot(self):
         self.game.score(100000)
-        self.game.update_lamps()
         self.num_left_ramp_shots_needed += 1
-        #self.jackpot_callback()
+        self.game.update_lamps()
 
     def sw_dropTargetD_inactive_for_400ms(self, sw):
         if self.jackpot_lit:

@@ -113,6 +113,7 @@ class Chain(Mode):
         self.mode = self.modes_not_attempted[self.modes_not_attempted_ptr]
         self.intro.setup(self.mode)
         self.game.modes.add(self.intro)
+        self.game.update_lamps()
 
     # activate a chain mode after showing the instructions
     def activate_chain_mode(self):
@@ -125,6 +126,7 @@ class Chain(Mode):
         # Add the mode to the mode Q to activate it.
         self.game.base_play.regular_play.state = 'mode'
         self.game.modes.add(self.mode)
+        self.game.update_lamps()
         self.mode.play_music()
 
         # Put the ball back into play
@@ -185,7 +187,6 @@ class ChainHurryUp(Mode):
         self.banner_layer.set_text('HURRY-UP!', 3)
         self.seconds_remaining = 13
         self.update_and_delay()
-        self.game.update_lamps()
         self.game.coils.tripDropTarget.pulse(40)
         self.delay(name='trip_check', event_type=None, delay=.400, handler=self.trip_check)
         self.already_collected = False
@@ -302,7 +303,6 @@ class ChainFeature(Scoring_Mode, ModeTimer):
         self.start_timer(self.mode_time)
         self.play_music()
         self.update_status()
-        self.game.update_lamps()
 
     def set_shots_required(self, options):
         """Return the number of required shots depending on the settings and the options for the mode"""
@@ -380,10 +380,6 @@ class Pursuit(ChainFeature):
         self.game.coils.flasherPursuitL.schedule(schedule=0x00030003, cycle_seconds=0, now=True)
         self.game.coils.flasherPursuitR.schedule(schedule=0x03000300, cycle_seconds=0, now=True)
 
-    def mode_stopped(self):
-        self.game.coils.flasherPursuitL.disable()
-        self.game.coils.flasherPursuitR.disable()
-
     # Award shot if ball diverted for multiball.
     # Ensure it was a fast shot rather than one that just trickles in.
     def sw_leftRampToLock_active(self, sw):
@@ -427,14 +423,12 @@ class Blackout(ChainFeature):
         super(Blackout, self).mode_started()
         self.game.base_play.play_animation('blackout', frame_time=3)
 
-    def mode_stopped(self):
-        self.game.coils.flasherBlackout.disable()
-        self.game.enable_gi(True)
-
     def update_lamps(self):
         self.game.enable_gi(False) # disable all gi except gi05
         self.game.lamps.gi05.enable()
         self.game.lamps.blackoutJackpot.schedule(schedule=0x000F000F, cycle_seconds=0, now=True)
+        if self.num_shots == self.shots_required - 1:
+            self.game.coils.flasherBlackout.schedule(schedule=0x000F000F, cycle_seconds=0, now=True)
 
     def sw_centerRampExit_active(self, sw):
         self.num_shots += 1
@@ -444,8 +438,8 @@ class Blackout(ChainFeature):
     def check_for_completion(self):
         self.update_status()
         if self.num_shots == self.shots_required - 1:
-            self.game.coils.flasherBlackout.schedule(schedule=0x000F000F, cycle_seconds=0, now=True)
             self.game.score(50000)
+            self.game.update_lamps()
         elif self.num_shots == self.shots_required:
             self.game.score(110000)
             self.exit_callback(True)
@@ -744,9 +738,6 @@ class ManhuntMillions(ChainFeature):
         super(ManhuntMillions, self).mode_started()
         self.game.sound.play_voice('mm - intro')
 
-    def mode_stopped(self):
-        self.game.coils.flasherPursuitL.disable()
-
     def update_lamps(self):
         self.game.coils.flasherPursuitL.schedule(schedule=0x000F000F, cycle_seconds=0, now=True)
 
@@ -788,7 +779,6 @@ class Stakeout(ChainFeature):
 
     def mode_stopped(self):
         self.cancel_delayed('boring')
-        self.game.coils.flasherPursuitR.disable()
 
     def update_lamps(self):
         self.game.coils.flasherPursuitR.schedule(schedule=0x000F000F, cycle_seconds=0, now=True)

@@ -39,27 +39,32 @@ class CrimeScenes(Mode):
 
     def crime_scene_levels_completed(self):
         self.game.modes.remove(self.crime_scene_levels)
+        self.game.update_lamps()
         self.game.base_play.regular_play.crime_scenes_completed()
 
     def start_block_war(self):
         self.game.modes.remove(self.crime_scene_levels)
         self.block_war.reset()
         self.game.modes.add(self.block_war)
+        self.game.update_lamps()
         self.start_multiball_callback()
 
     def start_block_war_bonus(self):
         self.game.modes.remove(self.block_war)
         self.game.modes.add(self.block_war_bonus)
+        self.game.update_lamps()
 
     def end_block_war_bonus(self, bonus_collected):
         self.game.modes.remove(self.block_war_bonus)
         self.block_war.next_round(bonus_collected)
         self.game.modes.add(self.block_war)
+        self.game.update_lamps()
 
     def end_multiball(self):
         self.game.modes.remove(self.block_war)
         self.game.modes.remove(self.block_war_bonus)
         self.crime_scenes_levels.next_level()
+        # next_level updated the lamps
         self.start_crime_scene_levels()
         self.end_multiball_callback()
 
@@ -249,7 +254,7 @@ class CrimeSceneLevels(CrimeSceneBase):
                 self.targets = [0] * 5
                 for i in range(0, num_to_pick):
                     self.targets[pick_from[i]] = 1
-            self.game.update_lamps()
+        self.game.update_lamps()
 
     def display_level_complete(self, level, points):
         small_font = self.game.fonts['07x5']
@@ -358,7 +363,6 @@ class BlockWarBonus(CrimeSceneBase):
         self.bonus_shot = 0
         self.delay(name='rotate_bonus_target', event_type=None, delay=3, handler=self.rotate_bonus_target, param=1)
         self.game.sound.play_voice('jackpot is lit')
-        self.game.update_lamps()
 
     def mode_stopped(self):
         self.cancel_delayed('rotate_bonus_target')
@@ -389,7 +393,5 @@ class BlockWarBonus(CrimeSceneBase):
     def update_lamps(self):
         self.game.drive_lamp('advanceCrimeLevel', 'off')
         for shot in range(0, 5):
-            for color in range(0, 4):
-                lamp_name = 'perp' + str(shot+1) + self.lamp_colors[color]
-                style = 'medium' if self.bonus_shot == shot else 'off'
-                self.game.drive_lamp(lamp_name, style)
+            style = 'medium' if self.bonus_shot == shot else 'off'
+            self.game.drive_perp_lamp('perp' + str(shot+1), style)

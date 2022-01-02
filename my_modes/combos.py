@@ -74,9 +74,7 @@ class Combos(Mode):
 
     def update_lamps(self):
         style = 'slow' if self.inner_loop_active else 'off'
-        for lamp_name in ['perp2W', 'perp2R', 'perp2Y', 'perp2G']:
-            self.game.drive_lamp(lamp_name, style)
+        self.game.drive_perp_lamp('perp2', style)
 
         style = 'slow' if self.outer_loop_active else 'off'
-        for lamp_name in ['perp4W', 'perp4R', 'perp4Y', 'perp4G']:
-            self.game.drive_lamp(lamp_name, style)
+        self.game.drive_perp_lamp('perp4', style)

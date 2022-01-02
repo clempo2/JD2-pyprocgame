@@ -269,6 +269,7 @@ class JDGame(BasicGame):
     def service_mode_ended(self):
         self.save_settings(settings_path)
         self.reset()
+        self.update_lamps()
 
     def volume_down(self):
         volume = self.sound.volume_down()
@@ -302,6 +303,7 @@ class JDGame(BasicGame):
         self.game_data['Audits']['Games Started'] += 1
         self.supergame = supergame
         self.modes.remove(self.attract_mode)
+        self.game.update_lamps()
 
         # Add the first player
         self.add_player()
@@ -311,6 +313,7 @@ class JDGame(BasicGame):
     def ball_starting(self):
         super(JDGame, self).ball_starting()
         self.modes.add(self.base_play)
+        self.update_lamps()
 
     # Override to create a flag signaling extra ball.
     def shoot_again(self):
@@ -349,6 +352,7 @@ class JDGame(BasicGame):
         self.set_status('SLAM TILT')
         self.remove_all_modes()
         self.reset()
+        self.update_lamps()
 
     def tilted(self):
         self.sound.fadeout_music()
@@ -422,6 +426,11 @@ class JDGame(BasicGame):
             self.lamps[lamp_name].enable()
         elif style == 'off':
             self.lamps[lamp_name].disable()
+
+    def drive_perp_lamp(self, perp_name, style='on'):
+        for color in ['W', 'R', 'Y', 'G']:
+            lamp_name = perp_name + color
+            self.drive_lamp(lamp_name, style)
 
     def disable_drop_lamps(self):
         self.lamps.dropTargetJ.disable()

@@ -119,6 +119,7 @@ During multiball, shoot left ramp to light jackpot then shoot subway to collect
             self.game.ball_save.callback = self.ball_save_callback
             self.game.ball_save.start(num_balls_to_save=1, time=ball_save_time, now=True, allow_multiple_saves=False)
         self.game.remove_modes([self.game_intro, self.shoot_again_intro])
+        self.game.update_lamps()
 
     #
     # submodes
@@ -183,6 +184,7 @@ During multiball, shoot left ramp to light jackpot then shoot subway to collect
             self.game.modes.remove(self.missile_award_mode)
             # Light mystery once for free.
             self.light_mystery()
+            # light mystery updated the lamps
 
     def multiball_ended(self):
         if not self.any_multiball_active():
@@ -203,6 +205,7 @@ During multiball, shoot left ramp to light jackpot then shoot subway to collect
         self.game.remove_modes([self.chain, self.crime_scenes, self.multiball, self])
         self.reset_modes()
         self.game.base_play.start_ultimate_challenge()
+        # ultimate challenge updated the lamps
 
     #
     # Mystery

@@ -13,15 +13,12 @@ class SkillShot(Mode):
 
     def mode_started(self):
         self.shots_hit = 0
-        self.game.update_lamps()
 
     def begin(self):
         self.delay(name='skill_shot_delay', event_type=None, delay=7.0, handler=self.skill_shot_expired)
-        self.game.update_lamps()
 
     def update_lamps(self):
-        for lamp_name in ['perm4W', 'perp4R', 'perp4Y', 'perp4G']:
-            self.game.lamps[lamp_name].schedule(schedule=0x00ff00ff, cycle_seconds=0, now=True)
+        self.game.drive_perp_lamp('perp4', 'slow')
 
     def award(self):
         self.game.sound.stop('good shot')
@@ -33,7 +30,6 @@ class SkillShot(Mode):
         self.award_layer.set_text(locale.format('%d', score, True), 3)
         self.cancel_delayed('skill_shot_delay')
         self.delay(name='skill_shot_delay', event_type=None, delay=3.0, handler=self.skill_shot_expired)
-        self.game.update_lamps()
 
     def skill_shot_expired(self):
         # timer expired or external caller cancels the skillshot (for example after a ball save)

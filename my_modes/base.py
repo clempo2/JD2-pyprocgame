@@ -72,8 +72,6 @@ class BasePlay(Mode):
         else:
             self.game.modes.add(self.regular_play)
 
-        self.game.update_lamps()
-
     def mode_stopped(self):
         self.game.remove_modes([self.skill_shot, self.display_mode, self.animation_mode])
         self.game.enable_flippers(False)
@@ -86,7 +84,12 @@ class BasePlay(Mode):
         player.setState('total_extra_balls_lit', self.total_extra_balls_lit)
 
     def update_lamps(self):
-        # Disable all lamps
+        # Disable all flashers
+        for coil in self.game.coils:
+            if coil.name.startswith('flasher'):
+                coil.disable()
+
+        # Disable all lamps except GI
         for lamp in self.game.lamps:
             lamp.disable()
 
@@ -127,7 +130,7 @@ class BasePlay(Mode):
 
     def cancel_show_status_timer(self):
         self.cancel_delayed("show_status")
-
+ 
     def start_show_status_timer(self):
         self.cancel_show_status_timer()
         self.delay("show_status", event_type=None, delay=6.0, handler=self.display_status_report)
@@ -176,6 +179,7 @@ class BasePlay(Mode):
             if not self.skill_shot_added:
                 self.game.modes.add(self.skill_shot)
                 self.skill_shot_added = True
+                self.game.update_lamps()
 
     def sw_shooterR_closed_for_700ms(self, sw):
         if self.auto_plunge:
@@ -226,10 +230,12 @@ class BasePlay(Mode):
         self.game.modes.remove(self.regular_play)
         self.game.modes.add(self.ultimate_challenge)
         self.ultimate_challenge.start_challenge()
+        # ultimate challenge updated the lamps
 
     def ultimate_challenge_over(self):
         self.game.modes.remove(self.ultimate_challenge)
         self.game.modes.add(self.regular_play)
+        self.game.update_lamps()
 
     #
     # Replay
@@ -363,12 +369,15 @@ class BasePlay(Mode):
         else:
             self.game.modes.add(self.bonus)
             self.bonus.compute(self.end_ball)
+            
+        self.game.update_lamps()
 
     # Final processing for the ball
     # If bonus was calculated, it is finished by now.
     def end_ball(self):
         self.game.modes.remove(self.bonus)
         self.game.modes.remove(self.replay)
+        self.game.update_lamps()
 
         self.game.enable_flippers(True)
 
