@@ -13,10 +13,13 @@ class Bonus(Mode):
         self.value_layer = TextLayer(128/2, 20, font_small, 'center')
         self.layer = GroupedLayer(128, 32, [self.title_layer, self.name_layer, self.value_layer])
 
-    def compute(self, exit_callback):
+    def mode_started(self):
         self.game.sound.play('drain')
-        self.exit_callback = exit_callback
+
+        self.delay_time = 1
         self.title_layer.set_text('BONUS', self.delay_time)
+        self.name_layer.set_text('')
+        self.value_layer.set_text('')
 
         player = self.game.current_player()
         num_modes_attempted = player.getState('num_modes_attempted')
@@ -39,13 +42,16 @@ class Bonus(Mode):
         self.game.score(total)
 
         self.item_index = 0
-        self.delay_time = 1
         self.bonus_items = [attempted, completed, crimescenes, total_base, multiplier, total_bonus]
         self.delay(name='show_bonus', event_type=None, delay=self.delay_time, handler=self.show_bonus_items)
+
+    def mode_stopped(self):
+        self.cancel_delayed('show_bonus')
 
     def show_bonus_items(self):
         if self.item_index == len(self.bonus_items):
             self.exit_callback()
+            return
 
         self.game.sound.play('bonus')
 

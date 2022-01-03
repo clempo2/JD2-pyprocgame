@@ -26,7 +26,9 @@ class BasePlay(Mode):
         self.status_report = StatusReport(self.game, 28)
         self.regular_play = RegularPlay(self.game, 8)
         self.skill_shot = SkillShot(self.game, 13)
+
         self.bonus = Bonus(self.game, 8)
+        self.bonus.exit_callback = self.end_ball
 
         self.ultimate_challenge = UltimateChallenge(game, 8)
         self.ultimate_challenge.exit_callback = self.ultimate_challenge_over
@@ -368,7 +370,6 @@ class BasePlay(Mode):
             self.end_ball()
         else:
             self.game.modes.add(self.bonus)
-            self.bonus.compute(self.end_ball)
             
         self.game.update_lamps()
 

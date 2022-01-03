@@ -149,8 +149,12 @@ class Chain(Mode):
 
     # called when a successful mode hurry up was achieved
     def hurry_up_collected(self):
-        # award a crime scene level and possibly 100K points
-        self.game.base_play.regular_play.crime_scenes.level_complete()
+        # award a crime scene level and/or some points
+        if self.game.base_play.regular_play.crime_scenes.is_complete():
+            self.game.score(10000)
+        else:
+            self.game.base_play.regular_play.crime_scenes.crime_scene_levels.level_complete()
+
         if self.game.base_play.regular_play.any_multiball_active():
             self.game.score(100000)
         self.hurry_up_over()

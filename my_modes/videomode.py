@@ -92,7 +92,7 @@ class ShootingGallery(Mode):
             new_layer.composite_op = 'blacksrc'
             self.shot_layers += [new_layer]
 
-        self.result_layer = TextLayer(128/2, 26, self.game.fonts['07x5'], 'center', opaque=True)
+        self.result_layer = TextLayer(128/2, 20, self.game.fonts['07x5'], 'center', opaque=False)
 
         # Add all of the layers to a GroupedLayer.
         all_layers = self.pos_layers + [self.scope_layer] + self.shot_layers + [self.status_layer, self.result_layer]
@@ -205,7 +205,7 @@ class ShootingGallery(Mode):
                 self.update_scope_pos()
 
     def update_scope_pos(self):
-        self.scope_layer.frame = self.scope_and_shot_anim.frames[self.scope_pos]
+        self.scope_layer.frame = self.scope_and_shot_anim[self.scope_pos]
 
     def sw_fireL_active(self, sw):
         self.fire_active()
@@ -218,7 +218,7 @@ class ShootingGallery(Mode):
             self.shoot()
 
     def shoot(self):
-        self.shot_layers[self.scope_pos].frame = self.scope_and_shot_anim.frames[self.scope_pos + 4]
+        self.shot_layers[self.scope_pos].frame = self.scope_and_shot_anim[self.scope_pos + 4]
         if self.targets[self.scope_pos] == 'enemy':
             self.delay(name='enemy_shot', event_type=None, delay=1.5, handler=self.enemy_shot, param=self.scope_pos)
             self.targets[self.scope_pos] = 'shot'

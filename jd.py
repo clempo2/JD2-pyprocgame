@@ -303,7 +303,7 @@ class JDGame(BasicGame):
         self.game_data['Audits']['Games Started'] += 1
         self.supergame = supergame
         self.modes.remove(self.attract_mode)
-        self.game.update_lamps()
+        self.update_lamps()
 
         # Add the first player
         self.add_player()

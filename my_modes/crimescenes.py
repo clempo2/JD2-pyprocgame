@@ -63,7 +63,7 @@ class CrimeScenes(Mode):
     def end_multiball(self):
         self.game.modes.remove(self.block_war)
         self.game.modes.remove(self.block_war_bonus)
-        self.crime_scenes_levels.next_level()
+        self.crime_scene_levels.next_level()
         # next_level updated the lamps
         self.start_crime_scene_levels()
         self.end_multiball_callback()

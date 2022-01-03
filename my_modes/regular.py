@@ -53,11 +53,11 @@ class RegularPlay(Scoring_Mode):
         self.setup_next_mode()
 
     def mode_stopped(self):
-        self.game.remove_modes([self.chain, self.crime_scenes, self.multiball])
+        self.game.remove_modes([self.chain, self.crime_scenes, self.multiball, self.missile_award_mode])
         self.game.setPlayerState('mystery_lit', self.mystery_lit)
 
     def sw_shooterR_active(self, sw):
-        if self.ball_starting:
+        if self.game.base_play.ball_starting:
             if not self.welcomed:
                 self.welcomed = True
                 self.welcome()
@@ -101,12 +101,12 @@ During multiball, shoot left ramp to light jackpot then shoot subway to collect
 
     def high_score_mention(self):
         if self.game.ball == self.game.balls_per_game:
-            if self.base_play.replay.replay_achieved[0]:
+            if self.game.base_play.replay.replay_achieved[0]:
                 text = 'Highest Score'
                 score = str(self.game.game_data['ClassicHighScoreData'][0]['inits']) + locale.format('  %d',self.game.game_data['ClassicHighScoreData'][0]['score'],True)
             else:
                 text = 'Replay'
-                score = locale.format('%d', self.base_play.replay.replay_scores[0], True)
+                score = locale.format('%d', self.game.base_play.replay.replay_scores[0], True)
             self.game.base_play.show_on_display(text, score)
 
     def sw_shooterL_active_for_500ms(self, sw):

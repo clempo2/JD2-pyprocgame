@@ -56,7 +56,6 @@ class Combos(Mode):
             score = 1000 * self.outer_loop_combos
             self.game.score(score)
             self.game.base_play.show_on_display('outer loop: ' + str(self.outer_loop_combos), score)
-            anim = self.game.animations['']
             self.game.base_play.play_animation('bike_across_screen', frame_time=3)
             self.game.update_lamps()
             self.cancel_delayed('outer_loop')

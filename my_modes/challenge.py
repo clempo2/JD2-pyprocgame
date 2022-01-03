@@ -107,6 +107,9 @@ class ChallengeBase(Scoring_Mode):
         script = [{'seconds':duration, 'layer':panning_layer}]
         return ScriptedLayer(width=128, height=32, script=script)
 
+    def sw_leftRampToLock_active(self, sw):
+        self.game.deadworld.eject_balls(1)
+
 
 class DarkJudge(ChallengeBase):
     """Base class for dark judge wizard modes"""
@@ -193,9 +196,6 @@ Extinguish fires and banish Judge Fire by shooting the lit crimescene shots.
             self.mystery_lit = False
             self.game.set_status('Add 2 balls!')
             self.game.trough.launch_balls(2)
-
-    def sw_leftRampToLock_active(self, sw):
-        self.game.deadworld.eject_balls(1)
 
     def switch_hit(self, num):
         if self.targets[num]:
@@ -288,9 +288,6 @@ Banish him by shooting each lit shot twice.
 
     def sw_captiveBall3_active(self, sw):
         self.switch_hit(4)
-
-    def sw_leftRampToLock_active(self, sw):
-        self.game.deadworld.eject_balls(1)
 
     def switch_hit(self, index):
         if self.shots_required[index] > 0:
@@ -386,9 +383,6 @@ Banish him by shooting the lit ramp shots and then the subway before time runs o
         if self.mystery_lit:
             self.mystery_lit = False
             self.timer = 20
-
-    def sw_leftRampToLock_active(self, sw):
-        self.game.deadworld.eject_balls(1)
 
     def sw_leftRampExit_active(self, sw):
         if self.state == 'ramps' and self.active_ramp == 'left':
@@ -524,9 +518,6 @@ Banish him by shooting the lit crimescene shots before time expires.  Shots slow
             style = 'off' if self.active_shots[shot] == 0 else 'medium'
             self.game.drive_perp_lamp('perp' + str(shot + 1), style)
 
-    def sw_leftRampToLock_active(self, sw):
-        self.game.deadworld.eject_balls(1)
-
     def switch_hit(self, index):
         if self.active_shots[index]:
             self.active_shots[index] = 0
@@ -641,6 +632,3 @@ Normal play resumes when only 1 ball remains.
 
     def sw_rightRampExit_active(self, sw):
         self.game.score(1000)
-
-    def sw_leftRampToLock_active(self, sw):
-        self.game.deadworld.eject_balls(1)
