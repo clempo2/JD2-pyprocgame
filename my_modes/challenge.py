@@ -422,7 +422,7 @@ Banish him by shooting the lit crimescene shots before time expires.  Shots slow
         self.timer = 10
         self.active_shots = [1, 1, 1, 1, 1]
         self.shot_order = [4, 2, 0, 3, 1] # from easiest to hardest
-        if self.game.switches.popperR.is_inactive() and not self.game.base_play.ball_starting
+        if self.game.switches.popperR.is_inactive() and not self.game.base_play.ball_starting:
             self.game.trough.launch_balls(1, self.launch_callback)
         self.delay(name='countdown', event_type=None, delay=1, handler=self.decrement_timer)
         self.game.coils.resetDropTarget.pulse(40)

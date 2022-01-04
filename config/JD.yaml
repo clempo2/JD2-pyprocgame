@@ -270,13 +270,13 @@ PRLamps:
         number: L13
     perp1G:
         number: L14
-    perp2W:
+    perp3W: # error in manual
         number: L15
-    perp2R:
+    perp3R:
         number: L16
-    perp2Y:
+    perp3Y:
         number: L17
-    perp2G:
+    perp3G:
         number: L18
     perp4W:
         number: L21
@@ -294,13 +294,13 @@ PRLamps:
         number: L27
     perp5G:
         number: L28
-    perp3W:
+    perp2W:  # error in manual
         number: L31
-    perp3R:
+    perp2R:
         number: L32
-    perp3Y:
+    perp2Y:
         number: L33
-    perp3G:
+    perp2G:
         number: L34
     lock1:
         number: L35

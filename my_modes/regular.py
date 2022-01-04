@@ -17,7 +17,7 @@ class RegularPlay(Scoring_Mode):
         self.game_intro = Introduction(self.game, priority + 1, delay=1.0)
         instruct_frame = MarkupFrameGenerator().frame_for_markup(self.get_instructions())
         instruct_layer = PanningLayer(width=128, height=32, frame=instruct_frame, origin=(0,0), translate=(0,1), bounce=False)
-        script = [{'seconds':24.0, 'layer':instruct_layer}]
+        script = [{'seconds':21.0, 'layer':instruct_layer}]
         self.game_intro.layer = ScriptedLayer(width=128, height=32, script=script)
 
         self.shoot_again_intro = Introduction(self.game, priority + 1, delay=1.0)
@@ -96,6 +96,9 @@ Complete crimescene levels by shooting lit crimescene shots
 Light locks by completing JUDGE target bank
 
 During multiball, shoot left ramp to light jackpot then shoot subway to collect
+
+
+
 
 """
 
