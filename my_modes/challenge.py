@@ -91,6 +91,9 @@ class UltimateChallenge(Scoring_Mode):
         self.game.coils.shooterL.pulse()
         return SwitchStop
 
+    def sw_popperR_active_for_300ms(self, sw):
+        self.game.base_play.flash_then_pop('flashersRtRamp', 'popperR', 20)
+
 
 class ChallengeBase(Scoring_Mode):
     """Base class for all wizard modes"""
