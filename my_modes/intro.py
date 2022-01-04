@@ -27,6 +27,12 @@ class Introduction(Mode):
     def sw_flipperLwR_active(self, sw):
         self.finish()
 
+    def sw_fireL_active(self, sw):
+        self.finish()
+
+    def sw_fireR_active(self, sw):
+        self.finish()
+
     def finish(self):
         self.game.modes.remove(self)
         if self.exit_callback:

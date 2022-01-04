@@ -27,7 +27,7 @@ class UltimateChallenge(Scoring_Mode):
         self.death = Death(game, self.priority+1)
         self.celebration = Celebration(game, self.priority+1)
 
-        self.mode_list = [self.fire, self.fear, self.mortis, self.death, self.celebration]
+        self.mode_list = [self.fear, self.mortis, self.death, self.fire, self.celebration]
         for mode in self.mode_list[0:4]:
             mode.complete_callback = self.level_complete_callback
 
@@ -142,8 +142,8 @@ class DarkJudge(ChallengeBase):
             self.score_layer.set_text(text)
 
 
-class Fire(DarkJudge, CrimeSceneBase):
-    """Fire wizard mode"""
+class Fear(DarkJudge):
+    """Fear wizard mode"""
 
     def instructions(self):
         return """
@@ -154,173 +154,6 @@ class Fire(DarkJudge, CrimeSceneBase):
 Defeat the Dark Judges
 
 Stage 1
-
-Judge Fire is creating chaos by lighting fires all over Mega City One.
-
-Extinguish fires and banish Judge Fire by shooting the lit crimescene shots.
-
-4 ball multiball.  No ball save.
-"""
-
-    def mode_started(self):
-        self.mystery_lit = True
-        self.targets = [1, 1, 1, 1, 1]
-        self.delay(name='taunt', event_type=None, delay=5, handler=self.taunt)
-
-        num_balls_locked = self.game.deadworld.num_balls_locked  # 0, 1 or 2 balls
-        if num_balls_locked > 0:
-            self.game.deadworld.eject_balls(num_balls_locked)
-        balls_to_launch = 3 - num_balls_locked
-        self.game.trough.launch_balls(balls_to_launch)
-
-    def mode_stopped(self):
-        self.cancel_delayed('taunt')
-
-    def taunt(self):
-        self.game.sound.play_voice('fire - taunt')
-        self.delay(name='taunt', event_type=None, delay=10, handler=self.taunt)
-
-    def update_lamps(self):
-        schedule = 0x80808080 if any(self.targets) else 0
-        self.game.coils.flasherFire.schedule(schedule=schedule, cycle_seconds=0, now=True)
-
-        for shot in range(0, 5):
-            for color in range(0, 4):
-                lampname = 'perp' + str(shot+1) + self.lamp_colors[color]
-                style = 'medium' if self.targets[shot] else 'off'
-                self.game.drive_lamp(lampname, style)
-
-        style = 'on' if self.mystery_lit else 'off'
-        self.game.drive_lamp('mystery', style)
-
-    def sw_mystery_active(self, sw):
-        self.game.sound.play('mystery')
-        if self.mystery_lit:
-            self.mystery_lit = False
-            self.game.set_status('Add 2 balls!')
-            self.game.trough.launch_balls(2)
-
-    def switch_hit(self, num):
-        if self.targets[num]:
-            self.targets[num] = 0
-            self.game.lampctrl.play_show('shot_hit', False, self.game.update_lamps)
-            self.game.score(10000)
-            self.check_for_completion()
-
-    def check_for_completion(self):
-        if not any(self.targets):
-            self.finish()
-
-    def finish(self):
-        self.layer = TextLayer(128/2, 13, self.game.fonts['tiny7'], 'center', True).set_text('Fire Defeated!')
-        self.game.enable_flippers(False)
-        self.mystery_lit = False
-        self.game.update_lamps()
-        self.complete_callback()
-
-
-class Mortis(DarkJudge):
-    """Mortis wizard mode"""
-
-    def instructions(self):
-        return """
-
-#ULTIMATE#
-#CHALLENGE#
-
-Stage 2
-
-Judge Mortis is spreading disease throughout the city.
-
-Banish him by shooting each lit shot twice.
-
-2 ball multiball with temporary ball save.
-"""
-
-    def mode_started(self):
-        self.state = 'ramps'
-        self.shots_required = [2, 2, 2, 2, 2]
-        num_launch_balls = 1 if self.game.switches.popperR.is_active() else 2
-        self.game.trough.launch_balls(num_launch_balls, self.launch_callback)
-        self.already_collected = False
-        self.delay(name='taunt', event_type=None, delay=5, handler=self.taunt)
-
-    def mode_stopped(self):
-        self.cancel_delayed('taunt')
-
-    def taunt(self):
-        self.game.sound.play_voice('mortis - taunt')
-        self.delay(name='taunt', event_type=None, delay=10, handler=self.taunt)
-
-    def launch_callback(self):
-        ball_save_time = 20
-        self.game.ball_save.start(num_balls_to_save=2, time=ball_save_time, now=False, allow_multiple_saves=True)
-
-    def update_lamps(self):
-        schedule = 0x80808080 if any(self.shots_required) else 0
-        self.game.coils.flasherMortis.schedule(schedule=schedule, cycle_seconds=0, now=True)
-        
-        self.drive_shot_lamp(0, 'mystery')
-        self.drive_shot_lamp(1, 'perp1')
-        self.drive_shot_lamp(2, 'perp3')
-        self.drive_shot_lamp(3, 'perp5')
-        # no lamp for (4, 'captiveBall3')
-
-    def drive_shot_lamp(self, index, lamp_name):
-        req_shots = self.shots_required[index]
-        styles = ['off', 'fast', 'medium']
-        style = styles[req_shots]
-        if lamp_name.startswith('perp'):
-            self.game.drive_perp_lamp(lamp_name, style)
-        else:
-            self.game.drive_lamp(lamp_name, style)
-
-    def sw_mystery_active(self, sw):
-        self.switch_hit(0)
-
-    def sw_topRightOpto_active(self, sw):
-        if self.game.switches.leftRollover.time_since_change() < 1:
-            # ball came around outer left loop
-            self.switch_hit(1)
-
-    def sw_popperR_active_for_300ms(self, sw):
-        self.switch_hit(2)
-
-    def sw_rightRampExit_active(self, sw):
-        self.switch_hit(3)
-
-    def sw_captiveBall3_active(self, sw):
-        self.switch_hit(4)
-
-    def switch_hit(self, index):
-        if self.shots_required[index] > 0:
-            self.shots_required[index] -= 1
-            self.game.lampctrl.play_show('shot_hit', False, self.game.update_lamps)
-            self.game.score(10000)
-            self.check_for_completion()
-
-    def check_for_completion(self):
-        if not any(self.shots_required):
-            self.finish()
-
-    def finish(self):
-        self.cancel_delayed('taunt')
-        self.layer = TextLayer(128/2, 13, self.game.fonts['tiny7'], 'center', True).set_text('Mortis Defeated!')
-        self.game.enable_flippers(False)
-        self.game.update_lamps()
-        self.complete_callback()
-
-
-class Fear(DarkJudge):
-    """Fear wizard mode"""
-
-    def instructions(self):
-        return """
-
-#ULTIMATE#
-#CHALLENGE#
-
-Stage 3
 
 Judge Fear is reigning terror on the city.
 
@@ -463,6 +296,98 @@ Banish him by shooting the lit ramp shots and then the subway before time runs o
             self.complete_callback()
 
 
+class Mortis(DarkJudge):
+    """Mortis wizard mode"""
+
+    def instructions(self):
+        return """
+
+#ULTIMATE#
+#CHALLENGE#
+
+Stage 2
+
+Judge Mortis is spreading disease throughout the city.
+
+Banish him by shooting each lit shot twice.
+
+2 ball multiball with temporary ball save.
+"""
+
+    def mode_started(self):
+        self.state = 'ramps'
+        self.shots_required = [2, 2, 2, 2, 2]
+        num_launch_balls = 1 if self.game.switches.popperR.is_active() else 2
+        self.game.trough.launch_balls(num_launch_balls, self.launch_callback)
+        self.already_collected = False
+        self.delay(name='taunt', event_type=None, delay=5, handler=self.taunt)
+
+    def mode_stopped(self):
+        self.cancel_delayed('taunt')
+
+    def taunt(self):
+        self.game.sound.play_voice('mortis - taunt')
+        self.delay(name='taunt', event_type=None, delay=10, handler=self.taunt)
+
+    def launch_callback(self):
+        ball_save_time = 20
+        self.game.ball_save.start(num_balls_to_save=2, time=ball_save_time, now=False, allow_multiple_saves=True)
+
+    def update_lamps(self):
+        schedule = 0x80808080 if any(self.shots_required) else 0
+        self.game.coils.flasherMortis.schedule(schedule=schedule, cycle_seconds=0, now=True)
+        
+        self.drive_shot_lamp(0, 'mystery')
+        self.drive_shot_lamp(1, 'perp1')
+        self.drive_shot_lamp(2, 'perp3')
+        self.drive_shot_lamp(3, 'perp5')
+        # no lamp for (4, 'captiveBall3')
+
+    def drive_shot_lamp(self, index, lamp_name):
+        req_shots = self.shots_required[index]
+        styles = ['off', 'fast', 'medium']
+        style = styles[req_shots]
+        if lamp_name.startswith('perp'):
+            self.game.drive_perp_lamp(lamp_name, style)
+        else:
+            self.game.drive_lamp(lamp_name, style)
+
+    def sw_mystery_active(self, sw):
+        self.switch_hit(0)
+
+    def sw_topRightOpto_active(self, sw):
+        if self.game.switches.leftRollover.time_since_change() < 1:
+            # ball came around outer left loop
+            self.switch_hit(1)
+
+    def sw_popperR_active_for_300ms(self, sw):
+        self.switch_hit(2)
+
+    def sw_rightRampExit_active(self, sw):
+        self.switch_hit(3)
+
+    def sw_captiveBall3_active(self, sw):
+        self.switch_hit(4)
+
+    def switch_hit(self, index):
+        if self.shots_required[index] > 0:
+            self.shots_required[index] -= 1
+            self.game.lampctrl.play_show('shot_hit', False, self.game.update_lamps)
+            self.game.score(10000)
+            self.check_for_completion()
+
+    def check_for_completion(self):
+        if not any(self.shots_required):
+            self.finish()
+
+    def finish(self):
+        self.cancel_delayed('taunt')
+        self.layer = TextLayer(128/2, 13, self.game.fonts['tiny7'], 'center', True).set_text('Mortis Defeated!')
+        self.game.enable_flippers(False)
+        self.game.update_lamps()
+        self.complete_callback()
+
+
 class Death(DarkJudge, CrimeSceneBase):
     """Death wizard mode"""
 
@@ -480,7 +405,7 @@ class Death(DarkJudge, CrimeSceneBase):
 #ULTIMATE#
 #CHALLENGE#
 
-Stage 4
+Stage 3
 
 Judge Death is on a murder spree.
 
@@ -565,6 +490,81 @@ Banish him by shooting the lit crimescene shots before time expires.  Shots slow
         self.game.update_lamps()
         if success:
             self.complete_callback()
+
+
+class Fire(DarkJudge, CrimeSceneBase):
+    """Fire wizard mode"""
+
+    def instructions(self):
+        return """
+
+#ULTIMATE#
+#CHALLENGE#
+
+Stage 4
+
+Judge Fire is creating chaos by lighting fires all over Mega City One.
+
+Extinguish fires and banish Judge Fire by shooting the lit crimescene shots.
+
+4 ball multiball.  No ball save.
+"""
+
+    def mode_started(self):
+        self.mystery_lit = True
+        self.targets = [1, 1, 1, 1, 1]
+        self.delay(name='taunt', event_type=None, delay=5, handler=self.taunt)
+
+        num_balls_locked = self.game.deadworld.num_balls_locked  # 0, 1 or 2 balls
+        if num_balls_locked > 0:
+            self.game.deadworld.eject_balls(num_balls_locked)
+        balls_to_launch = 3 - num_balls_locked
+        self.game.trough.launch_balls(balls_to_launch)
+
+    def mode_stopped(self):
+        self.cancel_delayed('taunt')
+
+    def taunt(self):
+        self.game.sound.play_voice('fire - taunt')
+        self.delay(name='taunt', event_type=None, delay=10, handler=self.taunt)
+
+    def update_lamps(self):
+        schedule = 0x80808080 if any(self.targets) else 0
+        self.game.coils.flasherFire.schedule(schedule=schedule, cycle_seconds=0, now=True)
+
+        for shot in range(0, 5):
+            for color in range(0, 4):
+                lampname = 'perp' + str(shot+1) + self.lamp_colors[color]
+                style = 'medium' if self.targets[shot] else 'off'
+                self.game.drive_lamp(lampname, style)
+
+        style = 'on' if self.mystery_lit else 'off'
+        self.game.drive_lamp('mystery', style)
+
+    def sw_mystery_active(self, sw):
+        self.game.sound.play('mystery')
+        if self.mystery_lit:
+            self.mystery_lit = False
+            self.game.set_status('Add 2 balls!')
+            self.game.trough.launch_balls(2)
+
+    def switch_hit(self, num):
+        if self.targets[num]:
+            self.targets[num] = 0
+            self.game.lampctrl.play_show('shot_hit', False, self.game.update_lamps)
+            self.game.score(10000)
+            self.check_for_completion()
+
+    def check_for_completion(self):
+        if not any(self.targets):
+            self.finish()
+
+    def finish(self):
+        self.layer = TextLayer(128/2, 13, self.game.fonts['tiny7'], 'center', True).set_text('Fire Defeated!')
+        self.game.enable_flippers(False)
+        self.mystery_lit = False
+        self.game.update_lamps()
+        self.complete_callback()
 
 
 class Celebration(ChallengeBase):
