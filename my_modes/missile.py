@@ -118,7 +118,7 @@ class MissileAwardMode(Mode):
 
     def award(self):
         award = self.available_awards[self.current_award_ptr]
-        if award.endswith('Points', 0) != -1:
+        if award.endswith('Points'):
             award_words = award.rsplit(' ')
             self.game.score(int(award_words[0]))
         elif award == 'Light Extra Ball':
