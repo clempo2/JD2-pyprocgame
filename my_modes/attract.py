@@ -1,5 +1,5 @@
 from random import shuffle
-from procgame.dmd import FrameLayer, MarkupFrameGenerator, PanningLayer, PushTransition, ScriptedLayer, TextLayer
+from procgame.dmd import FrameLayer, GroupedLayer, MarkupFrameGenerator, PanningLayer, PushTransition, ScriptedLayer, TextLayer
 from procgame.game import Mode
 from procgame.highscore import generate_highscore_frames
 
@@ -17,17 +17,29 @@ class Attract(Mode):
         super(Attract, self).__init__(game, 1)
         self.lampshow_keys = ['attract0', 'attract1']
 
+        font_jazz18 = self.game.fonts['jazz18']
+        font_07x5 = self.game.fonts['07x5']
         self.cityscape_layer = self.game.animations['cityscape']
-        self.jd_layer = TextLayer(128/2, 7, self.game.fonts['jazz18'], 'center', opaque=True).set_text('Judge Dredd')
+        self.jd_layer = TextLayer(128/2, 7, font_jazz18, 'center', opaque=True).set_text('Judge Dredd')
         self.jd_layer.transition = PushTransition(direction='south')
         self.proc_splash_layer = self.game.animations['Splash']
         self.proc_splash_layer.transition = PushTransition(direction='south')
-        self.pyprocgame_layer = TextLayer(128/2, 7, self.game.fonts['jazz18'], 'center', opaque=True).set_text('pyprocgame')
+        self.pyprocgame_layer = TextLayer(128/2, 7, font_jazz18, 'center', opaque=True).set_text('pyprocgame')
         self.pyprocgame_layer.transition = PushTransition(direction='west')
-        self.press_start_layer = TextLayer(128/2, 7, self.game.fonts['jazz18'], 'center', opaque=True).set_text('Press Start', seconds=None, blink_frames=1)
-        self.scores_layer = TextLayer(128/2, 7, self.game.fonts['jazz18'], 'center', opaque=True).set_text('High Scores')
+
+        press_yellow_layer = TextLayer(128/2, 8, font_07x5, 'center', opaque=True).set_text('Press Yellow Button', seconds=None, blink_frames=5)
+        regulation_layer = TextLayer(128/2, 17, font_07x5, 'center', opaque=False).set_text('for Regulation Play', seconds=None, blink_frames=5)
+        self.start_regulation_layer = GroupedLayer(128, 32, [press_yellow_layer, regulation_layer])
+        self.start_regulation_layer.transition = PushTransition(direction='west')
+
+        press_green_layer = TextLayer(128/2, 8, font_07x5, 'center', opaque=True).set_text('Press Green Button', seconds=None, blink_frames=9)
+        supergame_layer = TextLayer(128/2, 17, font_07x5, 'center', opaque=False).set_text('for SuperGame', seconds=None, blink_frames=9)
+        self.start_supergame_layer = GroupedLayer(128, 32, [press_green_layer, supergame_layer])
+        self.start_supergame_layer.transition = PushTransition(direction='east')
+
+        self.scores_layer = TextLayer(128/2, 7, font_jazz18, 'center', opaque=True).set_text('High Scores')
         self.scores_layer.transition = PushTransition(direction='north')
-        self.game_over_layer = TextLayer(128/2, 7, self.game.fonts['jazz18'], 'center', opaque=True).set_text('Game Over')
+        self.game_over_layer = TextLayer(128/2, 7, font_jazz18, 'center', opaque=True).set_text('Game Over')
 
         gen = MarkupFrameGenerator()
         credits_frame = gen.frame_for_markup("""
@@ -101,7 +113,8 @@ class Attract(Mode):
             {'seconds':4.0, 'layer':self.cityscape_layer},
             {'seconds':3.0, 'layer':self.proc_splash_layer},
             {'seconds':3.0, 'layer':self.pyprocgame_layer},
-            {'seconds':3.0, 'layer':self.press_start_layer},
+            {'seconds':3.0, 'layer':self.start_regulation_layer},
+            {'seconds':3.0, 'layer':self.start_supergame_layer},
             {'seconds':3.0, 'layer':self.game.score_display.layer},
             {'seconds':7.2, 'layer':self.credits_layer},
             {'seconds':3.0, 'layer':self.judges_layer},
@@ -125,10 +138,10 @@ class Attract(Mode):
         self.layer.on_complete = self.display
 
     def append_high_score_layers(self, script):
-        for frame in generate_highscore_frames(self.game.highscore_categories):
+        for frame in generate_highscore_frames(self.game.all_highscore_categories):
             new_layer = FrameLayer(frame=frame)
             new_layer.transition = PushTransition(direction='north')
-            script.append({'seconds':2.0, 'layer':new_layer})
+            script.append({'seconds':1.75, 'layer':new_layer})
 
     def change_lampshow(self):
         shuffle(self.lampshow_keys)

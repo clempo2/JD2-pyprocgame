@@ -67,6 +67,7 @@ class Chain(Mode):
         player.setState('modes_not_attempted_ptr', 0)
         player.setState('modes_attempted', [])
         player.setState('modes_completed', [])
+        # num_modes_completed and num_modes_attempted continue to accrue
 
     def is_active(self):
         return self.mode != None
@@ -150,7 +151,7 @@ class Chain(Mode):
     # called when a successful mode hurry up was achieved
     def hurry_up_collected(self):
         # award a crime scene level and/or some points
-        if self.game.base_play.regular_play.crime_scenes.is_complete():
+        if self.game.getPlayerState('crimescenes_complete', False):
             self.game.score(10000)
         else:
             self.game.base_play.regular_play.crime_scenes.crime_scene_levels.level_complete()

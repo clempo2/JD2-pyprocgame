@@ -91,7 +91,7 @@ Start chain features by shooting the Build Up Chain Feature shot when lit
 
 Chain feature instructions are displayed when starting each feature
 
-Complete crimescene levels by shooting lit crimescene shots
+Complete crime scene levels by shooting lit crimescene shots
 
 Light locks by completing JUDGE target bank
 
@@ -150,8 +150,8 @@ During multiball, shoot left ramp to light jackpot then shoot subway to collect
         self.game.update_lamps()
 
     # starts a mode if a mode is available
-    # the 300ms delay must be the same or longer than the popperR handler in crimescenes
-    # If that shot starts block war multiball, we want crimescenes to go first and change the state to busy
+    # the 300ms delay must be the same or longer than the popperR handler in crime scenes
+    # If that shot starts block war multiball, we want crime scenes to go first and change the state to busy
     # so we don't start something else here
     def sw_popperR_active_for_300ms(self, sw):
         if self.state == 'chain_ready':
@@ -201,7 +201,7 @@ During multiball, shoot left ramp to light jackpot then shoot subway to collect
     def is_ultimate_challenge_ready(self):
         # 3 Criteria for finale
         return (self.multiball.jackpot_collected and
-                self.crime_scenes.is_complete() and
+                self.game.getPlayerState('crimescenes_complete', False) and
                 self.chain.is_complete())
 
     def start_ultimate_challenge(self):

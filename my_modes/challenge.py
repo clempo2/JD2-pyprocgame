@@ -342,7 +342,7 @@ Banish him by shooting each lit shot twice.
         self.drive_shot_lamp(1, 'perp1')
         self.drive_shot_lamp(2, 'perp3')
         self.drive_shot_lamp(3, 'perp5')
-        # no lamp for (4, 'captiveBall3')
+        self.drive_shot_lamp(4, 'stopMeltdown')
 
     def drive_shot_lamp(self, index, lamp_name):
         req_shots = self.shots_required[index]
@@ -410,7 +410,7 @@ Stage 3
 
 Judge Death is on a murder spree.
 
-Banish him by shooting the lit crimescene shots before time expires.  Shots slowly re-light so finish him quickly.
+Banish him by shooting the lit crime scene shots before time expires.  Shots slowly re-light so finish him quickly.
 
 1 ball with temporary ball save.
 """
@@ -506,7 +506,7 @@ Stage 4
 
 Judge Fire is creating chaos by lighting fires all over Mega City One.
 
-Extinguish fires and banish Judge Fire by shooting the lit crimescene shots.
+Extinguish fires and banish Judge Fire by shooting the lit crime scene shots.
 
 4 ball multiball.  No ball save.
 """

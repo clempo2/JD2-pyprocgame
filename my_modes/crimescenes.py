@@ -11,7 +11,7 @@ class CrimeScenes(Mode):
     def __init__(self, game, priority):
         super(CrimeScenes, self).__init__(game, priority)
 
-        num_levels = int(self.game.user_settings['Gameplay']['Crimescene levels for finale'])
+        num_levels = int(self.game.user_settings['Gameplay']['Crime scene levels for finale'])
         self.levels_required = min(16, 4 * ceil(num_levels / 4)) # a multiple of 4 less than or equal to 16
 
         self.crime_scene_levels = CrimeSceneLevels(game, priority + 1, self.levels_required)
@@ -30,8 +30,8 @@ class CrimeScenes(Mode):
     def mode_stopped(self):
         self.game.remove_modes([self.crime_scene_levels, self.block_war, self.block_war_bonus])
 
-    def is_complete(self):
-        return self.game.getPlayerState('crimescenes_level', 0) >= self.levels_required
+    def reset(self):
+        self.crime_scene_levels.reset()
 
     def start_crime_scene_levels(self):
         if self.game.getPlayerState('crimescenes_level', 0) < self.levels_required:
@@ -40,6 +40,7 @@ class CrimeScenes(Mode):
     def crime_scene_levels_completed(self):
         self.game.modes.remove(self.crime_scene_levels)
         self.game.update_lamps()
+        self.game.setPlayerState('crimescenes_complete', True)
         self.game.base_play.regular_play.crime_scenes_completed()
 
     def start_block_war(self):
@@ -126,7 +127,7 @@ class CrimeSceneLevels(CrimeSceneBase):
         self.target_award_order = [1, 3 ,0, 2, 4]
         self.extra_ball_level = 4
 
-        difficulty = self.game.user_settings['Gameplay']['Crimescene shot difficulty']
+        difficulty = self.game.user_settings['Gameplay']['Crime scene shot difficulty']
         if difficulty == 'easy':
             self.level_pick_from = [
                 [2,4], [2,4], [2,4], [2,4],
@@ -155,6 +156,7 @@ class CrimeSceneLevels(CrimeSceneBase):
     def reset(self):
         # force the mode to initialize at level 0 the next time it starts
         self.game.setPlayerState('crimescenes_level', -1)
+        self.game.setPlayerState('crimescenes_complete', False)
 
     def mode_started(self):
         # restore player state

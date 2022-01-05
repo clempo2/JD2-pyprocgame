@@ -18,6 +18,12 @@ ClassicHighScoreData:
 - {date: 'Sun Oct  3 16:22:47 2010', inits: JRP, score: 3000000}
 - {date: 'Sun Oct  3 15:04:27 2010', inits: JAT, score: 2000000}
 - {date: 'Sun Oct  3 22:05:01 2010', inits: JTW, score: 1000000}
+SuperGameHighScoreData:
+- {date: 'Sun Oct  3 17:38:46 2010', inits: GSS, score: 5000000}
+- {date: 'Sun Oct  3 17:44:49 2010', inits: ASP, score: 4000000}
+- {date: 'Sun Oct  3 16:22:47 2010', inits: JRP, score: 3000000}
+- {date: 'Sun Oct  3 15:04:27 2010', inits: JAT, score: 2000000}
+- {date: 'Sun Oct  3 22:05:01 2010', inits: JTW, score: 1000000}
 InnerLoopsHighScoreData:
 - {date: 'Sun Oct  3 17:38:46 2010', inits: GSS, score: 2}
 OuterLoopsHighScoreData:

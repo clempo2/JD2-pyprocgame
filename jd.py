@@ -233,13 +233,22 @@ class JDGame(BasicGame):
         classic_category = HighScoreCategory()
         classic_category.game_data_key = 'ClassicHighScoreData'
 
-        crimeScenes_category = self.create_high_score_category('CrimeScenesHighScoreData', 'Crimescene Champ', 'crimescenes_total_levels', ' level')
+        crimeScenes_category = self.create_high_score_category('CrimeScenesHighScoreData', 'Crime Scene Champ', 'crimescenes_total_levels', ' level')
         innerLoops_category = self.create_high_score_category('InnerLoopsHighScoreData', 'Inner Loop Champ', 'best_inner_loops', ' loop')
         outerLoops_category = self.create_high_score_category('OuterLoopsHighScoreData', 'Outer Loop Champ', 'best_outer_loops', ' loop')
 
         self.highscore_categories = [classic_category, crimeScenes_category, innerLoops_category, outerLoops_category]
         for category in self.highscore_categories:
             category.load_from_game(self)
+
+        supergame_category = HighScoreCategory()
+        supergame_category.game_data_key = 'SuperGameHighScoreData'
+        supergame_category.titles = ['SuperGame Champion', 'SuperGame High Score #1', 'SuperGame High Score #2', 'SuperGame High Score #3', 'SuperGame High Score #4']
+        supergame_category.load_from_game(self)
+        
+        self.supergame_highscore_categories = [supergame_category, crimeScenes_category, innerLoops_category, outerLoops_category]
+        
+        self.all_highscore_categories = [classic_category, supergame_category, crimeScenes_category, innerLoops_category, outerLoops_category]
 
     def create_high_score_category(self, key, title, state_key, suffix):
         category = HighScoreCategory()
@@ -338,7 +347,8 @@ class JDGame(BasicGame):
         # High Score Stuff
         seq_manager = EntrySequenceManager(game=self, priority=2)
         seq_manager.finished_handler = self.highscore_entry_finished
-        seq_manager.logic = CategoryLogic(game=self, categories=self.highscore_categories)
+        categories = self.supergame_highscore_categories if self.supergame else self.highscore_categories
+        seq_manager.logic = CategoryLogic(game=self, categories=categories)
         seq_manager.ready_handler = self.highscore_entry_ready_to_prompt
         self.modes.add(seq_manager)
 

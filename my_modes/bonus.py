@@ -29,7 +29,7 @@ class Bonus(Mode):
         completed = ['Modes Completed: ' + str(num_modes_completed), num_modes_completed * 12000]
 
         crimescenes_total_levels = player.getState('crimescenes_total_levels', 0)
-        crimescenes = ['Crimescene Levels: ' + str(crimescenes_total_levels), crimescenes_total_levels * 2000]
+        crimescenes = ['Crime scene Levels: ' + str(crimescenes_total_levels), crimescenes_total_levels * 2000]
 
         base = attempted[1] + completed[1] + crimescenes[1]
         total_base = ['Total Base:', base]
@@ -57,7 +57,7 @@ class Bonus(Mode):
 
         text, value = self.bonus_items[self.item_index]
         self.name_layer.set_text(text)
-        self.value_layer.set_text(str(value))
+        self.value_layer.set_text('00' if value == 0 else str(value))
 
         self.item_index += 1
         self.delay(name='show_bonus', event_type=None, delay=self.delay_time, handler=self.show_bonus_items)
