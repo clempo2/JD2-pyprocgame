@@ -166,10 +166,14 @@ class BasePlay(Mode):
         self.auto_plunge = True
         self.ball_starting = False
         if self.game.base_play.ball_starting and not self.game.base_play.tilt.tilted:
-            self.skill_shot.begin()
-            self.game.modes.add(self.boring)
-            # Tell game to save ball start time now, since ball is now in play.
-            self.game.save_ball_start_time()
+            self.game.send_event('ball_started')
+
+    # event called when the ball is initially plunged by the player
+    def ball_started(self):
+        self.skill_shot.begin()
+        self.game.modes.add(self.boring)
+        # Tell game to save ball start time now, since ball is now in play.
+        self.game.save_ball_start_time()
 
     def sw_shooterR_active(self, sw):
         if self.ball_starting:
@@ -343,12 +347,9 @@ class BasePlay(Mode):
 
     def drain_callback(self):
         if not self.tilt.tilted:
-            for mode in self.game.modes:
-                # does it implement ball_drained
-                if getattr(mode, 'ball_drained', None):
-                    if mode.ball_drained():
-                        # drain was intentional, ignore it
-                        return
+            if self.game.send_event('ball_drained'):
+                # drain was intentional, ignore it
+                return
 
         if self.game.trough.num_balls_in_play == 0:
             # End the ball

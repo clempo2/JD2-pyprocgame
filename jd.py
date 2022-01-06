@@ -219,6 +219,15 @@ class JDGame(BasicGame):
         for m in self.modes:
             self.modes.remove(m)
 
+    def send_event(self, event):
+        for mode in self.game.modes:
+            handler = getattr(mode, event, None)
+            if handler:
+                ret = handler()
+                if ret:
+                    # skip lower priority modes
+                    return ret
+
     def load_settings_and_stats(self):
         self.load_settings(settings_template_path, settings_path)
         self.sound.music_volume_offset = self.user_settings['Machine']['Music volume offset']

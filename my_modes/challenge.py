@@ -110,6 +110,19 @@ class ChallengeBase(Scoring_Mode):
         script = [{'seconds':duration, 'layer':panning_layer}]
         return ScriptedLayer(width=128, height=32, script=script)
 
+    def balls_needed(self, num_balls):
+        # compute the number of balls to launch based on the current state and the number of balls needed by the mode
+        # account for ball already in right popper if starting ultimate challenge from regular play
+        # or account for ball in shooter lane when in supergame and this is the first mode for this ball
+        self.num_launch_balls = (num_balls -1) if self.game.switches.popperR.is_active() or self.game.base_play.ball_starting else num_balls
+
+    def ball_started(self):
+        if self.num_launch_balls > 0:
+            self.game.trough.launch_balls(self.num_launch_balls, self.launch_callback)
+
+    def launch_callback(self):
+        pass
+
     def sw_leftRampToLock_active(self, sw):
         self.game.deadworld.eject_balls(1)
 
@@ -177,8 +190,7 @@ Banish him by shooting the lit ramp shots and then the subway before time runs o
         self.ramp_shots_hit = 0
         self.active_ramp = 'left'
         self.timer = 20
-        if self.game.switches.popperR.is_inactive() and not self.game.base_play.ball_starting:
-            self.game.trough.launch_balls(1, self.launch_callback)
+        self.balls_needed(1)
         self.already_collected = False
         self.delay(name='countdown', event_type=None, delay=1, handler=self.decrement_timer)
         self.delay(name='taunt', event_type=None, delay=5, handler=self.taunt)
@@ -318,8 +330,7 @@ Banish him by shooting each lit shot twice.
     def mode_started(self):
         self.state = 'ramps'
         self.shots_required = [2, 2, 2, 2, 2]
-        num_launch_balls = 1 if self.game.switches.popperR.is_active() or self.game.base_play.ball_starting else 2
-        self.game.trough.launch_balls(num_launch_balls, self.launch_callback)
+        self.balls_needed(2)
         self.already_collected = False
         self.delay(name='taunt', event_type=None, delay=5, handler=self.taunt)
 
@@ -422,8 +433,7 @@ Banish him by shooting the lit crime scene shots before time expires.  Shots slo
         self.timer = 10
         self.active_shots = [1, 1, 1, 1, 1]
         self.shot_order = [4, 2, 0, 3, 1] # from easiest to hardest
-        if self.game.switches.popperR.is_inactive() and not self.game.base_play.ball_starting:
-            self.game.trough.launch_balls(1, self.launch_callback)
+        self.balls_needed(1)
         self.delay(name='countdown', event_type=None, delay=1, handler=self.decrement_timer)
         self.game.coils.resetDropTarget.pulse(40)
         self.delay(name='taunt', event_type=None, delay=5, handler=self.taunt)
@@ -515,8 +525,7 @@ Extinguish fires and banish Judge Fire by shooting the lit crime scene shots.
         self.mystery_lit = True
         self.targets = [1, 1, 1, 1, 1]
         self.delay(name='taunt', event_type=None, delay=5, handler=self.taunt)
-        num_launch_balls = 3 if self.game.switches.popperR.is_active() or self.game.base_play.ball_starting else 4
-        self.game.trough.launch_balls(num_launch_balls)
+        self.balls_needed(4)
 
     def mode_stopped(self):
         self.cancel_delayed('taunt')
@@ -584,9 +593,7 @@ Normal play resumes when only 1 ball remains.
         # This player reached the end of supergame, his next ball is regular play
         # do this early now in case the game tilts
         self.game.setPlayerState('supergame', False)
-
-        num_launch_balls = 5 if self.game.switches.popperR.is_active() or self.game.base_play.ball_starting else 6
-        self.game.trough.launch_balls(num_launch_balls)
+        self.balls_needed(6)
 
     def launch_callback(self):
         ball_save_time = 20
