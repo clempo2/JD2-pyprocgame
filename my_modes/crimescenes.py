@@ -177,7 +177,7 @@ class CrimeSceneLevels(CrimeSceneBase):
 
     def get_status_layers(self):
         tiny_font = self.game.fonts['tiny7']
-        level = self.game.getPlayerState('crimescenes_level', -1)
+        level = self.game.getPlayerState('crimescenes_level', 0)
         title_layer = TextLayer(128/2, 7, tiny_font, 'center').set_text('Crime Scenes')
         level_layer = TextLayer(128/2, 16, tiny_font, 'center').set_text('Current Level: ' + str(level + 1) + '/' + str(self.levels_required))
         block_layer = TextLayer(128/2, 25, tiny_font, 'center').set_text('Block War in ' + str(4-(level % 4)) + ' levels')

@@ -220,7 +220,7 @@ class JDGame(BasicGame):
             self.modes.remove(m)
 
     def send_event(self, event):
-        for mode in self.game.modes:
+        for mode in self.modes:
             handler = getattr(mode, event, None)
             if handler:
                 ret = handler()

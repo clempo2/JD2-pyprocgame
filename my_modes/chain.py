@@ -15,6 +15,10 @@ class Chain(Mode):
     def __init__(self, game, priority):
         super(Chain, self).__init__(game, priority)
 
+        # for status report in SuperGame before Chain is started
+        self.num_modes_attempted = 0
+        self.num_modes_completed = 0
+
         self.intro = ChainIntro(self.game, self.priority+1)
         self.intro.exit_callback = self.activate_chain_mode
 
