@@ -250,6 +250,10 @@ class JDGame(BasicGame):
         
         self.all_highscore_categories = [classic_category, supergame_category, crimeScenes_category, innerLoops_category, outerLoops_category]
 
+    # this variant is called by procgame.service.SettingsEditor
+    def save_settings(self):
+        self.save_settings(settings_path)
+
     def create_high_score_category(self, key, title, state_key, suffix):
         category = HighScoreCategory()
         category.game_data_key = key
@@ -276,7 +280,6 @@ class JDGame(BasicGame):
         self.modes.add(self.service_mode)
 
     def service_mode_ended(self):
-        self.save_settings(settings_path)
         self.reset()
         self.update_lamps()
 
@@ -390,13 +393,14 @@ class JDGame(BasicGame):
 
     def highscore_banner_complete(self, banner_mode, highscore_entry_mode):
         self.modes.remove(banner_mode)
+        self.update_lamps()
         highscore_entry_mode.prompt()
 
     def highscore_entry_finished(self, mode):
         self.modes.remove(mode)
-
         self.attract_mode.game_over_display()
         self.modes.add(self.attract_mode)
+        self.update_lamps()
 
         # Handle game stats.
         for i in range(0, len(self.players)):

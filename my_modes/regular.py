@@ -106,7 +106,7 @@ During multiball, shoot left ramp to light jackpot then shoot subway to collect
         if self.game.ball == self.game.balls_per_game:
             if self.game.base_play.replay.replay_achieved[0]:
                 text = 'Highest Score'
-                score = str(self.game.game_data['ClassicHighScoreData'][0]['inits']) + locale.format('  %d',self.game.game_data['ClassicHighScoreData'][0]['score'],True)
+                score = str(self.game.game_data['ClassicHighScoreData'][0]['inits']) + '  ' + locale.format('%d', self.game.game_data['ClassicHighScoreData'][0]['score'], True)
             else:
                 text = 'Replay'
                 score = locale.format('%d', self.game.base_play.replay.replay_scores[0], True)

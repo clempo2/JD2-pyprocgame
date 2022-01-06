@@ -85,10 +85,10 @@ Gameplay:
   'Chain feature difficulty':
     options: ['easy', 'medium', 'hard']
     default: 'medium'
-  'Crimescene levels for finale':
+  'Crime scene levels for finale':
     options: [8,12,16]
     default: 16
-  'Crimescene shot difficulty':
+  'Crime scene shot difficulty':
     options: ['easy', 'medium', 'hard']
     default: 'medium'
   'Video mode':
