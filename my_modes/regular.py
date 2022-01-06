@@ -161,7 +161,8 @@ During multiball, shoot left ramp to light jackpot then shoot subway to collect
             self.state = 'busy'
             self.start_ultimate_challenge()
         else: # state 'busy' or 'chain_complete'
-            self.popperR_eject()
+            self.game.base_play.flash_then_pop('flashersRtRamp', 'popperR', 20)
+
         self.game.update_lamps()
 
     def crime_scenes_completed(self):
@@ -266,16 +267,6 @@ During multiball, shoot left ramp to light jackpot then shoot subway to collect
         
         style = 'slow' if self.state == 'challenge_ready' else 'off'
         self.game.drive_lamp('ultChallenge', style)
-
-    #
-    # Coils
-    #
-
-    def sw_popperL_active_for_200ms(self, sw):
-        self.game.base_play.flash_then_pop('flashersLowerLeft', 'popperL', 50)
-
-    def popperR_eject(self):
-        self.game.base_play.flash_then_pop('flashersRtRamp', 'popperR', 20)
 
     #
     # End of ball

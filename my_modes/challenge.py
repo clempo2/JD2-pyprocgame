@@ -119,8 +119,13 @@ class ChallengeBase(Scoring_Mode):
     def ball_started(self):
         if self.num_launch_balls > 0:
             self.game.trough.launch_balls(self.num_launch_balls, self.launch_callback)
+            self.start()
 
     def launch_callback(self):
+        pass
+    
+    def start(self):
+        # this callback can be used to start a timer for example
         pass
 
     def sw_leftRampToLock_active(self, sw):
@@ -192,11 +197,16 @@ Banish him by shooting the lit ramp shots and then the subway before time runs o
         self.timer = 20
         self.balls_needed(1)
         self.already_collected = False
-        self.delay(name='countdown', event_type=None, delay=1, handler=self.decrement_timer)
-        self.delay(name='taunt', event_type=None, delay=5, handler=self.taunt)
+        if not self.game.base_play.ball_starting:
+            self.start()
 
     def mode_stopped(self):
         self.cancel_delayed(['countdown', 'taunt'])
+
+    def start(self):
+        # start the timers now that the ball is in play
+        self.delay(name='countdown', event_type=None, delay=1, handler=self.decrement_timer)
+        self.delay(name='taunt', event_type=None, delay=5, handler=self.taunt)
 
     def launch_callback(self):
         ball_save_time = 10
@@ -434,8 +444,15 @@ Banish him by shooting the lit crime scene shots before time expires.  Shots slo
         self.active_shots = [1, 1, 1, 1, 1]
         self.shot_order = [4, 2, 0, 3, 1] # from easiest to hardest
         self.balls_needed(1)
-        self.delay(name='countdown', event_type=None, delay=1, handler=self.decrement_timer)
+        if not self.game.base_play.ball_starting:
+            self.start()
+
+    def mode_stopped(self):
+        self.cancel_delayed(['countdown', 'taunt'])
+
+    def start(self):
         self.game.coils.resetDropTarget.pulse(40)
+        self.delay(name='countdown', event_type=None, delay=1, handler=self.decrement_timer)
         self.delay(name='taunt', event_type=None, delay=5, handler=self.taunt)
 
     def taunt(self):
@@ -445,9 +462,6 @@ Banish him by shooting the lit crime scene shots before time expires.  Shots slo
     def launch_callback(self):
         ball_save_time = 20
         self.game.ball_save.start(num_balls_to_save=1, time=ball_save_time, now=False, allow_multiple_saves=True)
-
-    def mode_stopped(self):
-        self.cancel_delayed('taunt')
 
     def update_lamps(self):
         schedule = 0x80808080 if any(self.active_shots) else 0

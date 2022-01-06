@@ -326,9 +326,12 @@ class BasePlay(Mode):
     # Coil
     #
 
+    def sw_popperL_active_for_200ms(self, sw):
+        self.game.base_play.flash_then_pop('flashersLowerLeft', 'popperL', 50)
+
     def flash_then_pop(self, flasher, coil, pulse):
         self.game.coils[flasher].schedule(0x00555555, cycle_seconds=1, now=True)
-        self.delay(name='delayed_pop', event_type=None, delay=1.0, handler=self.delayed_pop, param=[coil, pulse])
+        self.delay(name='delayed_pop', event_type=None, delay=0.8, handler=self.delayed_pop, param=[coil, pulse])
 
     def delayed_pop(self, coil_pulse):
         self.game.coils[coil_pulse[0]].pulse(coil_pulse[1])
