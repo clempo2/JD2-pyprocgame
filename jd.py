@@ -216,11 +216,11 @@ class JDGame(BasicGame):
             self.modes.remove(m)
 
     def remove_all_modes(self):
-        for m in self.modes:
+        for m in self.modes[:]:
             self.modes.remove(m)
 
     def send_event(self, event):
-        for mode in self.modes:
+        for mode in self.modes[:]:
             handler = getattr(mode, event, None)
             if handler:
                 ret = handler()

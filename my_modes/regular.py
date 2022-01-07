@@ -116,7 +116,7 @@ During multiball, shoot left ramp to light jackpot then shoot subway to collect
         if self.any_multiball_active():
             self.game.coils.shooterL.pulse()
 
-    def ball_started(self, sw):
+    def ball_started(self):
         if self.game.base_play.ball_starting and not self.game.base_play.tilt.tilted:
             ball_save_time = self.game.user_settings['Gameplay']['New ball ballsave time']
             self.game.ball_save.callback = self.ball_save_callback

@@ -164,8 +164,8 @@ class BasePlay(Mode):
     # Enable auto-plunge soon after the new ball is launched (by the player).
     def sw_shooterR_inactive_for_1s(self, sw):
         self.auto_plunge = True
-        self.ball_starting = False
-        if self.game.base_play.ball_starting and not self.game.base_play.tilt.tilted:
+        if self.ball_starting:
+            self.ball_starting = False
             self.game.send_event('ball_started')
 
     # event called when the ball is initially plunged by the player
