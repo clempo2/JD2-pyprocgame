@@ -44,7 +44,7 @@ class UltimateChallenge(Scoring_Mode):
 
     def update_lamps(self):
         self.game.lamps.ultChallenge.enable()
-        
+
     def start_challenge(self):
         # called by base play supergame or regular play
         self.start_intro()
@@ -110,10 +110,11 @@ class UltimateChallenge(Scoring_Mode):
 class ChallengeBase(Scoring_Mode):
     """Base class for all wizard modes"""
 
-    def __init__(self, game, priority, num_balls):
+    def __init__(self, game, priority, num_balls, ball_save_time):
         super(ChallengeBase, self).__init__(game, priority)
         self.frame_gen = MarkupFrameGenerator()
         self.num_balls = num_balls
+        self.ball_save_time = ball_save_time
 
     def mode_started(self):
         self.started = False
@@ -139,17 +140,17 @@ class ChallengeBase(Scoring_Mode):
         else:
             # serve the ball to the shooter lane, but wait for the player to plunge the ball
             self.game.base_play.auto_plunge = False
+            self.game.sound.play_music('ball_launch', loops=-1)
 
         if self.num_launch_balls > 0:
-            self.game.trough.launch_balls(self.num_launch_balls, self.launch_callback)
+            self.game.trough.launch_balls(self.num_launch_balls)
 
-    def launch_callback(self):
-        # this callback can be used to configure a ball saver for example
-        pass
-    
     def start(self):
-        # this callback can be used to start a timer for example
+        # the ball is now in play (popped from popperR or plunged by player)
         self.started = True
+        self.game.base_play.auto_plunge = True
+        if self.ball_save_time > 0:
+            self.game.ball_save.start(num_balls_to_save=self.num_balls, time=self.ball_save_time, now=False, allow_multiple_saves=True)
 
     def sw_shooterR_inactive_for_1s(self, sw):
         if not self.started:
@@ -161,6 +162,34 @@ class ChallengeBase(Scoring_Mode):
 
 class DarkJudge(ChallengeBase):
     """Base class for dark judge wizard modes"""
+
+    def __init__(self, game, priority, num_balls, ball_save_time, timer, taunt_sound):
+        super(DarkJudge, self).__init__(game, priority, num_balls, ball_save_time)
+        self.timer = timer
+        self.taunt_sound = taunt_sound
+        if self.timer > 0:
+            self.countdown_layer = TextLayer(127, 1, self.game.fonts['tiny7'], 'right')
+
+    def mode_stopped(self):
+        self.cancel_delayed(['countdown', 'taunt'])
+
+    def start(self):
+        super(DarkJudge, self).start()
+        if self.timer > 0:
+            self.delay(name='countdown', event_type=None, delay=1, handler=self.decrement_timer)
+        self.delay(name='taunt', event_type=None, delay=5, handler=self.taunt)
+
+    def decrement_timer(self):
+        if self.timer == 0:
+            self.finish(success=False)
+        else:
+            self.timer -= 1
+            self.countdown_layer.set_text(str(self.timer))
+            self.delay(name='countdown', event_type=None, delay=1, handler=self.decrement_timer)
+
+    def taunt(self):
+        self.game.sound.play_voice(self.taunt_sound)
+        self.delay(name='taunt', event_type=None, delay=10, handler=self.taunt)
 
     def sw_dropTargetJ_active_for_250ms(self, sw):
         self.reset_drops()
@@ -186,6 +215,14 @@ class DarkJudge(ChallengeBase):
             text = '00' if score == 0 else locale.format('%d', score, True)
             self.score_layer.set_text(text)
 
+    def finish(self, success):
+        self.cancel_delayed(['taunt', 'countdown'])
+        self.game.enable_flippers(False)
+        self.game.update_lamps()
+        text = self.__class__.__name__ + ' Defeated' if success else 'You lose!'
+        self.layer = TextLayer(128/2, 13, self.game.fonts['tiny7'], 'center', True).set_text(text)
+        self.exit_callback(success)
+
 
 class Fear(DarkJudge):
     """Fear wizard mode"""
@@ -208,8 +245,7 @@ Banish him by shooting the lit ramp shots and then the subway before time runs o
 """
 
     def __init__(self, game, priority):
-        super(Fear, self).__init__(game, priority, 1)
-        self.countdown_layer = TextLayer(127, 1, self.game.fonts['tiny7'], 'right')
+        super(Fear, self).__init__(game, priority, num_balls=1, ball_save_time=10, timer=20, taunt_sound='fear - taunt')
         self.name_layer = TextLayer(1, 1, self.game.fonts['tiny7'], 'left').set_text('Fear')
         self.score_layer = TextLayer(128/2, 10, self.game.fonts['num_14x10'], 'center')
         self.status_layer = TextLayer(128/2, 26, self.game.fonts['tiny7'], 'center')
@@ -223,24 +259,6 @@ Banish him by shooting the lit ramp shots and then the subway before time runs o
         self.active_ramp = 'left'
         self.ramp_shots_required = 4
         self.ramp_shots_hit = 0
-        self.timer = 20
-
-    def mode_stopped(self):
-        self.cancel_delayed(['countdown', 'taunt'])
-
-    def start(self):
-        # start the timers now that the ball is in play
-        super(Fear, self).mode_started()
-        self.delay(name='countdown', event_type=None, delay=1, handler=self.decrement_timer)
-        self.delay(name='taunt', event_type=None, delay=5, handler=self.taunt)
-
-    def launch_callback(self):
-        ball_save_time = 10
-        self.game.ball_save.start(num_balls_to_save=1, time=ball_save_time, now=False, allow_multiple_saves=True)
-
-    def taunt(self):
-        self.game.sound.play_voice('fear - taunt')
-        self.delay(name='taunt', event_type=None, delay=10, handler=self.taunt)
 
     def update_lamps(self):
         schedule = 0x80808080 if self.state != 'finished' else 0
@@ -278,21 +296,18 @@ Banish him by shooting the lit ramp shots and then the subway before time runs o
             self.ramp_shot_hit()
 
     def ramp_shot_hit(self):
-        self.ramp_shots_hit += 1
-        if self.ramp_shots_hit == self.ramp_shots_required:
-            self.state = 'subway'
-        else:
+        self.ramp_shots_required -= 1
+        if self.ramp_shots_required:
             self.switch_ramps()
+        else:
+            self.state = 'subway'
         self.timer = 20
         self.game.update_lamps()
 
     def switch_ramps(self):
         self.game.lampctrl.play_show('shot_hit', False, self.game.update_lamps)
         self.game.score(10000)
-        if self.active_ramp == 'left':
-            self.active_ramp = 'right'
-        else:
-            self.active_ramp = 'left'
+        self.active_ramp = 'right' if self.active_ramp == 'left' else 'right'
 
     def sw_dropTargetD_inactive_for_400ms(self, sw):
         if self.state == 'subway':
@@ -321,27 +336,13 @@ Banish him by shooting the lit ramp shots and then the subway before time runs o
             self.game.lampctrl.play_show('shot_hit', False, self.game.update_lamps)
             self.game.score(10000)
             self.finish(success=True)
-            self.cancel_delayed(['grace', 'countdown'])
 
     def mode_tick(self):
         self.show_score()
 
-    def decrement_timer(self):
-        if self.timer == 0:
-            self.finish(success=False)
-        else:
-            self.timer -= 1
-            self.countdown_layer.set_text(str(self.timer))
-            self.delay(name='countdown', event_type=None, delay=1, handler=self.decrement_timer)
-
     def finish(self, success):
-        self.cancel_delayed('taunt')
         self.state = 'finished'
-        self.game.enable_flippers(False)
-        self.game.update_lamps()
-        text = 'Fear Defeated' if success else 'You lose!'
-        self.layer = TextLayer(128/2, 13, self.game.fonts['tiny7'], 'center', True).set_text(text)
-        self.exit_callback(success)
+        super(Fear, self).finish(success)
 
 
 class Mortis(DarkJudge):
@@ -362,7 +363,9 @@ Banish him by shooting each lit shot twice.
 2 ball multiball with temporary ball save.
 """
     def __init__(self, game, priority):
-        super(Mortis, self).__init__(game, priority, 2)
+        super(Mortis, self).__init__(game, priority, num_balls=2, ball_save_time=10, timer=0, taunt_sound='mortis - taunt')
+        self.lamp_names = ['mystery', 'perp1G', 'perp3G', 'perp5G', 'stopMeltdown']
+        self.lamp_styles = ['off', 'fast', 'medium']
 
     def mode_started(self):
         super(Mortis, self).mode_started()
@@ -371,32 +374,14 @@ Banish him by shooting each lit shot twice.
         self.already_collected = False
         self.delay(name='taunt', event_type=None, delay=5, handler=self.taunt)
 
-    def mode_stopped(self):
-        self.cancel_delayed('taunt')
-
-    def taunt(self):
-        self.game.sound.play_voice('mortis - taunt')
-        self.delay(name='taunt', event_type=None, delay=10, handler=self.taunt)
-
-    def launch_callback(self):
-        ball_save_time = 20
-        self.game.ball_save.start(num_balls_to_save=2, time=ball_save_time, now=False, allow_multiple_saves=True)
-
     def update_lamps(self):
         schedule = 0x80808080 if any(self.shots_required) else 0
         self.game.coils.flasherMortis.schedule(schedule=schedule, cycle_seconds=0, now=True)
-        
-        self.drive_shot_lamp(0, 'mystery')
-        self.drive_shot_lamp(1, 'perp1G')
-        self.drive_shot_lamp(2, 'perp3G')
-        self.drive_shot_lamp(3, 'perp5G')
-        self.drive_shot_lamp(4, 'stopMeltdown')
-
-    def drive_shot_lamp(self, index, lamp_name):
-        req_shots = self.shots_required[index]
-        styles = ['off', 'fast', 'medium']
-        style = styles[req_shots]
-        self.game.drive_lamp(lamp_name, style)
+        for shot in range(0, 5):
+            lamp_name = self.lamp_names[shot]
+            req_shots = self.shots_required[shot]
+            style = self.lamp_styles[req_shots]
+            self.game.drive_lamp(lamp_name, style)
 
     def sw_mystery_active(self, sw):
         self.switch_hit(0)
@@ -424,14 +409,7 @@ Banish him by shooting each lit shot twice.
 
     def check_for_completion(self):
         if not any(self.shots_required):
-            self.finish()
-
-    def finish(self):
-        self.cancel_delayed('taunt')
-        self.layer = TextLayer(128/2, 13, self.game.fonts['tiny7'], 'center', True).set_text('Mortis Defeated!')
-        self.game.enable_flippers(False)
-        self.game.update_lamps()
-        self.exit_callback()
+            self.finish(success=True)
 
 
 class Death(DarkJudge, CrimeSceneBase):
@@ -453,8 +431,8 @@ Banish him by shooting the lit crime scene shots before time expires.  Shots slo
 """
 
     def __init__(self, game, priority):
-        super(Death, self).__init__(game, priority, 1)
-        self.countdown_layer = TextLayer(127, 1, self.game.fonts['tiny7'], 'right')
+        super(Death, self).__init__(game, priority, num_balls=1, ball_save_time=20, timer=180, taunt_sound='death - taunt')
+        self.shot_order = [4, 2, 0, 3, 1] # from easiest to hardest
         self.name_layer = TextLayer(1, 1, self.game.fonts['tiny7'], 'left').set_text('Death')
         self.score_layer = TextLayer(128/2, 10, self.game.fonts['num_14x10'], 'center')
         self.status_layer = TextLayer(128/2, 26, self.game.fonts['tiny7'], 'center')
@@ -464,27 +442,9 @@ Banish him by shooting the lit crime scene shots before time expires.  Shots slo
         super(Death, self).mode_started()
         self.already_collected = False
         self.current_shot_index = 0
-        self.timer = 180
         self.shot_timer = 10
         self.active_shots = [1, 1, 1, 1, 1]
-        self.shot_order = [4, 2, 0, 3, 1] # from easiest to hardest
-
-    def mode_stopped(self):
-        self.cancel_delayed(['countdown', 'taunt'])
-
-    def start(self):
-        super(Death, self).mode_started()
         self.game.coils.resetDropTarget.pulse(40)
-        self.delay(name='countdown', event_type=None, delay=1, handler=self.decrement_timer)
-        self.delay(name='taunt', event_type=None, delay=5, handler=self.taunt)
-
-    def taunt(self):
-        self.game.sound.play_voice('death - taunt')
-        self.delay(name='taunt', event_type=None, delay=10, handler=self.taunt)
-
-    def launch_callback(self):
-        ball_save_time = 20
-        self.game.ball_save.start(num_balls_to_save=1, time=ball_save_time, now=False, allow_multiple_saves=True)
 
     def update_lamps(self):
         schedule = 0x80808080 if any(self.active_shots) else 0
@@ -492,7 +452,7 @@ Banish him by shooting the lit crime scene shots before time expires.  Shots slo
 
         for shot in range(0, 5):
             style = 'off' if self.active_shots[shot] == 0 else 'medium'
-            self.game.drive_perp_lamp('perp' + str(shot + 1), style)
+            self.game.drive_lamp('perp' + str(shot + 1) + 'W', style)
 
     def switch_hit(self, index):
         if self.active_shots[index]:
@@ -514,32 +474,20 @@ Banish him by shooting the lit crime scene shots before time expires.  Shots slo
         self.show_score()
 
     def decrement_timer(self):
-        if self.timer == 0:
-            self.finish(success=False)
+        super(Death, self).decrement_timer()
+        if self.shot_timer > 0:
+            self.shot_timer -= 1
         else:
-            self.timer -= 1
-            self.countdown_layer.set_text(str(self.timer))
-
-            if self.shot_timer > 0:
-                self.shot_timer -= 1
-            else:
-                self.shot_timer = 10
-                self.add_shot()
-
-            self.delay(name='countdown', event_type=None, delay=1, handler=self.decrement_timer)
+            self.shot_timer = 10
+            self.add_shot()
 
     def check_for_completion(self):
         if not any(self.active_shots):
             self.finish(success=True)
 
     def finish(self, success):
-        self.cancel_delayed(['taunt', 'countdown'])
-        self.game.enable_flippers(False)
         self.active_shots = [0, 0, 0, 0, 0]
-        self.game.update_lamps()
-        text = 'Death Defeated' if success else 'You lose!'
-        self.layer = TextLayer(128/2, 13, self.game.fonts['tiny7'], 'center', True).set_text(text)
-        self.exit_callback(success)
+        super(Death, self).finish(success)
 
 
 class Fire(DarkJudge, CrimeSceneBase):
@@ -561,20 +509,12 @@ Extinguish fires and banish Judge Fire by shooting the lit crime scene shots.
 """
 
     def __init__(self, game, priority):
-        super(Fire, self).__init__(game, priority, 4)
+        super(Fire, self).__init__(game, priority, num_balls=4, ball_save_time=0, timer=0, taunt_sound='fire - taunt')
 
     def mode_started(self):
         super(Fire, self).mode_started()
         self.mystery_lit = True
         self.targets = [1, 1, 1, 1, 1]
-        self.delay(name='taunt', event_type=None, delay=5, handler=self.taunt)
-
-    def mode_stopped(self):
-        self.cancel_delayed('taunt')
-
-    def taunt(self):
-        self.game.sound.play_voice('fire - taunt')
-        self.delay(name='taunt', event_type=None, delay=10, handler=self.taunt)
 
     def update_lamps(self):
         schedule = 0x80808080 if any(self.targets) else 0
@@ -605,14 +545,11 @@ Extinguish fires and banish Judge Fire by shooting the lit crime scene shots.
 
     def check_for_completion(self):
         if not any(self.targets):
-            self.finish()
+            self.finish(success=True)
 
-    def finish(self):
-        self.layer = TextLayer(128/2, 13, self.game.fonts['tiny7'], 'center', True).set_text('Fire Defeated!')
-        self.game.enable_flippers(False)
+    def finish(self, success):
         self.mystery_lit = False
-        self.game.update_lamps()
-        self.exit_callback()
+        super(Fire, self).finish(success)
 
 
 class Celebration(ChallengeBase):
@@ -631,7 +568,7 @@ Normal play resumes when only 1 ball remains.
 """
 
     def __init__(self, game, priority):
-        super(Celebration, self).__init__(game, priority, 6)
+        super(Celebration, self).__init__(game, priority, num_balls=6, ball_save_time=20)
 
     def mode_started(self):
         super(Celebration, self).mode_started()
@@ -639,24 +576,16 @@ Normal play resumes when only 1 ball remains.
         # do this early now in case the game tilts
         self.game.setPlayerState('supergame', False)
 
-    def launch_callback(self):
-        ball_save_time = 20
-        self.game.ball_save.start(num_balls_to_save=6, time=ball_save_time, now=False, allow_multiple_saves=True)
-
     def update_lamps(self):
         self.game.enable_gi(True)
 
-        lamp_schedules = []
-        for i in range(0, 32):
-            lamp_schedules.append(0xffff0000 >> i)
-            if i > 16:
-                lamp_schedules[i] = (lamp_schedules[i] | (0xffff << (32-(i-16)))) & 0xffffffff
-
+        # rotate 0xFFFF0000 pattern to all 32 bit positions
+        lamp_schedules = [(0xFFFF0000 >> d)|(0xFFFF0000 << (32 - d)) & 0xFFFFFFFF for d in range (0, 32)]
         shuffle(lamp_schedules)
+
         i = 0
         for lamp in self.game.lamps:
-            if (lamp.name.find('gi0', 0) == -1 and
-                    lamp.name not in ['startButton', 'buyIn', 'drainShield', 'superGame', 'judgeAgain']):
+            if lamp.name not in ['gi01', 'gi02', 'gi03', 'gi04', 'gi05', 'startButton', 'buyIn', 'drainShield', 'superGame', 'judgeAgain']:
                 lamp.schedule(schedule=lamp_schedules[i%32], cycle_seconds=0, now=False)
                 i += 1
 

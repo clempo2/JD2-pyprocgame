@@ -54,7 +54,7 @@ class BasePlay(Mode):
         self.game.coils.flasherPursuitR.schedule(0x00000101, cycle_seconds=1, now=False)
 
         # Always start the ball with no launch callback.
-        self.game.trough.launch_balls(1, self.empty_ball_launch_callback)
+        self.game.trough.launch_balls(1)
         self.game.trough.drain_callback = self.drain_callback
         self.ball_starting = True
         self.skill_shot_added = False
@@ -344,9 +344,6 @@ class BasePlay(Mode):
         self.skill_shot.skill_shot_expired()
         if self.regular_play in self.game.modes:
             self.regular_play.ball_save_callback()
-
-    def empty_ball_launch_callback(self):
-        pass
 
     def drain_callback(self):
         if not self.tilt.tilted:
