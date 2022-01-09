@@ -71,8 +71,10 @@ class MissileAwardMode(Mode):
     def start_missile_award(self):
         self.game.sound.stop_music()
         self.game.base_play.regular_play.chain.pause()
-        # first award is always video if video mode is enabled in the settings
-        if self.video_mode_lit:
+        # first award is video mode (if enabled in the settings)
+        # but keep video mode for later if another mode is running
+        # this way we don't pause the running mode for too long
+        if self.video_mode_lit and not self.game.base_play.regular_play.chain.is_active():
             self.video_mode_lit = False
             self.game.modes.add(self.video_mode)
         else:

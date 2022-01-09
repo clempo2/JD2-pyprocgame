@@ -125,7 +125,7 @@ class CrimeSceneLevels(CrimeSceneBase):
 
         # we always award the most difficult target that remains in the current level
         self.target_award_order = [1, 3 ,0, 2, 4]
-        self.extra_ball_level = 4
+        self.extra_ball_level = 3 # that means when completing the 4th level
 
         difficulty = self.game.user_settings['Gameplay']['Crime scene shot difficulty']
         if difficulty == 'easy':
@@ -221,18 +221,16 @@ class CrimeSceneLevels(CrimeSceneBase):
         self.game.score(10000)
         self.game.lampctrl.play_show('advance_level', False, self.game.update_lamps)
         self.total_levels += 1
-        level = self.game.getPlayerState('crime_scenes_level', -1)
-        level += 1
-        self.game.setPlayerState('crime_scenes_level', level)
 
+        level = self.game.getPlayerState('crime_scenes_level', -1)
         if level == self.extra_ball_level:
             self.game.base_play.light_extra_ball()
 
-        if (level % 4) == 3:
+        if level % 4 == 3:
             self.start_block_war()
         else:
-            self.display_level_complete(level, 10000)
-            self.game.sound.play_voice('block complete ' + str(level))
+            self.display_level_complete(level + 1, 10000)
+            self.game.sound.play_voice('block complete ' + str(level + 1))
             self.next_level()
 
     def next_level(self):

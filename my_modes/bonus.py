@@ -28,10 +28,10 @@ class Bonus(Mode):
         num_modes_completed = player.getState('num_modes_completed', 0)
         completed = ['Modes Completed: ' + str(num_modes_completed), num_modes_completed * 12000]
 
-        crimescenes_total_levels = player.getState('crime_scenes_total_levels', 0)
-        crimescenes = ['Crime scene Levels: ' + str(crimescenes_total_levels), crimescenes_total_levels * 2000]
+        crime_scenes_total_levels = player.getState('crime_scenes_total_levels', 0)
+        crime_scenes = ['Crime scene Levels: ' + str(crime_scenes_total_levels), crime_scenes_total_levels * 2000]
 
-        base = attempted[1] + completed[1] + crimescenes[1]
+        base = attempted[1] + completed[1] + crime_scenes[1]
         total_base = ['Total Base:', base]
 
         bonus_x = player.getState('bonus_x', 1)
@@ -42,7 +42,7 @@ class Bonus(Mode):
         self.game.score(total)
 
         self.item_index = 0
-        self.bonus_items = [attempted, completed, crimescenes, total_base, multiplier, total_bonus]
+        self.bonus_items = [attempted, completed, crime_scenes, total_base, multiplier, total_bonus]
         self.delay(name='show_bonus', event_type=None, delay=self.delay_time, handler=self.show_bonus_items)
 
     def mode_stopped(self):
