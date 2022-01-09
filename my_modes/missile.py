@@ -90,7 +90,7 @@ class MissileAwardMode(Mode):
         self.end_missile_award()
 
     def start_selection(self):
-        scenes_complete = self.game.getPlayerState('crimescenes_complete', False)
+        scenes_complete = self.game.getPlayerState('crime_scenes_complete', False)
         self.available_awards[0] = '50000 Points' if scenes_complete else 'Advance Crime Scenes'
         self.rotate_awards()
         self.layer = self.selection_layer

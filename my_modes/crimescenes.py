@@ -34,13 +34,13 @@ class CrimeScenes(Mode):
         self.crime_scene_levels.reset()
 
     def start_crime_scene_levels(self):
-        if self.game.getPlayerState('crimescenes_level', 0) < self.levels_required:
+        if self.game.getPlayerState('crime_scenes_level', 0) < self.levels_required:
             self.game.modes.add(self.crime_scene_levels)
 
     def crime_scene_levels_completed(self):
         self.game.modes.remove(self.crime_scene_levels)
         self.game.update_lamps()
-        self.game.setPlayerState('crimescenes_complete', True)
+        self.game.setPlayerState('crime_scenes_complete', True)
         self.game.base_play.regular_play.crime_scenes_completed()
 
     def start_block_war(self):
@@ -75,7 +75,7 @@ class CrimeScenes(Mode):
 
     def update_lamps(self):
         # Use 4 center crime scene lamps to indicate fraction of required levels completed in quarters
-        level = self.game.getPlayerState('crimescenes_level', 0)
+        level = self.game.getPlayerState('crime_scenes_level', 0)
         num_quarters = int(level * 4 / self.levels_required)
         for num in range(1, 5):
             lamp_name = 'crimeLevel' + str(num)
@@ -155,29 +155,29 @@ class CrimeSceneLevels(CrimeSceneBase):
 
     def reset(self):
         # force the mode to initialize at level 0 the next time it starts
-        self.game.setPlayerState('crimescenes_level', -1)
-        self.game.setPlayerState('crimescenes_complete', False)
+        self.game.setPlayerState('crime_scenes_level', -1)
+        self.game.setPlayerState('crime_scenes_complete', False)
 
     def mode_started(self):
         # restore player state
         player = self.game.current_player()
-        self.targets = player.getState('crimescenes_targets', None)
-        self.total_levels = player.getState('crimescenes_total_levels', 0)
+        self.targets = player.getState('crime_scenes_targets', None)
+        self.total_levels = player.getState('crime_scenes_total_levels', 0)
 
         self.num_advance_hits = 0
-        if player.getState('crimescenes_level', -1) == -1:
+        if player.getState('crime_scenes_level', -1) == -1:
             self.next_level()
 
     def mode_stopped(self):
         # save player state
         player = self.game.current_player()
-        player.setState('crimescenes_targets', self.targets)
-        player.setState('crimescenes_total_levels', self.total_levels)
-        # 'crimescenes_level' is always kept up to date in the player's state for other modes to see
+        player.setState('crime_scenes_targets', self.targets)
+        player.setState('crime_scenes_total_levels', self.total_levels)
+        # 'crime_scenes_level' is always kept up to date in the player's state for other modes to see
 
     def get_status_layers(self):
         tiny_font = self.game.fonts['tiny7']
-        level = self.game.getPlayerState('crimescenes_level', 0)
+        level = self.game.getPlayerState('crime_scenes_level', 0)
         title_layer = TextLayer(128/2, 7, tiny_font, 'center').set_text('Crime Scenes')
         level_layer = TextLayer(128/2, 16, tiny_font, 'center').set_text('Current Level: ' + str(level + 1) + '/' + str(self.levels_required))
         block_layer = TextLayer(128/2, 25, tiny_font, 'center').set_text('Block War in ' + str(4-(level % 4)) + ' levels')
@@ -221,9 +221,9 @@ class CrimeSceneLevels(CrimeSceneBase):
         self.game.score(10000)
         self.game.lampctrl.play_show('advance_level', False, self.game.update_lamps)
         self.total_levels += 1
-        level = self.game.getPlayerState('crimescenes_level', -1)
+        level = self.game.getPlayerState('crime_scenes_level', -1)
         level += 1
-        self.game.setPlayerState('crimescenes_level', level)
+        self.game.setPlayerState('crime_scenes_level', level)
 
         if level == self.extra_ball_level:
             self.game.base_play.light_extra_ball()
@@ -236,10 +236,10 @@ class CrimeSceneLevels(CrimeSceneBase):
             self.next_level()
 
     def next_level(self):
-        level = self.game.getPlayerState('crimescenes_level', -1)
+        level = self.game.getPlayerState('crime_scenes_level', -1)
         if level < self.levels_required:
             level += 1
-            self.game.setPlayerState('crimescenes_level', level)
+            self.game.setPlayerState('crime_scenes_level', level)
             if level == self.levels_required:
                 self.crime_scenes_completed()
             else:
@@ -274,7 +274,7 @@ class CrimeSceneLevels(CrimeSceneBase):
         style = styles[self.num_advance_hits]
         self.game.drive_lamp('advanceCrimeLevel', style)
 
-        level = self.game.getPlayerState('crimescenes_level', -1)
+        level = self.game.getPlayerState('crime_scenes_level', -1)
         lamp_color = level % 4
         for shot in range(0, 5):
             for color in range(0, 4):

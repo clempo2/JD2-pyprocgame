@@ -242,7 +242,7 @@ class JDGame(BasicGame):
         classic_category = HighScoreCategory()
         classic_category.game_data_key = 'ClassicHighScoreData'
 
-        crimeScenes_category = self.create_high_score_category('CrimeScenesHighScoreData', 'Crime Scene Champ', 'crimescenes_total_levels', ' level')
+        crimeScenes_category = self.create_high_score_category('CrimeScenesHighScoreData', 'Crime Scene Champ', 'crime_scenes_total_levels', ' level')
         innerLoops_category = self.create_high_score_category('InnerLoopsHighScoreData', 'Inner Loop Champ', 'best_inner_loops', ' loop')
         outerLoops_category = self.create_high_score_category('OuterLoopsHighScoreData', 'Outer Loop Champ', 'best_outer_loops', ' loop')
 

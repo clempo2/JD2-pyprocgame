@@ -202,7 +202,7 @@ During multiball, shoot left ramp to light jackpot then shoot subway to collect
     def is_ultimate_challenge_ready(self):
         # 3 Criteria for finale
         return (self.multiball.jackpot_collected and
-                self.game.getPlayerState('crimescenes_complete', False) and
+                self.game.getPlayerState('crime_scenes_complete', False) and
                 self.chain.is_complete())
 
     def start_ultimate_challenge(self):

@@ -28,7 +28,7 @@ class Bonus(Mode):
         num_modes_completed = player.getState('num_modes_completed', 0)
         completed = ['Modes Completed: ' + str(num_modes_completed), num_modes_completed * 12000]
 
-        crimescenes_total_levels = player.getState('crimescenes_total_levels', 0)
+        crimescenes_total_levels = player.getState('crime_scenes_total_levels', 0)
         crimescenes = ['Crime scene Levels: ' + str(crimescenes_total_levels), crimescenes_total_levels * 2000]
 
         base = attempted[1] + completed[1] + crimescenes[1]
