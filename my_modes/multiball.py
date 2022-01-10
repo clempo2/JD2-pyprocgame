@@ -240,7 +240,7 @@ class Multiball(Scoring_Mode):
                 if self.deadworld_mod_installed:
                     # Use stealth launch so another ball isn't counted in play.
                     self.game.ball_save.callback = None
-                    self.game.trough.launch_balls(1, None, stealth=True)
+                    self.game.trough.launch_balls(1, self.game.no_op_callback, stealth=True)
                 else:
                     self.game.deadworld.eject_balls(1)
 
@@ -249,7 +249,7 @@ class Multiball(Scoring_Mode):
             elif self.deadworld_mod_installed:
                 # Use stealth launch so another ball isn't counted in play.
                 self.game.ball_save.callback = None
-                self.game.trough.launch_balls(1, None, stealth=True)
+                self.game.trough.launch_balls(1, self.game.no_op_callback, stealth=True)
             else:
                 self.game.deadworld.eject_balls(1)
 

@@ -61,6 +61,9 @@ class UltimateChallenge(Scoring_Mode):
         self.game.modes.add(self.intro)
         self.game.update_lamps()
         self.game.enable_flippers(True)
+        if self.game.trough.num_balls_in_play == 0:
+            self.game.base_play.auto_plunge = False
+            self.game.trough.launch_balls(1, self.game.no_op_callback)
 
     def start_level(self):
         # intro completed or aborted, start the actual mode
@@ -91,13 +94,8 @@ class UltimateChallenge(Scoring_Mode):
             if self.game.trough.num_balls_in_play == 0:
                 self.intentional_drain = False
                 self.next_level()
-                # ignore this drain, starting the next mode acts like a ball saver
+                # abort the event to ignore this drain
                 return True
-            # else wait for the other balls to drain
-        elif self.game.trough.num_balls_in_play == 1 and self.active_mode == 4: # celebration
-            # wizard mode completed successfully, revert to regular play
-            self.end_challenge()
-        #else let base_play handle it, i.e. mode continues with remaining balls or ends if no balls left
 
     def sw_shooterL_active_for_200ms(self, sw):
         self.game.coils.shooterL.pulse()
@@ -118,10 +116,6 @@ class ChallengeBase(Scoring_Mode):
 
     def mode_started(self):
         self.started = False
-        # account for ball already in right popper if starting ultimate challenge from regular play
-        # or account for ball in shooter lane when in supergame and this is the first mode for this ball
-        active_balls = 1 if self.game.switches.popperR.is_active() or self.game.switches.shooterR.is_active() else 0
-        self.num_launch_balls = self.num_balls - active_balls
 
     def get_instruction_layer(self):
         instructions = self.instructions()
@@ -138,12 +132,12 @@ class ChallengeBase(Scoring_Mode):
             self.game.base_play.flash_then_pop('flashersRtRamp', 'popperR', 20)
             self.start()
         else:
-            # serve the ball to the shooter lane, but wait for the player to plunge the ball
-            self.game.base_play.auto_plunge = False
+            # wait for the player to plunge the ball
             self.game.sound.play_music('ball_launch', loops=-1)
 
-        if self.num_launch_balls > 0:
-            self.game.trough.launch_balls(self.num_launch_balls)
+        balls_to_launch = self.num_balls - self.game.trough.num_balls_in_play
+        if balls_to_launch > 0:
+            self.game.trough.launch_balls(balls_to_launch, self.game.no_op_callback)
 
     def start(self):
         # the ball is now in play (popped from popperR or plunged by player)
@@ -152,7 +146,7 @@ class ChallengeBase(Scoring_Mode):
         if self.ball_save_time > 0:
             self.game.ball_save.start(num_balls_to_save=self.num_balls, time=self.ball_save_time, now=False, allow_multiple_saves=True)
 
-    def sw_shooterR_inactive_for_1s(self, sw):
+    def sw_shooterR_inactive_for_900ms(self, sw):
         if not self.started:
             self.start()
 
@@ -533,7 +527,7 @@ Extinguish fires and banish Judge Fire by shooting the lit crime scene shots.
         if self.mystery_lit:
             self.mystery_lit = False
             self.game.set_status('Add 2 balls!')
-            self.game.trough.launch_balls(2)
+            self.game.trough.launch_balls(2, self.game.no_op_callback)
             self.game.update_lamps()
 
     def switch_hit(self, num):
@@ -588,6 +582,12 @@ Normal play resumes when only 1 ball remains.
             if lamp.name not in ['gi01', 'gi02', 'gi03', 'gi04', 'gi05', 'startButton', 'buyIn', 'drainShield', 'superGame', 'judgeAgain']:
                 lamp.schedule(schedule=lamp_schedules[i%32], cycle_seconds=0, now=False)
                 i += 1
+
+    def ball_drained(self):
+        if self.game.trough.num_balls_in_play == 1:
+            # down to just one ball, revert to regular play
+            self.end_challenge()
+        # else celebration continues until we are down to 1 ball
 
     def sw_mystery_active(self, sw):
         self.game.score(5000)

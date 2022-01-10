@@ -183,14 +183,12 @@ class JDGame(BasicGame):
         # Trough
         trough_switchnames = ['trough1', 'trough2', 'trough3', 'trough4', 'trough5', 'trough6']
         early_save_switchnames = ['outlaneR', 'outlaneL']
-        self.trough = Trough(self, trough_switchnames, 'trough6', 'trough', early_save_switchnames, 'shooterR', self.drain_callback)
-        self.trough.drain_callback = self.drain_callback
-
         self.ball_save = BallSave(self, self.lamps.drainShield, 'shooterR')
+        self.ball_save.disable()
+        self.trough = Trough(self, trough_switchnames, 'trough6', 'trough', early_save_switchnames, 'shooterR', self.no_op_callback)
         self.trough.ball_save_callback = self.ball_save.launch_callback
         self.trough.num_balls_to_save = self.ball_save.get_num_balls_to_save
         self.ball_save.trough_enable_ball_save = self.trough.enable_ball_save
-        self.ball_save.disable()
 
         # Instantiate basic game features
         self.attract_mode = Attract(self)
@@ -350,7 +348,7 @@ class JDGame(BasicGame):
 
     def ball_ended(self):
         self.modes.remove(self.base_play)
-        self.trough.drain_callback = self.drain_callback
+        self.trough.drain_callback = self.no_op_callback
 
     def game_ended(self):
         super(JDGame, self).game_ended()
@@ -429,9 +427,10 @@ class JDGame(BasicGame):
         if self.deadworld.num_balls_locked > 0:
             self.deadworld.perform_ball_search()
 
-    # Empty callback just in case a ball drains into the trough before another
-    # drain_callback can be installed by a gameplay mode.
-    def drain_callback(self):
+    # Empty callback
+    # Calling self.game.trough.launch_balls() with a None callback preserves the previous callback
+    # to erase the callback completely, you have to pass an empty callback instead
+    def no_op_callback(self):
         pass
 
     def enable_flippers(self, enable=True):

@@ -53,8 +53,8 @@ class BasePlay(Mode):
         self.game.coils.flasherPursuitL.schedule(0x00001010, cycle_seconds=1, now=False)
         self.game.coils.flasherPursuitR.schedule(0x00000101, cycle_seconds=1, now=False)
 
-        # Always start the ball with no launch callback.
-        self.game.trough.launch_balls(1)
+        # must pass a no-op callback, passing None keeps the previous callback
+        self.game.trough.launch_balls(1, self.game.no_op_callback)
         self.game.trough.drain_callback = self.drain_callback
         self.ball_starting = True
         self.skill_shot_added = False
@@ -78,7 +78,7 @@ class BasePlay(Mode):
         self.game.remove_modes([self.skill_shot, self.display_mode, self.animation_mode])
         self.game.enable_flippers(False)
         self.game.ball_search.disable()
-        self.game.trough.drain_callback = self.game.drain_callback
+        self.game.trough.drain_callback = self.game.no_op_callback
         self.cancel_show_status_timer()
 
         player = self.game.current_player()
