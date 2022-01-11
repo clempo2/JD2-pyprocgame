@@ -73,9 +73,9 @@ class UltimateChallenge(Scoring_Mode):
         self.mode_list[self.active_mode].launch_balls()
 
     def level_ended(self, success=True):
+        self.game.ball_save.disable()
         if success:
             # drain intentionally before starting next mode
-            self.game.ball_save.disable()
             self.game.sound.fadeout_music()
             self.intentional_drain = True
         else:
@@ -116,6 +116,7 @@ class ChallengeBase(Scoring_Mode):
 
     def mode_started(self):
         self.started = False
+        self.layer = None
 
     def get_instruction_layer(self):
         instructions = self.instructions()
@@ -144,7 +145,8 @@ class ChallengeBase(Scoring_Mode):
         self.started = True
         self.game.base_play.auto_plunge = True
         if self.ball_save_time > 0:
-            self.game.ball_save.start(num_balls_to_save=self.num_balls, time=self.ball_save_time, now=False, allow_multiple_saves=True)
+            self.game.ball_save.disable() # put ball save timer to 0 to limit the ball_save_time to our value
+            self.game.ball_save.start(num_balls_to_save=self.num_balls, time=self.ball_save_time, now=True, allow_multiple_saves=True)
 
     def sw_shooterR_inactive_for_900ms(self, sw):
         if not self.started:
@@ -159,9 +161,9 @@ class DarkJudge(ChallengeBase):
 
     def __init__(self, game, priority, num_balls, ball_save_time, timer, taunt_sound):
         super(DarkJudge, self).__init__(game, priority, num_balls, ball_save_time)
-        self.timer = timer
+        self.initial_timer = timer
         self.taunt_sound = taunt_sound
-        if self.timer > 0:
+        if self.initial_timer > 0:
             self.countdown_layer = TextLayer(127, 1, self.game.fonts['tiny7'], 'right')
 
     def mode_stopped(self):
@@ -169,7 +171,8 @@ class DarkJudge(ChallengeBase):
 
     def start(self):
         super(DarkJudge, self).start()
-        if self.timer > 0:
+        if self.initial_timer > 0:
+            self.timer = self.initial_timer
             self.delay(name='countdown', event_type=None, delay=1, handler=self.decrement_timer)
         self.delay(name='taunt', event_type=None, delay=5, handler=self.taunt)
 
@@ -243,10 +246,10 @@ Banish him by shooting the lit ramp shots and then the subway before time runs o
         self.name_layer = TextLayer(1, 1, self.game.fonts['tiny7'], 'left').set_text('Fear')
         self.score_layer = TextLayer(128/2, 10, self.game.fonts['num_14x10'], 'center')
         self.status_layer = TextLayer(128/2, 26, self.game.fonts['tiny7'], 'center')
-        self.layer = GroupedLayer(128, 32, [self.countdown_layer, self.name_layer, self.score_layer, self.status_layer])
 
     def mode_started(self):
         super(Fear, self).mode_started()
+        self.layer = GroupedLayer(128, 32, [self.countdown_layer, self.name_layer, self.score_layer, self.status_layer])
         self.already_collected = False
         self.mystery_lit = True
         self.state = 'ramps'
@@ -430,10 +433,10 @@ Banish him by shooting the lit crime scene shots before time expires.  Shots slo
         self.name_layer = TextLayer(1, 1, self.game.fonts['tiny7'], 'left').set_text('Death')
         self.score_layer = TextLayer(128/2, 10, self.game.fonts['num_14x10'], 'center')
         self.status_layer = TextLayer(128/2, 26, self.game.fonts['tiny7'], 'center')
-        self.layer = GroupedLayer(128, 32, [self.countdown_layer, self.name_layer, self.score_layer, self.status_layer])
 
     def mode_started(self):
         super(Death, self).mode_started()
+        self.layer = GroupedLayer(128, 32, [self.countdown_layer, self.name_layer, self.score_layer, self.status_layer])
         self.already_collected = False
         self.current_shot_index = 0
         self.shot_timer = 10
@@ -453,7 +456,7 @@ Banish him by shooting the lit crime scene shots before time expires.  Shots slo
             self.active_shots[index] = 0
             self.game.lampctrl.play_show('shot_hit', False, self.game.update_lamps)
             self.game.score(10000)
-            self.shot_timer += 10
+            self.shot_timer = 10
             self.check_for_completion()
             self.game.update_lamps()
 

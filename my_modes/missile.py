@@ -45,7 +45,7 @@ class MissileAwardMode(Mode):
 
     # must be called when the missile award mode is stopped
     def reset(self):
-        self.game.setState('missile_award_lit', False)
+        self.game.setPlayerState('missile_award_lit', False)
 
     def light_missile_award(self):
         self.missile_award_lit = True

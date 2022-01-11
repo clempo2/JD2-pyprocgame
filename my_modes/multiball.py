@@ -87,6 +87,9 @@ class Multiball(Scoring_Mode):
         self.cancel_delayed(name='voice instructions')
         self.game.modes.remove(self.drops)
 
+    def reset(self):
+        self.game.setPlayerState('multiball_jackpot_collected', False)
+
     def install_rule(self, enable):
         switch_num = self.game.switches['leftRampEnter'].number
         #self.game.install_switch_rule_coil_pulse(switch_num, 'closed_debounced', 'diverter', 255, True, enable)

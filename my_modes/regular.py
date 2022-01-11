@@ -56,6 +56,18 @@ class RegularPlay(Scoring_Mode):
         self.game.remove_modes([self.chain, self.crime_scenes, self.multiball, self.missile_award_mode])
         self.game.setPlayerState('mystery_lit', self.mystery_lit)
 
+
+    #### DEBUG: push the buy in button to go straight to ultimate challenge from regular mode
+    def sw_buyIn_active(self, sw):
+        self.game.remove_modes([self.chain, self.crime_scenes])
+        self.multiball.jackpot_collected = True
+        self.game.setPlayerState('crime_scenes_complete', True)
+        self.game.setPlayerState('modes_not_attempted', [])
+        self.game.add_modes([self.chain, self.crime_scenes])
+        self.chain.modes_attempted = self.chain.all_chain_modes[:]
+        self.game.update_lamps()
+        self.setup_next_mode()
+
     def sw_shooterR_active(self, sw):
         if self.game.base_play.ball_starting:
             if not self.welcomed:
