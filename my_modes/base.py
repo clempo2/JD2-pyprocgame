@@ -235,8 +235,7 @@ class BasePlay(Mode):
     def start_ultimate_challenge(self):
         self.game.modes.remove(self.regular_play)
         self.game.modes.add(self.ultimate_challenge)
-        self.ultimate_challenge.start_challenge()
-        # ultimate challenge updated the lamps
+        self.game.update_lamps()
 
     def ultimate_challenge_over(self):
         self.game.modes.remove(self.ultimate_challenge)

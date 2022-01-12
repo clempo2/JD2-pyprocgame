@@ -1,6 +1,6 @@
 from random import randint
 from procgame.dmd import ExpandTransition, Frame, FrameLayer, GroupedLayer, ScriptedLayer, TextLayer
-from procgame.game import Mode
+from procgame.game import Mode, SwitchStop
 
 class ShootingGallery(Mode):
     def __init__(self, game, priority, video_mode_setting):
@@ -18,17 +18,15 @@ class ShootingGallery(Mode):
         self.on_complete = None
 
     def mode_started(self):
+        self.success = False
         self.scope_pos = 0
         self.targets = ['empty'] * 4
         self.num_enemies = 0
         self.num_enemies_old = 0
         self.num_enemies_shot = 0
         self.speed_factor = 1
-        
-        self.state = 'active'
-        self.success = False
 
-        self.intro_active = True
+        self.state = 'intro'
         self.intro()
 
     def intro(self):
@@ -60,12 +58,12 @@ class ShootingGallery(Mode):
             {'seconds':3.0, 'layer':self.intro_layer_1},
             {'seconds':3.0, 'layer':self.intro_layer_2},
             {'seconds':3.0, 'layer':self.intro_layer_3},
-            {'seconds':1.0, 'layer':self.intro_layer_4}])
+            {'seconds':2.0, 'layer':self.intro_layer_4}])
 
         self.layer.on_complete = self.start
 
     def start(self):
-        self.intro_active = False
+        self.state = 'active'
         self.status_layer.set_text('')
 
         self.target_layers = [self.new_frame_layer(True) for unused in range(0, 4)]
@@ -174,15 +172,15 @@ class ShootingGallery(Mode):
         self.target_layers[position].transition.start()
 
     def sw_flipperLwL_active(self, sw):
-        self.flipper_active('flipperLwR', -1)
+        self.flipper_active(-1)
 
     def sw_flipperLwR_active(self, sw):
-        self.flipper_active('flipperLwL', 1)
+        self.flipper_active(1)
 
-    def flipper_active(self, other_flipper, pos_delta):
-        if self.intro_active:
-            if self.game.switches[other_flipper].is_active():
-                self.layer.force_next(True)
+    def flipper_active(self, pos_delta):
+        if self.state == 'intro':
+            # skip the intro
+            self.start()
         elif self.state == 'active':
             new_pos = self.scope_pos + pos_delta
             if 0 <= new_pos <= 3:
@@ -194,16 +192,17 @@ class ShootingGallery(Mode):
 
     def sw_fireL_active(self, sw):
         self.fire_active()
+        return SwitchStop
 
     def sw_fireR_active(self, sw):
         self.fire_active()
+        return SwitchStop
 
     def fire_active(self):
-        if self.intro_active:
+        if self.state == 'intro':
             # skip the intro
-            self.layer = None
             self.start()
-        else:
+        elif self.state == 'active':
             self.shoot()
 
     def shoot(self):

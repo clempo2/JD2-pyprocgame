@@ -32,9 +32,11 @@ class UltimateChallenge(Scoring_Mode):
             mode.exit_callback = self.level_ended
 
     def mode_started(self):
-        self.active_mode = self.game.getPlayerState('challenge_mode', 0)
+        self.starting_mode = self.game.getPlayerState('challenge_mode', 0)
+        self.active_mode = self.starting_mode
         self.game.coils.resetDropTarget.pulse(40)
         self.intentional_drain = False
+        self.start_intro()
 
     def mode_stopped(self):
         # when celebration was awarded, the next challenge starts from the beginning
@@ -44,10 +46,6 @@ class UltimateChallenge(Scoring_Mode):
 
     def update_lamps(self):
         self.game.lamps.ultChallenge.enable()
-
-    def start_challenge(self):
-        # called by base play supergame or regular play
-        self.start_intro()
 
     def end_challenge(self):
         # go back to regular play
@@ -120,6 +118,15 @@ class ChallengeBase(Scoring_Mode):
 
     def get_instruction_layer(self):
         instructions = self.instructions()
+        if self.game.base_play.ultimate_challenge.active_mode == self.game.base_play.ultimate_challenge.starting_mode:
+            instructions = """
+
+#ULTIMATE#
+#CHALLENGE#
+
+Defeat the Dark Judges
+""" + instructions
+
         instruction_frame = self.frame_gen.frame_for_markup(instructions)
         panning_layer = PanningLayer(width=128, height=32, frame=instruction_frame, origin=(0, 0), translate=(0, 1), bounce=False)
         duration = len(instructions) / 16
@@ -226,13 +233,6 @@ class Fear(DarkJudge):
 
     def instructions(self):
         return """
-
-#ULTIMATE#
-#CHALLENGE#
-
-Defeat the Dark Judges
-
-Stage 1
 
 Judge Fear is reigning terror on the city.
 
@@ -348,11 +348,6 @@ class Mortis(DarkJudge):
     def instructions(self):
         return """
 
-#ULTIMATE#
-#CHALLENGE#
-
-Stage 2
-
 Judge Mortis is spreading disease throughout the city.
 
 Banish him by shooting each lit shot twice.
@@ -414,11 +409,6 @@ class Death(DarkJudge, CrimeSceneBase):
 
     def instructions(self):
         return """
-
-#ULTIMATE#
-#CHALLENGE#
-
-Stage 3
 
 Judge Death is on a murder spree.
 
@@ -492,11 +482,6 @@ class Fire(DarkJudge, CrimeSceneBase):
 
     def instructions(self):
         return """
-
-#ULTIMATE#
-#CHALLENGE#
-
-Stage 4
 
 Judge Fire is creating chaos by lighting fires all over Mega City One.
 
