@@ -9,7 +9,7 @@ class Multiball(Scoring_Mode):
 
         self.deadworld_mod_installed = self.game.user_settings['Machine']['Deadworld mod installed']
 
-        self.drops = BasicDropTargetBank(self.game, priority=priority+1, prefix='dropTarget', letters='JUDGE')
+        self.drops = BasicDropTargetBank(self.game, priority=priority + 1, prefix='dropTarget', letters='JUDGE')
         self.drops.on_advance = self.on_drops_advance
         self.drops.on_completed = self.possibly_light_lock
         self.drops.auto_reset = True

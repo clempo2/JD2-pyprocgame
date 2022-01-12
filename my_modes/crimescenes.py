@@ -175,15 +175,6 @@ class CrimeSceneLevels(CrimeSceneBase):
         player.setState('crime_scenes_total_levels', self.total_levels)
         # 'crime_scenes_level' is always kept up to date in the player's state for other modes to see
 
-    def get_status_layers(self):
-        tiny_font = self.game.fonts['tiny7']
-        level = self.game.getPlayerState('crime_scenes_level', 0)
-        title_layer = TextLayer(128/2, 7, tiny_font, 'center').set_text('Crime Scenes')
-        level_layer = TextLayer(128/2, 16, tiny_font, 'center').set_text('Current Level: ' + str(level + 1) + '/' + str(self.levels_required))
-        block_layer = TextLayer(128/2, 25, tiny_font, 'center').set_text('Block War in ' + str(4-(level % 4)) + ' levels')
-        status_layer = GroupedLayer(128, 32, [title_layer, level_layer, block_layer])
-        return [status_layer]
-
     #
     # Advance Crime Level
     #
@@ -276,7 +267,7 @@ class CrimeSceneLevels(CrimeSceneBase):
         lamp_color = level % 4
         for shot in range(0, 5):
             for color in range(0, 4):
-                lamp_name = 'perp' + str(shot+1) + self.lamp_colors[color]
+                lamp_name = 'perp' + str(shot + 1) + self.lamp_colors[color]
                 style = 'medium' if self.targets[shot] and lamp_color == color else 'off'
                 self.game.drive_lamp(lamp_name, style)
 
@@ -329,7 +320,7 @@ class BlockWar(CrimeSceneBase):
             self.game.score(score)
             self.game.sound.play('block_war_target')
             if self.shots_required[shot] == 0:
-                self.score_reason_layer.set_text('Block ' + str(shot+1) + ' secured!', 2)
+                self.score_reason_layer.set_text('Block ' + str(shot + 1) + ' secured!', 2)
 
             if not any(self.shots_required):
                 # all shots hit already
@@ -347,7 +338,7 @@ class BlockWar(CrimeSceneBase):
         self.game.drive_lamp('advanceCrimeLevel', 'off')
         for shot in range(0, 5):
             for color in range(0, 4):
-                lamp_name = 'perp' + str(shot+1) + self.lamp_colors[color]
+                lamp_name = 'perp' + str(shot + 1) + self.lamp_colors[color]
                 style = 'medium' if color < self.shots_required[shot] else 'off'
                 self.game.drive_lamp(lamp_name, style)
 
@@ -394,4 +385,4 @@ class BlockWarBonus(CrimeSceneBase):
         self.game.drive_lamp('advanceCrimeLevel', 'off')
         for shot in range(0, 5):
             style = 'medium' if self.bonus_shot == shot else 'off'
-            self.game.drive_perp_lamp('perp' + str(shot+1), style)
+            self.game.drive_perp_lamp('perp' + str(shot + 1), style)

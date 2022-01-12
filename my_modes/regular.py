@@ -62,9 +62,8 @@ class RegularPlay(Scoring_Mode):
         self.game.remove_modes([self.chain, self.crime_scenes])
         self.multiball.jackpot_collected = True
         self.game.setPlayerState('crime_scenes_complete', True)
-        self.game.setPlayerState('modes_not_attempted', [])
+        self.game.setPlayerState('modes_remaining', [])
         self.game.add_modes([self.chain, self.crime_scenes])
-        self.chain.modes_attempted = self.chain.all_chain_modes[:]
         self.game.update_lamps()
         self.setup_next_mode()
 
@@ -84,7 +83,7 @@ class RegularPlay(Scoring_Mode):
             self.game.sound.play_voice('welcome')
             self.game.modes.add(self.game_intro)
         elif self.game.shooting_again:
-            self.game.sound.play_voice('shoot again ' + str(self.game.current_player_index+1))
+            self.game.sound.play_voice('shoot again ' + str(self.game.current_player_index + 1))
             self.game.modes.add(self.shoot_again_intro)
 
     def get_instructions(self):

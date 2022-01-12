@@ -5,29 +5,13 @@ class Combos(Mode):
     """Award combos for repeated loop shots"""
 
     def mode_started(self):
-        player = self.game.current_player()
-        self.best_inner_loops = player.getState('best_inner_loops', 0)
-        self.best_outer_loops = player.getState('best_outer_loops', 0)
-
         self.outer_loop_active = False
         self.inner_loop_active = False
         self.inner_loop_combos = 0
         self.outer_loop_combos = 0
 
     def mode_stopped(self):
-        player = self.game.current_player()
-        player.setState('best_inner_loops', self.best_inner_loops)
-        player.setState('best_outer_loops', self.best_outer_loops)
-
         self.cancel_delayed(['inner_loop', 'outer_loop'])
-
-    def get_status_layers(self):
-        tiny_font = self.game.fonts['tiny7']
-        title_layer = TextLayer(128/2, 7, tiny_font, 'center').set_text('Best Combos')
-        inner_loops_layer = TextLayer(128/2, 16, tiny_font, 'center').set_text('Inner Loops: ' + str(self.best_inner_loops).rjust(3))
-        outer_loops_layer = TextLayer(128/2, 25, tiny_font, 'center').set_text('Outer Loops: ' + str(self.best_outer_loops).rjust(3))
-        status_layer = GroupedLayer(128, 32, [title_layer, inner_loops_layer, outer_loops_layer])
-        return [status_layer]
 
     def sw_topRightOpto_active(self, sw):
         # See if ball came around inner left loop
@@ -35,8 +19,8 @@ class Combos(Mode):
             self.inner_loop_active = True
             self.game.sound.play('inner_loop')
             self.inner_loop_combos += 1
-            if self.inner_loop_combos > self.best_inner_loops:
-                self.best_inner_loops = self.inner_loop_combos
+            if self.inner_loop_combos > self.game.getPlayerState('best_inner_loops', 0):
+                self.game.setPlayerState('best_inner_loops', self.inner_loop_combos)
             score = 10000 * self.inner_loop_combos
             self.game.score(score)
             self.game.base_play.show_on_display('inner loop: ' + str(self.inner_loop_combos), score)
@@ -51,9 +35,9 @@ class Combos(Mode):
             self.outer_loop_active = True
             self.game.sound.play('outer_loop')
             self.outer_loop_combos += 1
-            if self.outer_loop_combos > self.best_outer_loops:
-                self.best_outer_loops = self.outer_loop_combos
-            score = 1000 * self.outer_loop_combos
+            if self.outer_loop_combos > self.game.getPlayerState('best_outer_loops', 0):
+                self.game.getPlayerState('best_outer_loops', self.outer_loop_combos)
+            score = 5000 * self.outer_loop_combos
             self.game.score(score)
             self.game.base_play.show_on_display('outer loop: ' + str(self.outer_loop_combos), score)
             self.game.base_play.play_animation('bike_across_screen', frame_time=3)
@@ -73,7 +57,7 @@ class Combos(Mode):
 
     def update_lamps(self):
         if self.inner_loop_active:
-            self.game.drive_perp_lamp('perp2', 'slow')
+            self.game.drive_perp_lamp('perp2', 'medium')
 
         if self.outer_loop_active:
-            self.game.drive_perp_lamp('perp4', 'slow')
+            self.game.drive_perp_lamp('perp4', 'medium')

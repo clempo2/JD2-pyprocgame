@@ -310,12 +310,14 @@ class JDGame(BasicGame):
             self.logger.info('Cannot add more than 4 players.')
 
     def getPlayerState(self, key, default=None):
-        player = self.current_player()
-        return player.getState(key, default)
+        return self.current_player().getState(key, default)
 
     def setPlayerState(self, key, val):
-        player = self.current_player()
-        player.setState(key, val)
+        self.current_player().setState(key, val)
+
+    def addPlayerState(self, key, delta):
+        value = self.current_player().getState(key, 0)
+        self.current_player().setState(key, value + delta)
 
     def start_game(self, supergame):
         super(JDGame, self).start_game()

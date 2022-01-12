@@ -15,76 +15,56 @@ class Chain(Mode):
     def __init__(self, game, priority):
         super(Chain, self).__init__(game, priority)
 
-        # for status report in SuperGame before Chain is started
-        self.num_modes_attempted = 0
-        self.num_modes_completed = 0
-
-        self.intro = ChainIntro(self.game, self.priority+1)
+        self.intro = ChainIntro(self.game, self.priority + 1)
         self.intro.exit_callback = self.activate_chain_mode
 
-        pursuit = Pursuit(game, priority+1)
-        blackout = Blackout(game, priority+1)
-        sniper = Sniper(game, priority+1)
-        battle_tank = BattleTank(game, priority+1)
-        impersonator = Impersonator(game, priority+1)
-        meltdown = Meltdown(game, priority+1)
-        safecracker = Safecracker(game, priority+1)
-        manhunt = ManhuntMillions(game, priority+1)
-        stakeout = Stakeout(game, priority+1)
+        pursuit = Pursuit(game, priority + 1)
+        blackout = Blackout(game, priority + 1)
+        sniper = Sniper(game, priority + 1)
+        battle_tank = BattleTank(game, priority + 1)
+        impersonator = Impersonator(game, priority + 1)
+        meltdown = Meltdown(game, priority + 1)
+        safecracker = Safecracker(game, priority + 1)
+        manhunt = ManhuntMillions(game, priority + 1)
+        stakeout = Stakeout(game, priority + 1)
 
         self.all_chain_modes = [pursuit, blackout, sniper, battle_tank, impersonator, meltdown, safecracker, manhunt, stakeout]
         for mode in self.all_chain_modes:
             mode.exit_callback = self.chain_mode_over
 
-        self.hurry_up = ChainHurryUp(game, priority+1)
+        self.hurry_up = ChainHurryUp(game, priority + 1)
         self.hurry_up.collected_callback = self.hurry_up_collected
         self.hurry_up.expired_callback = self.hurry_up_over
 
     def mode_started(self):
         # restore player state
         player = self.game.current_player()
-        self.modes_not_attempted = player.getState('modes_not_attempted', self.all_chain_modes[:])
-        self.modes_not_attempted_ptr = player.getState('modes_not_attempted_ptr', 0)
-        self.modes_attempted = player.getState('modes_attempted', [])
-        self.modes_completed = player.getState('modes_completed', [])
-        self.num_modes_attempted = player.getState('num_modes_attempted', 0)
-        self.num_modes_completed = player.getState('num_modes_completed', 0)
+        self.modes_remaining = player.getState('modes_remaining', self.all_chain_modes[:])
+        self.modes_remaining_ptr = player.getState('modes_remaining_ptr', 0)
 
         self.mode = None
 
     def mode_stopped(self):
         # save player state
         player = self.game.current_player()
-        player.setState('modes_not_attempted', self.modes_not_attempted)
-        player.setState('modes_not_attempted_ptr', self.modes_not_attempted_ptr)
-        player.setState('modes_attempted', self.modes_attempted)
-        player.setState('modes_completed', self.modes_completed)
-        player.setState('num_modes_completed', self.num_modes_completed)
-        player.setState('num_modes_attempted', self.num_modes_attempted)
+        player.setState('modes_remaining', self.modes_remaining)
+        player.setState('modes_remaining_ptr', self.modes_remaining_ptr)
 
         if self.mode != None:
             self.game.modes.remove(self.mode)
 
     def reset(self):
         player = self.game.current_player()
-        player.setState('modes_not_attempted', self.all_chain_modes[:])
-        player.setState('modes_not_attempted_ptr', 0)
-        player.setState('modes_attempted', [])
-        player.setState('modes_completed', [])
-        # num_modes_completed and num_modes_attempted continue to accrue
+        player.setState('modes_remaining', self.all_chain_modes[:])
+        player.setState('modes_remaining_ptr', 0)
+        player.setState('chain_complete', False)
+        # num_modes_attempted and num_modes_completed continue to accrue
 
     def is_active(self):
         return self.mode != None
 
     def is_complete(self):
-        return len(self.modes_not_attempted) == 0
-
-    def get_status_layers(self):
-        tiny_font = self.game.fonts['tiny7']
-        attempted_layer = TextLayer(128/2, 9, tiny_font, 'center').set_text('Modes attempted: ' + str(self.num_modes_attempted))
-        completed_layer = TextLayer(128/2, 19, tiny_font, 'center').set_text('Modes completed: ' + str(self.num_modes_completed))
-        status_layer = GroupedLayer(128, 32, [attempted_layer, completed_layer])
-        return [status_layer]
+        return len(self.modes_remaining) == 0
 
     def sw_slingL_active(self, sw):
         self.rotate_modes(-1)
@@ -100,9 +80,9 @@ class Chain(Mode):
 
     # move the pointer to the left or right in the list with pacman wrap-around
     def rotate_modes(self, step):
-        length = len(self.modes_not_attempted)
+        length = len(self.modes_remaining)
         if length > 0:
-            self.modes_not_attempted_ptr = (self.modes_not_attempted_ptr + step + length) % length
+            self.modes_remaining_ptr = (self.modes_remaining_ptr + step + length) % length
         self.game.update_lamps()
 
     def pause(self):
@@ -115,20 +95,19 @@ class Chain(Mode):
 
     # start a chain mode by showing the instructions
     def start_chain_mode(self):
-        self.mode = self.modes_not_attempted[self.modes_not_attempted_ptr]
+        self.mode = self.modes_remaining[self.modes_remaining_ptr]
         self.intro.setup(self.mode)
         self.game.modes.add(self.intro)
         self.game.update_lamps()
 
     # activate a chain mode after showing the instructions
     def activate_chain_mode(self):
-        # Update the mode lists.
-        self.modes_not_attempted.remove(self.mode)
-        self.modes_attempted.append(self.mode)
-        self.num_modes_attempted += 1
+        self.modes_remaining.remove(self.mode)
+        if len(self.modes_remaining) == 0:
+            self.game.setPlayerState('chain_complete', True)
         self.rotate_modes(0)
 
-        # Add the mode to the mode Q to activate it.
+        self.game.addPlayerState('num_modes_attempted', 1)
         self.game.base_play.regular_play.state = 'mode'
         self.game.modes.add(self.mode)
         self.game.update_lamps()
@@ -143,9 +122,7 @@ class Chain(Mode):
 
         if completed:
             # mode was completed successfully, start hurry up award
-            self.modes_completed.append(self.mode)
-            self.num_modes_completed += 1
-            self.game.setPlayerState('num_modes_completed', self.num_modes_completed)
+            self.game.addPlayerState('num_modes_completed', 1)
             self.game.modes.add(self.hurry_up)
             self.game.update_lamps()
         else:
@@ -173,14 +150,12 @@ class Chain(Mode):
 
     def update_lamps(self):
         self.game.enable_gi(True)
-
-        if len(self.modes_not_attempted) > 0:
-            blinking_mode = self.mode if self.mode else self.modes_not_attempted[self.modes_not_attempted_ptr]
-            for mode in self.modes_not_attempted:
-                style = 'slow' if mode is blinking_mode else 'off'
-                self.game.drive_lamp(mode.lamp_name, style)
-        for mode in self.modes_attempted:
-            self.game.drive_lamp(mode.lamp_name, 'on')
+        for mode in self.all_chain_modes:
+            style = 'off' if mode in self.modes_remaining else 'on'
+            self.game.drive_lamp(mode.lamp_name, style)
+        if len(self.modes_remaining) > 0:
+            blinking_mode = self.mode if self.mode else self.modes_remaining[self.modes_remaining_ptr]
+            self.game.drive_lamp(blinking_mode.lamp_name, 'slow')
 
 
 class ChainHurryUp(Mode):

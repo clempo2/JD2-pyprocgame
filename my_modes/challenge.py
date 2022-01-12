@@ -18,14 +18,14 @@ class UltimateChallenge(Scoring_Mode):
     def __init__(self, game, priority):
         super(UltimateChallenge, self).__init__(game, priority)
 
-        self.intro = ChallengeIntro(self.game, self.priority+1)
+        self.intro = ChallengeIntro(self.game, self.priority + 1)
         self.intro.exit_callback = self.start_level
 
-        self.fear = Fear(game, self.priority+1)
-        self.mortis = Mortis(game, self.priority+1)
-        self.death = Death(game, self.priority+1)
-        self.fire = Fire(game, self.priority+1)
-        self.celebration = Celebration(game, self.priority+1)
+        self.fear = Fear(game, self.priority + 1)
+        self.mortis = Mortis(game, self.priority + 1)
+        self.death = Death(game, self.priority + 1)
+        self.fire = Fire(game, self.priority + 1)
+        self.celebration = Celebration(game, self.priority + 1)
 
         self.mode_list = [self.fear, self.mortis, self.death, self.fire, self.celebration]
         for mode in self.mode_list[0:4]:
@@ -518,7 +518,7 @@ Extinguish fires and banish Judge Fire by shooting the lit crime scene shots.
         self.game.coils.flasherFire.schedule(schedule=schedule, cycle_seconds=0, now=True)
 
         for shot in range(0, 5):
-            lampname = 'perp' + str(shot+1) + 'R'
+            lampname = 'perp' + str(shot + 1) + 'R'
             style = 'medium' if self.targets[shot] else 'off'
             self.game.drive_lamp(lampname, style)
 
