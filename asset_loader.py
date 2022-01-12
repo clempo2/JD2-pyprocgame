@@ -23,7 +23,7 @@ class AssetLoader(object):
             {'key': 'jdpeople', 'file': 'jdpeople.dmd', 'frame_time':1},
             {'key': 'cows', 'file': 'cows.dmd', 'frame_time':1},
             {'key': 'scopeandshot', 'file': 'scopeandshot.dmd', 'frame_time':1},
-            {'key': 'gun_powerup', 'file': 'gun_powerup.dmd', 'composite_op':'blacksrc', 'frame_time':5},
+            {'key': 'gun_powerup', 'file': 'gun_powerup.dmd', 'holdLastFrame':True, 'composite_op':'blacksrc', 'frame_time':7},
             {'key': 'bike_across_screen', 'file': 'bike_across_screen.dmd', 'frame_time':3},
             {'key': 'bikeacrosscity', 'file': 'bikeacrosscity.dmd', 'frame_time':5},
             {'key': 'EBAnim', 'file': 'EBAnim.dmd', 'frame_time':1}

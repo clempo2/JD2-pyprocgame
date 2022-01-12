@@ -18,14 +18,13 @@ class ShootingGallery(Mode):
         self.on_complete = None
 
     def mode_started(self):
-        self.gallery_index = 0
         self.scope_pos = 0
         self.targets = ['empty'] * 4
         self.num_enemies = 0
         self.num_enemies_old = 0
         self.num_enemies_shot = 0
         self.speed_factor = 1
-
+        
         self.state = 'active'
         self.success = False
 
@@ -44,63 +43,49 @@ class ShootingGallery(Mode):
             enemy_text = 'Shoot enemies'
             friend_text = 'Do NOT shoot friends'
 
-        self.instruction_layer_11 = TextLayer(128/2, 7, self.game.fonts['07x5'], 'center').set_text(enemy_text)
-        self.instruction_layer_12 = TextLayer(128/2, 17, self.game.fonts['07x5'], 'center').set_text(friend_text)
-        self.intro_layer_1 = GroupedLayer(128, 32, [self.instruction_layer_11, self.instruction_layer_12])
+        self.intro_layer_11 = TextLayer(128/2, 7, self.game.fonts['07x5'], 'center').set_text(enemy_text)
+        self.intro_layer_12 = TextLayer(128/2, 17, self.game.fonts['07x5'], 'center').set_text(friend_text)
+        self.intro_layer_1 = GroupedLayer(128, 32, [self.intro_layer_11, self.intro_layer_12])
 
-        self.instruction_layer_21 = TextLayer(128/2, 7, self.game.fonts['07x5'], 'center').set_text('Flipper buttons aim')
-        self.instruction_layer_22 = TextLayer(128/2, 17, self.game.fonts['07x5'], 'center').set_text('Fire buttons shoot')
-        self.intro_layer_2 = GroupedLayer(128, 32, [self.instruction_layer_21, self.instruction_layer_22])
+        self.intro_layer_21 = TextLayer(128/2, 7, self.game.fonts['07x5'], 'center').set_text('Flipper buttons aim')
+        self.intro_layer_22 = TextLayer(128/2, 17, self.game.fonts['07x5'], 'center').set_text('Fire buttons shoot')
+        self.intro_layer_2 = GroupedLayer(128, 32, [self.intro_layer_21, self.intro_layer_22])
 
         self.intro_layer_3 = TextLayer(128/2, 7, self.game.fonts['jazz18'], 'center', opaque=False).set_text('Video Mode').set_text('Ready...')
 
-        self.anim_layer = self.game.animations['gun_powerup']
-        self.status_layer_4 = TextLayer(128/2, 7, self.game.fonts['jazz18'], 'center', opaque=False).set_text('Video Mode').set_text('Begin!')
-        self.intro_layer_4 = GroupedLayer(128, 32, [self.anim_layer, self.status_layer_4])
+        self.intro_layer_4 = TextLayer(128/2, 7, self.game.fonts['jazz18'], 'center', opaque=False).set_text('Video Mode').set_text('Begin!')
 
         self.layer = ScriptedLayer(128, 32, [
             {'seconds':3.0, 'layer':self.intro_layer_0},
             {'seconds':3.0, 'layer':self.intro_layer_1},
             {'seconds':3.0, 'layer':self.intro_layer_2},
             {'seconds':3.0, 'layer':self.intro_layer_3},
-            {'seconds':3.0, 'layer':self.intro_layer_4}])
+            {'seconds':1.0, 'layer':self.intro_layer_4}])
 
         self.layer.on_complete = self.start
 
     def start(self):
-
         self.intro_active = False
         self.status_layer.set_text('')
 
-        # Create the layers for each target
-        self.pos_layers = []
-
-        for unused in range(0, 4):
-            new_layer = FrameLayer()
-            new_layer.composite_op = 'blacksrc'
-            new_layer.transition = ExpandTransition()
-            self.pos_layers += [new_layer]
-
-        # Create the layer for the gun scope.
-        self.scope_layer = FrameLayer()
-        self.scope_layer.composite_op = 'blacksrc'
-
-        # Create the layer for each bullet hole position.
-        self.shot_layers = []
-        for unused in range(0, 4):
-            new_layer = FrameLayer()
-            new_layer.composite_op = 'blacksrc'
-            self.shot_layers += [new_layer]
-
+        self.target_layers = [self.new_frame_layer(True) for unused in range(0, 4)]
+        self.scope_layer = self.new_frame_layer()
+        self.bullet_layers = [self.new_frame_layer() for unused in range(0, 4)]
         self.result_layer = TextLayer(128/2, 20, self.game.fonts['07x5'], 'center', opaque=False)
 
-        # Add all of the layers to a GroupedLayer.
-        all_layers = self.pos_layers + [self.scope_layer] + self.shot_layers + [self.status_layer, self.result_layer]
+        all_layers = self.target_layers + [self.scope_layer] + self.bullet_layers + [self.status_layer, self.result_layer]
         self.layer = GroupedLayer(128, 32, all_layers)
 
         # Add the first target after 1 second.
         self.delay(name='add', event_type=None, delay=1, handler=self.add_target)
         self.update_scope_pos()
+
+    def new_frame_layer(self, transition=False):
+        frame_layer = FrameLayer()
+        frame_layer.composite_op = 'blacksrc'
+        if transition:
+            frame_layer.transition = ExpandTransition()
+        return frame_layer
 
     def add_target(self):
         if self.num_enemies == 15:
@@ -130,14 +115,14 @@ class ShootingGallery(Mode):
     def finish(self):
         self.state = 'complete'
         self.status_layer.set_text('Completed!')
-        self.instruction_layer_21.set_text('Completion Bonus:')
-        self.instruction_layer_22.set_text(str(100000))
+        self.intro_layer_21.set_text('Completion Bonus:')
+        self.intro_layer_22.set_text(str(100000))
         self.layer = self.intro_layer_2
         self.delay(name='show_num_shot', event_type=None, delay=2.0, handler=self.show_num_shot)
 
     def show_num_shot(self):
-        self.instruction_layer_21.set_text('Enemies Shot:')
-        self.instruction_layer_22.set_text(str(self.num_enemies_shot) + ' of ' + str(self.num_enemies))
+        self.intro_layer_21.set_text('Enemies Shot:')
+        self.intro_layer_22.set_text(str(self.num_enemies_shot) + ' of ' + str(self.num_enemies))
         self.success = self.num_enemies_shot == self.num_enemies
         if self.success:
             self.delay(name='perfect', event_type=None, delay=3.0, handler=self.perfect)
@@ -160,8 +145,8 @@ class ShootingGallery(Mode):
         # If it has been shot, it will be removed later.
         if self.targets[position] != 'shot' and self.state == 'active':
             self.targets[position] = 'empty'
-            self.pos_layers[position].transition.in_out = 'out'
-            self.pos_layers[position].transition.start()
+            self.target_layers[position].transition.in_out = 'out'
+            self.target_layers[position].transition.start()
 
     def show_friend(self, position, target_index=-1):
         if target_index == -1:
@@ -184,9 +169,9 @@ class ShootingGallery(Mode):
         new_frame = Frame(128,32)
         src_frames = self.cow_image_frames if self.cow_mode else self.image_frames
         Frame.copy_rect(dst=new_frame, dst_x=position*32, dst_y=0, src=src_frames[target_index], src_x=0, src_y=0, width=32, height=32, op='blacksrc')
-        self.pos_layers[position].frame = new_frame
-        self.pos_layers[position].transition.in_out = 'in'
-        self.pos_layers[position].transition.start()
+        self.target_layers[position].frame = new_frame
+        self.target_layers[position].transition.in_out = 'in'
+        self.target_layers[position].transition.start()
 
     def sw_flipperLwL_active(self, sw):
         self.flipper_active('flipperLwR', -1)
@@ -214,11 +199,15 @@ class ShootingGallery(Mode):
         self.fire_active()
 
     def fire_active(self):
-        if not self.intro_active:
+        if self.intro_active:
+            # skip the intro
+            self.layer = None
+            self.start()
+        else:
             self.shoot()
 
     def shoot(self):
-        self.shot_layers[self.scope_pos].frame = self.scope_and_shot_anim[self.scope_pos + 4]
+        self.bullet_layers[self.scope_pos].frame = self.scope_and_shot_anim[self.scope_pos + 4]
         if self.targets[self.scope_pos] == 'enemy':
             self.delay(name='enemy_shot', event_type=None, delay=1.5, handler=self.enemy_shot, param=self.scope_pos)
             self.targets[self.scope_pos] = 'shot'
@@ -231,16 +220,16 @@ class ShootingGallery(Mode):
             self.friend_shot()
 
     def enemy_shot(self, position):
-        self.pos_layers[position].blink_frames = 2
-        self.shot_layers[position].blink_frames = 2
+        self.target_layers[position].blink_frames = 2
+        self.bullet_layers[position].blink_frames = 2
         self.delay(name='enemy_remove', event_type=None, delay=1, handler=self.enemy_remove, param=position)
 
     def enemy_remove(self, position):
         self.targets[position] = 'empty'
-        self.pos_layers[position].frame = None
-        self.shot_layers[position].frame = None
-        self.pos_layers[position].blink_frames = 0
-        self.shot_layers[position].blink_frames = 0
+        self.target_layers[position].frame = None
+        self.bullet_layers[position].frame = None
+        self.target_layers[position].blink_frames = 0
+        self.bullet_layers[position].blink_frames = 0
 
     def friend_shot(self):
         self.game.sound.play('good guy shot')
@@ -253,4 +242,4 @@ class ShootingGallery(Mode):
     def empty_shot(self, position):
         # Make sure it's still empty
         if self.targets[position] == 'empty':
-            self.shot_layers[position].frame = None
+            self.bullet_layers[position].frame = None

@@ -19,13 +19,16 @@ class Attract(Mode):
 
         font_jazz18 = self.game.fonts['jazz18']
         font_07x5 = self.game.fonts['07x5']
-        self.cityscape_layer = self.game.animations['cityscape']
+
+        self.gun_layer = self.game.animations['gun_powerup']
+
         self.jd_layer = TextLayer(128/2, 7, font_jazz18, 'center', opaque=True).set_text('Judge Dredd')
         self.jd_layer.transition = PushTransition(direction='south')
+
+        self.cityscape_layer = self.game.animations['cityscape']
+
         self.proc_splash_layer = self.game.animations['Splash']
         self.proc_splash_layer.transition = PushTransition(direction='south')
-        self.pyprocgame_layer = TextLayer(128/2, 7, font_jazz18, 'center', opaque=True).set_text('pyprocgame')
-        self.pyprocgame_layer.transition = PushTransition(direction='west')
 
         press_yellow_layer = TextLayer(128/2, 8, font_07x5, 'center', opaque=True).set_text('Press Yellow Button', seconds=None, blink_frames=5)
         regulation_layer = TextLayer(128/2, 17, font_07x5, 'center', opaque=False).set_text('for Regulation Play', seconds=None, blink_frames=5)
@@ -37,8 +40,8 @@ class Attract(Mode):
         self.start_supergame_layer = GroupedLayer(128, 32, [press_green_layer, supergame_layer])
         self.start_supergame_layer.transition = PushTransition(direction='east')
 
-        self.scores_layer = TextLayer(128/2, 7, font_jazz18, 'center', opaque=True).set_text('High Scores')
-        self.scores_layer.transition = PushTransition(direction='north')
+        self.high_scores_title_layer = TextLayer(128/2, 7, font_jazz18, 'center', opaque=True).set_text('High Scores')
+        self.high_scores_title_layer.transition = PushTransition(direction='north')
         self.game_over_layer = TextLayer(128/2, 7, font_jazz18, 'center', opaque=True).set_text('Game Over')
 
         gen = MarkupFrameGenerator()
@@ -50,10 +53,8 @@ class Attract(Mode):
 [Rules:]
 [Gerry Stellenberg]
 
-[Tools and Framework:]
-[Adam Preble]
-
 [Software:]
+[Adam Preble]
 [Clement Pellerin]
 
 [Sound and Music:]
@@ -63,16 +64,13 @@ class Attract(Mode):
 [Dots:]
 [Travis Highrise]
 
-[P.ROC:]
-[www.multimorphic.com]
-
-[pyprocgame:]
-[pyprocgame.pindev.org]
-
-[Special thanks to:]
+[Special Thanks to:]
 [Rob Anthony]
 [Michael Ocean]
 [Josh Kugler]
+
+[www.multimorphic.com]
+[pyprocgame.pindev.org]
 """)
 
         self.credits_layer = FastPanningLayer(width=128, height=32, frame=credits_frame, origin=(0, 0), translate=(0, 1), bounce=False)
@@ -109,16 +107,16 @@ class Attract(Mode):
     def display(self):
         self.game.score_display.update_layer()
         script = [
+            {'seconds':3.0, 'layer':self.gun_layer},
             {'seconds':3.0, 'layer':self.jd_layer},
             {'seconds':4.0, 'layer':self.cityscape_layer},
             {'seconds':3.0, 'layer':self.proc_splash_layer},
-            {'seconds':3.0, 'layer':self.pyprocgame_layer},
             {'seconds':3.0, 'layer':self.start_regulation_layer},
             {'seconds':3.0, 'layer':self.start_supergame_layer},
             {'seconds':3.0, 'layer':self.game.score_display.layer},
-            {'seconds':7.2, 'layer':self.credits_layer},
+            {'seconds':7.0, 'layer':self.credits_layer},
             {'seconds':3.0, 'layer':self.judges_layer},
-            {'seconds':3.0, 'layer':self.scores_layer}
+            {'seconds':3.0, 'layer':self.high_scores_title_layer}
         ]
 
         self.append_high_score_layers(script)
@@ -130,7 +128,7 @@ class Attract(Mode):
             {'seconds':6.0, 'layer':self.longwalk_layer},
             {'seconds':3.0, 'layer':self.game_over_layer},
             {'seconds':3.0, 'layer':self.game.score_display.layer},
-            {'seconds':3.0, 'layer':self.scores_layer}
+            {'seconds':3.0, 'layer':self.high_scores_title_layer}
         ]
 
         self.append_high_score_layers(script)
