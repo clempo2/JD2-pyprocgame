@@ -1,3 +1,4 @@
+from random import randint
 from procgame.dmd import AnimatedLayer, GroupedLayer, TextLayer
 from procgame.game import Mode
 from procgame.modes import Replay
@@ -191,6 +192,12 @@ class BasePlay(Mode):
         if self.auto_plunge:
             self.game.coils.shooterR.pulse(50)
 
+    def sw_shooterL_active_for_500ms(self, sw):
+        self.game.send_event('evt_shooterL_active_500ms')
+
+    def evt_shooterL_active_500ms(self):
+        self.game.coils.shooterL.pulse(randint(20,40))
+
     def sw_shooterL_inactive_for_200ms(self, sw):
         self.game.sound.play('shooterL_launch')
 
@@ -322,6 +329,23 @@ class BasePlay(Mode):
         self.game.sound.play('inlane')
 
     #
+    # Outlanes
+    #
+
+    def sw_outlaneL_active(self, sw):
+        self.outlane_hit()
+
+    def sw_outlaneR_active(self, sw):
+        self.outlane_hit()
+
+    def outlane_hit(self):
+        self.game.score(1000)
+        if self.game.trough.num_balls_in_play > 1 or self.game.trough.ball_save_active:
+            self.game.sound.play('outlane')
+        else:
+            self.game.sound.play_voice('curse')
+
+    #
     # Coil
     #
 
@@ -346,7 +370,7 @@ class BasePlay(Mode):
 
     def drain_callback(self):
         if not self.tilt.tilted:
-            if self.game.send_event('ball_drained'):
+            if self.game.send_event('evt_ball_drained'):
                 # drain was intentional, ignore it
                 return
 

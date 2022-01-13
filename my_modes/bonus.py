@@ -17,7 +17,7 @@ class Bonus(Mode):
         self.game.sound.play('drain')
 
         self.delay_time = 1
-        self.title_layer.set_text('BONUS', self.delay_time)
+        self.title_layer.set_text('BONUS')
         self.name_layer.set_text('')
         self.value_layer.set_text('')
 
@@ -56,6 +56,7 @@ class Bonus(Mode):
         self.game.sound.play('bonus')
 
         text, value = self.bonus_items[self.item_index]
+        self.title_layer.set_text('')
         self.name_layer.set_text(text)
         self.value_layer.set_text('00' if value == 0 else str(value))
 
@@ -63,9 +64,14 @@ class Bonus(Mode):
         self.delay(name='show_bonus', event_type=None, delay=self.delay_time, handler=self.show_bonus_items)
 
     def sw_flipperLwL_active(self, sw):
-        # speed up
-        self.delay_time = 0.2
+        self.flipper_active()
 
     def sw_flipperLwR_active(self, sw):
+        self.flipper_active()
+
+    def flipper_active(self):
         # skip to total
+        self.cancel_delayed('show_bonus')
+        self.delay_time = 2
         self.item_index = len(self.bonus_items) - 1
+        self.show_bonus_items()

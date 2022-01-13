@@ -116,7 +116,6 @@ class Attract(Mode):
             {'seconds':3.0, 'layer':self.game.score_display.layer},
             {'seconds':7.0, 'layer':self.credits_layer},
             {'seconds':3.0, 'layer':self.judges_layer},
-            {'seconds':3.0, 'layer':self.high_scores_title_layer}
         ]
 
         self.append_high_score_layers(script)
@@ -125,10 +124,9 @@ class Attract(Mode):
     def game_over_display(self):
         self.game.score_display.update_layer()
         script = [
-            {'seconds':6.0, 'layer':self.longwalk_layer},
+            {'seconds':3.4, 'layer':self.longwalk_layer}, # stop this anim early, Game Over font does not fit rest of the game
             {'seconds':3.0, 'layer':self.game_over_layer},
             {'seconds':3.0, 'layer':self.game.score_display.layer},
-            {'seconds':3.0, 'layer':self.high_scores_title_layer}
         ]
 
         self.append_high_score_layers(script)
@@ -136,6 +134,7 @@ class Attract(Mode):
         self.layer.on_complete = self.display
 
     def append_high_score_layers(self, script):
+        script.append({'seconds':3.0, 'layer':self.high_scores_title_layer})
         for frame in generate_highscore_frames(self.game.all_highscore_categories):
             new_layer = FrameLayer(frame=frame)
             new_layer.transition = PushTransition(direction='north')

@@ -1,7 +1,6 @@
 import locale
 from random import shuffle
 from procgame.dmd import GroupedLayer, MarkupFrameGenerator, PanningLayer, ScriptedLayer, TextLayer
-from procgame.game import SwitchStop
 from procgame.modes import Scoring_Mode
 from crimescenes import CrimeSceneBase
 from intro import Introduction
@@ -87,17 +86,13 @@ class UltimateChallenge(Scoring_Mode):
         self.start_intro()
         # intro updated the lamps
 
-    def ball_drained(self):
+    def evt_ball_drained(self):
         if self.intentional_drain:
             if self.game.trough.num_balls_in_play == 0:
                 self.intentional_drain = False
                 self.next_level()
                 # abort the event to ignore this drain
                 return True
-
-    def sw_shooterL_active_for_200ms(self, sw):
-        self.game.coils.shooterL.pulse()
-        return SwitchStop
 
     def sw_popperR_active_for_300ms(self, sw):
         self.game.base_play.flash_then_pop('flashersRtRamp', 'popperR', 20)
@@ -571,7 +566,7 @@ Normal play resumes when only 1 ball remains.
                 lamp.schedule(schedule=lamp_schedules[i%32], cycle_seconds=0, now=False)
                 i += 1
 
-    def ball_drained(self):
+    def evt_ball_drained(self):
         if self.game.trough.num_balls_in_play == 1:
             # down to just one ball, revert to regular play
             self.end_challenge()

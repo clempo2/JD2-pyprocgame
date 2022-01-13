@@ -35,7 +35,9 @@ class MissileAwardMode(Mode):
         self.video_mode_lit = player.getState('video_mode_lit', self.video_mode_setting != 'off')
         self.missile_award_lit = player.getState('missile_award_lit', False)
         self.available_awards = player.getState('available_awards', self.initial_awards[:])
-        self.active = False
+
+        # mode is active whenever self.timer is > 0
+        self.timer = 0
 
     def mode_stopped(self):
         player = self.game.current_player()
@@ -51,22 +53,24 @@ class MissileAwardMode(Mode):
         self.missile_award_lit = True
         self.game.update_lamps()
 
-    def sw_shooterL_active_for_500ms(self, sw):
+    def evt_shooterL_active_500ms(self):
         if self.missile_award_lit:
             self.missile_award_lit = False
             self.start_missile_award()
+            # abort the event to capture the ball
+            return True
         else:
             self.missile_award_lit = True
-            self.game.coils.shooterL.pulse()
+            # base handler will kick back the ball
+            return False
 
     def sw_fireL_active(self, sw):
-        if self.active:
-            if self.timer > 3:
-                self.timer = 3
-                self.cancel_delayed('missile_update')
-                self.update()
-        else:
-            self.game.coils.shooterL.pulse(50)
+        if self.timer > 3:
+            self.timer = 3
+            self.cancel_delayed('missile_update')
+            self.update()
+        elif self.timer == 0:
+            self.lauch_ball()
 
     def start_missile_award(self):
         self.game.sound.stop_music()
@@ -86,7 +90,7 @@ class MissileAwardMode(Mode):
 
     def video_mode_complete(self, success):
         self.game.modes.remove(self.video_mode)
-        self.game.coils.shooterL.pulse()
+        self.launch_ball()
         if success:
             self.game.base_play.light_extra_ball()
         self.end_missile_award()
@@ -97,15 +101,13 @@ class MissileAwardMode(Mode):
         self.rotate_awards()
         self.layer = self.selection_layer
         self.timer = 70
-        self.active = True
         self.delay(name='missile_update', event_type=None, delay=self.delay_time, handler=self.update)
 
     def update(self):
         if self.timer == 0:
-            self.active = False
             self.layer = None
         elif self.timer == 3:
-            self.game.coils.shooterL.pulse()
+            self.launch_ball()
             self.award()
         elif self.timer > 10:
             self.rotate_awards()
@@ -123,6 +125,7 @@ class MissileAwardMode(Mode):
         if award.endswith('Points'):
             award_words = award.rsplit(' ')
             self.game.score(int(award_words[0]))
+            self.game.base_play.show_on_display(award)
         elif award == 'Light Extra Ball':
             self.game.base_play.light_extra_ball()
         elif award == 'Advance Crime Scenes':
@@ -140,3 +143,6 @@ class MissileAwardMode(Mode):
     def update_lamps(self):
         style = 'medium' if self.missile_award_lit else 'off'
         self.game.drive_lamp('airRaid', style)
+
+    def launch_ball(self):
+        self.game.coils.shooterL.pulse(randint(20, 40))

@@ -201,6 +201,7 @@ class JDGame(BasicGame):
         # Add the basic modes to the mode queue
         self.add_modes([self.switch_monitor, self.attract_mode, self.ball_search,
                         self.deadworld, self.ball_save, self.trough, self.flipper_workaround_mode])
+        self.attract_mode.display()
 
         # Make sure flippers are off, especially for user initiated resets.
         self.enable_flippers(enable=False)
@@ -407,8 +408,8 @@ class JDGame(BasicGame):
 
     def highscore_entry_finished(self, mode):
         self.modes.remove(mode)
-        self.attract_mode.game_over_display()
         self.modes.add(self.attract_mode)
+        self.attract_mode.game_over_display()
         self.update_lamps()
 
         # Handle game stats.

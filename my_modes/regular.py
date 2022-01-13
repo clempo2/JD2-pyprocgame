@@ -123,10 +123,6 @@ During multiball, shoot left ramp to light jackpot then shoot subway to collect
                 score = locale.format('%d', self.game.base_play.replay.replay_scores[0], True)
             self.game.base_play.show_on_display(text, score)
 
-    def sw_shooterL_active_for_500ms(self, sw):
-        if self.any_multiball_active():
-            self.game.coils.shooterL.pulse()
-
     def ball_started(self):
         if self.game.base_play.ball_starting and not self.game.base_play.tilt.tilted:
             ball_save_time = self.game.user_settings['Gameplay']['New ball ballsave time']
@@ -283,25 +279,12 @@ During multiball, shoot left ramp to light jackpot then shoot subway to collect
     # End of ball
     #
 
-    def sw_outlaneL_active(self, sw):
-        self.outlane_hit()
-
-    def sw_outlaneR_active(self, sw):
-        self.outlane_hit()
-
-    def outlane_hit(self):
-        self.game.score(1000)
-        if self.any_multiball_active() or self.game.trough.ball_save_active:
-            self.game.sound.play('outlane')
-        else:
-            self.game.sound.play_voice('curse')
-
     def ball_save_callback(self):
         if not self.any_multiball_active():
             self.game.sound.play_voice('ball saved')
             self.game.base_play.show_on_display('Ball Saved!')
 
-    def ball_drained(self):
+    def evt_ball_drained(self):
         # Called as a result of a ball draining into the trough.
         # End multiball if there is now only one ball in play (and MB was active).
         self.game.ball_save.callback = None
