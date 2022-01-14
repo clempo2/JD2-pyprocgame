@@ -5,19 +5,13 @@ from procgame.modes import Scoring_Mode
 from crimescenes import CrimeSceneBase
 from intro import Introduction
 
-class ChallengeIntro(Introduction):
-    def update_lamps(self):
-        self.game.enable_gi(False)
-        self.game.disable_drop_lamps()
-
-
 class UltimateChallenge(Scoring_Mode):
     """Wizard mode or start of supergame"""
 
     def __init__(self, game, priority):
         super(UltimateChallenge, self).__init__(game, priority)
 
-        self.intro = ChallengeIntro(self.game, self.priority + 1)
+        self.intro = Introduction(self.game, self.priority + 1, 0, False)
         self.intro.exit_callback = self.start_level
 
         self.fear = Fear(game, self.priority + 1)
@@ -45,6 +39,7 @@ class UltimateChallenge(Scoring_Mode):
 
     def update_lamps(self):
         self.game.lamps.ultChallenge.enable()
+        self.game.disable_drop_lamps()
 
     def end_challenge(self):
         # go back to regular play

@@ -458,11 +458,8 @@ class JDGame(BasicGame):
             self.drive_lamp(lamp_name, style)
 
     def disable_drop_lamps(self):
-        self.lamps.dropTargetJ.disable()
-        self.lamps.dropTargetU.disable()
-        self.lamps.dropTargetD.disable()
-        self.lamps.dropTargetG.disable()
-        self.lamps.dropTargetE.disable()
+        for lamp in ['dropTargetJ', 'dropTargetU', 'dropTargetD', 'dropTargetG', 'dropTargetE']:
+            self.lamps[lamp].disable()
 
     def enable_gi(self, on):
         for gi in ['gi01', 'gi02', 'gi03', 'gi04', 'gi05']:

@@ -120,9 +120,11 @@ class Attract(Mode):
 
         self.append_high_score_layers(script)
         self.layer = ScriptedLayer(width=128, height=32, script=script)
+        self.layer.on_complete = self.reset_display
 
     def game_over_display(self):
         self.game.score_display.update_layer()
+        
         script = [
             {'seconds':3.4, 'layer':self.longwalk_layer}, # stop this anim early, Game Over font does not fit rest of the game
             {'seconds':3.0, 'layer':self.game_over_layer},
@@ -139,6 +141,11 @@ class Attract(Mode):
             new_layer = FrameLayer(frame=frame)
             new_layer.transition = PushTransition(direction='north')
             script.append({'seconds':1.75, 'layer':new_layer})
+
+    def reset_display(self):
+        # Reset the layers to play them all again from the start
+        # the gun layer is special because it holds instead of repeating when it reaches the end
+        self.gun_layer.reset()
 
     def change_lampshow(self):
         shuffle(self.lampshow_keys)

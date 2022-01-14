@@ -166,11 +166,12 @@ class BasePlay(Mode):
     def sw_shooterR_inactive_for_1s(self, sw):
         self.auto_plunge = True
         if self.ball_starting:
+            self.game.send_event('evt_ball_started')
+            # send the event only once per ball
             self.ball_starting = False
-            self.game.send_event('ball_started')
 
     # event called when the ball is initially plunged by the player
-    def ball_started(self):
+    def evt_ball_started(self):
         self.skill_shot.begin()
         self.game.modes.add(self.boring)
         # Tell game to save ball start time now, since ball is now in play.

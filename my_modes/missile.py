@@ -145,4 +145,4 @@ class MissileAwardMode(Mode):
         self.game.drive_lamp('airRaid', style)
 
     def launch_ball(self):
-        self.game.coils.shooterL.pulse(randint(20, 40))
+        self.game.coils.shooterL.pulse(randint(10, 30))

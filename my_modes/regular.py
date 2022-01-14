@@ -123,11 +123,10 @@ During multiball, shoot left ramp to light jackpot then shoot subway to collect
                 score = locale.format('%d', self.game.base_play.replay.replay_scores[0], True)
             self.game.base_play.show_on_display(text, score)
 
-    def ball_started(self):
-        if self.game.base_play.ball_starting and not self.game.base_play.tilt.tilted:
-            ball_save_time = self.game.user_settings['Gameplay']['New ball ballsave time']
-            self.game.ball_save.callback = self.ball_save_callback
-            self.game.ball_save.start(num_balls_to_save=1, time=ball_save_time, now=True, allow_multiple_saves=False)
+    def evt_ball_started(self):
+        ball_save_time = self.game.user_settings['Gameplay']['New ball ballsave time']
+        self.game.ball_save.callback = self.ball_save_callback
+        self.game.ball_save.start(num_balls_to_save=1, time=ball_save_time, now=True, allow_multiple_saves=False)
         self.game.remove_modes([self.game_intro, self.shoot_again_intro])
         self.game.update_lamps()
 

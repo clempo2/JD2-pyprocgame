@@ -5,17 +5,13 @@ from procgame.game import Mode
 from procgame.modes import Scoring_Mode
 from intro import Introduction
 
-class ChainIntro(Introduction):
-    def update_lamps(self):
-        self.game.enable_gi(False)
-
 class Chain(Mode):
     """Controls the progress through the chain modes"""
 
     def __init__(self, game, priority):
         super(Chain, self).__init__(game, priority)
 
-        self.intro = ChainIntro(self.game, self.priority + 1)
+        self.intro = Introduction(self.game, self.priority + 1, 0, False)
         self.intro.exit_callback = self.activate_chain_mode
 
         pursuit = Pursuit(game, priority + 1)
