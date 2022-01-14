@@ -1,5 +1,4 @@
 import locale
-from math import ceil
 from random import shuffle
 from procgame.dmd import GroupedLayer, TextLayer
 from procgame.game import Mode
@@ -11,10 +10,7 @@ class CrimeScenes(Mode):
     def __init__(self, game, priority):
         super(CrimeScenes, self).__init__(game, priority)
 
-        num_levels = int(self.game.user_settings['Gameplay']['Crime scene levels for finale'])
-        self.levels_required = min(16, 4 * ceil(num_levels / 4)) # a multiple of 4 less than or equal to 16
-
-        self.crime_scene_levels = CrimeSceneLevels(game, priority + 1, self.levels_required)
+        self.crime_scene_levels = CrimeSceneLevels(game, priority + 1)
         self.crime_scene_levels.start_block_war = self.start_block_war
         self.crime_scene_levels.crime_scenes_completed = self.crime_scene_levels_completed
 
@@ -34,7 +30,7 @@ class CrimeScenes(Mode):
         self.crime_scene_levels.reset()
 
     def start_crime_scene_levels(self):
-        if self.game.getPlayerState('crime_scenes_level', 0) < self.levels_required:
+        if self.game.getPlayerState('crime_scenes_level', 0) < self.game.crime_scene_levels_required:
             self.game.modes.add(self.crime_scene_levels)
 
     def crime_scene_levels_completed(self):
@@ -76,7 +72,7 @@ class CrimeScenes(Mode):
     def update_lamps(self):
         # Use 4 center crime scene lamps to indicate fraction of required levels completed in quarters
         level = self.game.getPlayerState('crime_scenes_level', 0)
-        num_quarters = int(level * 4 / self.levels_required)
+        num_quarters = int(level * 4 / self.game.crime_scene_levels_required)
         for num in range(1, 5):
             lamp_name = 'crimeLevel' + str(num)
             style = 'on' if num <= num_quarters else 'off'
@@ -119,9 +115,8 @@ class CrimeSceneBase(Scoring_Mode):
 class CrimeSceneLevels(CrimeSceneBase):
     """Crime scenes mode"""
 
-    def __init__(self, game, priority, levels_required):
+    def __init__(self, game, priority):
         super(CrimeSceneLevels, self).__init__(game, priority)
-        self.levels_required = levels_required
 
         # we always award the most difficult target that remains in the current level
         self.target_award_order = [1, 3 ,0, 2, 4]
@@ -226,10 +221,10 @@ class CrimeSceneLevels(CrimeSceneBase):
 
     def next_level(self):
         level = self.game.getPlayerState('crime_scenes_level', -1)
-        if level < self.levels_required:
+        if level < self.game.crime_scene_levels_required:
             level += 1
             self.game.setPlayerState('crime_scenes_level', level)
-            if level == self.levels_required:
+            if level == self.game.crime_scene_levels_required:
                 self.crime_scenes_completed()
             else:
                 # the level consists of num_to_pick many targets chosen among the targets listed in pick_from

@@ -20,7 +20,7 @@ class StatusReport(Mode):
         # crime scenes
         level = player.getState('crime_scenes_level', 0)
         crime_scene_title_layer = TextLayer(128/2, 7, tiny_font, 'center').set_text('Crime Scenes')
-        level_layer = TextLayer(128/2, 16, tiny_font, 'center').set_text('Current Level: ' + str(level + 1) + '/' + str(self.levels_required))
+        level_layer = TextLayer(128/2, 16, tiny_font, 'center').set_text('Current Level: ' + str(level + 1) + '/' + str(self.game.crime_scene_levels_required))
         block_layer = TextLayer(128/2, 25, tiny_font, 'center').set_text('Block War in ' + str(4-(level % 4)) + ' levels')
         crime_scene_layer = GroupedLayer(128, 32, [crime_scene_title_layer, level_layer, block_layer])
 

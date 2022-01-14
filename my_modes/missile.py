@@ -70,7 +70,7 @@ class MissileAwardMode(Mode):
             self.cancel_delayed('missile_update')
             self.update()
         elif self.timer == 0:
-            self.lauch_ball()
+            self.launch_ball()
 
     def start_missile_award(self):
         self.game.sound.stop_music()
@@ -145,4 +145,4 @@ class MissileAwardMode(Mode):
         self.game.drive_lamp('airRaid', style)
 
     def launch_ball(self):
-        self.game.coils.shooterL.pulse(randint(10, 30))
+        self.game.coils.shooterL.pulse(randint(15, 30))

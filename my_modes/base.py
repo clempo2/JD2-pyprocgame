@@ -197,7 +197,7 @@ class BasePlay(Mode):
         self.game.send_event('evt_shooterL_active_500ms')
 
     def evt_shooterL_active_500ms(self):
-        self.game.coils.shooterL.pulse(randint(20,40))
+        self.game.coils.shooterL.pulse(randint(15,30))
 
     def sw_shooterL_inactive_for_200ms(self, sw):
         self.game.sound.play('shooterL_launch')
