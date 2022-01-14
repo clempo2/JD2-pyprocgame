@@ -16,7 +16,7 @@ class RegularPlay(Scoring_Mode):
         # Instantiate sub-modes
         instruct_frame = MarkupFrameGenerator().frame_for_markup(self.get_instructions())
         instruct_layer = PanningLayer(width=128, height=32, frame=instruct_frame, origin=(0,0), translate=(0,1), bounce=False)
-        script = [{'seconds':21.0, 'layer':instruct_layer}]
+        script = [{'seconds':22.0, 'layer':instruct_layer}]
         self.game_intro = Introduction(self.game, priority + 1, delay=1.0)
         self.game_intro.setup(ScriptedLayer(width=128, height=32, script=script))
 
@@ -87,6 +87,7 @@ class RegularPlay(Scoring_Mode):
             self.game.modes.add(self.shoot_again_intro)
 
     def get_instructions(self):
+        # The last 5 empty lines force the instructions to scroll all the way to the top and disappear
         return """
 
 #INSTRUCTIONS#
@@ -107,6 +108,7 @@ Complete crime scene levels by shooting lit crimescene shots
 Light locks by completing JUDGE target bank
 
 During multiball, shoot left ramp to light jackpot then shoot subway to collect
+
 
 
 
