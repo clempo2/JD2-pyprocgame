@@ -92,7 +92,7 @@ class Chain(Mode):
     # start a chain mode by showing the instructions
     def start_chain_mode(self):
         self.mode = self.modes_remaining[self.modes_remaining_ptr]
-        self.intro.setup(self.mode)
+        self.intro.setup(self.mode.get_instruction_layer())
         self.game.modes.add(self.intro)
         self.game.update_lamps()
 

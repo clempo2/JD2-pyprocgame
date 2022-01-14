@@ -9,11 +9,11 @@ class Introduction(Mode):
         self.gi = gi
         self.exit_callback = None
 
-    def setup(self, mode):
+    def setup(self, intro_layer):
         # expecting a ScriptedLayer because of the on_complete callback
-        self.intro_layer = mode.get_instruction_layer()
-        self.intro_layer.on_complete = self.finish
-        self.intro_layer.reset()
+        intro_layer.on_complete = self.finish
+        intro_layer.reset()
+        self.intro_layer = intro_layer
 
     def mode_started(self):
         self.delay(name='start', event_type=None, delay=self.start_delay, handler=self.start)

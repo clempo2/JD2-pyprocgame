@@ -49,7 +49,7 @@ class UltimateChallenge(Scoring_Mode):
 
     def start_intro(self):
         self.game.sound.stop_music()
-        self.intro.setup(self.mode_list[self.active_mode])
+        self.intro.setup(self.mode_list[self.active_mode].get_instruction_layer())
         self.game.modes.add(self.intro)
         self.game.update_lamps()
         self.game.enable_flippers(True)

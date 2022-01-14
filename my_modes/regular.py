@@ -14,17 +14,17 @@ class RegularPlay(Scoring_Mode):
         super(RegularPlay, self).__init__(game, priority)
 
         # Instantiate sub-modes
-        self.game_intro = Introduction(self.game, priority + 1, delay=1.0)
         instruct_frame = MarkupFrameGenerator().frame_for_markup(self.get_instructions())
         instruct_layer = PanningLayer(width=128, height=32, frame=instruct_frame, origin=(0,0), translate=(0,1), bounce=False)
         script = [{'seconds':21.0, 'layer':instruct_layer}]
-        self.game_intro.layer = ScriptedLayer(width=128, height=32, script=script)
+        self.game_intro = Introduction(self.game, priority + 1, delay=1.0)
+        self.game_intro.setup(ScriptedLayer(width=128, height=32, script=script))
 
-        self.shoot_again_intro = Introduction(self.game, priority + 1, delay=1.0)
         big_font = self.game.fonts['jazz18']
         shoot_again_layer = TextLayer(128/2, 9, big_font, 'center').set_text('Shoot Again', 3)
         script = [{'seconds':99999999.0, 'layer':shoot_again_layer}]
-        self.shoot_again_intro.layer = ScriptedLayer(width=128, height=32, script=script)
+        self.shoot_again_intro = Introduction(self.game, priority + 1, delay=1.0)
+        self.shoot_again_intro.setup(ScriptedLayer(width=128, height=32, script=script))
         
         self.chain = Chain(self.game, priority)
 
