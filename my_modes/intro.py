@@ -12,16 +12,17 @@ class Introduction(Mode):
     def setup(self, intro_layer):
         # expecting a ScriptedLayer because of the on_complete callback
         intro_layer.on_complete = self.finish
-        intro_layer.reset()
         self.intro_layer = intro_layer
 
     def mode_started(self):
+        self.layer = None
         self.delay(name='start', event_type=None, delay=self.start_delay, handler=self.start)
 
     def mode_stopped(self):
         self.cancel_delayed(['start'])
 
     def start(self):
+        self.intro_layer.reset()
         self.layer = self.intro_layer
 
     def finish(self):
