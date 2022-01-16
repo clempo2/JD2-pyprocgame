@@ -30,7 +30,7 @@ class BasePlay(Mode):
         self.bonus.exit_callback = self.end_ball
 
         self.ultimate_challenge = UltimateChallenge(game, 8)
-        self.ultimate_challenge.exit_callback = self.ultimate_challenge_over
+        self.ultimate_challenge.exit_callback = self.ultimate_challenge_ended
 
         self.replay = Replay(self.game, 18)
         self.replay.replay_callback = self.replay_callback
@@ -243,7 +243,7 @@ class BasePlay(Mode):
         self.game.modes.add(self.ultimate_challenge)
         self.game.update_lamps()
 
-    def ultimate_challenge_over(self):
+    def ultimate_challenge_ended(self):
         self.game.modes.remove(self.ultimate_challenge)
         self.game.modes.add(self.regular_play)
         self.game.update_lamps()

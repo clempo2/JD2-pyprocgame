@@ -4,6 +4,7 @@ from procgame.dmd import GroupedLayer, ScriptedLayer, TextLayer
 from procgame.game import Mode
 from procgame.modes import Scoring_Mode
 from intro import Introduction
+from timer import ModeTimer
 
 class Chain(Mode):
     """Controls the progress through the chain modes"""
@@ -26,11 +27,10 @@ class Chain(Mode):
 
         self.all_chain_modes = [pursuit, blackout, sniper, battle_tank, impersonator, meltdown, safecracker, manhunt, stakeout]
         for mode in self.all_chain_modes:
-            mode.exit_callback = self.chain_mode_over
+            mode.exit_callback = self.chain_mode_ended
 
         self.hurry_up = ChainHurryUp(game, priority + 1)
-        self.hurry_up.collected_callback = self.hurry_up_collected
-        self.hurry_up.expired_callback = self.hurry_up_over
+        self.hurry_up.exit_callback = self.hurry_up_ended
 
     def mode_started(self):
         # restore player state
@@ -113,32 +113,30 @@ class Chain(Mode):
         self.game.base_play.flash_then_pop('flashersRtRamp', 'popperR', 20)
 
     # called when the mode has completed or expired but before the hurry up
-    def chain_mode_over(self, completed):
+    def chain_mode_ended(self, success):
         self.game.modes.remove(self.mode)
 
-        if completed:
+        if success:
             # mode was completed successfully, start hurry up award
             self.game.addPlayerState('num_modes_completed', 1)
             self.game.modes.add(self.hurry_up)
             self.game.update_lamps()
         else:
             # mode not successful, skip the hurry up
-            self.hurry_up_over()
-
-    # called when a successful mode hurry up was achieved
-    def hurry_up_collected(self):
-        # award a crime scene level and/or some points
-        if self.game.getPlayerState('crime_scenes_complete', False):
-            self.game.score(10000)
-        else:
-            self.game.base_play.regular_play.crime_scenes.crime_scene_levels.level_complete()
-
-        if self.game.base_play.regular_play.any_multiball_active():
-            self.game.score(100000)
-        self.hurry_up_over()
+            self.hurry_up_ended(False)
 
     # called when the mode is over including the hurry up
-    def hurry_up_over(self):
+    def hurry_up_ended(self, success):
+        if success:
+            # award a crime scene level and/or some points
+            if self.game.getPlayerState('crime_scenes_complete', False):
+                self.game.score(10000)
+            else:
+                self.game.base_play.regular_play.crime_scenes.crime_scene_levels.level_complete()
+    
+            if self.game.base_play.regular_play.any_multiball_active():
+                self.game.score(100000)
+
         self.mode = None
         self.game.modes.remove(self.hurry_up)
         self.game.base_play.regular_play.chain_mode_completed()
@@ -154,7 +152,7 @@ class Chain(Mode):
             self.game.drive_lamp(blinking_mode.lamp_name, 'slow')
 
 
-class ChainHurryUp(Mode):
+class ChainHurryUp(ModeTimer):
     """Hurry up to subway after a chain mode is successfully completed"""
 
     def __init__(self, game, priority):
@@ -165,14 +163,21 @@ class ChainHurryUp(Mode):
 
     def mode_started(self):
         self.banner_layer.set_text('HURRY-UP!', 3)
-        self.seconds_remaining = 13
-        self.update_and_delay()
+        self.start_timer(14) # 13sec + 1sec grace
         self.game.coils.tripDropTarget.pulse(40)
         self.delay(name='trip_check', event_type=None, delay=.400, handler=self.trip_check)
         self.already_collected = False
 
     def mode_stopped(self):
-        self.cancel_delayed(['grace', 'countdown', 'trip_check'])
+        self.cancel_delayed('trip_check')
+
+    def timer_update(self, time):
+        # last second is the grace period
+        text = '%d seconds' % (time - 1) if time > 1 else ''
+        self.countdown_layer.set_text(text)
+
+    def expired(self):
+        self.exit_callback(False)
 
     def trip_check(self):
         if self.game.switches.dropTargetD.is_inactive():
@@ -196,71 +201,11 @@ class ChainHurryUp(Mode):
 
     def collect_hurry_up(self):
         self.game.sound.play_voice('collected')
-        self.cancel_delayed(['grace', 'countdown', 'trip_check'])
+        self.cancel_delayed('trip_check')
         self.already_collected = True
         self.banner_layer.set_text('Well Done!')
         self.layer = GroupedLayer(128, 32, [self.banner_layer])
-        self.collected_callback()
-
-    def update_and_delay(self):
-        self.countdown_layer.set_text('%d seconds' % (self.seconds_remaining))
-        self.delay(name='countdown', event_type=None, delay=1, handler=self.one_less_second)
-
-    def one_less_second(self):
-        self.seconds_remaining -= 1
-        if self.seconds_remaining > 0:
-            self.update_and_delay()
-        else:
-            self.countdown_layer.set_text('')
-            self.delay(name='grace', event_type=None, delay=1, handler=self.delayed_removal)
-
-    def delayed_removal(self):
-        self.expired_callback()
-
-
-class ModeTimer(Mode):
-    """timer for a timed mode"""
-
-    def __init__(self, game, priority):
-        super(ModeTimer, self).__init__(game, priority)
-        self.timer = 0
-
-    def mode_stopped(self):
-        self.stop_timer()
-
-    def start_timer(self, time):
-        # Tell the mode how much time it gets, if it cares.
-        self.timer_update(time)
-        self.timer = time
-        self.delay(name='decrement timer', event_type=None, delay=1, handler=self.decrement_timer)
-
-    def stop_timer(self):
-        self.timer = 0
-        self.cancel_delayed('decrement timer')
-
-    def add_time(self, time):
-        self.timer += time
-
-    def pause(self):
-        self.cancel_delayed('decrement timer')
-
-    def resume(self):
-        if self.timer > 0:
-            self.delay(name='decrement timer', event_type=None, delay=1, handler=self.decrement_timer)
-
-    def decrement_timer(self):
-        if self.timer > 0:
-            self.timer -= 1
-            self.delay(name='decrement timer', event_type=None, delay=1, handler=self.decrement_timer)
-            self.timer_update(self.timer)
-        else:
-            self.expired()
-
-    def expired(self):
-        pass
-
-    def timer_update(self, time):
-        pass
+        self.exit_callback(True)
 
 
 class ChainFeature(Scoring_Mode, ModeTimer):
