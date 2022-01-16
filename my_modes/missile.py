@@ -1,24 +1,22 @@
 from random import randint
 from procgame.dmd import GroupedLayer, TextLayer
-from procgame.game import Mode
+from timer import ModeTimer
 from videomode import ShootingGallery
 
-class MissileAwardMode(Mode):
+class MissileAwardMode(ModeTimer):
     """Choose an award while the only ball sits in the left shooter lane"""
 
     def __init__(self, game, priority):
         super(MissileAwardMode, self).__init__(game, priority)
 
-        self.video_mode_setting = self.game.user_settings['Gameplay']['Video mode']
-        if self.video_mode_setting != 'off':
+        self.video_mode_setting = self.game.user_settings['Gameplay']['Video mode'] != 'off'
+        if self.video_mode_setting:
             self.video_mode = ShootingGallery(self.game, priority + 11, self.video_mode_setting)
             self.video_mode.on_complete = self.video_mode_complete
 
         self.initial_awards = ['Advance Crime Scenes', 'Light Extra Ball', '30000 Points', 'Bonus +1X', 'Hold Bonus X']
         self.repeatable_award = [True, False, True, True, False]
         self.current_award_ptr = 0
-
-        self.delay_time = 0.200
 
         font = self.game.fonts['tiny7']
         self.title_layer = TextLayer(128/2, 7, font, 'center')
@@ -32,16 +30,11 @@ class MissileAwardMode(Mode):
 
     def mode_started(self):
         player = self.game.current_player()
-        self.video_mode_lit = player.getState('video_mode_lit', self.video_mode_setting != 'off')
         self.missile_award_lit = player.getState('missile_award_lit', False)
         self.available_awards = player.getState('available_awards', self.initial_awards[:])
 
-        # mode is active whenever self.timer is > 0
-        self.timer = 0
-
     def mode_stopped(self):
         player = self.game.current_player()
-        player.setState('video_mode_lit', self.video_mode_lit)
         player.setState('missile_award_lit', self.missile_award_lit)
         player.setState('available_awards', self.available_awards)
 
@@ -78,8 +71,9 @@ class MissileAwardMode(Mode):
         # first award is video mode (if enabled in the settings)
         # but keep video mode for later if another mode is running
         # this way we don't pause the running mode for too long
-        if self.video_mode_lit and not self.game.base_play.regular_play.chain.is_active():
-            self.video_mode_lit = False
+        video_mode_lit = self.game.getPlayerState('video_mode_lit', self.video_mode_setting)
+        if video_mode_lit and not self.game.base_play.regular_play.chain.is_active():
+            self.game.setPlayerState('video_mode_lit', False)
             self.game.modes.add(self.video_mode)
         else:
             self.start_selection()
@@ -100,22 +94,18 @@ class MissileAwardMode(Mode):
         self.available_awards[0] = '50000 Points' if scenes_complete else 'Advance Crime Scenes'
         self.rotate_awards()
         self.layer = self.selection_layer
-        self.timer = 70
-        self.delay(name='missile_update', event_type=None, delay=self.delay_time, handler=self.update)
+        self.start_timer(70, 0.2)
 
-    def update(self):
-        if self.timer == 0:
-            self.layer = None
-        elif self.timer == 3:
+    def timer_update(self, time):
+        if time == 3:
             self.launch_ball()
             self.award()
-        elif self.timer > 10:
+        elif time > 10:
             self.rotate_awards()
 
-        if self.timer > 0:
-            self.timer -= 1
-            self.delay(name='missile_update', event_type=None, delay=self.delay_time, handler=self.update)
-
+    def expired(self):
+        self.layer = None
+        
     def rotate_awards(self):
         self.current_award_ptr = (self.current_award_ptr + randint(1, 4)) % len(self.available_awards)
         self.value_layer.set_text(self.available_awards[self.current_award_ptr])

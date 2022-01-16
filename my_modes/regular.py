@@ -152,11 +152,11 @@ During multiball, shoot left ramp to light jackpot then shoot subway to collect
                 self.state = 'challenge_ready'
                 self.game.modes.remove(self.multiball)
                 self.light_mystery(False)
-            elif not self.chain.is_complete():
+            elif self.game.getPlayerState('chain_complete', False):
+                self.state = 'chain_complete'
+            else:
                 # player needs to shoot the right popper to start the next chain mode
                 self.state = 'chain_ready'
-            else:
-                self.state = 'chain_complete'
                 
         self.game.update_lamps()
 
@@ -214,7 +214,7 @@ During multiball, shoot left ramp to light jackpot then shoot subway to collect
         # 3 Criteria for finale
         return (self.multiball.jackpot_collected and
                 self.game.getPlayerState('crime_scenes_complete', False) and
-                self.chain.is_complete())
+                self.game.getPlayerState('chain_complete', False))
 
     def start_ultimate_challenge(self):
         self.game.remove_modes([self.chain, self.crime_scenes, self.multiball, self])

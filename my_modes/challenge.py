@@ -171,7 +171,7 @@ class DarkJudge(ChallengeBase):
         if self.initial_timer > 0:
             self.timer = self.initial_timer
             self.delay(name='countdown', event_type=None, delay=1, handler=self.decrement_timer)
-        self.delay(name='taunt', event_type=None, delay=5, handler=self.taunt)
+        self.delay(name='taunt', event_type=None, delay=10, handler=self.taunt)
 
     def decrement_timer(self):
         if self.timer == 0:
@@ -183,7 +183,7 @@ class DarkJudge(ChallengeBase):
 
     def taunt(self):
         self.game.sound.play_voice(self.taunt_sound)
-        self.delay(name='taunt', event_type=None, delay=10, handler=self.taunt)
+        self.delay(name='taunt', event_type=None, delay=20, handler=self.taunt)
 
     def sw_dropTargetJ_active_for_250ms(self, sw):
         self.reset_drops()
@@ -354,7 +354,6 @@ Banish him by shooting each lit shot twice.
         self.state = 'ramps'
         self.shots_required = [2, 2, 2, 2, 2]
         self.already_collected = False
-        self.delay(name='taunt', event_type=None, delay=5, handler=self.taunt)
 
     def update_lamps(self):
         schedule = 0x80808080 if any(self.shots_required) else 0

@@ -59,9 +59,6 @@ class Chain(Mode):
     def is_active(self):
         return self.mode != None
 
-    def is_complete(self):
-        return len(self.modes_remaining) == 0
-
     def sw_slingL_active(self, sw):
         self.rotate_modes(-1)
 
@@ -266,11 +263,9 @@ class ChainFeature(Scoring_Mode, ModeTimer):
     def timer_update(self, time):
         self.countdown_layer.set_text(str(time))
 
-    def is_complete(self):
-        return self.num_shots >= self.shots_required
-
     def expired(self):
-        self.exit_callback(self.is_complete())
+        success = self.num_shots >= self.shots_required
+        self.exit_callback(success)
 
     def start_using_drops(self):
         self.game.base_play.regular_play.multiball.drops.paused = True
