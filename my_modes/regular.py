@@ -17,8 +17,9 @@ class RegularPlay(Scoring_Mode):
         instruct_frame = MarkupFrameGenerator().frame_for_markup(self.get_instructions())
         instruct_layer = PanningLayer(width=128, height=32, frame=instruct_frame, origin=(0,0), translate=(0,1), bounce=False)
         script = [{'seconds':22.0, 'layer':instruct_layer}]
+        self.intro_layer = ScriptedLayer(width=128, height=32, script=script)
         self.game_intro = Introduction(self.game, priority + 1, delay=1.0)
-        self.game_intro.setup(ScriptedLayer(width=128, height=32, script=script))
+        self.game_intro.setup(self.intro_layer)
 
         big_font = self.game.fonts['jazz18']
         shoot_again_layer = TextLayer(128/2, 9, big_font, 'center').set_text('Shoot Again', 3)
@@ -56,7 +57,6 @@ class RegularPlay(Scoring_Mode):
         self.game.remove_modes([self.chain, self.crime_scenes, self.multiball, self.missile_award_mode])
         self.game.setPlayerState('mystery_lit', self.mystery_lit)
 
-
     #### DEBUG: push the buy in button to go straight to ultimate challenge from regular mode
     def sw_buyIn_active(self, sw):
         self.game.remove_modes([self.chain, self.crime_scenes])
@@ -81,7 +81,10 @@ class RegularPlay(Scoring_Mode):
     def welcome(self):
         if self.game.ball == 1:
             self.game.sound.play_voice('welcome')
-            self.game.modes.add(self.game_intro)
+            if self.game.current_player_index == 0:
+                # only the first player gets the game instructions
+                self.intro_layer.reset()
+                self.game.modes.add(self.game_intro)
         elif self.game.shooting_again:
             self.game.sound.play_voice('shoot again ' + str(self.game.current_player_index + 1))
             self.game.modes.add(self.shoot_again_intro)
@@ -96,7 +99,7 @@ Hit Right Fire to abort
 
 To light Ultimate Challenge:
 Attempt all chain features
-Complete 16 crimescene levels
+Complete all crime scene levels
 Collect a multiball jackpot
 
 Start chain features by shooting the Build Up Chain Feature shot when lit
@@ -220,12 +223,8 @@ During multiball, shoot left ramp to light jackpot then shoot subway to collect
         # ultimate challenge updated the lamps
 
     #
-    # Mystery
+    # Captive balls
     #
-
-    def light_mystery(self, lit=True):
-        self.mystery_lit = lit
-        self.game.update_lamps()
 
     def sw_captiveBall1_active(self, sw):
         self.game.sound.play('meltdown')
@@ -237,6 +236,14 @@ During multiball, shoot left ramp to light jackpot then shoot subway to collect
         self.game.sound.play('meltdown')
         self.game.base_play.inc_bonus_x()
         self.light_mystery()
+
+    #
+    # Mystery
+    #
+
+    def light_mystery(self, lit=True):
+        self.mystery_lit = lit
+        self.game.update_lamps()
 
     def sw_mystery_active(self, sw):
         self.game.sound.play('mystery')

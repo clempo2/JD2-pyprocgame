@@ -116,6 +116,7 @@ class ShootingGallery(Mode):
         self.intro_layer_21.set_text('Completion Bonus:')
         self.intro_layer_22.set_text(str(100000))
         self.layer = self.intro_layer_2
+        self.game.score(100000)
         self.delay(name='show_num_shot', event_type=None, delay=2.0, handler=self.show_num_shot)
 
     def show_num_shot(self):

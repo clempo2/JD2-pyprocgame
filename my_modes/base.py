@@ -16,9 +16,7 @@ class BasePlay(Mode):
 
     def __init__(self, game):
         super(BasePlay, self).__init__(game, 2)
-        self.flipper_enable_workaround_active = False
 
-        # Instantiate sub-modes
         self.tilt = TiltMonitorMode(self.game, 1000, 'tilt', 'slamTilt')
         self.tilt.num_tilt_warnings = self.game.user_settings['Gameplay']['Number of tilt warnings']
 
@@ -384,6 +382,7 @@ class BasePlay(Mode):
 
     def finish_ball(self):
         self.game.sound.fadeout_music()
+        self.game.ball_search.disable()
 
         # Make sure the motor isn't spinning between balls.
         self.game.coils.globeMotor.disable()

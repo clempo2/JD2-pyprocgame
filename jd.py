@@ -28,66 +28,6 @@ game_data_path = curr_file_path + '/config/game_data.yaml'
 game_data_template_path = curr_file_path + '/config/game_data_template.yaml'
 settings_template_path = curr_file_path + '/config/settings_template.yaml'
 
-# Workaround to deal with latency of flipper rule programming.
-# Need to make sure flippers deativate when the flipper buttons are
-# released.  The flipper rules will automatically activate the flippers
-# if the buttons are held while the enable ruler is programmed, but
-# if the buttons are released immediately after that, the deactivation
-# would be missed without this workaround.
-class FlipperWorkaroundMode(Mode):
-    """Workaround to deal with latency of flipper rule programming"""
-    def __init__(self, game):
-        super(FlipperWorkaroundMode, self).__init__(game, 2)
-        self.flipper_enable_workaround_active = False
-
-    def enable_flippers(self, enable=True):
-        if enable:
-            self.flipper_enable_workaround_active = True
-            self.delay(name='flipper_workaround', event_type=None, delay=0.1, handler=self.end_flipper_workaround)
-
-    def end_flipper_workaround(self):
-        self.flipper_enable_workaround_active = False
-
-    #def sw_flipperLwL_active(self, sw):
-    #    if self.flipper_enable_workaround_active:
-    #        self.game.coils['flipperLwLMain'].pulse(34)
-    #        self.game.coils['flipperLwLHold'].pulse(0)
-
-    def sw_flipperLwL_inactive(self, sw):
-        if self.flipper_enable_workaround_active:
-            self.game.coils['flipperLwLMain'].disable()
-            self.game.coils['flipperLwLHold'].disable()
-
-    #def sw_flipperLwR_active(self, sw):
-    #    if self.flipper_enable_workaround_active:
-    #        self.game.coils['flipperLwRMain'].pulse(34)
-    #        self.game.coils['flipperLwRHold'].pulse(0)
-
-    def sw_flipperLwR_inactive(self, sw):
-        if self.flipper_enable_workaround_active:
-            self.game.coils['flipperLwRMain'].disable()
-            self.game.coils['flipperLwRHold'].disable()
-
-    #def sw_flipperUpL_active(self, sw):
-    #    if self.flipper_enable_workaround_active:
-    #        self.game.coils['flipperUpLMain'].pulse(34)
-    #        self.game.coils['flipperUpLHold'].pulse(0)
-
-    def sw_flipperUpL_inactive(self, sw):
-        if self.flipper_enable_workaround_active:
-            self.game.coils['flipperUpLMain'].disable()
-            self.game.coils['flipperUpLHold'].disable()
-
-    #def sw_flipperUpR_active(self, sw):
-    #    if self.flipper_enable_workaround_active:
-    #        self.game.coils['flipperUpRMain'].pulse(34)
-    #        self.game.coils['flipperUpRHold'].pulse(0)
-
-    def sw_flipperUpR_inactive(self, sw):
-        if self.flipper_enable_workaround_active:
-            self.game.coils['flipperUpRMain'].disable()
-            self.game.coils['flipperUpRHold'].disable()
-
 class JDServiceMode(ServiceMode):
 
     def mode_stopped(self):
@@ -194,14 +134,12 @@ class JDGame(BasicGame):
         # Instantiate basic game features
         self.attract_mode = Attract(self)
         self.base_play = BasePlay(self)
-        self.flipper_workaround_mode = FlipperWorkaroundMode(self)
         self.deadworld = Deadworld(self, 20, self.settings['Machine']['Deadworld mod installed'])
 
         self.shooting_again = False
 
         # Add the basic modes to the mode queue
-        self.add_modes([self.switch_monitor, self.attract_mode, self.ball_search,
-                        self.deadworld, self.ball_save, self.trough, self.flipper_workaround_mode])
+        self.add_modes([self.switch_monitor, self.attract_mode, self.ball_search, self.deadworld, self.ball_save, self.trough])
         self.attract_mode.display()
 
         # Make sure flippers are off, especially for user initiated resets.
@@ -250,17 +188,16 @@ class JDGame(BasicGame):
         outerLoops_category = self.create_high_score_category('OuterLoopsHighScoreData', 'Outer Loop Champ', 'best_outer_loops', ' loop')
 
         self.highscore_categories = [classic_category, crimeScenes_category, innerLoops_category, outerLoops_category]
-        for category in self.highscore_categories:
-            category.load_from_game(self)
 
         supergame_category = HighScoreCategory()
         supergame_category.game_data_key = 'SuperGameHighScoreData'
         supergame_category.titles = ['SuperGame Champion', 'SuperGame High Score #1', 'SuperGame High Score #2', 'SuperGame High Score #3', 'SuperGame High Score #4']
-        supergame_category.load_from_game(self)
         
         self.supergame_highscore_categories = [supergame_category, crimeScenes_category, innerLoops_category, outerLoops_category]
         
         self.all_highscore_categories = [classic_category, supergame_category, crimeScenes_category, innerLoops_category, outerLoops_category]
+        for category in self.all_highscore_categories:
+            category.load_from_game(self)
 
     # this variant is called by procgame.service.SettingsEditor
     def save_settings(self):
@@ -439,10 +376,6 @@ class JDGame(BasicGame):
     # to erase the callback completely, you have to pass an empty callback instead
     def no_op_callback(self):
         pass
-
-    def enable_flippers(self, enable=True):
-        super(JDGame, self).enable_flippers(enable)
-        self.flipper_workaround_mode.enable_flippers(enable)
 
     def drive_lamp(self, lamp_name, style='on'):
         if style == 'slow':

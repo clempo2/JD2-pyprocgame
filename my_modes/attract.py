@@ -103,15 +103,16 @@ class Attract(Mode):
         script = [
             {'seconds':3.0, 'layer':self.gun_layer},
             {'seconds':3.0, 'layer':self.jd_layer},
+            {'seconds':3.0, 'layer':self.game.score_display.layer},
             {'seconds':4.0, 'layer':self.cityscape_layer},
             {'seconds':3.0, 'layer':self.proc_splash_layer},
-            {'seconds':1.0, 'layer':self.press_yellow_layer},
+            {'seconds':0.75, 'layer':self.press_yellow_layer},
             {'seconds':2.0, 'layer':self.press_yellow_layer2},
-            {'seconds':1.0, 'layer':self.press_green_layer},
+            {'seconds':0.75, 'layer':self.press_green_layer},
             {'seconds':2.0, 'layer':self.press_green_layer2},
             {'seconds':3.0, 'layer':self.game.score_display.layer},
-            {'seconds':7.0, 'layer':self.credits_layer},
             {'seconds':3.0, 'layer':self.judges_layer},
+            {'seconds':7.0, 'layer':self.credits_layer},
         ]
 
         self.append_high_score_layers(script)
@@ -141,11 +142,10 @@ class Attract(Mode):
         return start_layer
 
     def append_high_score_layers(self, script):
-        script.append({'seconds':3.0, 'layer':self.high_scores_title_layer})
+        script.append({'seconds':2.0, 'layer':self.high_scores_title_layer})
         for frame in generate_highscore_frames(self.game.all_highscore_categories):
             new_layer = FrameLayer(frame=frame)
-            new_layer.transition = PushTransition(direction='north')
-            script.append({'seconds':1.75, 'layer':new_layer})
+            script.append({'seconds':1.25, 'layer':new_layer})
 
     def reset_display(self):
         # Reset the layers to play them all again from the start

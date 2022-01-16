@@ -142,7 +142,7 @@ Defeat the Dark Judges
         self.started = True
         self.game.base_play.auto_plunge = True
         if self.ball_save_time > 0:
-            self.game.ball_save.disable() # put ball save timer to 0 to limit the ball_save_time to our value
+            self.game.ball_save.disable() # put ball save timer to 0 because we don't want to add to the remaining time
             self.game.ball_save.start(num_balls_to_save=self.num_balls, time=self.ball_save_time, now=True, allow_multiple_saves=True)
 
     def sw_shooterR_inactive_for_900ms(self, sw):
@@ -438,7 +438,6 @@ Banish him by shooting the lit crime scene shots before time expires.  Shots slo
             self.game.score(10000)
             self.shot_timer = 10
             self.check_for_completion()
-            self.game.update_lamps()
 
     def add_shot(self):
         for shot in self.shot_order:

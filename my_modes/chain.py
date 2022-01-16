@@ -518,47 +518,6 @@ class BattleTank(ChainFeature):
             self.exit_callback(True)
 
 
-class Meltdown(ChainFeature):
-    """Meltdown chain mode"""
-
-    def __init__(self, game, priority):
-        super(Meltdown, self).__init__(game, priority, 'Meltdown', 'meltdown')
-        self.set_shots_required({'easy':3, 'medium':4, 'hard':5})
-        self.instructions = 'Hit ' + str(self.shots_required) + ' captive ball switches'
-
-    def mode_started(self):
-        super(Meltdown, self).mode_started()
-        self.game.sound.play_voice('meltdown intro')
-
-    def update_lamps(self):
-        self.game.lamps.stopMeltdown.schedule(schedule=0x00FF00FF, cycle_seconds=0, now=True)
-
-    def sw_captiveBall1_active(self, sw):
-        self.switch_hit()
-
-    def sw_captiveBall2_active(self, sw):
-        self.switch_hit()
-
-    def sw_captiveBall3_active(self, sw):
-        self.switch_hit()
-
-    def switch_hit(self):
-        if self.num_shots > 0:
-            self.game.sound.stop('meltdown ' + str(self.num_shots))
-        self.num_shots += 1
-        if self.num_shots <= 4:
-            self.game.sound.play_voice('meltdown ' + str(self.num_shots))
-        self.game.score(10000)
-        self.check_for_completion()
-
-    def check_for_completion(self):
-        self.update_status()
-        if self.num_shots == self.shots_required:
-            self.game.sound.play_voice('meltdown all')
-            self.game.score(50000)
-            self.exit_callback(True)
-
-
 class Impersonator(ChainFeature):
     """Bad impersonator chain mode"""
 
@@ -656,6 +615,47 @@ class Impersonator(ChainFeature):
         if self.num_shots == self.shots_required:
             self.game.score(50000)
             # keep playing for extra shots until the timer expires
+
+
+class Meltdown(ChainFeature):
+    """Meltdown chain mode"""
+
+    def __init__(self, game, priority):
+        super(Meltdown, self).__init__(game, priority, 'Meltdown', 'meltdown')
+        self.set_shots_required({'easy':3, 'medium':4, 'hard':5})
+        self.instructions = 'Hit ' + str(self.shots_required) + ' captive ball switches'
+
+    def mode_started(self):
+        super(Meltdown, self).mode_started()
+        self.game.sound.play_voice('meltdown intro')
+
+    def update_lamps(self):
+        self.game.lamps.stopMeltdown.schedule(schedule=0x00FF00FF, cycle_seconds=0, now=True)
+
+    def sw_captiveBall1_active(self, sw):
+        self.switch_hit()
+
+    def sw_captiveBall2_active(self, sw):
+        self.switch_hit()
+
+    def sw_captiveBall3_active(self, sw):
+        self.switch_hit()
+
+    def switch_hit(self):
+        if self.num_shots > 0:
+            self.game.sound.stop('meltdown ' + str(self.num_shots))
+        self.num_shots += 1
+        if self.num_shots <= 4:
+            self.game.sound.play_voice('meltdown ' + str(self.num_shots))
+        self.game.score(10000)
+        self.check_for_completion()
+
+    def check_for_completion(self):
+        self.update_status()
+        if self.num_shots == self.shots_required:
+            self.game.sound.play_voice('meltdown all')
+            self.game.score(50000)
+            self.exit_callback(True)
 
 
 class Safecracker(ChainFeature):
