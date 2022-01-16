@@ -29,9 +29,9 @@ class Attract(Mode):
         self.proc_splash_layer = self.game.animations['Splash']
         self.proc_splash_layer.transition = PushTransition(direction='south')
 
-        self.press_yellow_layer = self.button_layer('Press Yellow Button', 'for Regulation Play', blink_frame=0, direction='west')
+        self.press_yellow_layer = self.button_layer('Press Yellow Button', 'for Regulation Play', direction='west')
         self.press_yellow_layer2 = self.button_layer('Press Yellow Button', 'for Regulation Play', blink_frame=5)
-        self.press_green_layer = self.button_layer('Press Green Button', 'for SuperGame', blink_frame=0, direction='west')
+        self.press_green_layer = self.button_layer('Press Green Button', 'for SuperGame', direction='west')
         self.press_green_layer2 = self.button_layer('Press Green Button', 'for SuperGame', blink_frame=5)
 
         self.high_scores_title_layer = TextLayer(128/2, 7, font_jazz18, 'center', opaque=True).set_text('High Scores')
@@ -132,7 +132,7 @@ class Attract(Mode):
         self.layer = ScriptedLayer(width=128, height=32, script=script)
         self.layer.on_complete = self.display
 
-    def button_layer(self, button_text, play_text, blink_frame=0, direction=None):
+    def button_layer(self, button_text, play_text, blink_frame=None, direction=None):
         font_07x5 = self.game.fonts['07x5']
         press_layer = TextLayer(128/2, 8, font_07x5, 'center', opaque=True).set_text(button_text, seconds=None, blink_frames=blink_frame)
         play_layer = TextLayer(128/2, 17, font_07x5, 'center', opaque=False).set_text(play_text, seconds=None, blink_frames=blink_frame)

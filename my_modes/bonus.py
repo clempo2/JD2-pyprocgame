@@ -14,9 +14,9 @@ class Bonus(Mode):
         self.layer = GroupedLayer(128, 32, [self.title_layer, self.name_layer, self.value_layer])
 
     def mode_started(self):
-        self.game.sound.play('drain')
+        self.game.stop_all_sounds()
+        self.game.sound.play_voice('drain')
 
-        self.delay_time = 1
         self.title_layer.set_text('BONUS')
         self.name_layer.set_text('')
         self.value_layer.set_text('')
@@ -43,7 +43,7 @@ class Bonus(Mode):
 
         self.item_index = 0
         self.bonus_items = [attempted, completed, crime_scenes, total_base, multiplier, total_bonus]
-        self.delay(name='show_bonus', event_type=None, delay=self.delay_time, handler=self.show_bonus_items)
+        self.delay(name='show_bonus', event_type=None, delay=1.5, handler=self.show_bonus_items)
 
     def mode_stopped(self):
         self.cancel_delayed('show_bonus')
@@ -61,7 +61,7 @@ class Bonus(Mode):
         self.value_layer.set_text('00' if value == 0 else str(value))
 
         self.item_index += 1
-        self.delay(name='show_bonus', event_type=None, delay=self.delay_time, handler=self.show_bonus_items)
+        self.delay(name='show_bonus', event_type=None, delay=1, handler=self.show_bonus_items)
 
     def sw_flipperLwL_active(self, sw):
         self.flipper_active()

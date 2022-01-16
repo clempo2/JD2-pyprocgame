@@ -58,6 +58,7 @@ class JDGame(BasicGame):
         self.sound = SoundController(self)
         self.lampctrl = LampController(self)
         self.logging_enabled = False
+        self.lamp_schedules = {'slow':0x00ff00ff, 'medium':0x0f0f0f0f, 'fast':0x55555555, 'on':0xffffffff, 'off':0x00000000}
 
         self.load_config('config/JD.yaml')
 
@@ -119,7 +120,7 @@ class JDGame(BasicGame):
         self.ball_search = BallSearch(self, priority=100, countdown_time=10,
                      coils=self.ballsearch_coils, reset_switches=self.ballsearch_resetSwitches,
                      stop_switches=self.ballsearch_stopSwitches, special_handler_modes=[])
-        self.ball_search.disable()
+        self.disable_ball_search()
         
         # Trough
         trough_switchnames = ['trough1', 'trough2', 'trough3', 'trough4', 'trough5', 'trough6']
@@ -165,6 +166,12 @@ class JDGame(BasicGame):
                 if ret:
                     # skip lower priority modes
                     return ret
+
+    def stop_all_sounds(self):
+        # workaround for pyprocgame's SoundController lack of functionality
+        for key in self.sound.sounds:
+            self.sound.sounds[key][0].stop()
+        self.sound.voice_end_time = 0
 
     def load_settings_and_stats(self):
         self.load_settings(settings_template_path, settings_path)
@@ -370,7 +377,13 @@ class JDGame(BasicGame):
         self.ball_search.perform_search(5)
         if self.deadworld.num_balls_locked > 0:
             self.deadworld.perform_ball_search()
-
+            
+    def disable_ball_search(self):
+        # workaround for a bug in pyprocgame's BallSearch.disable
+        self.ball_search.disable()
+        self.ball_search.cancel_delayed(name='ball_search_countdown')
+        self.ball_search.cancel_delayed('ball_search_coil1')
+        
     # Empty callback
     # Calling self.game.trough.launch_balls() with a None callback preserves the previous callback
     # to erase the callback completely, you have to pass an empty callback instead
@@ -378,16 +391,8 @@ class JDGame(BasicGame):
         pass
 
     def drive_lamp(self, lamp_name, style='on'):
-        if style == 'slow':
-            self.lamps[lamp_name].schedule(schedule=0x00ff00ff, cycle_seconds=0, now=True)
-        elif style == 'medium':
-            self.lamps[lamp_name].schedule(schedule=0x0f0f0f0f, cycle_seconds=0, now=True)
-        elif style == 'fast':
-            self.lamps[lamp_name].schedule(schedule=0x55555555, cycle_seconds=0, now=True)
-        elif style == 'on':
-            self.lamps[lamp_name].enable()
-        elif style == 'off':
-            self.lamps[lamp_name].disable()
+        lamp_schedule = self.lamp_schedules[style]
+        self.lamps[lamp_name].schedule(schedule=lamp_schedule, cycle_seconds=0, now=True)
 
     def drive_perp_lamp(self, perp_name, style='on'):
         for color in ['W', 'R', 'Y', 'G']:

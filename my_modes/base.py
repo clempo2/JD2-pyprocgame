@@ -76,7 +76,7 @@ class BasePlay(Mode):
     def mode_stopped(self):
         self.game.remove_modes([self.skill_shot, self.display_mode, self.animation_mode])
         self.game.enable_flippers(False)
-        self.game.ball_search.disable()
+        self.game.disable_ball_search()
         self.game.trough.drain_callback = self.game.no_op_callback
         self.cancel_show_status_timer()
 
@@ -382,7 +382,7 @@ class BasePlay(Mode):
 
     def finish_ball(self):
         self.game.sound.fadeout_music()
-        self.game.ball_search.disable()
+        self.game.disable_ball_search()
 
         # Make sure the motor isn't spinning between balls.
         self.game.coils.globeMotor.disable()
