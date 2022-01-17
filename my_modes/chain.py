@@ -150,62 +150,6 @@ class Chain(Mode):
             self.game.drive_lamp(blinking_mode.lamp_name, 'slow')
 
 
-class ChainHurryUp(ModeTimer):
-    """Hurry up to subway after a chain mode is successfully completed"""
-
-    def __init__(self, game, priority):
-        super(ChainHurryUp, self).__init__(game, priority)
-        self.countdown_layer = TextLayer(128/2, 7, self.game.fonts['jazz18'], 'center')
-        self.banner_layer = TextLayer(128/2, 7, self.game.fonts['jazz18'], 'center')
-        self.layer = GroupedLayer(128, 32, [self.countdown_layer, self.banner_layer])
-
-    def mode_started(self):
-        self.banner_layer.set_text('HURRY-UP!', 3)
-        self.start_timer(14) # 13sec + 1sec grace
-        self.game.coils.tripDropTarget.pulse(40)
-        self.delay(name='trip_check', event_type=None, delay=.400, handler=self.trip_check)
-        self.already_collected = False
-
-    def mode_stopped(self):
-        self.cancel_delayed('trip_check')
-
-    def timer_update(self, time):
-        # last second is the grace period
-        text = '%d seconds' % (time - 1) if time > 1 else ''
-        self.countdown_layer.set_text(text)
-
-    def expired(self):
-        self.exit_callback(False)
-
-    def trip_check(self):
-        if self.game.switches.dropTargetD.is_inactive():
-            self.game.coils.tripDropTarget.pulse(40)
-            self.delay(name='trip_check', event_type=None, delay=.400, handler=self.trip_check)
-
-    def sw_dropTargetD_inactive_for_400ms(self, sw):
-        self.game.coils.tripDropTarget.pulse(40)
-        self.delay(name='trip_check', event_type=None, delay=.400, handler=self.trip_check)
-
-    def update_lamps(self):
-        self.game.lamps.pickAPrize.schedule(schedule=0x33333333, cycle_seconds=0, now=True)
-
-    def sw_subwayEnter1_closed(self, sw):
-        self.collect_hurry_up()
-
-    # Ball might jump over first switch.  Use 2nd switch as a catch all.
-    def sw_subwayEnter2_closed(self, sw):
-        if not self.already_collected:
-            self.collect_hurry_up()
-
-    def collect_hurry_up(self):
-        self.game.sound.play_voice('collected')
-        self.cancel_delayed('trip_check')
-        self.already_collected = True
-        self.banner_layer.set_text('Well Done!')
-        self.layer = GroupedLayer(128, 32, [self.banner_layer])
-        self.exit_callback(True)
-
-
 class ChainFeature(Scoring_Mode, ModeTimer):
     """Base class for the chain modes"""
 
@@ -279,6 +223,63 @@ class ChainFeature(Scoring_Mode, ModeTimer):
     def reset_drops(self):
         self.game.base_play.regular_play.multiball.drops.animated_reset(.1)
         self.game.base_play.regular_play.multiball.reset_active_drops()
+
+
+class ChainHurryUp(ChainFeature):
+    """Hurry up to subway after a chain mode is successfully completed"""
+
+    def __init__(self, game, priority):
+        super(ChainHurryUp, self).__init__(game, priority, 'Hurry Up', None)
+        self.instructions = 'Shoot subway'
+        self.mode_time = 14
+        self.hurry_up_intro = Introduction(self.game, self.priority + 1, 0, True)
+        self.hurry_up_intro.setup(self.get_instruction_layer())
+
+    def mode_started(self):
+        super(ChainHurryUp, self).mode_started()
+        self.game.modes.add(self.hurry_up_intro)
+        self.game.coils.tripDropTarget.pulse(40)
+        self.delay(name='trip_check', event_type=None, delay=.400, handler=self.trip_check)
+        self.already_collected = False
+
+    def mode_stopped(self):
+        self.game.modes.remove(self.hurry_up_intro)
+        self.cancel_delayed('trip_check')
+
+    def update_status(self):
+        pass
+
+    def expired(self):
+        self.exit_callback(False)
+
+    def trip_check(self):
+        if self.game.switches.dropTargetD.is_inactive():
+            self.game.coils.tripDropTarget.pulse(40)
+            self.delay(name='trip_check', event_type=None, delay=.400, handler=self.trip_check)
+
+    def sw_dropTargetD_inactive_for_400ms(self, sw):
+        self.game.coils.tripDropTarget.pulse(40)
+        self.delay(name='trip_check', event_type=None, delay=.400, handler=self.trip_check)
+
+    def update_lamps(self):
+        self.game.lamps.pickAPrize.schedule(schedule=0x33333333, cycle_seconds=0, now=True)
+
+    def sw_subwayEnter1_closed(self, sw):
+        self.collect_hurry_up()
+
+    # Ball might jump over first switch.  Use 2nd switch as a catch all.
+    def sw_subwayEnter2_closed(self, sw):
+        if not self.already_collected:
+            self.collect_hurry_up()
+
+    def collect_hurry_up(self):
+        self.game.modes.remove(self.hurry_up_intro)
+        self.game.sound.play_voice('collected')
+        self.cancel_delayed('trip_check')
+        self.already_collected = True
+        self.banner_layer.set_text('Well Done!')
+        self.layer = GroupedLayer(128, 32, [self.banner_layer])
+        self.exit_callback(True)
 
 
 class Pursuit(ChainFeature):
