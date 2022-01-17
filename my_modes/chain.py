@@ -48,6 +48,7 @@ class Chain(Mode):
 
         if self.mode != None:
             self.game.modes.remove(self.mode)
+        self.game.modes.remove(self.hurry_up)
 
     def reset(self):
         player = self.game.current_player()

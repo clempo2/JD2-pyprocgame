@@ -99,20 +99,22 @@ class Attract(Mode):
         self.game.lampctrl.stop_show()
 
     def display(self):
+        self.reset_display()
         self.game.score_display.update_layer()
+        
         script = [
             {'seconds':3.0, 'layer':self.gun_layer},
             {'seconds':3.0, 'layer':self.jd_layer},
             {'seconds':3.0, 'layer':self.game.score_display.layer},
             {'seconds':4.0, 'layer':self.cityscape_layer},
-            {'seconds':3.0, 'layer':self.proc_splash_layer},
             {'seconds':0.75, 'layer':self.press_yellow_layer},
             {'seconds':2.0, 'layer':self.press_yellow_layer2},
             {'seconds':0.75, 'layer':self.press_green_layer},
             {'seconds':2.0, 'layer':self.press_green_layer2},
             {'seconds':3.0, 'layer':self.game.score_display.layer},
-            {'seconds':3.0, 'layer':self.judges_layer},
+            {'seconds':3.0, 'layer':self.proc_splash_layer},
             {'seconds':7.0, 'layer':self.credits_layer},
+            {'seconds':3.0, 'layer':self.judges_layer},
         ]
 
         self.append_high_score_layers(script)
@@ -148,7 +150,7 @@ class Attract(Mode):
             script.append({'seconds':1.25, 'layer':new_layer})
 
     def reset_display(self):
-        # Reset the layers to play them all again from the start
+        # Reset the layers to their initial state
         # the gun layer is special because it holds instead of repeating when it reaches the end
         self.gun_layer.reset()
 
