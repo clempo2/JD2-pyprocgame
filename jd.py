@@ -206,9 +206,9 @@ class JDGame(BasicGame):
         for category in self.all_highscore_categories:
             category.load_from_game(self)
 
-    # this variant is called by procgame.service.SettingsEditor
-    def save_settings(self):
-        self.save_settings(settings_path)
+    # workaround for procgame.service.SettingsEditor calling this method with only one argument
+    def save_settings(self, filename=None):
+        super(JDGame, self).save_settings(filename if filename else settings_path)
 
     def create_high_score_category(self, key, title, state_key, suffix):
         category = HighScoreCategory()

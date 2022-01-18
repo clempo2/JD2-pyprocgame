@@ -8,7 +8,7 @@ class MissileAwardMode(ModeTimer):
 
     def __init__(self, game, priority):
         super(MissileAwardMode, self).__init__(game, priority)
-        self.timer_delayed = 0.2
+        self.timer_delay = 0.2
 
         self.video_mode_setting = self.game.user_settings['Gameplay']['Video mode'] != 'off'
         if self.video_mode_setting:
