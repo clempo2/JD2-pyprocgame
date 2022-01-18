@@ -93,7 +93,7 @@ class RegularPlay(Scoring_Mode):
         ball_save_time = self.game.user_settings['Gameplay']['New ball ballsave time']
         self.game.ball_save.callback = self.ball_save_callback
         self.game.ball_save.start(num_balls_to_save=1, time=ball_save_time, now=True, allow_multiple_saves=False)
-        self.game.modes.remove_modes(self.shoot_again_intro)
+        self.game.modes.remove(self.shoot_again_intro)
         self.game.update_lamps()
 
     #
