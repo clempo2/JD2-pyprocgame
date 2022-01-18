@@ -1,3 +1,4 @@
+import locale
 from procgame.dmd import GroupedLayer, TextLayer
 from procgame.game import Mode
 
@@ -26,18 +27,18 @@ class Bonus(Mode):
         self.layer = self.tabular_layer
 
         player = self.game.current_player()
-        modes_attempted = player.getState('num_modes_attempted', 0)
-        modes_completed = player.getState('num_modes_completed', 0)
-        crime_scenes = player.getState('crime_scenes_total_levels', 0)
+        chain_features = player.getState('chain_features', 0)
+        hurry_ups = player.getState('num_hurry_ups', 0)
+        blocks = player.getState('num_blocks', 0)
         
-        modes_attempted_bonus = modes_attempted * 4000
-        modes_completed_bonus = modes_completed * 12000
-        crime_scenes_bonus = crime_scenes * 2000
-        self.base_bonus =  modes_attempted_bonus + modes_completed_bonus + crime_scenes_bonus
+        chain_features_bonus = chain_features * 4000
+        hurry_ups_bonus = hurry_ups * 12000
+        blocks_bonus = blocks * 2000
+        self.base_bonus =  chain_features_bonus + hurry_ups_bonus + blocks_bonus
 
-        self.set_line_text(0, modes_attempted, 'MODE', 'MODES', modes_attempted_bonus)
-        self.set_line_text(1, modes_completed, 'COMPLETED', 'COMPLETED', modes_completed_bonus)
-        self.set_line_text(2, crime_scenes, 'CRIME SCENE', 'CRIME SCENES', crime_scenes_bonus)
+        self.set_line_text(0, chain_features, 'FEATURE', 'FEATURES', chain_features_bonus)
+        self.set_line_text(1, hurry_ups, 'HURRY UP', 'HURRY UPS', hurry_ups_bonus)
+        self.set_line_text(2, blocks, 'BLOCK', 'BLOCKS', blocks_bonus)
 
         self.delay(name='show_bonus', event_type=None, delay=3, handler=self.show_page2)
 
@@ -65,7 +66,7 @@ class Bonus(Mode):
         index = line_index * 3
         self.text_layers[index].set_text('' if count < 0 else str(count))
         self.text_layers[index + 1].set_text(singular if count < 2 else plural)
-        self.text_layers[index + 2].set_text('00' if str(value) == 0 else str(value))
+        self.text_layers[index + 2].set_text('00' if str(value) == 0 else locale.format('%d', value, True))
 
     def sw_flipperLwL_active(self, sw):
         self.flipper_active()

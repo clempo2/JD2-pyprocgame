@@ -34,7 +34,6 @@ class Multiball(Scoring_Mode):
         self.num_locks_lit = player.getState('multiball_num_locks_lit', 0)
         self.num_times_played = player.getState('multiball_num_times_played', 0)
         self.lock_level = player.getState('multiball_lock_level', 1)
-        self.jackpot_collected = player.getState('multiball_jackpot_collected', False)
 
         self.lock_enabled = 0
         self.num_balls_to_eject = 0
@@ -82,7 +81,6 @@ class Multiball(Scoring_Mode):
         player.setState('multiball_num_locks_lit', self.num_locks_lit)
         player.setState('multiball_num_times_played', self.num_times_played)
         player.setState('multiball_lock_level', self.lock_level)
-        player.setState('multiball_jackpot_collected', self.jackpot_collected)
 
         self.cancel_delayed(name='voice instructions')
         self.game.modes.remove(self.drops)
@@ -156,12 +154,9 @@ class Multiball(Scoring_Mode):
             self.jackpot_lit = False
             self.delay(name='jackpot', event_type=None, delay=1.5, handler=self.jackpot)
             self.num_left_ramp_shots_hit = 0
-            self.jackpot_collected = True
+            self.game.setPlayerState('multiball_jackpot_collected', True)
             self.game.update_lamps()
             self.game.lampctrl.play_show('jackpot', False, self.game.update_lamps)
-
-    def reset_jackpot_collected(self):
-        self.jackpot_collected = False
 
     def display_text(self, text):
         self.banner_layer.set_text(text, 3)

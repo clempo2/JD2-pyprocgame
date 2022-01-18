@@ -1,5 +1,5 @@
 import locale
-from procgame.dmd import MarkupFrameGenerator, PanningLayer, ScriptedLayer, TextLayer
+from procgame.dmd import ScriptedLayer, TextLayer
 from procgame.modes import Scoring_Mode
 from chain import Chain
 from crimescenes import CrimeScenes
@@ -12,14 +12,6 @@ class RegularPlay(Scoring_Mode):
 
     def __init__(self, game, priority):
         super(RegularPlay, self).__init__(game, priority)
-
-        # Instantiate sub-modes
-        instruct_frame = MarkupFrameGenerator().frame_for_markup(self.get_instructions())
-        instruct_layer = PanningLayer(width=128, height=32, frame=instruct_frame, origin=(0,0), translate=(0,1), bounce=False)
-        script = [{'seconds':22.0, 'layer':instruct_layer}]
-        self.intro_layer = ScriptedLayer(width=128, height=32, script=script)
-        self.game_intro = Introduction(self.game, priority + 1, delay=1.0)
-        self.game_intro.setup(self.intro_layer)
 
         big_font = self.game.fonts['jazz18']
         shoot_again_layer = TextLayer(128/2, 9, big_font, 'center').set_text('Shoot Again', 3)
@@ -44,7 +36,7 @@ class RegularPlay(Scoring_Mode):
             mode.reset()
 
         # reset RegularPlay itself
-        self.light_mystery(False)
+        self.mystery_lit = False
 
     def mode_started(self):
         self.mystery_lit = self.game.getPlayerState('mystery_lit', False)
@@ -60,8 +52,8 @@ class RegularPlay(Scoring_Mode):
     #### DEBUG: push the buy in button to go straight to ultimate challenge from regular mode
     def sw_buyIn_active(self, sw):
         self.game.remove_modes([self.chain, self.crime_scenes])
-        self.multiball.jackpot_collected = True
-        self.game.setPlayerState('crime_scenes_complete', True)
+        self.game.setPlayerState('multiball_jackpot_collected', True)
+        self.game.setPlayerState('blocks_complete', True)
         self.game.setPlayerState('modes_remaining', [])
         self.game.add_modes([self.chain, self.crime_scenes])
         self.game.update_lamps()
@@ -81,48 +73,17 @@ class RegularPlay(Scoring_Mode):
     def welcome(self):
         if self.game.ball == 1:
             self.game.sound.play_voice('welcome')
-            if self.game.current_player_index == 0:
-                # only the first player gets the game instructions
-                self.intro_layer.reset()
-                self.game.modes.add(self.game_intro)
         elif self.game.shooting_again:
             self.game.sound.play_voice('shoot again ' + str(self.game.current_player_index + 1))
             self.game.modes.add(self.shoot_again_intro)
-
-    def get_instructions(self):
-        # The last 5 empty lines force the instructions to scroll all the way to the top and disappear
-        return """
-
-#INSTRUCTIONS#
-
-Hit Right Fire to abort
-
-To light Ultimate Challenge:
-Attempt all chain features
-Complete all crime scene levels
-Collect a multiball jackpot
-
-Start chain features by shooting the Build Up Chain Feature shot when lit
-
-Chain feature instructions are displayed when starting each feature
-
-Complete crime scene levels by shooting lit crimescene shots
-
-Light locks by completing JUDGE target bank
-
-During multiball, shoot left ramp to light jackpot then shoot subway to collect
-
-
-
-
-
-"""
 
     def high_score_mention(self):
         if self.game.ball == self.game.balls_per_game:
             if self.game.base_play.replay.replay_achieved[0]:
                 text = 'Highest Score'
-                score = str(self.game.game_data['ClassicHighScoreData'][0]['inits']) + '  ' + locale.format('%d', self.game.game_data['ClassicHighScoreData'][0]['score'], True)
+                game_data_key = 'SuperGameHighScoreData' if self.game.supergame else 'ClassicHighScoreData'
+                high_score_data = self.game.game_data[game_data_key][0]
+                score = str(high_score_data['inits']) + '  ' + locale.format('%d', high_score_data['score'], True)
             else:
                 text = 'Replay'
                 score = locale.format('%d', self.game.base_play.replay.replay_scores[0], True)
@@ -132,7 +93,7 @@ During multiball, shoot left ramp to light jackpot then shoot subway to collect
         ball_save_time = self.game.user_settings['Gameplay']['New ball ballsave time']
         self.game.ball_save.callback = self.ball_save_callback
         self.game.ball_save.start(num_balls_to_save=1, time=ball_save_time, now=True, allow_multiple_saves=False)
-        self.game.remove_modes([self.game_intro, self.shoot_again_intro])
+        self.game.modes.remove_modes(self.shoot_again_intro)
         self.game.update_lamps()
 
     #
@@ -151,7 +112,7 @@ During multiball, shoot left ramp to light jackpot then shoot subway to collect
                 # player needs to shoot the right popper to start the finale
                 self.state = 'challenge_ready'
                 self.game.modes.remove(self.multiball)
-                self.light_mystery(False)
+                self.mystery_lit = False
             elif self.game.getPlayerState('chain_complete', False):
                 self.state = 'chain_complete'
             else:
@@ -176,7 +137,7 @@ During multiball, shoot left ramp to light jackpot then shoot subway to collect
 
         self.game.update_lamps()
 
-    def crime_scenes_completed(self):
+    def blocks_completed(self):
         self.setup_next_mode()
 
     def chain_mode_completed(self):
@@ -198,8 +159,8 @@ During multiball, shoot left ramp to light jackpot then shoot subway to collect
             self.game.sound.play_music('multiball', loops=-1)
             self.game.modes.remove(self.missile_award_mode)
             # Light mystery once for free.
-            self.light_mystery()
-            # light mystery updated the lamps
+            self.mystery_lit = False
+            self.game.update_lamps()
 
     def multiball_ended(self):
         if not self.any_multiball_active():
@@ -212,8 +173,8 @@ During multiball, shoot left ramp to light jackpot then shoot subway to collect
 
     def is_ultimate_challenge_ready(self):
         # 3 Criteria for finale
-        return (self.multiball.jackpot_collected and
-                self.game.getPlayerState('crime_scenes_complete', False) and
+        return (self.game.setPlayerState('multiball_jackpot_collected', False) and
+                self.game.getPlayerState('blocks_complete', False) and
                 self.game.getPlayerState('chain_complete', False))
 
     def start_ultimate_challenge(self):
@@ -235,20 +196,18 @@ During multiball, shoot left ramp to light jackpot then shoot subway to collect
     def sw_captiveBall3_active(self, sw):
         self.game.sound.play('meltdown')
         self.game.base_play.inc_bonus_x()
-        self.light_mystery()
+        self.mystery_lit = True
+        self.game.update_lamps()
 
     #
     # Mystery
     #
 
-    def light_mystery(self, lit=True):
-        self.mystery_lit = lit
-        self.game.update_lamps()
-
     def sw_mystery_active(self, sw):
         self.game.sound.play('mystery')
         if self.mystery_lit:
-            self.light_mystery(False)
+            self.mystery_lit = False
+            self.game.update_lamps()
             if self.any_multiball_active():
                 if self.game.ball_save.timer > 0:
                     self.game.set_status('+10 second ball saver')
@@ -264,7 +223,7 @@ During multiball, shoot left ramp to light jackpot then shoot subway to collect
             else:
                 self.game.ball_save.callback = self.ball_save_callback
                 self.game.ball_save.start(num_balls_to_save=1, time=10, now=True, allow_multiple_saves=True)
-                self.game.set_status('+10 second ball saver')
+                self.game.set_status('10 second ball saver')
                 self.missile_award_mode.light_missile_award()
 
     #

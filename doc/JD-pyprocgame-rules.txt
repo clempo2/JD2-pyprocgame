@@ -24,9 +24,9 @@ the flipper buttons.
 
 Every time a mode is completed successfully, a 10-second hurryup countdown
 begins, and the D drop target is lowered to expose the subway shot.
-Shooting into the subway before the timer expires awards a crime scene level
-(explained below) or 10,000 points if all crime scene levels are already
-completed. If multiball was active, it awards an additional 100,000 points.
+Shooting into the subway before the timer expires awards a block
+(explained below) or 10,000 points if all blocks are secured.
+If multiball was active, it awards an additional 100,000 points.
 
 The modes are timed. Hitting the Mystery target when lit while in a mode
 extends the mode timer by 10 seconds. Hitting the Mystery target when lit
@@ -70,30 +70,30 @@ Shoot the left ramp.
 ==== Stakeout ====
 Shoot the right ramp.
 
-== Crime scenes ==
-There are up to 16 levels of crime scenes. The actual number of levels to
-complete depends on a user configurable setting but is always a multiple of 4.
-At each level, one or more of the crime scene inserts scattered around the
-playfield is lit. Higher levels require more shots to complete. Shooting the
-3 target bank in the center of the playfield 3 times also advances the level.
+== Blocks ==
+There are up to 16 city blocks to secure. The actual number of blocks
+depends on a user configurable setting but is always a multiple of 4.
+For each block, one or more of the crime scene inserts scattered around the
+playfield is lit. Higher blocks require more shots to complete. Shooting the
+3 target bank in the center of the playfield 3 times awards one shot.
 Each shot to an active crime scene target awards 1000 points, and each time
-a level is a completed 10,000 points are awarded. An extra ball is lit after
-completing 4 levels. Completing all required levels is needed before
+a block is a completed 10,000 points are awarded. An extra ball is lit after
+completing 4 blocks. Completing all required blocks is needed before
 Ultimate Challenge can be lit.
 
 Difficulty settings determine how many and which crime scene targets are set
-at each level.
+for each block.
 
-The 16 crime scene levels are tracked in groups of 4. The 4 crime scene
-inserts in the front-center of the playfield indicate which group is active.
+The blocks are tracked in groups of 4. The 4 crime scene inserts
+in the front-center of the playfield indicate which group is active.
 
-The crime scene levels restart at 1 after Ultimate Challenge is attempted.
-Each completed crime scene level contributes 2000 points into the bonus.
+The block number restarts at 1 after Ultimate Challenge.
+Each completed block contributes 2000 points into the bonus.
 This bonus contribution is not reset between balls.
 
 ==== Block War Multiball ====
-After every 4th level of crime scenes is completed, a 2-ball Block War
-multiball begins. This progressive multiball mode starts with the crime scene
+After every 4th block is completed, a 2-ball Block War multiball begins.
+This progressive multiball mode starts with the crime scene
 insert lamps lit. When all 5 crime scene shots are completed, a rotating
 jackpot shot is lit. If the jackpot shot is lit, the mode starts again but
 this time each shot must be hit twice. The third round requires 3 hits
@@ -122,25 +122,24 @@ in front of the center ramp.
 
 Awards include:
 * Video mode
-* Advance crime  scene level
-* Light extra ball
+* Secure One Block
+* Light Extra Ball
 * 30,000 Points
-* Increase bonus multiplier
-* Hold bonus multiplier
+* Increase Bonus Multiplier
+* Hold Bonus Multiplier
 
 Video mode is selected automatically unless a chain feature is active
 in which case it is kept for the next missile launch.
 Video mode can only be collected once per game.
 
-If all crime scenes are completed, Advance crime scene level is replaced
-with 50,000 points.
+If all blocks are secured, Secure One Block is replaced with 50,000 points.
 
-After light extra ball is collected, it is replaced with 20,000 points.
-After hold bonus multiplier is collected, it is replaced with 50,000 points.
-Advance crime scene level, points and increase bonus multiplier can be
-collected more than once.
+After Light Extra Ball is collected, it is replaced with 20,000 points.
+After Hold Bonus Multiplier is collected, it is replaced with 50,000 points.
+Secure One Block, points and Increase Bonus Multiplier can be collected
+more than once.
 
-If Missile Launch is activated during a mode, the mode timer is paused
+If Missile Launch is activated during a feature, the feature timer is paused
 until the award is collected.
 
 == Video Mode ==
@@ -197,15 +196,15 @@ Ultimate Challenge is a multi-stage wizard mode representing final battles
 with each of the Dark Judges. Ultimate Challenge is lit when the following
 requirements are met:
 * All 9 Chain Feature modes attempted (completion not required)
-* All required Crime scene levels completed
+* All required blocks are secured
 * At least one Deadworld Multiball jackpot collected
 
 Once Ultimate Challenge is lit, a shot to the upper right ‘build chain feature’
 shot initiates it. The player is presented with an Ultimate Challenge
 introduction with instructions before Level 1 begins. Each time a level
 is successfully completed, the machine goes dead, allowing all of the balls
-to drain. Then the player is presented with an intro and instructions for
-the next level before any balls are re-launched and put back into play.
+to drain. Then the player is presented with instructions for the next
+level before any balls are re-launched and put back into play.
 If all balls drain before the player completes a level, the player’s
 ball ends and Ultimate Challenge is aborted. Re-lighting Ultimate Challenge
 requires the player to complete the 3 major requirements again.
@@ -260,4 +259,4 @@ The following high scores are tracked:
 * 5 highest supergame scores
 * Max inner loop combos (upper right flipper loops)
 * Max outer loop combos (upper left flipper loops)
-* Max number of crime scene levels completed
+* Max number of blocks secured

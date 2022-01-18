@@ -158,7 +158,7 @@ class BasePlay(Mode):
 
     def sw_shooterR_inactive_for_300ms(self, sw):
         self.game.sound.play('ball_launch')
-        self.game.base_play.play_animation('bikeacrosscity', frame_time=5)
+        self.play_animation('bikeacrosscity', frame_time=5)
 
     # Enable auto-plunge soon after the new ball is launched (by the player).
     def sw_shooterR_inactive_for_1s(self, sw):
@@ -213,7 +213,7 @@ class BasePlay(Mode):
             self.extra_balls_lit += 1
             self.total_extra_balls_lit += 1
             self.game.update_lamps()
-            self.game.base_play.show_on_display('Extra Ball Lit!')
+            self.show_on_display('Extra Ball Lit!')
 
     def sw_leftScorePost_active(self, sw):
         self.extra_ball_switch_hit()
@@ -230,8 +230,8 @@ class BasePlay(Mode):
     def extra_ball(self):
         player = self.game.current_player()
         player.extra_balls += 1
-        self.game.base_play.show_on_display('Extra Ball!')
-        self.game.base_play.play_animation('EBAnim')
+        self.show_on_display('Extra Ball!')
+        self.play_animation('EBAnim')
         self.game.update_lamps()
 
     #
@@ -349,7 +349,7 @@ class BasePlay(Mode):
     #
 
     def sw_popperL_active_for_200ms(self, sw):
-        self.game.base_play.flash_then_pop('flashersLowerLeft', 'popperL', 50)
+        self.flash_then_pop('flashersLowerLeft', 'popperL', 50)
 
     def flash_then_pop(self, flasher, coil, pulse):
         self.game.coils[flasher].schedule(0x00555555, cycle_seconds=1, now=True)
@@ -425,7 +425,7 @@ class BasePlay(Mode):
 
     def hold_bonus_x(self):
         self.game.setPlayerState('hold_bonus_x', True)
-        self.game.base_play.show_on_display('Hold Bonus X')
+        self.show_on_display('Hold Bonus X')
 
 
 class ModesDisplay(Mode):

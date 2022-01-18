@@ -55,7 +55,7 @@ class Chain(Mode):
         player.setState('modes_remaining', self.all_chain_modes[:])
         player.setState('modes_remaining_ptr', 0)
         player.setState('chain_complete', False)
-        # num_modes_attempted and num_modes_completed continue to accrue
+        # num_chain_features and num_hurry_ups continue to accrue
 
     def is_active(self):
         return self.mode != None
@@ -101,7 +101,7 @@ class Chain(Mode):
             self.game.setPlayerState('chain_complete', True)
         self.rotate_modes(0)
 
-        self.game.addPlayerState('num_modes_attempted', 1)
+        self.game.addPlayerState('num_chain_features', 1)
         self.game.base_play.regular_play.state = 'mode'
         self.game.modes.add(self.mode)
         self.game.update_lamps()
@@ -116,7 +116,7 @@ class Chain(Mode):
 
         if success:
             # mode was completed successfully, start hurry up award
-            self.game.addPlayerState('num_modes_completed', 1)
+            self.game.addPlayerState('num_hurry_ups', 1)
             self.game.modes.add(self.hurry_up)
             self.game.update_lamps()
         else:
@@ -126,8 +126,8 @@ class Chain(Mode):
     # called when the mode is over including the hurry up
     def hurry_up_ended(self, success):
         if success:
-            # award a crime scene level and/or some points
-            if self.game.getPlayerState('crime_scenes_complete', False):
+            # award a block and/or some points
+            if self.game.getPlayerState('blocks_complete', False):
                 self.game.score(10000)
             else:
                 self.game.base_play.regular_play.crime_scenes.crime_scene_levels.level_complete()
@@ -277,8 +277,7 @@ class ChainHurryUp(ChainFeature):
         self.game.sound.play_voice('collected')
         self.cancel_delayed('trip_check')
         self.already_collected = True
-        self.banner_layer.set_text('Well Done!')
-        self.layer = GroupedLayer(128, 32, [self.banner_layer])
+        self.game.base_play.show_on_display('Well Done!')
         self.exit_callback(True)
 
 

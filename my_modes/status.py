@@ -13,16 +13,16 @@ class StatusReport(Mode):
         main_title_layer = GroupedLayer(128, 32, [report_title_layer, extra_ball_layer])
 
         # chain modes
-        attempted_layer = TextLayer(128/2, 9, tiny_font, 'center').set_text('Modes attempted: ' + str(player.getState('num_modes_attempted', 0)))
-        completed_layer = TextLayer(128/2, 19, tiny_font, 'center').set_text('Modes completed: ' + str(player.getState('num_modes_completed', 0)))
+        attempted_layer = TextLayer(128/2, 9, tiny_font, 'center').set_text('Modes attempted: ' + str(player.getState('num_chain_features', 0)))
+        completed_layer = TextLayer(128/2, 19, tiny_font, 'center').set_text('Modes completed: ' + str(player.getState('num_hurry_ups', 0)))
         chain_layer = GroupedLayer(128, 32, [attempted_layer, completed_layer])
 
         # crime scenes
-        level = player.getState('crime_scenes_level', 0)
-        crime_scene_title_layer = TextLayer(128/2, 7, tiny_font, 'center').set_text('Crime Scenes')
-        level_layer = TextLayer(128/2, 16, tiny_font, 'center').set_text('Current Level: ' + str(level + 1) + '/' + str(self.game.crime_scene_levels_required))
-        block_layer = TextLayer(128/2, 25, tiny_font, 'center').set_text('Block War in ' + str(4-(level % 4)) + ' levels')
-        crime_scene_layer = GroupedLayer(128, 32, [crime_scene_title_layer, level_layer, block_layer])
+        block = player.getState('current_block', 0)
+        block_title_layer = TextLayer(128/2, 7, tiny_font, 'center').set_text('Blocks')
+        current_block_layer = TextLayer(128/2, 16, tiny_font, 'center').set_text('Current Block: ' + str(block + 1) + '/' + str(self.game.blocks_required))
+        block_war_layer = TextLayer(128/2, 25, tiny_font, 'center').set_text('Block War in ' + str(4-(block % 4)) + ' blocks')
+        block_layer = GroupedLayer(128, 32, [block_title_layer, current_block_layer, block_war_layer])
 
         # combos
         combo_title_layer = TextLayer(128/2, 7, tiny_font, 'center').set_text('Best Combos')
@@ -30,7 +30,7 @@ class StatusReport(Mode):
         outer_loops_layer = TextLayer(128/2, 25, tiny_font, 'center').set_text('Outer Loops: ' + str(player.getState('best_outer_loops', 0)).rjust(3))
         combo_layer = GroupedLayer(128, 32, [combo_title_layer, inner_loops_layer, outer_loops_layer])
 
-        self.report_layers = [main_title_layer, chain_layer, crime_scene_layer, combo_layer]
+        self.report_layers = [main_title_layer, chain_layer, block_layer, combo_layer]
         self.index = 0
         self.index_max = len(self.report_layers) - 1
         self.update_display()

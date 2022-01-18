@@ -183,14 +183,14 @@ class JDGame(BasicGame):
         self.balls_per_game = self.user_settings['Gameplay']['Balls per game']
         self.score_display.set_left_players_justify(self.user_settings['Display']['Left side score justify'])
 
-        num_levels = int(self.user_settings['Gameplay']['Crime scene levels for finale'])
-        self.crime_scene_levels_required = min(16, 4 * ceil(num_levels / 4)) # a multiple of 4 less than or equal to 16
+        num_blocks_setting = int(self.user_settings['Gameplay']['Blocks for Ultimate Challenge'])
+        self.blocks_required = min(16, 4 * ceil(num_blocks_setting / 4)) # a multiple of 4 less than or equal to 16
 
         # High Score stuff
         classic_category = HighScoreCategory()
         classic_category.game_data_key = 'ClassicHighScoreData'
 
-        crimeScenes_category = self.create_high_score_category('CrimeScenesHighScoreData', 'Crime Scene Champ', 'crime_scenes_total_levels', ' level')
+        crimeScenes_category = self.create_high_score_category('BlocksHighScoreData', 'Block Champ', 'num_blocks', ' block')
         innerLoops_category = self.create_high_score_category('InnerLoopsHighScoreData', 'Inner Loop Champ', 'best_inner_loops', ' loop')
         outerLoops_category = self.create_high_score_category('OuterLoopsHighScoreData', 'Outer Loop Champ', 'best_outer_loops', ' loop')
 

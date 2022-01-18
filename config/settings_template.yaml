@@ -85,10 +85,10 @@ Gameplay:
   'Chain feature difficulty':
     options: ['easy', 'medium', 'hard']
     default: 'medium'
-  'Crime scene levels for finale':
+  'Blocks for Ultimate Challenge':
     options: [8,12,16]
     default: 16
-  'Crime scene shot difficulty':
+  'Block difficulty':
     options: ['easy', 'medium', 'hard']
     default: 'medium'
   'Video mode':

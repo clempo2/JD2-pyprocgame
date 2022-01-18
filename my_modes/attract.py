@@ -71,6 +71,37 @@ class Attract(Mode):
         self.guntech_layer = self.game.animations['guntech']
         self.judges_layer = self.game.animations['darkjudges_no_bg']
         self.longwalk_layer = self.game.animations['longwalk']
+        
+        instruct_frame = MarkupFrameGenerator().frame_for_markup("""
+
+
+#INSTRUCTIONS#
+
+Start chain features
+by shooting
+Build Up Chain Feature
+when lit
+
+Instructions are displayed
+when starting each feature
+
+Secure blocks by shooting
+lit crime scene shots
+
+Complete JUDGE targets
+to light locks
+
+During multiball,
+Left ramp lights jackpot
+shoot subway to collect
+
+To light Ultimate Challenge:
+Start all chain features
+Secure all blocks
+Collect a multiball jackpot
+""")
+
+        self.instruct_layer = PanningLayer(width=128, height=32, frame=instruct_frame, origin=(0,0), translate=(0,1), bounce=False)
 
     def mode_started(self):
         if self.game.deadworld.num_balls_locked > 0:
@@ -99,7 +130,6 @@ class Attract(Mode):
         self.game.lampctrl.stop_show()
 
     def display(self):
-        self.reset_display()
         self.game.score_display.update_layer()
         
         script = [
@@ -118,8 +148,9 @@ class Attract(Mode):
         ]
 
         self.append_high_score_layers(script)
+        self.reset_script(script)
         self.layer = ScriptedLayer(width=128, height=32, script=script)
-        self.layer.on_complete = self.reset_display
+        self.layer.on_complete = lambda: self.reset_script(script)
 
     def game_over_display(self):
         self.game.score_display.update_layer()
@@ -131,6 +162,13 @@ class Attract(Mode):
         ]
 
         self.append_high_score_layers(script)
+        self.reset_script(script)
+        self.layer = ScriptedLayer(width=128, height=32, script=script)
+        self.layer.on_complete = self.display
+        
+    def instruction_display(self):
+        script = [{'seconds':20.1, 'layer':self.instruct_layer}]
+        self.reset_script(script)
         self.layer = ScriptedLayer(width=128, height=32, script=script)
         self.layer.on_complete = self.display
 
@@ -149,10 +187,9 @@ class Attract(Mode):
             new_layer = FrameLayer(frame=frame)
             script.append({'seconds':1.25, 'layer':new_layer})
 
-    def reset_display(self):
-        # Reset the layers to their initial state
-        # the gun layer is special because it holds instead of repeating when it reaches the end
-        self.gun_layer.reset()
+    def reset_script(self, script):
+        for script_item in script:
+            script_item['layer'].reset()
 
     def change_lampshow(self):
         shuffle(self.lampshow_keys)
@@ -161,15 +198,17 @@ class Attract(Mode):
 
     def sw_fireL_active(self, sw):
         self.game.sound.play_voice('attract')
+        self.layer.force_next(False)
 
     def sw_fireR_active(self, sw):
         self.game.sound.play_voice('attract')
+        self.layer.force_next(True)
 
     def sw_flipperLwL_active(self, sw):
-        self.layer.force_next(False)
+        self.instruction_display()
 
     def sw_flipperLwR_active(self, sw):
-        self.layer.force_next(True)
+        self.instruction_display()
 
     # Eject any balls that get stuck before returning to the trough.
     def sw_popperL_active_for_500ms(self, sw): # opto!
