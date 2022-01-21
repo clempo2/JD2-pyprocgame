@@ -1,10 +1,13 @@
+import locale
+from procgame.dmd import GroupedLayer, ScriptedLayer, TextLayer
 from procgame.game import Mode
+from intro import Introduction
 
-class ModeTimer(Mode):
+class Timer(Mode):
     """timer for a timed mode"""
 
     def __init__(self, game, priority):
-        super(ModeTimer, self).__init__(game, priority)
+        super(Timer, self).__init__(game, priority)
         self.timer = 0
 
     def mode_stopped(self):
@@ -49,3 +52,74 @@ class ModeTimer(Mode):
 
     def timer_update(self, time):
         pass
+
+
+class TimedMode(Timer):
+    """Base class for timed modes, start with an intro showing instructions,
+    then display the number of shots with a countdown timer"""
+
+    def __init__(self, game, priority, mode_time, name, instructions, shots_required):
+        super(TimedMode, self).__init__(game, priority)
+        self.mode_time = mode_time
+        self.name = name
+        self.shots_required = shots_required
+
+        font_big = self.game.fonts['jazz18']
+        font_small = self.game.fonts['tiny7']
+        font_num = self.game.fonts['num_14x10']
+        
+        intro_name_layer = TextLayer(128/2, 7, font_big, 'center').set_text(name)
+        intro_instruct_layer = TextLayer(128/2, 24, font_small, 'center').set_text(instructions)
+        intro_page_layer = GroupedLayer(128, 32, [intro_name_layer, intro_instruct_layer])
+        script = [{'seconds':1, 'layer':intro_name_layer}, {'seconds':3, 'layer':intro_page_layer}]
+        intro_layer = ScriptedLayer(width=128, height=32, script=script)
+    
+        self.intro = Introduction(game, priority + 1, 0, False)
+        self.intro.setup(intro_layer)
+        self.intro.exit_callback = self.intro_ended
+
+        self.countdown_layer = TextLayer(127, 1, font_small, 'right')
+        self.name_layer = TextLayer(1, 1, font_small, 'left').set_text(name)
+        self.score_layer = TextLayer(128/2, 10, font_num, 'center')
+        self.status_layer = TextLayer(128/2, 26, font_small, 'center')
+        self.layer = GroupedLayer(128, 32, [self.countdown_layer, self.name_layer, self.score_layer, self.status_layer])
+
+    def mode_started(self):
+        self.game.modes.add(self.intro)
+        self.num_shots = 0
+
+    def mode_stopped(self):
+        self.game.modes.remove(self.intro)
+        self.stop_timer()
+
+    def intro_ended(self):
+        self.game.modes.remove(self.intro)
+        if self.mode_time > 0:
+            self.start_timer(self.mode_time)
+        self.play_music()
+        self.update_status()
+
+    def play_music(self):
+        self.game.sound.stop_music()
+        self.game.sound.play_music('mode', loops=-1)
+
+    def update_status(self):
+        if self.num_shots > self.shots_required:
+            # only Impersonator can get extra hits
+            extra_shots = self.num_shots - self.shots_required
+            status = 'Shots made: ' + str(extra_shots) + ' extra'
+        else:
+            status = 'Shots made: ' + str(self.num_shots) + '/' + str(self.shots_required)
+        self.status_layer.set_text(status)
+
+    def mode_tick(self):
+        score = self.game.current_player().score
+        text = '00' if score == 0 else locale.format('%d', score, True)
+        self.score_layer.set_text(text)
+
+    def timer_update(self, time):
+        self.countdown_layer.set_text(str(time))
+
+    def expired(self):
+        success = self.num_shots >= self.shots_required
+        self.exit_callback(success)

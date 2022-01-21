@@ -1,13 +1,13 @@
 import locale
 from procgame.dmd import ScriptedLayer, TextLayer
-from procgame.modes import Scoring_Mode
+from procgame.game import Mode
 from chain import Chain
 from crimescenes import CrimeScenes
 from intro import Introduction
 from multiball import Multiball
 from missile import MissileAwardMode
 
-class RegularPlay(Scoring_Mode):
+class RegularPlay(Mode):
     """Controls all play except ultimate challenge"""
 
     def __init__(self, game, priority):
@@ -50,11 +50,16 @@ class RegularPlay(Scoring_Mode):
         self.game.setPlayerState('mystery_lit', self.mystery_lit)
 
     #### DEBUG: push the buy in button to go straight to ultimate challenge from regular mode
+    ####        press multiple times in a row to skip Dark Judge modes
     def sw_buyIn_active(self, sw):
         self.game.remove_modes([self.chain, self.crime_scenes])
+        if self.is_ultimate_challenge_ready() and self.game.getPlayerState('challenge_mode', 0) < 3:
+            self.game.addPlayerState('challenge_mode', 1)
         self.game.setPlayerState('multiball_jackpot_collected', True)
         self.game.setPlayerState('blocks_complete', True)
+        self.game.setPlayerState('chain_complete', True)
         self.game.setPlayerState('modes_remaining', [])
+        self.chain.mode = None
         self.game.add_modes([self.chain, self.crime_scenes])
         self.game.update_lamps()
         self.setup_next_mode()
@@ -173,7 +178,7 @@ class RegularPlay(Scoring_Mode):
 
     def is_ultimate_challenge_ready(self):
         # 3 Criteria for finale
-        return (self.game.setPlayerState('multiball_jackpot_collected', False) and
+        return (self.game.getPlayerState('multiball_jackpot_collected', False) and
                 self.game.getPlayerState('blocks_complete', False) and
                 self.game.getPlayerState('chain_complete', False))
 

@@ -1,9 +1,9 @@
 from random import randint
 from procgame.dmd import GroupedLayer, TextLayer
-from timer import ModeTimer
+from timer import Timer
 from videomode import ShootingGallery
 
-class MissileAwardMode(ModeTimer):
+class MissileAwardMode(Timer):
     """Choose an award while the only ball sits in the left shooter lane"""
 
     def __init__(self, game, priority):

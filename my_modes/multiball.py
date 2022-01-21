@@ -1,7 +1,8 @@
 from procgame.dmd import GroupedLayer, TextLayer
-from procgame.modes import BasicDropTargetBank, Scoring_Mode
+from procgame.game import Mode
+from procgame.modes import BasicDropTargetBank
 
-class Multiball(Scoring_Mode):
+class Multiball(Mode):
     """Multiball activated by locking balls in the Deadworld planet"""
 
     def __init__(self, game, priority):

@@ -1,19 +1,12 @@
 from random import randint
-import locale
-from procgame.dmd import GroupedLayer, ScriptedLayer, TextLayer
 from procgame.game import Mode
-from procgame.modes import Scoring_Mode
-from intro import Introduction
-from timer import ModeTimer
+from timer import TimedMode
 
 class Chain(Mode):
     """Controls the progress through the chain modes"""
 
     def __init__(self, game, priority):
         super(Chain, self).__init__(game, priority)
-
-        self.intro = Introduction(self.game, self.priority + 1, 0, False)
-        self.intro.exit_callback = self.activate_chain_mode
 
         pursuit = Pursuit(game, priority + 1)
         blackout = Blackout(game, priority + 1)
@@ -90,22 +83,15 @@ class Chain(Mode):
     # start a chain mode by showing the instructions
     def start_chain_mode(self):
         self.mode = self.modes_remaining[self.modes_remaining_ptr]
-        self.intro.setup(self.mode.get_instruction_layer())
-        self.game.modes.add(self.intro)
-        self.game.update_lamps()
-
-    # activate a chain mode after showing the instructions
-    def activate_chain_mode(self):
         self.modes_remaining.remove(self.mode)
         if len(self.modes_remaining) == 0:
             self.game.setPlayerState('chain_complete', True)
         self.rotate_modes(0)
-
         self.game.addPlayerState('num_chain_features', 1)
+
         self.game.base_play.regular_play.state = 'mode'
         self.game.modes.add(self.mode)
         self.game.update_lamps()
-        self.mode.play_music()
 
         # Put the ball back into play
         self.game.base_play.flash_then_pop('flashersRtRamp', 'popperR', 20)
@@ -150,100 +136,21 @@ class Chain(Mode):
             self.game.drive_lamp(blinking_mode.lamp_name, 'slow')
 
 
-class ChainFeature(Scoring_Mode, ModeTimer):
-    """Base class for the chain modes"""
-
-    def __init__(self, game, priority, name, lamp_name):
-        super(ChainFeature, self).__init__(game, priority)
-        self.name = name
-        self.lamp_name = lamp_name
-        self.mode_time = self.game.user_settings['Gameplay']['Time per chain feature']
-
-        self.countdown_layer = TextLayer(127, 1, self.game.fonts['tiny7'], 'right')
-        self.name_layer = TextLayer(1, 1, self.game.fonts['tiny7'], 'left').set_text(name)
-        self.score_layer = TextLayer(128/2, 10, self.game.fonts['num_14x10'], 'center')
-        self.status_layer = TextLayer(128/2, 26, self.game.fonts['tiny7'], 'center')
-        self.layer = GroupedLayer(128, 32, [self.countdown_layer, self.name_layer, self.score_layer, self.status_layer])
-
-    def mode_started(self):
-        self.num_shots = 0
-        self.start_timer(self.mode_time)
-        self.play_music()
-        self.update_status()
-
-    def set_shots_required(self, options):
-        """Return the number of required shots depending on the settings and the options for the mode"""
-        difficulty = self.game.user_settings['Gameplay']['Chain feature difficulty']
-        if not difficulty in ['easy', 'medium', 'hard']:
-            difficulty = 'medium'
-        self.shots_required = options[difficulty]
-
-    def play_music(self):
-        self.game.sound.stop_music()
-        self.game.sound.play_music('mode', loops=-1)
-
-    def get_instruction_layer(self):
-        font = self.game.fonts['jazz18']
-        font_small = self.game.fonts['tiny7']
-        layer_name = TextLayer(128/2, 7, font, 'center').set_text(self.name)
-        layer_instructions = TextLayer(128/2, 24, font_small, 'center').set_text(self.instructions)
-        layer_grouped = GroupedLayer(128, 32, [layer_name, layer_instructions])
-        script = [{'seconds':2, 'layer':layer_name}, {'seconds':2, 'layer':layer_grouped}]
-        return ScriptedLayer(width=128, height=32, script=script)
-
-    def update_status(self):
-        if self.num_shots > self.shots_required:
-            # only Impersonator can get extra hits
-            extra_shots = self.num_shots - self.shots_required
-            status = 'Shots made: ' + str(extra_shots) + ' extra'
-        else:
-            status = 'Shots made: ' + str(self.num_shots) + '/' + str(self.shots_required)
-        self.status_layer.set_text(status)
-
-    def mode_tick(self):
-        score = self.game.current_player().score
-        text = '00' if score == 0 else locale.format('%d', score, True)
-        self.score_layer.set_text(text)
-
-    def timer_update(self, time):
-        self.countdown_layer.set_text(str(time))
-
-    def expired(self):
-        success = self.num_shots >= self.shots_required
-        self.exit_callback(success)
-
-    def start_using_drops(self):
-        self.game.base_play.regular_play.multiball.drops.paused = True
-        self.reset_drops()
-
-    def stop_using_drops(self):
-        self.game.base_play.regular_play.multiball.drops.paused = False
-        self.reset_drops()
-
-    def reset_drops(self):
-        self.game.base_play.regular_play.multiball.drops.animated_reset(.1)
-        self.game.base_play.regular_play.multiball.reset_active_drops()
-
-
-class ChainHurryUp(ChainFeature):
+class ChainHurryUp(TimedMode):
     """Hurry up to subway after a chain mode is successfully completed"""
 
     def __init__(self, game, priority):
-        super(ChainHurryUp, self).__init__(game, priority, 'Hurry Up', None)
-        self.instructions = 'Shoot subway'
-        self.mode_time = 14
-        self.hurry_up_intro = Introduction(self.game, self.priority + 1, 0, True)
-        self.hurry_up_intro.setup(self.get_instruction_layer())
+        super(ChainHurryUp, self).__init__(game, priority, mode_time=10, name='Hurry Up',
+                    instructions='Shoot subway', shots_required=1)
 
     def mode_started(self):
         super(ChainHurryUp, self).mode_started()
-        self.game.modes.add(self.hurry_up_intro)
         self.game.coils.tripDropTarget.pulse(40)
         self.delay(name='trip_check', event_type=None, delay=.400, handler=self.trip_check)
         self.already_collected = False
 
     def mode_stopped(self):
-        self.game.modes.remove(self.hurry_up_intro)
+        super(ChainHurryUp, self).mode_stopped()
         self.cancel_delayed('trip_check')
 
     def update_status(self):
@@ -262,7 +169,7 @@ class ChainHurryUp(ChainFeature):
         self.delay(name='trip_check', event_type=None, delay=.400, handler=self.trip_check)
 
     def update_lamps(self):
-        self.game.lamps.pickAPrize.schedule(schedule=0x33333333, cycle_seconds=0, now=True)
+        self.game.drive_lamp('pickAPrize', 'fast')
 
     def sw_subwayEnter1_closed(self, sw):
         self.collect_hurry_up()
@@ -273,7 +180,6 @@ class ChainHurryUp(ChainFeature):
             self.collect_hurry_up()
 
     def collect_hurry_up(self):
-        self.game.modes.remove(self.hurry_up_intro)
         self.game.sound.play_voice('collected')
         self.cancel_delayed('trip_check')
         self.already_collected = True
@@ -281,13 +187,44 @@ class ChainHurryUp(ChainFeature):
         self.exit_callback(True)
 
 
+class ChainFeature(TimedMode):
+    """Base class for the chain modes"""
+
+    def __init__(self, game, priority, name, instructions, shots_required, lamp_name):
+        mode_time = game.user_settings['Gameplay']['Time per chain feature']
+        super(ChainFeature, self).__init__(game, priority, mode_time, name, instructions, shots_required)
+        self.lamp_name = lamp_name
+        
+    def pick_shots_required(self, game, shot_options):        
+        difficulty = game.user_settings['Gameplay']['Chain feature difficulty']
+        if not difficulty in ['easy', 'medium', 'hard']:
+            difficulty = 'medium'
+        return shot_options[difficulty]
+
+    def play_music(self):
+        self.game.sound.stop_music()
+        self.game.sound.play_music('mode', loops=-1)
+
+    def start_using_drops(self):
+        self.game.base_play.regular_play.multiball.drops.paused = True
+        self.reset_drops()
+
+    def stop_using_drops(self):
+        self.game.base_play.regular_play.multiball.drops.paused = False
+        self.reset_drops()
+
+    def reset_drops(self):
+        self.game.base_play.regular_play.multiball.drops.animated_reset(.1)
+        self.game.base_play.regular_play.multiball.reset_active_drops()
+
+
 class Pursuit(ChainFeature):
     """Pursuit chain mode"""
 
     def __init__(self, game, priority):
-        super(Pursuit, self).__init__(game, priority, 'Pursuit', 'pursuit')
-        self.set_shots_required({'easy':3, 'medium':4, 'hard':5})
-        self.instructions = 'Shoot ' + str(self.shots_required) + ' L/R ramp shots'
+        shots_required = self.pick_shots_required(game, {'easy':3, 'medium':4, 'hard':5})
+        instructions = 'Shoot ' + str(shots_required) + ' L/R ramp shots'
+        super(Pursuit, self).__init__(game, priority, 'Pursuit', instructions, shots_required, lamp_name='pursuit')
 
     def mode_started(self):
         super(Pursuit, self).mode_started()
@@ -336,16 +273,16 @@ class Blackout(ChainFeature):
     """Blackout chain mode"""
 
     def __init__(self, game, priority):
-        super(Blackout, self).__init__(game, priority, 'Blackout', 'blackout')
-        self.set_shots_required({'easy':2, 'medium':2, 'hard':3})
-        self.instructions = 'Shoot center ramp'
+        shots_required = self.pick_shots_required(game, {'easy':2, 'medium':2, 'hard':3})
+        super(Blackout, self).__init__(game, priority, 'Blackout', 'Shoot center ramp',
+                     shots_required, lamp_name='blackout')
 
     def mode_started(self):
         super(Blackout, self).mode_started()
         self.game.base_play.play_animation('blackout', frame_time=3)
 
     def update_lamps(self):
-        self.game.enable_gi(False) # disable all gi except gi05
+        self.game.enable_gi(False) # disable all gi except gi05 (Underworld)
         self.game.lamps.gi05.enable()
         self.game.lamps.blackoutJackpot.schedule(schedule=0x000F000F, cycle_seconds=0, now=True)
         if self.num_shots == self.shots_required - 1:
@@ -370,15 +307,9 @@ class Sniper(ChainFeature):
     """Sniper chain mode"""
 
     def __init__(self, game, priority):
-        super(Sniper, self).__init__(game, priority, 'Sniper', 'sniper')
-        self.set_shots_required({'easy':2, 'medium':2, 'hard':3})
-        self.instructions = 'Shoot Sniper Tower 2 times'
-
-        # Sniper has extra animation on left and text right justified
-        self.score_layer = TextLayer(127, 10, self.game.fonts['num_14x10'], 'right')
-        self.status_layer = TextLayer(127, 26, self.game.fonts['tiny7'], 'right')
-        self.anim_layer = self.game.animations['scope']
-        self.layer = GroupedLayer(128, 32, [self.anim_layer, self.countdown_layer, self.name_layer, self.score_layer, self.status_layer])
+        shots_required = self.pick_shots_required(game, {'easy':2, 'medium':2, 'hard':3})
+        super(Sniper, self).__init__(game, priority, 'Sniper', 'Shoot Sniper Tower twice',
+                     shots_required, lamp_name='sniper')
 
     def mode_started(self):
         super(Sniper, self).mode_started()
@@ -416,9 +347,8 @@ class BattleTank(ChainFeature):
     """Battle tank chain mode"""
 
     def __init__(self, game, priority):
-        super(BattleTank, self).__init__(game, priority, 'Battle Tank', 'battleTank')
-        self.instructions = 'Shoot all 3 battle tank shots'
-        self.shots_required = 3
+        super(BattleTank, self).__init__(game, priority, 'Battle Tank', 'Shoot all 3 battle tank shots',
+                     shots_required=3, lamp_name='battleTank')
         self.lamp_names = ['tankLeft', 'tankCenter', 'tankRight']
 
     def mode_started(self):
@@ -463,9 +393,10 @@ class Impersonator(ChainFeature):
     """Bad impersonator chain mode"""
 
     def __init__(self, game, priority):
-        super(Impersonator, self).__init__(game, priority, 'Impersonator', 'impersonator')
-        self.set_shots_required({'easy':3, 'medium':5, 'hard':7})
-        self.instructions = 'Shoot ' + str(self.shots_required) + ' lit drop targets'
+        shots_required = self.pick_shots_required(game, {'easy':3, 'medium':5, 'hard':7})
+        instructions = 'Shoot ' + str(shots_required) + ' lit drop targets'
+        super(Impersonator, self).__init__(game, priority, 'Impersonator', instructions,
+                     shots_required, lamp_name='impersonator')
 
     def mode_started(self):
         super(Impersonator, self).mode_started()
@@ -505,7 +436,7 @@ class Impersonator(ChainFeature):
     def update_lamps(self):
         self.game.lamps.awardBadImpersonator.schedule(schedule=0x00FF00FF, cycle_seconds=0, now=True)
         self.game.disable_drop_lamps()
-        # ModeTimer is continuously updating self.timer
+        # Timer is continuously updating self.timer
         time = self.timer % 6
         if time == 0:
             self.game.lamps.dropTargetJ.enable()
@@ -562,9 +493,10 @@ class Meltdown(ChainFeature):
     """Meltdown chain mode"""
 
     def __init__(self, game, priority):
-        super(Meltdown, self).__init__(game, priority, 'Meltdown', 'meltdown')
-        self.set_shots_required({'easy':3, 'medium':4, 'hard':5})
-        self.instructions = 'Hit ' + str(self.shots_required) + ' captive ball switches'
+        shots_required = self.pick_shots_required(game, {'easy':3, 'medium':4, 'hard':5})
+        instructions = 'Hit ' + str(shots_required) + ' captive ball switches'
+        super(Meltdown, self).__init__(game, priority, 'Meltdown', instructions,
+                     shots_required, lamp_name='meltdown')
 
     def mode_started(self):
         super(Meltdown, self).mode_started()
@@ -603,9 +535,10 @@ class Safecracker(ChainFeature):
     """Safecracker chain mode"""
 
     def __init__(self, game, priority):
-        super(Safecracker, self).__init__(game, priority, 'Safe Cracker', 'safecracker')
-        self.set_shots_required({'easy':2, 'medium':3, 'hard':4})
-        self.instructions = 'Shoot the subway ' + str(self.shots_required) + ' times'
+        shots_required = self.pick_shots_required(game, {'easy':2, 'medium':3, 'hard':4})
+        instructions = 'Shoot subway ' + str(shots_required) + ' times'
+        super(Safecracker, self).__init__(game, priority, 'Safe Cracker', instructions,
+                     shots_required, lamp_name='safecracker')
 
     def bad_guys(self):
         self.delay(name='bad guys', event_type=None, delay=randint(5, 10), handler=self.bad_guys)
@@ -651,9 +584,10 @@ class ManhuntMillions(ChainFeature):
     """ManhuntMillions chain mode"""
 
     def __init__(self, game, priority):
-        super(ManhuntMillions, self).__init__(game, priority, 'Manhunt', 'manhunt')
-        self.set_shots_required({'easy':2, 'medium':3, 'hard':4})
-        self.instructions = 'Shoot the left ramp ' + str(self.shots_required) + ' times'
+        shots_required = self.pick_shots_required(game, {'easy':2, 'medium':3, 'hard':4})
+        instructions = 'Shoot left ramp ' + str(shots_required) + ' times'
+        super(ManhuntMillions, self).__init__(game, priority, 'Manhunt', instructions,
+                     shots_required, lamp_name='manhunt')
 
     def mode_started(self):
         super(ManhuntMillions, self).mode_started()
@@ -690,9 +624,10 @@ class Stakeout(ChainFeature):
     """Stakeout chain mode"""
 
     def __init__(self, game, priority):
-        super(Stakeout, self).__init__(game, priority, 'Stakeout', 'stakeout')
-        self.set_shots_required({'easy':3, 'medium':4, 'hard':5})
-        self.instructions = 'Shoot the right ramp ' + str(self.shots_required) + ' times'
+        shots_required = self.pick_shots_required(game, {'easy':3, 'medium':4, 'hard':5})
+        instructions = 'Shoot right ramp ' + str(shots_required) + ' times'
+        super(Stakeout, self).__init__(game, priority, 'Stakeout', instructions,
+                     shots_required, lamp_name='stakeout')
 
     def mode_started(self):
         super(Stakeout, self).mode_started()

@@ -17,7 +17,7 @@ class AssetLoader(object):
             {'key': 'darkjudges_no_bg', 'file': 'darkjudges_no_bg.dmd', 'repeat':True, 'frame_time':4},
             {'key': 'longwalk', 'file': 'longwalk.dmd', 'frame_time':7},
             {'key': 'blackout', 'file': 'blackout.dmd', 'frame_time':3},
-            {'key': 'scope', 'file': 'scope.dmd', 'repeat':True, 'frame_time':8},
+            #{'key': 'scope', 'file': 'scope.dmd', 'repeat':True, 'frame_time':8},
             {'key': 'dredd_shoot_at_sniper', 'file': 'dredd_shoot_at_sniper.dmd', 'frame_time':5},
             {'key': 'blockwars', 'file': 'blockwars.dmd', 'repeat':True, 'frame_time':3},
             {'key': 'jdpeople', 'file': 'jdpeople.dmd', 'frame_time':1},

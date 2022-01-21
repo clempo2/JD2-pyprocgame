@@ -2,7 +2,6 @@ import locale
 from random import shuffle
 from procgame.dmd import GroupedLayer, TextLayer
 from procgame.game import Mode
-from procgame.modes import Scoring_Mode
 
 class CrimeScenes(Mode):
     """Controls the progress through the crime scene modes"""
@@ -79,10 +78,10 @@ class CrimeScenes(Mode):
             style = 'on' if num <= num_block_wars else 'off'
             self.game.drive_lamp(lamp_name, style)
 
-class CrimeSceneBase(Scoring_Mode):
+class CrimeSceneBase(Mode):
     """Base class for modes using the crime scene shots"""
 
-    def __init__(self, game, priority):
+    def __init__(self, game, priority, *args, **kwargs):
         super(CrimeSceneBase, self).__init__(game, priority)
         self.lamp_colors = ['G', 'Y', 'R', 'W']
 
