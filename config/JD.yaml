@@ -195,10 +195,12 @@ PRSwitches:
 PRCoils:
     flipperLwRMain: 
         number: FLRM
+        pulseTime: 40
     flipperLwRHold: 
         number: FLRH
     flipperLwLMain: 
         number: FLLM
+        pulseTime: 40
     flipperLwLHold: 
         number: FLLH
     flipperUpRMain: 
@@ -270,13 +272,13 @@ PRLamps:
         number: L13
     perp1G:
         number: L14
-    perp3W: # error in manual
+    perp2W:
         number: L15
-    perp3R:
+    perp2R:
         number: L16
-    perp3Y:
+    perp2Y:
         number: L17
-    perp3G:
+    perp2G:
         number: L18
     perp4W:
         number: L21
@@ -294,13 +296,13 @@ PRLamps:
         number: L27
     perp5G:
         number: L28
-    perp2W:  # error in manual
+    perp3W:
         number: L31
-    perp2R:
+    perp3R:
         number: L32
-    perp2Y:
+    perp3Y:
         number: L33
-    perp2G:
+    perp3G:
         number: L34
     lock1:
         number: L35

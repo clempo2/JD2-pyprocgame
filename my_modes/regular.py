@@ -2,7 +2,7 @@ import locale
 from procgame.dmd import ScriptedLayer, TextLayer
 from procgame.game import Mode
 from chain import Chain
-from crimescenes import CrimeScenes
+from crimescenes import CityBlocks
 from intro import Introduction
 from multiball import Multiball
 from missile import MissileAwardMode
@@ -21,9 +21,9 @@ class RegularPlay(Mode):
         
         self.chain = Chain(self.game, priority)
 
-        self.crime_scenes = CrimeScenes(game, priority + 1)
-        self.crime_scenes.start_multiball_callback = self.multiball_started
-        self.crime_scenes.end_multiball_callback = self.multiball_ended
+        self.city_blocks = CityBlocks(game, priority + 1)
+        self.city_blocks.start_multiball_callback = self.multiball_started
+        self.city_blocks.end_multiball_callback = self.multiball_ended
 
         self.multiball = Multiball(self.game, priority + 1)
         self.multiball.start_callback = self.multiball_started
@@ -32,7 +32,7 @@ class RegularPlay(Mode):
         self.missile_award_mode = MissileAwardMode(game, priority + 10)
 
     def reset_modes(self):
-        for mode in [self.chain, self.crime_scenes, self.multiball, self.missile_award_mode]:
+        for mode in [self.chain, self.city_blocks, self.multiball, self.missile_award_mode]:
             mode.reset()
 
         # reset RegularPlay itself
@@ -42,17 +42,17 @@ class RegularPlay(Mode):
         self.mystery_lit = self.game.getPlayerState('mystery_lit', False)
         self.welcomed = False
         self.state = 'init'
-        self.game.add_modes([self.chain, self.crime_scenes, self.multiball, self.missile_award_mode])
+        self.game.add_modes([self.chain, self.city_blocks, self.multiball, self.missile_award_mode])
         self.setup_next_mode()
 
     def mode_stopped(self):
-        self.game.remove_modes([self.chain, self.crime_scenes, self.multiball, self.missile_award_mode])
+        self.game.remove_modes([self.chain, self.city_blocks, self.multiball, self.missile_award_mode])
         self.game.setPlayerState('mystery_lit', self.mystery_lit)
 
     #### DEBUG: push the buy in button to go straight to ultimate challenge from regular mode
     ####        press multiple times in a row to skip Dark Judge modes
     def sw_buyIn_active(self, sw):
-        self.game.remove_modes([self.chain, self.crime_scenes])
+        self.game.remove_modes([self.chain, self.city_blocks])
         if self.is_ultimate_challenge_ready() and self.game.getPlayerState('challenge_mode', 0) < 3:
             self.game.addPlayerState('challenge_mode', 1)
         self.game.setPlayerState('multiball_jackpot_collected', True)
@@ -60,7 +60,7 @@ class RegularPlay(Mode):
         self.game.setPlayerState('chain_complete', True)
         self.game.setPlayerState('modes_remaining', [])
         self.chain.mode = None
-        self.game.add_modes([self.chain, self.crime_scenes])
+        self.game.add_modes([self.chain, self.city_blocks])
         self.game.update_lamps()
         self.setup_next_mode()
 
@@ -127,8 +127,8 @@ class RegularPlay(Mode):
         self.game.update_lamps()
 
     # starts a mode if a mode is available
-    # the 300ms delay must be the same or longer than the popperR handler in crime scenes
-    # If that shot starts block war multiball, we want crime scenes to go first and change the state to busy
+    # the 300ms delay must be the same or longer than the popperR handler in CityBlock (handler inherited from CrimeSceneShots)
+    # If that shot starts BlockWar multiball, we want the CityBlock to go first and change the state to busy
     # so we don't start something else here
     def sw_popperR_active_for_300ms(self, sw):
         if self.state == 'chain_ready':
@@ -153,12 +153,12 @@ class RegularPlay(Mode):
     #
 
     def any_multiball_active(self):
-        return self.multiball.is_active() or self.crime_scenes.is_multiball_active()
+        return self.multiball.is_active() or self.city_blocks.is_multiball_active()
 
     def multiball_started(self):
         # Make sure no other multiball was already active before preparing for multiball.
         # One multiball is the caller, so if both are active it means the other multiball was already active
-        if not (self.multiball.is_active() and self.crime_scenes.is_multiball_active()):
+        if not (self.multiball.is_active() and self.city_blocks.is_multiball_active()):
             self.state = 'busy'
             self.game.sound.fadeout_music()
             self.game.sound.play_music('multiball', loops=-1)
@@ -183,7 +183,7 @@ class RegularPlay(Mode):
                 self.game.getPlayerState('chain_complete', False))
 
     def start_ultimate_challenge(self):
-        self.game.remove_modes([self.chain, self.crime_scenes, self.multiball, self])
+        self.game.remove_modes([self.chain, self.city_blocks, self.multiball, self])
         self.reset_modes()
         self.game.base_play.start_ultimate_challenge()
         # ultimate challenge updated the lamps
@@ -263,5 +263,5 @@ class RegularPlay(Mode):
         if self.game.trough.num_balls_in_play == 1:
             if self.multiball.is_active():
                 self.multiball.end_multiball()
-            if self.crime_scenes.is_multiball_active():
-                self.crime_scenes.end_multiball()
+            if self.city_blocks.is_multiball_active():
+                self.city_blocks.end_multiball()

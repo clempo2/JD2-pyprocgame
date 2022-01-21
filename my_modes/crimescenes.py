@@ -3,86 +3,11 @@ from random import shuffle
 from procgame.dmd import GroupedLayer, TextLayer
 from procgame.game import Mode
 
-class CrimeScenes(Mode):
-    """Controls the progress through the crime scene modes"""
-
-    def __init__(self, game, priority):
-        super(CrimeScenes, self).__init__(game, priority)
-
-        self.crime_scene_levels = CrimeSceneLevels(game, priority + 1)
-        self.crime_scene_levels.start_block_war = self.start_block_war
-        self.crime_scene_levels.blocks_completed = self.crime_scene_levels_completed
-
-        self.block_war = BlockWar(game, priority + 5)
-        self.block_war.start_block_war_bonus = self.start_block_war_bonus
-
-        self.block_war_bonus = BlockWarBonus(game, priority + 5)
-        self.block_war_bonus.end_block_war_bonus = self.end_block_war_bonus
-
-    def mode_started(self):
-        self.start_crime_scene_levels()
-
-    def mode_stopped(self):
-        self.game.remove_modes([self.crime_scene_levels, self.block_war, self.block_war_bonus])
-
-    def reset(self):
-        self.crime_scene_levels.reset()
-
-    def start_crime_scene_levels(self):
-        if self.game.getPlayerState('current_block', 0) < self.game.blocks_required:
-            self.game.modes.add(self.crime_scene_levels)
-
-    def crime_scene_levels_completed(self):
-        self.game.modes.remove(self.crime_scene_levels)
-        self.game.update_lamps()
-        self.game.setPlayerState('blocks_complete', True)
-        self.game.base_play.regular_play.blocks_completed()
-
-    def start_block_war(self):
-        self.game.modes.remove(self.crime_scene_levels)
-        self.block_war.reset()
-        self.game.modes.add(self.block_war)
-        self.game.update_lamps()
-        self.start_multiball_callback()
-
-    def start_block_war_bonus(self):
-        self.game.modes.remove(self.block_war)
-        self.game.modes.add(self.block_war_bonus)
-        self.game.update_lamps()
-
-    def end_block_war_bonus(self, bonus_collected):
-        self.game.modes.remove(self.block_war_bonus)
-        self.block_war.next_round(bonus_collected)
-        self.game.modes.add(self.block_war)
-        self.game.update_lamps()
-
-    def end_multiball(self):
-        self.game.modes.remove(self.block_war)
-        self.game.modes.remove(self.block_war_bonus)
-        self.crime_scene_levels.next_level()
-        # next_level updated the lamps
-        self.start_crime_scene_levels()
-        self.end_multiball_callback()
-
-    def is_multiball_active(self):
-        return (self.block_war in self.game.modes or
-                self.block_war_bonus in self.game.modes)
-
-    def update_lamps(self):
-        # Count the number of block wars for this round
-        block = self.game.getPlayerState('current_block', 0)
-        free_block_wars = int((16 - self.game.blocks_required) / 4)
-        num_block_wars = free_block_wars + int(block * 4 / self.game.blocks_required)
-        for num in range(1, 5):
-            lamp_name = 'crimeLevel' + str(num)
-            style = 'on' if num <= num_block_wars else 'off'
-            self.game.drive_lamp(lamp_name, style)
-
-class CrimeSceneBase(Mode):
+class CrimeSceneShots(Mode):
     """Base class for modes using the crime scene shots"""
 
     def __init__(self, game, priority, *args, **kwargs):
-        super(CrimeSceneBase, self).__init__(game, priority)
+        super(CrimeSceneShots, self).__init__(game, priority)
         self.lamp_colors = ['G', 'Y', 'R', 'W']
 
     def sw_topRightOpto_active(self, sw):
@@ -112,11 +37,88 @@ class CrimeSceneBase(Mode):
     def switch_hit(self, shot):
         pass
 
-class CrimeSceneLevels(CrimeSceneBase):
-    """Crime scenes mode"""
+
+class CityBlocks(Mode):
+    """Controls the progress through the city block modes"""
 
     def __init__(self, game, priority):
-        super(CrimeSceneLevels, self).__init__(game, priority)
+        super(CityBlocks, self).__init__(game, priority)
+
+        self.city_block = CityBlock(game, priority + 1)
+        self.city_block.start_block_war = self.start_block_war
+        self.city_block.blocks_completed = self.city_block_completed
+
+        self.block_war = BlockWar(game, priority + 5)
+        self.block_war.start_block_war_bonus = self.start_block_war_bonus
+
+        self.block_war_bonus = BlockWarBonus(game, priority + 5)
+        self.block_war_bonus.end_block_war_bonus = self.end_block_war_bonus
+
+    def mode_started(self):
+        self.start_city_block()
+
+    def mode_stopped(self):
+        self.game.remove_modes([self.city_block, self.block_war, self.block_war_bonus])
+
+    def reset(self):
+        self.city_block.reset()
+
+    def start_city_block(self):
+        if self.game.getPlayerState('current_block', 0) < self.game.blocks_required:
+            self.game.modes.add(self.city_block)
+
+    def city_block_completed(self):
+        self.game.modes.remove(self.city_block)
+        self.game.update_lamps()
+        self.game.setPlayerState('blocks_complete', True)
+        self.game.base_play.regular_play.blocks_completed()
+
+    def start_block_war(self):
+        self.game.modes.remove(self.city_block)
+        self.block_war.reset()
+        self.game.modes.add(self.block_war)
+        self.game.update_lamps()
+        self.start_multiball_callback()
+
+    def start_block_war_bonus(self):
+        self.game.modes.remove(self.block_war)
+        self.game.modes.add(self.block_war_bonus)
+        self.game.update_lamps()
+
+    def end_block_war_bonus(self, bonus_collected):
+        self.game.modes.remove(self.block_war_bonus)
+        self.block_war.next_round(bonus_collected)
+        self.game.modes.add(self.block_war)
+        self.game.update_lamps()
+
+    def end_multiball(self):
+        self.game.modes.remove(self.block_war)
+        self.game.modes.remove(self.block_war_bonus)
+        self.city_block.next_level()
+        # next_level updated the lamps
+        self.start_city_block()
+        self.end_multiball_callback()
+
+    def is_multiball_active(self):
+        return (self.block_war in self.game.modes or
+                self.block_war_bonus in self.game.modes)
+
+    def update_lamps(self):
+        # Count the number of block wars for this round
+        block = self.game.getPlayerState('current_block', 0)
+        free_block_wars = int((16 - self.game.blocks_required) / 4)
+        num_block_wars = free_block_wars + int(block * 4 / self.game.blocks_required)
+        for num in range(1, 5):
+            lamp_name = 'crimeLevel' + str(num)
+            style = 'on' if num <= num_block_wars else 'off'
+            self.game.drive_lamp(lamp_name, style)
+
+
+class CityBlock(CrimeSceneShots):
+    """Mode using the crime scene shot to secure a city block"""
+
+    def __init__(self, game, priority):
+        super(CityBlock, self).__init__(game, priority)
 
         # we always award the most difficult target that remains in the current level
         self.target_award_order = [1, 3 ,0, 2, 4]
@@ -156,7 +158,7 @@ class CrimeSceneLevels(CrimeSceneBase):
     def mode_started(self):
         # restore player state
         player = self.game.current_player()
-        self.targets = player.getState('crime_scenes_targets', None)
+        self.targets = player.getState('block_targets', None)
         self.total_levels = player.getState('num_blocks', 0)
 
         self.num_advance_hits = 0
@@ -166,12 +168,12 @@ class CrimeSceneLevels(CrimeSceneBase):
     def mode_stopped(self):
         # save player state
         player = self.game.current_player()
-        player.setState('crime_scenes_targets', self.targets)
+        player.setState('block_targets', self.targets)
         player.setState('num_blocks', self.total_levels)
         # 'current_block' is always kept up to date in the player's state for other modes to see
 
     #
-    # Advance Crime Level
+    # Award One Crime Scene Shot
     #
 
     def sw_threeBankTargets_active(self, sw):
@@ -267,8 +269,8 @@ class CrimeSceneLevels(CrimeSceneBase):
                 self.game.drive_lamp(lamp_name, style)
 
 
-class BlockWar(CrimeSceneBase):
-    """Multiball activated by crime scenes"""
+class BlockWar(CrimeSceneShots):
+    """Multiball activated by securing city blocks"""
 
     def __init__(self, game, priority):
         super(BlockWar, self).__init__(game, priority)
@@ -338,7 +340,7 @@ class BlockWar(CrimeSceneBase):
                 self.game.drive_lamp(lamp_name, style)
 
 
-class BlockWarBonus(CrimeSceneBase):
+class BlockWarBonus(CrimeSceneShots):
     """Bonus round after a successful block war round, shoot the rotating target"""
 
     def __init__(self, game, priority):

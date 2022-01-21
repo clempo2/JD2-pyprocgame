@@ -12,12 +12,12 @@ class StatusReport(Mode):
         extra_ball_layer = TextLayer(128/2, 19, tiny_font, 'center').set_text('Extra Balls: ' + str(player.extra_balls))
         main_title_layer = GroupedLayer(128, 32, [report_title_layer, extra_ball_layer])
 
-        # chain modes
-        attempted_layer = TextLayer(128/2, 9, tiny_font, 'center').set_text('Modes attempted: ' + str(player.getState('num_chain_features', 0)))
-        completed_layer = TextLayer(128/2, 19, tiny_font, 'center').set_text('Modes completed: ' + str(player.getState('num_hurry_ups', 0)))
+        # chain features
+        attempted_layer = TextLayer(128/2, 9, tiny_font, 'center').set_text('Chain features: ' + str(player.getState('num_chain_features', 0)))
+        completed_layer = TextLayer(128/2, 19, tiny_font, 'center').set_text('Hurry Ups: ' + str(player.getState('num_hurry_ups', 0)))
         chain_layer = GroupedLayer(128, 32, [attempted_layer, completed_layer])
 
-        # crime scenes
+        # city blocks
         block = player.getState('current_block', 0)
         block_title_layer = TextLayer(128/2, 7, tiny_font, 'center').set_text('Blocks')
         current_block_layer = TextLayer(128/2, 16, tiny_font, 'center').set_text('Current Block: ' + str(block + 1) + '/' + str(self.game.blocks_required))

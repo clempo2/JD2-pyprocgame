@@ -190,19 +190,19 @@ class JDGame(BasicGame):
         classic_category = HighScoreCategory()
         classic_category.game_data_key = 'ClassicHighScoreData'
 
-        crimeScenes_category = self.create_high_score_category('BlocksHighScoreData', 'Block Champ', 'num_blocks', ' block')
+        blocks_category = self.create_high_score_category('BlocksHighScoreData', 'Block Champ', 'num_blocks', ' block')
         innerLoops_category = self.create_high_score_category('InnerLoopsHighScoreData', 'Inner Loop Champ', 'best_inner_loops', ' loop')
         outerLoops_category = self.create_high_score_category('OuterLoopsHighScoreData', 'Outer Loop Champ', 'best_outer_loops', ' loop')
 
-        self.highscore_categories = [classic_category, crimeScenes_category, innerLoops_category, outerLoops_category]
+        self.highscore_categories = [classic_category, blocks_category, innerLoops_category, outerLoops_category]
 
         supergame_category = HighScoreCategory()
         supergame_category.game_data_key = 'SuperGameHighScoreData'
         supergame_category.titles = ['SuperGame Champion', 'SuperGame High Score #1', 'SuperGame High Score #2', 'SuperGame High Score #3', 'SuperGame High Score #4']
         
-        self.supergame_highscore_categories = [supergame_category, crimeScenes_category, innerLoops_category, outerLoops_category]
+        self.supergame_highscore_categories = [supergame_category, blocks_category, innerLoops_category, outerLoops_category]
         
-        self.all_highscore_categories = [classic_category, supergame_category, crimeScenes_category, innerLoops_category, outerLoops_category]
+        self.all_highscore_categories = [classic_category, supergame_category, blocks_category, innerLoops_category, outerLoops_category]
         for category in self.all_highscore_categories:
             category.load_from_game(self)
 

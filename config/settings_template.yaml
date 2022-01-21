@@ -14,7 +14,7 @@ Machine:
   'Initial volume':
     options: [1,10]
     increments: 1
-    default: 0.5
+    default: 5
   'Music volume offset':
     options: [-4,4]
     increments: 1
@@ -76,7 +76,7 @@ Gameplay:
   'Multiball ballsave time':
     options: [5,10,15,20,25,30,35]
     default: 20
-  'Block Wars ballsave time':
+  'Block War ballsave time':
     options: [5,10,15,20,25,30]
     default: 15
   'Time per chain feature':

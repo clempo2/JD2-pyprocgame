@@ -118,7 +118,7 @@ class MissileAwardMode(Timer):
         elif award == 'Light Extra Ball':
             self.game.base_play.light_extra_ball()
         elif award == 'Secure One Block':
-            self.game.base_play.regular_play.crime_scenes.crime_scene_levels.level_complete()
+            self.game.base_play.regular_play.city_blocks.city_block.level_complete()
         elif award == 'Bonus +1X':
             self.game.base_play.inc_bonus_x()
         elif award == 'Hold Bonus X':

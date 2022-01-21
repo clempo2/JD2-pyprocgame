@@ -1,7 +1,7 @@
 from random import shuffle
 from procgame.dmd import TextLayer
 from procgame.game import Mode
-from crimescenes import CrimeSceneBase
+from crimescenes import CrimeSceneShots
 from timer import TimedMode
 
 class UltimateChallenge(Mode):
@@ -345,7 +345,7 @@ class Mortis(DarkJudge):
             self.check_for_completion()
 
 
-class Death(DarkJudge, CrimeSceneBase):
+class Death(DarkJudge, CrimeSceneShots):
     """ Death wizard mode
         Judge Death is on a murder spree.
         Shoot crime scene shots quickly before they relight.
@@ -404,7 +404,7 @@ class Death(DarkJudge, CrimeSceneBase):
         super(Death, self).finish(success)
 
 
-class Fire(DarkJudge, CrimeSceneBase):
+class Fire(DarkJudge, CrimeSceneShots):
     """ Fire wizard mode
         Judge Fire is lighting fires all over Mega City One.
         Shooting the lit crime scene shots.
@@ -459,7 +459,7 @@ class Fire(DarkJudge, CrimeSceneBase):
         super(Fire, self).finish(success)
 
 
-class Celebration(ChallengeBase, CrimeSceneBase):
+class Celebration(ChallengeBase, CrimeSceneShots):
     """ Final multiball wizard mode after all dark judges have been defeated
         All shots score.
         6 ball multiball with temporary ball save.
