@@ -58,11 +58,11 @@ class TimedMode(Timer):
     """Base class for timed modes, start with an intro showing instructions,
     then display the number of shots with a countdown timer"""
 
-    def __init__(self, game, priority, mode_time, name, instructions, shots_required):
+    def __init__(self, game, priority, mode_time, name, instructions, num_shots_required):
         super(TimedMode, self).__init__(game, priority)
         self.mode_time = mode_time
         self.name = name
-        self.shots_required = shots_required
+        self.num_shots_required = num_shots_required
 
         font_big = self.game.fonts['jazz18']
         font_small = self.game.fonts['tiny7']
@@ -104,12 +104,12 @@ class TimedMode(Timer):
         self.game.sound.play_music('mode', loops=-1)
 
     def update_status(self):
-        if self.num_shots > self.shots_required:
+        if self.num_shots > self.num_shots_required:
             # only Impersonator can get extra hits
-            extra_shots = self.num_shots - self.shots_required
+            extra_shots = self.num_shots - self.num_shots_required
             status = 'Shots made: ' + str(extra_shots) + ' extra'
         else:
-            status = 'Shots made: ' + str(self.num_shots) + '/' + str(self.shots_required)
+            status = 'Shots made: ' + str(self.num_shots) + '/' + str(self.num_shots_required)
         self.status_layer.set_text(status)
 
     def mode_tick(self):
@@ -121,5 +121,5 @@ class TimedMode(Timer):
         self.countdown_layer.set_text(str(time))
 
     def expired(self):
-        success = self.num_shots >= self.shots_required
+        success = self.num_shots >= self.num_shots_required
         self.exit_callback(success)

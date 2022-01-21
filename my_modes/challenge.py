@@ -83,9 +83,9 @@ class UltimateChallenge(Mode):
 class ChallengeBase(TimedMode):
     """Base class for all wizard modes"""
 
-    def __init__(self, game, priority, initial_time, instructions, shots_required, num_balls, ball_save_time):
+    def __init__(self, game, priority, initial_time, instructions, num_shots_required, num_balls, ball_save_time):
         name = self.__class__.__name__
-        super(ChallengeBase, self).__init__(game, priority, 0, name, instructions, shots_required)
+        super(ChallengeBase, self).__init__(game, priority, 0, name, instructions, num_shots_required)
         self.initial_time = initial_time
         self.num_balls = num_balls
         self.ball_save_time = ball_save_time
@@ -132,8 +132,8 @@ class ChallengeBase(TimedMode):
 class DarkJudge(ChallengeBase):
     """Base class for dark judge wizard modes"""
 
-    def __init__(self, game, priority, initial_time, instructions, shots_required, num_balls, ball_save_time):
-        super(DarkJudge, self).__init__(game, priority, initial_time, instructions, shots_required, num_balls, ball_save_time)
+    def __init__(self, game, priority, initial_time, instructions, num_shots_required, num_balls, ball_save_time):
+        super(DarkJudge, self).__init__(game, priority, initial_time, instructions, num_shots_required, num_balls, ball_save_time)
         self.taunt_sound = self.name.lower() + ' - taunt'
 
     def mode_stopped(self):
@@ -170,7 +170,7 @@ class DarkJudge(ChallengeBase):
 
     def check_for_completion(self):
         self.update_status()
-        if self.num_shots == self.shots_required:
+        if self.num_shots == self.num_shots_required:
             self.finish(True)
 
     def finish(self, success):
@@ -193,11 +193,10 @@ class Fear(DarkJudge):
 
     def __init__(self, game, priority):
         super(Fear, self).__init__(game, priority, initial_time=20, instructions='Shoot lit ramps then subway',
-                    shots_required=5, num_balls=1, ball_save_time=10)
+                    num_shots_required=5, num_balls=1, ball_save_time=10)
 
     def mode_started(self):
         super(Fear, self).mode_started()
-        self.already_collected = False
         self.mystery_lit = True
         self.state = 'ramps'
         self.active_ramp = 'left'
@@ -238,10 +237,10 @@ class Fear(DarkJudge):
             self.ramp_shot_hit()
 
     def ramp_shot_hit(self):
-        if self.num_shots <= self.shots_required - 2:
+        if self.num_shots < self.num_shots_required - 1:
             self.num_shots += 1
             self.update_status()
-            if self.num_shots == self.shots_required -1:
+            if self.num_shots == self.num_shots_required -1:
                 self.state = 'subway'
             else:
                 self.switch_ramps()
@@ -272,13 +271,13 @@ class Fear(DarkJudge):
 
     # Ball might jump over first switch.  Use 2nd switch as a catch all.
     def sw_subwayEnter2_closed(self, sw):
-        self.subway_hit()
+        if self.num_shots < self.num_shots_required:
+            self.subway_hit()
 
     def subway_hit(self):
-        if self.state == 'subway' and not self.already_collected:
+        if self.state == 'subway':
             self.num_shots += 1
             self.update_status()
-            self.already_collected = True
             self.game.lampctrl.play_show('shot_hit', False, self.game.update_lamps)
             self.game.score(10000)
             self.finish(success=True)
@@ -298,25 +297,24 @@ class Mortis(DarkJudge):
 
     def __init__(self, game, priority):
         super(Mortis, self).__init__(game, priority, initial_time=0, instructions='Shoot lit shots twice',
-                    shots_required=10, num_balls=2, ball_save_time=10)
+                    num_shots_required=10, num_balls=2, ball_save_time=10)
         self.lamp_names = ['mystery', 'perp1G', 'perp3G', 'perp5G', 'stopMeltdown']
         self.lamp_styles = ['off', 'fast', 'medium']
 
     def mode_started(self):
         super(Mortis, self).mode_started()
         self.state = 'ramps'
-        self.remaining_shots = [2, 2, 2, 2, 2]
-        self.already_collected = False
+        self.shots_required = [2, 2, 2, 2, 2]
 
     def timer_update(self, time):
         pass
 
     def update_lamps(self):
-        schedule = 0x80808080 if self.num_shots < self.shots_required else 0
+        schedule = 0x80808080 if self.num_shots < self.num_shots_required else 0
         self.game.coils.flasherMortis.schedule(schedule=schedule, cycle_seconds=0, now=True)
         for shot in range(0, 5):
             lamp_name = self.lamp_names[shot]
-            style = self.lamp_styles[self.remaining_shots[shot]]
+            style = self.lamp_styles[self.shots_required[shot]]
             self.game.drive_lamp(lamp_name, style)
 
     def sw_mystery_active(self, sw):
@@ -337,8 +335,8 @@ class Mortis(DarkJudge):
         self.switch_hit(4)
 
     def switch_hit(self, index):
-        if self.remaining_shots[index] > 0:
-            self.remaining_shots[index] -= 1
+        if self.shots_required[index] > 0:
+            self.shots_required[index] -= 1
             self.num_shots += 1
             self.game.lampctrl.play_show('shot_hit', False, self.game.update_lamps)
             self.game.score(10000)
@@ -355,13 +353,11 @@ class Death(DarkJudge, CrimeSceneShots):
 
     def __init__(self, game, priority):
         super(Death, self).__init__(game, priority, initial_time=180, instructions='Shoot lit shots quickly',
-                    shots_required=5, num_balls=1, ball_save_time=20)
+                    num_shots_required=5, num_balls=1, ball_save_time=20)
         self.shot_order = [4, 2, 0, 3, 1] # from easiest to hardest
 
     def mode_started(self):
         super(Death, self).mode_started()
-        self.already_collected = False
-        self.current_shot_index = 0
         self.shot_timer = 10
         self.active_shots = [1, 1, 1, 1, 1]
         self.game.coils.resetDropTarget.pulse(40)
@@ -414,7 +410,7 @@ class Fire(DarkJudge, CrimeSceneShots):
 
     def __init__(self, game, priority):
         super(Fire, self).__init__(game, priority, initial_time=0, instructions='Shoot lit shots',
-                         shots_required=5, num_balls=4, ball_save_time=0)
+                         num_shots_required=5, num_balls=4, ball_save_time=0)
 
     def mode_started(self):
         super(Fire, self).mode_started()
@@ -468,7 +464,7 @@ class Celebration(ChallengeBase, CrimeSceneShots):
 
     def __init__(self, game, priority):
         super(Celebration, self).__init__(game, priority, initial_time=0, instructions='All shots score',
-                     shots_required=0, num_balls=6, ball_save_time=20)
+                     num_shots_required=0, num_balls=6, ball_save_time=20)
 
     def mode_started(self):
         super(Celebration, self).mode_started()

@@ -141,7 +141,7 @@ class ChainHurryUp(TimedMode):
 
     def __init__(self, game, priority):
         super(ChainHurryUp, self).__init__(game, priority, mode_time=10, name='Hurry Up',
-                    instructions='Shoot subway', shots_required=1)
+                    instructions='Shoot subway', num_shots_required=1)
 
     def mode_started(self):
         super(ChainHurryUp, self).mode_started()
@@ -190,12 +190,12 @@ class ChainHurryUp(TimedMode):
 class ChainFeature(TimedMode):
     """Base class for the chain modes"""
 
-    def __init__(self, game, priority, name, instructions, shots_required, lamp_name):
+    def __init__(self, game, priority, name, instructions, num_shots_required, lamp_name):
         mode_time = game.user_settings['Gameplay']['Time per chain feature']
-        super(ChainFeature, self).__init__(game, priority, mode_time, name, instructions, shots_required)
+        super(ChainFeature, self).__init__(game, priority, mode_time, name, instructions, num_shots_required)
         self.lamp_name = lamp_name
-        
-    def pick_shots_required(self, game, shot_options):        
+
+    def pick_num_shots_required(self, game, shot_options):
         difficulty = game.user_settings['Gameplay']['Chain feature difficulty']
         if not difficulty in ['easy', 'medium', 'hard']:
             difficulty = 'medium'
@@ -222,9 +222,9 @@ class Pursuit(ChainFeature):
     """Pursuit chain mode"""
 
     def __init__(self, game, priority):
-        shots_required = self.pick_shots_required(game, {'easy':3, 'medium':4, 'hard':5})
-        instructions = 'Shoot ' + str(shots_required) + ' L/R ramp shots'
-        super(Pursuit, self).__init__(game, priority, 'Pursuit', instructions, shots_required, lamp_name='pursuit')
+        num_shots_required = self.pick_num_shots_required(game, {'easy':3, 'medium':4, 'hard':5})
+        instructions = 'Shoot ' + str(num_shots_required) + ' L/R ramp shots'
+        super(Pursuit, self).__init__(game, priority, 'Pursuit', instructions, num_shots_required, lamp_name='pursuit')
 
     def mode_started(self):
         super(Pursuit, self).mode_started()
@@ -257,7 +257,7 @@ class Pursuit(ChainFeature):
 
     def check_for_completion(self):
         self.update_status()
-        if self.num_shots == self.shots_required:
+        if self.num_shots == self.num_shots_required:
             self.game.sound.play_voice('complete')
             self.game.score(50000)
             self.exit_callback(True)
@@ -273,9 +273,9 @@ class Blackout(ChainFeature):
     """Blackout chain mode"""
 
     def __init__(self, game, priority):
-        shots_required = self.pick_shots_required(game, {'easy':2, 'medium':2, 'hard':3})
+        num_shots_required = self.pick_num_shots_required(game, {'easy':2, 'medium':2, 'hard':3})
         super(Blackout, self).__init__(game, priority, 'Blackout', 'Shoot center ramp',
-                     shots_required, lamp_name='blackout')
+                     num_shots_required, lamp_name='blackout')
 
     def mode_started(self):
         super(Blackout, self).mode_started()
@@ -285,7 +285,7 @@ class Blackout(ChainFeature):
         self.game.enable_gi(False) # disable all gi except gi05 (Underworld)
         self.game.lamps.gi05.enable()
         self.game.lamps.blackoutJackpot.schedule(schedule=0x000F000F, cycle_seconds=0, now=True)
-        if self.num_shots == self.shots_required - 1:
+        if self.num_shots == self.num_shots_required - 1:
             self.game.coils.flasherBlackout.schedule(schedule=0x000F000F, cycle_seconds=0, now=True)
 
     def sw_centerRampExit_active(self, sw):
@@ -295,10 +295,10 @@ class Blackout(ChainFeature):
 
     def check_for_completion(self):
         self.update_status()
-        if self.num_shots == self.shots_required - 1:
+        if self.num_shots == self.num_shots_required - 1:
             self.game.score(50000)
             self.game.update_lamps()
-        elif self.num_shots == self.shots_required:
+        elif self.num_shots == self.num_shots_required:
             self.game.score(110000)
             self.exit_callback(True)
 
@@ -307,9 +307,9 @@ class Sniper(ChainFeature):
     """Sniper chain mode"""
 
     def __init__(self, game, priority):
-        shots_required = self.pick_shots_required(game, {'easy':2, 'medium':2, 'hard':3})
+        num_shots_required = self.pick_num_shots_required(game, {'easy':2, 'medium':2, 'hard':3})
         super(Sniper, self).__init__(game, priority, 'Sniper', 'Shoot Sniper Tower twice',
-                     shots_required, lamp_name='sniper')
+                     num_shots_required, lamp_name='sniper')
 
     def mode_started(self):
         super(Sniper, self).mode_started()
@@ -335,7 +335,7 @@ class Sniper(ChainFeature):
 
     def check_for_completion(self):
         self.update_status()
-        if self.num_shots == self.shots_required:
+        if self.num_shots == self.num_shots_required:
             self.game.sound.play_voice('sniper - hit')
             self.game.score(50000)
             self.exit_callback(True)
@@ -348,7 +348,7 @@ class BattleTank(ChainFeature):
 
     def __init__(self, game, priority):
         super(BattleTank, self).__init__(game, priority, 'Battle Tank', 'Shoot all 3 battle tank shots',
-                     shots_required=3, lamp_name='battleTank')
+                     num_shots_required=3, lamp_name='battleTank')
         self.lamp_names = ['tankLeft', 'tankCenter', 'tankRight']
 
     def mode_started(self):
@@ -384,7 +384,7 @@ class BattleTank(ChainFeature):
 
     def check_for_completion(self):
         self.update_status()
-        if self.num_shots == self.shots_required:
+        if self.num_shots == self.num_shots_required:
             self.game.score(50000)
             self.exit_callback(True)
 
@@ -393,10 +393,10 @@ class Impersonator(ChainFeature):
     """Bad impersonator chain mode"""
 
     def __init__(self, game, priority):
-        shots_required = self.pick_shots_required(game, {'easy':3, 'medium':5, 'hard':7})
-        instructions = 'Shoot ' + str(shots_required) + ' lit drop targets'
+        num_shots_required = self.pick_num_shots_required(game, {'easy':3, 'medium':5, 'hard':7})
+        instructions = 'Shoot ' + str(num_shots_required) + ' lit drop targets'
         super(Impersonator, self).__init__(game, priority, 'Impersonator', instructions,
-                     shots_required, lamp_name='impersonator')
+                     num_shots_required, lamp_name='impersonator')
 
     def mode_started(self):
         super(Impersonator, self).mode_started()
@@ -484,7 +484,7 @@ class Impersonator(ChainFeature):
 
     def check_for_completion(self):
         self.update_status()
-        if self.num_shots == self.shots_required:
+        if self.num_shots == self.num_shots_required:
             self.game.score(50000)
             # keep playing for extra shots until the timer expires
 
@@ -493,10 +493,10 @@ class Meltdown(ChainFeature):
     """Meltdown chain mode"""
 
     def __init__(self, game, priority):
-        shots_required = self.pick_shots_required(game, {'easy':3, 'medium':4, 'hard':5})
-        instructions = 'Hit ' + str(shots_required) + ' captive ball switches'
+        num_shots_required = self.pick_num_shots_required(game, {'easy':3, 'medium':4, 'hard':5})
+        instructions = 'Hit ' + str(num_shots_required) + ' captive ball switches'
         super(Meltdown, self).__init__(game, priority, 'Meltdown', instructions,
-                     shots_required, lamp_name='meltdown')
+                     num_shots_required, lamp_name='meltdown')
 
     def mode_started(self):
         super(Meltdown, self).mode_started()
@@ -525,7 +525,7 @@ class Meltdown(ChainFeature):
 
     def check_for_completion(self):
         self.update_status()
-        if self.num_shots == self.shots_required:
+        if self.num_shots == self.num_shots_required:
             self.game.sound.play_voice('meltdown all')
             self.game.score(50000)
             self.exit_callback(True)
@@ -535,10 +535,10 @@ class Safecracker(ChainFeature):
     """Safecracker chain mode"""
 
     def __init__(self, game, priority):
-        shots_required = self.pick_shots_required(game, {'easy':2, 'medium':3, 'hard':4})
-        instructions = 'Shoot subway ' + str(shots_required) + ' times'
+        num_shots_required = self.pick_num_shots_required(game, {'easy':2, 'medium':3, 'hard':4})
+        instructions = 'Shoot subway ' + str(num_shots_required) + ' times'
         super(Safecracker, self).__init__(game, priority, 'Safe Cracker', instructions,
-                     shots_required, lamp_name='safecracker')
+                     num_shots_required, lamp_name='safecracker')
 
     def bad_guys(self):
         self.delay(name='bad guys', event_type=None, delay=randint(5, 10), handler=self.bad_guys)
@@ -572,7 +572,7 @@ class Safecracker(ChainFeature):
 
     def check_for_completion(self):
         self.update_status()
-        if self.num_shots == self.shots_required:
+        if self.num_shots == self.num_shots_required:
             self.game.sound.play_voice('complete')
             self.game.score(50000)
             self.exit_callback(True)
@@ -584,10 +584,10 @@ class ManhuntMillions(ChainFeature):
     """ManhuntMillions chain mode"""
 
     def __init__(self, game, priority):
-        shots_required = self.pick_shots_required(game, {'easy':2, 'medium':3, 'hard':4})
-        instructions = 'Shoot left ramp ' + str(shots_required) + ' times'
+        num_shots_required = self.pick_num_shots_required(game, {'easy':2, 'medium':3, 'hard':4})
+        instructions = 'Shoot left ramp ' + str(num_shots_required) + ' times'
         super(ManhuntMillions, self).__init__(game, priority, 'Manhunt', instructions,
-                     shots_required, lamp_name='manhunt')
+                     num_shots_required, lamp_name='manhunt')
 
     def mode_started(self):
         super(ManhuntMillions, self).mode_started()
@@ -612,7 +612,7 @@ class ManhuntMillions(ChainFeature):
 
     def check_for_completion(self):
         self.update_status()
-        if self.num_shots == self.shots_required:
+        if self.num_shots == self.num_shots_required:
             self.game.sound.play_voice('mm - done')
             self.game.score(50000)
             self.exit_callback(True)
@@ -624,10 +624,10 @@ class Stakeout(ChainFeature):
     """Stakeout chain mode"""
 
     def __init__(self, game, priority):
-        shots_required = self.pick_shots_required(game, {'easy':3, 'medium':4, 'hard':5})
-        instructions = 'Shoot right ramp ' + str(shots_required) + ' times'
+        num_shots_required = self.pick_num_shots_required(game, {'easy':3, 'medium':4, 'hard':5})
+        instructions = 'Shoot right ramp ' + str(num_shots_required) + ' times'
         super(Stakeout, self).__init__(game, priority, 'Stakeout', instructions,
-                     shots_required, lamp_name='stakeout')
+                     num_shots_required, lamp_name='stakeout')
 
     def mode_started(self):
         super(Stakeout, self).mode_started()
@@ -658,6 +658,6 @@ class Stakeout(ChainFeature):
 
     def check_for_completion(self):
         self.update_status()
-        if self.num_shots == self.shots_required:
+        if self.num_shots == self.num_shots_required:
             self.game.score(50000)
             self.exit_callback(True)

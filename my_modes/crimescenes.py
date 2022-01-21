@@ -299,14 +299,14 @@ class BlockWar(CrimeSceneShots):
 
     def reset(self):
         # go back to the first round
-        self.shots_required_per_target = 1
+        self.num_shots_required_per_target = 1
         self.shots_required = [1, 1, 1, 1, 1]
 
     def next_round(self, inc_num_shots):
         if inc_num_shots:
-            if self.shots_required_per_target < 4:
-                self.shots_required_per_target += 1
-        self.shots_required = [self.shots_required_per_target] * 5
+            if self.num_shots_required_per_target < 4:
+                self.num_shots_required_per_target += 1
+        self.num_shots_required = [self.num_shots_required_per_target] * 5
 
     def switch_hit(self, shot):
         if self.shots_required[shot] > 0:
