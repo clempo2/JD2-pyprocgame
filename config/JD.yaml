@@ -2,6 +2,37 @@
 PRGame:
     machineType: wpc
     numBalls: 6
+PRPinmame:
+    # This section is specific to running the P-ROC via Pinmame.
+
+    # keyboard:
+    #   on or off - determines whether keyboard will be enabled or not
+    #   useful in a Sys11 in early debugging
+    #   Note that this caused problems reading the ball trough on Demolition Man (WPC)
+
+    # s11CreditDisplay and s11BallDisplay :
+    #   If using a Sys11 game prior which has a separate Ball/Credit display, you can put them on the
+    #   DMD.  If the value for a display is set to zero (or removed from YAML) it won't display.
+    #   Otherwise it's the vertical position of the display from the top.  Try 1 and 15 for a start.
+
+    # autoPatterDetection:
+    #   on or off - by default, Pinmame will try to automatically detect patter requirements.
+    #   there is a thread on the forum about this.  For Sys11 this should certainly be disabled,
+    #   as it does nasty things.  Likely enable for other platforms but could be useful to disable.
+
+    # doubleAlpha:
+    #   0 or 1 - set to 1 if your machine has 2 lines of 16 character alphanumeric displays.
+    #   This will adapt the code to properly handle the various display types in Sys11 machines (and a couple of WPC)
+
+    # fullTroughDisablesFlippers:
+    #   0 or 1 - Set to 1 to disable flippers when switches "trough1" through "troughX"
+    #            are all active.
+    keyboard: off
+    autoPatterDetection: on
+    s11CreditDisplay: 0
+    s11BallDisplay: 0
+    doubleAlpha: 0
+    fullTroughDisablesFlippers: 0
 PRFlippers:
     - flipperLwR
     - flipperLwL
@@ -195,12 +226,12 @@ PRSwitches:
 PRCoils:
     flipperLwRMain: 
         number: FLRM
-        pulseTime: 40
+        pulseTime: 45
     flipperLwRHold: 
         number: FLRH
     flipperLwLMain: 
         number: FLLM
-        pulseTime: 40
+        pulseTime: 45
     flipperLwLHold: 
         number: FLLH
     flipperUpRMain: 
