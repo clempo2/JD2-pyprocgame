@@ -76,9 +76,9 @@ class CityBlocks(Mode):
     def start_block_war(self):
         self.game.modes.remove(self.city_block)
         self.block_war.reset()
+        self.start_multiball_callback()
         self.game.modes.add(self.block_war)
         self.game.update_lamps()
-        self.start_multiball_callback()
 
     def start_block_war_bonus(self):
         self.game.modes.remove(self.block_war)

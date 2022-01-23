@@ -22,11 +22,11 @@ class RegularPlay(Mode):
         self.chain = Chain(self.game, priority)
 
         self.city_blocks = CityBlocks(game, priority + 1)
-        self.city_blocks.start_multiball_callback = self.multiball_started
+        self.city_blocks.start_multiball_callback = self.multiball_starting
         self.city_blocks.end_multiball_callback = self.multiball_ended
 
         self.multiball = Multiball(self.game, priority + 1)
-        self.multiball.start_callback = self.multiball_started
+        self.multiball.start_callback = self.multiball_starting
         self.multiball.end_callback = self.multiball_ended
 
         self.missile_award_mode = MissileAwardMode(game, priority + 10)
@@ -152,7 +152,7 @@ class RegularPlay(Mode):
     # Multiball
     #
 
-    def multiball_started(self):
+    def multiball_starting(self):
         # Make sure no other multiball was already active before preparing for multiball.
         if not self.game.getPlayerState('multiball_active', 0):
             self.state = 'busy'

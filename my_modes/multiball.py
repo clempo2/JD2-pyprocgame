@@ -105,8 +105,8 @@ class Multiball(Mode):
         self.num_balls_locked = 0
         self.state = 'multiball'
         self.display_text('Multiball!')
-        self.game.addPlayerState('multiball_active', 0x1)
         self.start_callback()
+        self.game.addPlayerState('multiball_active', 0x1)
         self.num_left_ramp_shots_hit = 0
         self.num_left_ramp_shots_needed = 1
         self.jackpot_lit = False

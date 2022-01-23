@@ -17,6 +17,22 @@ class Bonus(Mode):
         self.game.stop_all_sounds()
         self.game.sound.play_voice('drain')
         self.layer = self.title_layer
+
+        # compute everything before we start so we can easily skip pages
+        player = self.game.current_player()
+        self.chain_features = player.getState('chain_features', 0)
+        self.hurry_ups = player.getState('num_hurry_ups', 0)
+        self.blocks = player.getState('num_blocks', 0)
+     
+        self.chain_features_bonus = self.chain_features * 4000
+        self.hurry_ups_bonus = self.hurry_ups * 12000
+        self.blocks_bonus = self.blocks * 2000
+        self.base_bonus =  self.chain_features_bonus + self.hurry_ups_bonus + self.blocks_bonus
+
+        self.bonus_x = self.game.getPlayerState('bonus_x', 1)
+        self.total = self.base_bonus * self.bonus_x
+        self.game.score(self.total)
+
         self.delay(name='show_bonus', event_type=None, delay=1.5, handler=self.show_page1)
 
     def mode_stopped(self):
@@ -26,32 +42,19 @@ class Bonus(Mode):
         self.game.sound.play('bonus')
         self.layer = self.tabular_layer
 
-        player = self.game.current_player()
-        chain_features = player.getState('chain_features', 0)
-        hurry_ups = player.getState('num_hurry_ups', 0)
-        blocks = player.getState('num_blocks', 0)
-        
-        chain_features_bonus = chain_features * 4000
-        hurry_ups_bonus = hurry_ups * 12000
-        blocks_bonus = blocks * 2000
-        self.base_bonus =  chain_features_bonus + hurry_ups_bonus + blocks_bonus
-
-        self.set_line_text(0, chain_features, 'FEATURE', 'FEATURES', chain_features_bonus)
-        self.set_line_text(1, hurry_ups, 'HURRY UP', 'HURRY UPS', hurry_ups_bonus)
-        self.set_line_text(2, blocks, 'BLOCK', 'BLOCKS', blocks_bonus)
+        self.set_line_text(0, self.chain_features, 'FEATURE', 'FEATURES', self.chain_features_bonus)
+        self.set_line_text(1, self.hurry_ups, 'HURRY UP', 'HURRY UPS', self.hurry_ups_bonus)
+        self.set_line_text(2, self.blocks, 'BLOCK', 'BLOCKS', self.blocks_bonus)
 
         self.delay(name='show_bonus', event_type=None, delay=3, handler=self.show_page2)
 
     def show_page2(self):
         self.game.sound.play('bonus')
-
-        bonus_x = self.game.getPlayerState('bonus_x', 1)
-        total = self.base_bonus * bonus_x
-        self.game.score(total)
+        self.layer = self.tabular_layer # in case we skipped to page 2
 
         self.set_line_text(0, -1, 'BASE', None, self.base_bonus)
-        self.set_line_text(1, -1, 'BONUS X', None, bonus_x)
-        self.set_line_text(2, -1, 'TOTAL', None, total)
+        self.set_line_text(1, -1, 'BONUS X', None, self.bonus_x)
+        self.set_line_text(2, -1, 'TOTAL', None, self.total)
 
         self.delay(name='show_bonus', event_type=None, delay=3, handler=self.exit_callback)
 
