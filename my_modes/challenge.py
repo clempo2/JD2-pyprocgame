@@ -153,6 +153,7 @@ class DarkJudge(ChallengeBase):
         self.taunt_sound = self.name.lower() + ' - taunt'
 
     def mode_stopped(self):
+        super(DarkJudge, self).mode_stopped()
         self.cancel_delayed('taunt')
 
     def start(self):
@@ -504,7 +505,7 @@ class Celebration(ChallengeBase, CrimeSceneShots):
     # That's how multiball Challenge modes continue to run on a single ball.
     # (RegularPlay.evt_ball_drained() ends multiball modes on the last ball
     # but remember RegularPlay does not run when UltimateChallenge is running.)
-    # Celebration is the only multiball Challenge mode that ends on the last ball
+    # Celebration is the only multiball Challenge mode that ends on the last ball in play
     # therefore it has to trap evt_ball_drained and implement that behavior itself.
     
     def evt_ball_drained(self):
