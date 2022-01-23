@@ -374,7 +374,7 @@ class BasePlay(Mode):
     def ball_save_callback(self):
         self.skill_shot.skill_shot_expired()
         if not self.game.getPlayerState('multiball_active', 0):
-            self.sound.play_voice('ball saved')
+            self.game.sound.play_voice('ball saved')
             self.show_on_display('Ball Saved!')
 
     def drain_callback(self):
