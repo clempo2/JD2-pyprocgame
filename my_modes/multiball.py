@@ -37,7 +37,6 @@ class Multiball(Mode):
         self.lock_level = player.getState('multiball_lock_level', 1)
 
         self.lock_enabled = 0
-        self.num_balls_to_eject = 0
         self.virtual_locks_needed = 0
         self.paused = False
         self.num_left_ramp_shots_hit = 0
@@ -77,6 +76,7 @@ class Multiball(Mode):
     def mode_stopped(self):
         # save player state
         player = self.game.current_player()
+        player.setState('multiball_active', player.getState('multiball_active', 0) and ~0x1) # in case of tilt
         player.setState('multiball_state', self.state)
         player.setState('multiball_num_balls_locked', self.num_balls_locked)
         player.setState('multiball_num_locks_lit', self.num_locks_lit)
@@ -100,14 +100,12 @@ class Multiball(Mode):
     def on_drops_advance(self, mode):
         pass
 
-    def is_active(self):
-        return self.state == 'multiball'
-
     def start_multiball(self):
         self.game.sound.play_voice('multiball')
         self.num_balls_locked = 0
         self.state = 'multiball'
         self.display_text('Multiball!')
+        self.game.addPlayerState('multiball_active', 0x1)
         self.start_callback()
         self.num_left_ramp_shots_hit = 0
         self.num_left_ramp_shots_needed = 1
@@ -118,12 +116,19 @@ class Multiball(Mode):
         self.cancel_delayed(name='trip_check')
         self.game.coils.flasherGlobe.disable()
         self.state = 'load'
+        self.game.addPlayerState('multiball_active', -0x1)
         self.end_callback()
         self.jackpot_lit = False
         self.reset_active_drops()
         self.num_locks_lit = 0
         self.lock_level += 1
         self.game.update_lamps()
+
+    def evt_ball_drained(self):
+        # End multiball if there is now only one ball in play
+        if self.game.trough.num_balls_in_play == 1:
+            if self.state == 'multiball':
+                self.end_multiball()
 
     def reset_active_drops(self):
         if (self.game.switches.dropTargetJ.is_active() or
@@ -195,14 +200,12 @@ class Multiball(Mode):
         ball_save_time = self.game.user_settings['Gameplay']['Multiball ballsave time']
         # Balls launched are already in play.
         local_num_balls_to_save = self.game.trough.num_balls_in_play
-        self.game.ball_save.callback = None
-        self.game.ball_save.start(num_balls_to_save=local_num_balls_to_save, time=ball_save_time, now=True, allow_multiple_saves=True)
+        self.game.ball_save_start(num_balls_to_save=local_num_balls_to_save, time=ball_save_time, now=True, allow_multiple_saves=True)
 
     def start_ballsave(self):
         ball_save_time = self.game.user_settings['Gameplay']['Multiball ballsave time']
         local_num_balls_to_save = self.game.trough.num_balls_in_play + 2
-        self.game.ball_save.callback = None
-        self.game.ball_save.start(num_balls_to_save=local_num_balls_to_save, time=ball_save_time, now=True, allow_multiple_saves=True)
+        self.game.ball_save_start(num_balls_to_save=local_num_balls_to_save, time=ball_save_time, now=True, allow_multiple_saves=True)
 
     def sw_leftRampToLock_active(self, sw):
         if not self.lock_enabled:
@@ -238,7 +241,6 @@ class Multiball(Mode):
                 self.disable_lock()
                 if self.deadworld_mod_installed:
                     # Use stealth launch so another ball isn't counted in play.
-                    self.game.ball_save.callback = None
                     self.game.trough.launch_balls(1, self.game.no_op_callback, stealth=True)
                 else:
                     self.game.deadworld.eject_balls(1)
@@ -247,7 +249,6 @@ class Multiball(Mode):
             # one is locked.
             elif self.deadworld_mod_installed:
                 # Use stealth launch so another ball isn't counted in play.
-                self.game.ball_save.callback = None
                 self.game.trough.launch_balls(1, self.game.no_op_callback, stealth=True)
             else:
                 self.game.deadworld.eject_balls(1)

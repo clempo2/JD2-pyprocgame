@@ -36,11 +36,11 @@ class UltimateChallenge(Mode):
         if self.game.trough.num_balls_in_play == 0:
             # serve one ball in the shooter lane and wait for player to plunge
             self.game.base_play.auto_plunge = False
-            self.game.trough.launch_balls(1, self.game.no_op_callback)
+            self.launch_balls(1)
         self.game.modes.add(self.mode_list[self.active_mode])
         self.game.update_lamps()
         self.game.sound.play_music('mode', loops=-1)
-        self.mode_list[self.active_mode].launch_balls()
+        self.mode_list[self.active_mode].ready()
 
     def level_ended(self, success=True):
         self.game.ball_save.disable()
@@ -93,8 +93,15 @@ class ChallengeBase(TimedMode):
     def mode_started(self):
         super(ChallengeBase, self).mode_started()
         self.started = False
+        if self.num_balls > 0:
+            self.game.addPlayerState('multiball_active', 0x8)
 
-    def launch_balls(self):
+    def mode_stopped(self):
+        super(ChallengeBase, self).mode_stopped()
+        if self.num_balls > 0:
+            self.game.addPlayerState('multiball_active', -0x8)
+
+    def ready(self):
         if self.game.switches.popperR.is_active():
             # we were started from regular mode
             # put the ball back in play and start the timer if applicable
@@ -107,8 +114,7 @@ class ChallengeBase(TimedMode):
     def start(self):
         # the first ball is now in play (popped from popperR or plunged by player)
         if self.ball_save_time > 0:
-            self.game.ball_save.disable() # put ball save timer to 0 because we don't want to add to the remaining time
-            self.game.ball_save.start(num_balls_to_save=self.num_balls, time=self.ball_save_time, now=True, allow_multiple_saves=True)
+            self.game.ball_save_start(num_balls_to_save=self.num_balls, time=self.ball_save_time, now=True, allow_multiple_saves=True)
 
         if self.initial_time > 0:
             self.start_timer(self.initial_time)
@@ -117,9 +123,19 @@ class ChallengeBase(TimedMode):
         self.game.base_play.auto_plunge = True
         balls_to_launch = self.num_balls - self.game.trough.num_balls_in_play
         if balls_to_launch > 0:
-            self.game.trough.launch_balls(balls_to_launch, self.game.no_op_callback)
+            self.launch_balls(balls_to_launch)
 
         self.started = True
+
+    def launch_balls(self, balls_to_launch):
+        # launch balls from the trough if it has sufficient balls, else eject additional balls from Deadworld
+        trough_balls = self.game.trough.num_balls()
+        trough_balls_to_launch = balls_to_launch if balls_to_launch <= trough_balls else trough_balls
+        deadworld_balls_to_launch = balls_to_launch - trough_balls_to_launch
+        if trough_balls_to_launch:
+            self.game.trough.launch_balls(balls_to_launch, self.game.no_op_callback)
+        if deadworld_balls_to_launch:
+            self.game.deadworld.eject_balls(deadworld_balls_to_launch)
 
     def sw_shooterR_inactive_for_900ms(self, sw):
         if not self.started:
@@ -438,8 +454,8 @@ class Fire(DarkJudge, CrimeSceneShots):
         self.game.sound.play('mystery')
         if self.mystery_lit:
             self.mystery_lit = False
-            self.game.set_status('Add 2 balls!')
-            self.game.trough.launch_balls(2, self.game.no_op_callback)
+            self.game.set_status('Add 2 balls')
+            self.launch_balls(2)
             self.game.update_lamps()
 
     def switch_hit(self, num):

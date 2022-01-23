@@ -135,15 +135,16 @@ Collect a multiball jackpot
         script = [
             {'seconds':3.0, 'layer':self.gun_layer},
             {'seconds':3.0, 'layer':self.jd_layer},
-            {'seconds':3.0, 'layer':self.game.score_display.layer},
+            {'seconds':2.5, 'layer':self.game.score_display.layer},
             {'seconds':4.0, 'layer':self.cityscape_layer},
             {'seconds':0.75, 'layer':self.press_yellow_layer},
             {'seconds':2.0, 'layer':self.press_yellow_layer2},
             {'seconds':0.75, 'layer':self.press_green_layer},
             {'seconds':2.0, 'layer':self.press_green_layer2},
-            {'seconds':3.0, 'layer':self.game.score_display.layer},
+            {'seconds':2.5, 'layer':self.game.score_display.layer},
             {'seconds':3.0, 'layer':self.proc_splash_layer},
             {'seconds':7.0, 'layer':self.credits_layer},
+            {'seconds':2.5, 'layer':self.game.score_display.layer},
             {'seconds':3.0, 'layer':self.judges_layer},
         ]
 
@@ -158,7 +159,7 @@ Collect a multiball jackpot
         script = [
             {'seconds':3.4, 'layer':self.longwalk_layer}, # stop this anim early, Game Over font does not fit rest of the game
             {'seconds':3.0, 'layer':self.game_over_layer},
-            {'seconds':3.0, 'layer':self.game.score_display.layer},
+            {'seconds':4.0, 'layer':self.game.score_display.layer},
         ]
 
         self.append_high_score_layers(script)

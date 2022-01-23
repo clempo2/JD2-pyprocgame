@@ -46,7 +46,7 @@ class CityBlocks(Mode):
 
         self.city_block = CityBlock(game, priority + 1)
         self.city_block.start_block_war = self.start_block_war
-        self.city_block.blocks_completed = self.city_block_completed
+        self.city_block.city_blocks_completed = self.city_blocks_completed
 
         self.block_war = BlockWar(game, priority + 5)
         self.block_war.start_block_war_bonus = self.start_block_war_bonus
@@ -67,11 +67,11 @@ class CityBlocks(Mode):
         if self.game.getPlayerState('current_block', 0) < self.game.blocks_required:
             self.game.modes.add(self.city_block)
 
-    def city_block_completed(self):
+    def city_blocks_completed(self):
         self.game.modes.remove(self.city_block)
         self.game.update_lamps()
         self.game.setPlayerState('blocks_complete', True)
-        self.game.base_play.regular_play.blocks_completed()
+        self.game.base_play.regular_play.city_blocks_completed()
 
     def start_block_war(self):
         self.game.modes.remove(self.city_block)
@@ -99,9 +99,10 @@ class CityBlocks(Mode):
         self.start_city_block()
         self.end_multiball_callback()
 
-    def is_multiball_active(self):
-        return (self.block_war in self.game.modes or
-                self.block_war_bonus in self.game.modes)
+    def evt_ball_drained(self):
+        # End multiball if there is now only one ball in play
+        if self.game.getPlayerState('multiball_active', 0) & 0x6:
+            self.end_multiball()
 
     def update_lamps(self):
         # Count the number of block wars for this round
@@ -159,18 +160,20 @@ class CityBlock(CrimeSceneShots):
         # restore player state
         player = self.game.current_player()
         self.targets = player.getState('block_targets', None)
-        self.total_levels = player.getState('num_blocks', 0)
+        self.num_blocks = player.getState('num_blocks', 0)
 
         self.num_advance_hits = 0
         if player.getState('current_block', -1) == -1:
             self.next_level()
 
     def mode_stopped(self):
+        self.layer = None
+
         # save player state
         player = self.game.current_player()
         player.setState('block_targets', self.targets)
-        player.setState('num_blocks', self.total_levels)
-        # 'current_block' is always kept up to date in the player's state for other modes to see
+        player.setState('num_blocks', self.num_blocks)
+        # current_block is always kept up to date in the player's state for other modes to see
 
     #
     # Award One Crime Scene Shot
@@ -208,7 +211,7 @@ class CityBlock(CrimeSceneShots):
     def level_complete(self):
         self.game.score(10000)
         self.game.lampctrl.play_show('advance_level', False, self.game.update_lamps)
-        self.total_levels += 1
+        self.num_blocks += 1
 
         level = self.game.getPlayerState('current_block', -1)
         if level == self.extra_ball_level:
@@ -227,7 +230,7 @@ class CityBlock(CrimeSceneShots):
             level += 1
             self.game.setPlayerState('current_block', level)
             if level == self.game.blocks_required:
-                self.blocks_completed()
+                self.city_blocks_completed()
             else:
                 # the level consists of num_to_pick many targets chosen among the targets listed in pick_from
                 # every selected target needs to be hit once
@@ -282,11 +285,13 @@ class BlockWar(CrimeSceneShots):
         self.layer = GroupedLayer(128, 32, [self.anim_layer, self.countdown_layer, self.banner_layer, self.score_reason_layer, self.score_value_layer])
 
     def mode_started(self):
+        self.game.addPlayerState('multiball_active', 0x2)
         self.banner_layer.set_text('Block War!', 3)
         self.game.sound.play_voice('block war start')
         self.game.trough.launch_balls(1, self.start_callback)
 
     def mode_stopped(self):
+        self.game.addPlayerState('multiball_active', -0x2)
         self.cancel_delayed('rotate_bonus_target')
 
     # trough callback
@@ -295,7 +300,7 @@ class BlockWar(CrimeSceneShots):
         # 1 ball added already from launcher.  So ask ball_save to save
         # new total of balls in play.
         local_num_balls_to_save = self.game.trough.num_balls_in_play
-        self.game.ball_save.start(num_balls_to_save=local_num_balls_to_save, time=ball_save_time, now=False, allow_multiple_saves=True)
+        self.game.ball_save_start(num_balls_to_save=local_num_balls_to_save, time=ball_save_time, now=False, allow_multiple_saves=True)
 
     def reset(self):
         # go back to the first round
@@ -348,11 +353,13 @@ class BlockWarBonus(CrimeSceneShots):
         self.banner_layer = TextLayer(128/2, 7, self.game.fonts['jazz18'], 'center')
 
     def mode_started(self):
+        self.game.addPlayerState('multiball_active', 0x4)
         self.bonus_shot = 0
         self.delay(name='rotate_bonus_target', event_type=None, delay=3, handler=self.rotate_bonus_target, param=1)
         self.game.sound.play_voice('jackpot is lit')
 
     def mode_stopped(self):
+        self.game.addPlayerState('multiball_active', -0x4)
         self.cancel_delayed('rotate_bonus_target')
 
     # rotate all the way to the end and back only once

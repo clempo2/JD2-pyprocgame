@@ -285,6 +285,11 @@ class JDGame(BasicGame):
         self.modes.add(self.base_play)
         self.update_lamps()
 
+    def ball_save_start(self, num_balls_to_save, time, now, allow_multiple_saves):
+        # work-around for ball_save.start() that always adds to the timer
+        self.game.ball_save.timer = 0
+        self.ball_save.start(num_balls_to_save, time, now, allow_multiple_saves)
+
     # Override to create a flag signaling extra ball.
     def shoot_again(self):
         super(JDGame, self).shoot_again()

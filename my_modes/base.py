@@ -42,7 +42,7 @@ class BasePlay(Mode):
         # init player state
         player = self.game.current_player()
         self.extra_balls_lit = player.getState('extra_balls_lit', 0)
-        self.total_extra_balls_lit = player.getState('total_extra_balls_lit', 0)
+        self.total_extra_balls = player.getState('total_extra_balls', 0)
 
         bonus_x = player.getState('bonus_x', 1) if player.getState('hold_bonus_x', False) else 1
         player.setState('bonus_x', bonus_x)
@@ -55,6 +55,7 @@ class BasePlay(Mode):
         # must pass a no-op callback, passing None keeps the previous callback
         self.game.trough.launch_balls(1, self.game.no_op_callback)
         self.game.trough.drain_callback = self.drain_callback
+        self.game.ball_save.callback = self.ball_save_callback
         self.ball_starting = True
         self.skill_shot_added = False
 
@@ -78,11 +79,12 @@ class BasePlay(Mode):
         self.game.enable_flippers(False)
         self.game.disable_ball_search()
         self.game.trough.drain_callback = self.game.no_op_callback
+        self.game.ball_save.callback = None
         self.cancel_show_status_timer()
 
         player = self.game.current_player()
         player.setState('extra_balls_lit', self.extra_balls_lit)
-        player.setState('total_extra_balls_lit', self.total_extra_balls_lit)
+        player.setState('total_extra_balls', self.total_extra_balls)
 
     def update_lamps(self):
         # Disable all flashers
@@ -205,13 +207,12 @@ class BasePlay(Mode):
     #
 
     def light_extra_ball(self):
-        if self.total_extra_balls_lit == self.game.user_settings['Gameplay']['Max extra balls per game']:
+        if self.extra_balls_lit + self.total_extra_balls == self.game.user_settings['Gameplay']['Max extra balls per game']:
             self.game.set_status('No more extras this game.')
         elif self.extra_balls_lit == self.game.user_settings['Gameplay']['Max extra balls lit']:
             self.game.set_status('Extra balls lit maxed.')
         else:
             self.extra_balls_lit += 1
-            self.total_extra_balls_lit += 1
             self.game.update_lamps()
             self.show_on_display('Extra Ball Lit!')
 
@@ -225,14 +226,34 @@ class BasePlay(Mode):
         self.game.sound.play('extra_ball_target')
         if self.extra_balls_lit > 0:
             self.extra_balls_lit -= 1
+            self.game.update_lamps()
+            self.show_on_display('Extra Ball')
             self.extra_ball()
 
     def extra_ball(self):
         player = self.game.current_player()
         player.extra_balls += 1
-        self.show_on_display('Extra Ball!')
+        self.total_extra_balls += 1
         self.play_animation('EBAnim')
-        self.game.update_lamps()
+
+    #
+    # Replay
+    #
+
+    def replay_callback(self):
+        award = self.game.user_settings['Replay']['Replay Award']
+        self.game.coils.knocker.pulse(50)
+        self.show_on_display('Reolay')
+        if award == 'Extra Ball':
+            if self.total_extra_balls < self.game.user_settings['Gameplay']['Max extra balls per game']:
+                if self.extra_balls_lit + self.total_extra_balls == self.game.user_settings['Gameplay']['Max extra balls per game']:
+                    # already maximum allocated, convert a lit extra ball to an extra ball instead
+                    self.extra_balls_lit -= 1
+                self.extra_ball()
+            else:
+                self.game.set_status('100,000 points')
+                self.game.score(100000)
+        #else add a credit in your head
 
     #
     # Ultimate Challenge
@@ -247,18 +268,6 @@ class BasePlay(Mode):
         self.game.modes.remove(self.ultimate_challenge)
         self.game.modes.add(self.regular_play)
         self.game.update_lamps()
-
-    #
-    # Replay
-    #
-
-    def replay_callback(self):
-        award = self.game.user_settings['Replay']['Replay Award']
-        self.game.coils.knocker.pulse(50)
-        self.show_on_display('Replay')
-        if award == 'Extra Ball':
-            self.extra_ball()
-        #else add a credit in your head
 
     #
     # Drop Targets
@@ -364,8 +373,9 @@ class BasePlay(Mode):
 
     def ball_save_callback(self):
         self.skill_shot.skill_shot_expired()
-        if self.regular_play in self.game.modes:
-            self.regular_play.ball_save_callback()
+        if not self.game.getPlayerState('multiball_active', 0):
+            self.sound.play_voice('ball saved')
+            self.show_on_display('Ball Saved!')
 
     def drain_callback(self):
         if not self.tilt.tilted:

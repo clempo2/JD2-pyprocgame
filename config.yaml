@@ -18,11 +18,11 @@ keyboard_switch_map:                                # this is the mapping of key
     K_DOWN: SD8 # enter
     a: S44 # superGame
     s: S13 # startButton
-    q: S54 # J
-    w: S55 # U
-    e: S56 # D
-    r: S57 # G
-    t: S58 # E
+    j: S54 # J
+    u: S55 # U
+    d: S56 # D
+    g: S57 # G
+    e: S58 # E
     p: S74 # popperR
     9: S14 # tilt
     0: S21 # slam tilt
@@ -38,5 +38,10 @@ keyboard_switch_map:                                # this is the mapping of key
     'l': S33 # leftRollover
     ';': S35 # topCenterRollover
     "'": S72 # topRightOpto
+    z: S15 # shooterL
+    '/': S41 # shooterR
+    '.': S68 # captiveBall3
+    x: S27 # mystery
+    q: S36 # leftScorePost
 
     

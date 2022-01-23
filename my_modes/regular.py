@@ -92,12 +92,12 @@ class RegularPlay(Mode):
             else:
                 text = 'Replay'
                 score = locale.format('%d', self.game.base_play.replay.replay_scores[0], True)
-            self.game.base_play.show_on_display(text, score)
+            #this needs a redesign, it hides too much and/or looks ugly
+            #self.game.base_play.show_on_display(text, score)
 
     def evt_ball_started(self):
         ball_save_time = self.game.user_settings['Gameplay']['New ball ballsave time']
-        self.game.ball_save.callback = self.ball_save_callback
-        self.game.ball_save.start(num_balls_to_save=1, time=ball_save_time, now=True, allow_multiple_saves=False)
+        self.game.ball_save_start(num_balls_to_save=1, time=ball_save_time, now=True, allow_multiple_saves=False)
         self.game.modes.remove(self.shoot_again_intro)
         self.game.update_lamps()
 
@@ -109,7 +109,7 @@ class RegularPlay(Mode):
     # the rule is: multiball can be stacked with a running mode, you cannot start a new mode during multiball
     def setup_next_mode(self):
         # a mode could still be running if modes were stacked, in that case do nothing and stay 'busy'
-        if not (self.any_multiball_active() or self.chain.is_active()):
+        if not (self.game.getPlayerState('multiball_active', 0) or self.chain.is_active()):
             self.game.sound.fadeout_music()
             self.game.sound.play_music('background', loops=-1)
 
@@ -142,7 +142,7 @@ class RegularPlay(Mode):
 
         self.game.update_lamps()
 
-    def blocks_completed(self):
+    def city_blocks_completed(self):
         self.setup_next_mode()
 
     def chain_mode_completed(self):
@@ -152,13 +152,9 @@ class RegularPlay(Mode):
     # Multiball
     #
 
-    def any_multiball_active(self):
-        return self.multiball.is_active() or self.city_blocks.is_multiball_active()
-
     def multiball_started(self):
         # Make sure no other multiball was already active before preparing for multiball.
-        # One multiball is the caller, so if both are active it means the other multiball was already active
-        if not (self.multiball.is_active() and self.city_blocks.is_multiball_active()):
+        if not self.game.getPlayerState('multiball_active', 0):
             self.state = 'busy'
             self.game.sound.fadeout_music()
             self.game.sound.play_music('multiball', loops=-1)
@@ -168,7 +164,7 @@ class RegularPlay(Mode):
             self.game.update_lamps()
 
     def multiball_ended(self):
-        if not self.any_multiball_active():
+        if not self.game.getPlayerState('multiball_active', 0):
             self.game.modes.add(self.missile_award_mode)
         self.setup_next_mode()
 
@@ -213,21 +209,19 @@ class RegularPlay(Mode):
         if self.mystery_lit:
             self.mystery_lit = False
             self.game.update_lamps()
-            if self.any_multiball_active():
+            if self.game.getPlayerState('multiball_active', 0):
                 if self.game.ball_save.timer > 0:
                     self.game.set_status('+10 second ball saver')
                     self.game.ball_save.add(10)
                 else:
-                    self.game.ball_save.callback = None
                     self.game.set_status('save ' + str(self.game.trough.num_balls_in_play) + ' balls')
-                    self.game.ball_save.start(num_balls_to_save=self.game.trough.num_balls_in_play, time=10, now=True, allow_multiple_saves=True)
+                    self.game.ball_save_start(num_balls_to_save=self.game.trough.num_balls_in_play, time=10, now=True, allow_multiple_saves=True)
 
             elif self.chain.is_active():
                 self.chain.mode.add(10)
                 self.game.set_status('Adding 10 seconds')
             else:
-                self.game.ball_save.callback = self.ball_save_callback
-                self.game.ball_save.start(num_balls_to_save=1, time=10, now=True, allow_multiple_saves=True)
+                self.game.ball_save_start(num_balls_to_save=1, time=10, now=True, allow_multiple_saves=True)
                 self.game.set_status('10 second ball saver')
                 self.missile_award_mode.light_missile_award()
 
@@ -246,22 +240,3 @@ class RegularPlay(Mode):
         
         style = 'slow' if self.state == 'challenge_ready' else 'off'
         self.game.drive_lamp('ultChallenge', style)
-
-    #
-    # End of ball
-    #
-
-    def ball_save_callback(self):
-        if not self.any_multiball_active():
-            self.game.sound.play_voice('ball saved')
-            self.game.base_play.show_on_display('Ball Saved!')
-
-    def evt_ball_drained(self):
-        # Called as a result of a ball draining into the trough.
-        # End multiball if there is now only one ball in play (and MB was active).
-        self.game.ball_save.callback = None
-        if self.game.trough.num_balls_in_play == 1:
-            if self.multiball.is_active():
-                self.multiball.end_multiball()
-            if self.city_blocks.is_multiball_active():
-                self.city_blocks.end_multiball()
