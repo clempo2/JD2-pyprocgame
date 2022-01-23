@@ -93,12 +93,12 @@ class ChallengeBase(TimedMode):
     def mode_started(self):
         super(ChallengeBase, self).mode_started()
         self.started = False
-        if self.num_balls > 0:
+        if self.num_balls > 1:
             self.game.addPlayerState('multiball_active', 0x8)
 
     def mode_stopped(self):
         super(ChallengeBase, self).mode_stopped()
-        if self.num_balls > 0:
+        if self.num_balls > 1:
             self.game.addPlayerState('multiball_active', -0x8)
 
     def ready(self):
