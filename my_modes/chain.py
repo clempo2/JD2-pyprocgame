@@ -153,6 +153,10 @@ class ChainHurryUp(TimedMode):
         super(ChainHurryUp, self).mode_stopped()
         self.cancel_delayed('trip_check')
 
+    def play_music(self):
+        # don't change the music for the hurry up, that mode is too short
+        pass
+
     def update_status(self):
         pass
 
@@ -200,10 +204,6 @@ class ChainFeature(TimedMode):
         if not difficulty in ['easy', 'medium', 'hard']:
             difficulty = 'medium'
         return shot_options[difficulty]
-
-    def play_music(self):
-        self.game.sound.stop_music()
-        self.game.sound.play_music('mode', loops=-1)
 
     def start_using_drops(self):
         self.game.base_play.regular_play.multiball.drops.paused = True

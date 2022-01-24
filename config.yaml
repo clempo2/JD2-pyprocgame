@@ -1,7 +1,7 @@
 font_path:
     - ./assets/fonts/
 
-#pinproc_class: procgame.fakepinproc.FakePinPROC # comment out this line when using a real P-ROC. 
+pinproc_class: procgame.fakepinproc.FakePinPROC # comment out this line when using a real P-ROC. 
 
 desktop_dmd_scale: 5                # the dmd scale is the multiplier per dot.  At 5 each dot is 5x5 pixels
 

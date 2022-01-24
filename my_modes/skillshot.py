@@ -1,4 +1,3 @@
-import locale
 from procgame.dmd import GroupedLayer, TextLayer
 from procgame.game import Mode
 
@@ -27,7 +26,7 @@ class SkillShot(Mode):
         score = self.shots_hit * 5000
         self.game.score(score)
         self.text_layer.set_text('Skill Shot!', 3)
-        self.award_layer.set_text(locale.format('%d', score, True), 3)
+        self.award_layer.set_text(self.game.format_score(score), 3)
         self.cancel_delayed('skill_shot_delay')
         self.delay(name='skill_shot_delay', event_type=None, delay=3.0, handler=self.skill_shot_expired)
 

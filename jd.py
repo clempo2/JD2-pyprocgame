@@ -1,4 +1,3 @@
-import locale
 from math import ceil
 import os
 import pinproc
@@ -19,8 +18,6 @@ from my_modes.deadworld import Deadworld, DeadworldTest
 
 import logging
 logging.basicConfig(level=logging.ERROR, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-
-locale.setlocale(locale.LC_ALL, '') # Used to put commas in the score.
 
 curr_file_path = os.path.dirname(os.path.abspath(__file__))
 settings_path = curr_file_path + '/config/settings.yaml'
@@ -59,6 +56,9 @@ class JDGame(BasicGame):
         self.lampctrl = LampController(self)
         self.logging_enabled = False
         self.lamp_schedules = {'slow':0x00ff00ff, 'medium':0x0f0f0f0f, 'fast':0x55555555, 'on':0xffffffff, 'off':0x00000000}
+
+        # don't use the locale, always insert commas in groups of 3 digits
+        self.score_display.format_score = self.format_score
 
         self.load_config('config/JD.yaml')
 
@@ -373,6 +373,10 @@ class JDGame(BasicGame):
             self.game_data['Audits']['Games Played'] += 1
 
         self.save_game_data(game_data_path)
+
+    def format_score(self, score):
+        # disregard the locale, always insert commas between groups of 3 digits
+        return '00' if score == 0 else '{:,}'.format(score)
 
     def set_status(self, text):
         self.dmd.set_message(text, 3)

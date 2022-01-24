@@ -1,4 +1,3 @@
-import locale
 from procgame.dmd import GroupedLayer, ScriptedLayer, TextLayer
 from procgame.game import Mode
 from intro import Introduction
@@ -114,7 +113,7 @@ class TimedMode(Timer):
 
     def mode_tick(self):
         score = self.game.current_player().score
-        text = '00' if score == 0 else locale.format('%d', score, True)
+        text = self.game.format_score(score)
         self.score_layer.set_text(text)
 
     def timer_update(self, time):

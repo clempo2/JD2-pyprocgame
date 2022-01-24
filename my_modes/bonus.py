@@ -1,4 +1,3 @@
-import locale
 from procgame.dmd import GroupedLayer, TextLayer
 from procgame.game import Mode
 
@@ -69,7 +68,7 @@ class Bonus(Mode):
         index = line_index * 3
         self.text_layers[index].set_text('' if count < 0 else str(count))
         self.text_layers[index + 1].set_text(singular if count < 2 else plural)
-        self.text_layers[index + 2].set_text('00' if str(value) == 0 else locale.format('%d', value, True))
+        self.text_layers[index + 2].set_text(self.game.format_score(value))
 
     def sw_flipperLwL_active(self, sw):
         self.flipper_active()

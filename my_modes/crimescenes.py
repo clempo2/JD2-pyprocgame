@@ -1,4 +1,3 @@
-import locale
 from random import shuffle
 from procgame.dmd import GroupedLayer, TextLayer
 from procgame.game import Mode
@@ -251,7 +250,7 @@ class CityBlock(CrimeSceneShots):
         small_font = self.game.fonts['07x5']
         title_layer = TextLayer(128/2, 7, small_font, 'center').set_text('Advance Blocks', 1.5)
         level_layer = TextLayer(128/2, 14, small_font, 'center').set_text('Block ' + str(level) + ' secured', 1.5)
-        award_layer = TextLayer(128/2, 21, small_font, 'center').set_text('Award: ' + locale.format('%d', points, True) + ' points', 1.5)
+        award_layer = TextLayer(128/2, 21, small_font, 'center').set_text('Award: ' + self.game.format_score(points) + ' points', 1.5)
         self.layer = GroupedLayer(128, 32, [title_layer, level_layer, award_layer])
 
     #

@@ -1,4 +1,3 @@
-import locale
 from procgame.dmd import ScriptedLayer, TextLayer
 from procgame.game import Mode
 from chain import Chain
@@ -88,10 +87,10 @@ class RegularPlay(Mode):
                 text = 'Highest Score'
                 game_data_key = 'SuperGameHighScoreData' if self.game.supergame else 'ClassicHighScoreData'
                 high_score_data = self.game.game_data[game_data_key][0]
-                score = str(high_score_data['inits']) + '  ' + locale.format('%d', high_score_data['score'], True)
+                score = str(high_score_data['inits']) + '  {:,}'.format(high_score_data['score'])
             else:
                 text = 'Replay'
-                score = locale.format('%d', self.game.base_play.replay.replay_scores[0], True)
+                score = self.game.format_score(self.game.base_play.replay.replay_scores[0])
             #this needs a redesign, it hides too much and/or looks ugly
             #self.game.base_play.show_on_display(text, score)
 
