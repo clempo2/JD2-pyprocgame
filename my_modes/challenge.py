@@ -10,13 +10,15 @@ class UltimateChallenge(Mode):
     def __init__(self, game, priority):
         super(UltimateChallenge, self).__init__(game, priority)
 
-        self.fear = Fear(self, self.priority + 1)
-        self.mortis = Mortis(self, self.priority + 1)
-        self.death = Death(self, self.priority + 1)
-        self.fire = Fire(self, self.priority + 1)
-        self.celebration = Celebration(self, self.priority + 1)
+        self.fear = Fear(game, self.priority + 1)
+        self.mortis = Mortis(game, self.priority + 1)
+        self.death = Death(game, self.priority + 1)
+        self.fire = Fire(game, self.priority + 1)
+        self.celebration = Celebration(game, self.priority + 1)
 
         self.mode_list = [self.fear, self.mortis, self.death, self.fire, self.celebration]
+        for mode in self.mode_list:
+            mode.exit_callback = self.level_ended
 
     def mode_started(self):
         self.active_mode = self.game.getPlayerState('challenge_mode', 0)
@@ -81,10 +83,9 @@ class UltimateChallenge(Mode):
 class ChallengeBase(TimedMode):
     """Base class for all wizard modes"""
 
-    def __init__(self, parent, priority, initial_time, instructions, num_shots_required, num_balls, ball_save_time):
+    def __init__(self, game, priority, initial_time, instructions, num_shots_required, num_balls, ball_save_time):
         name = self.__class__.__name__
-        super(ChallengeBase, self).__init__(parent.game, priority, 0, name, instructions, num_shots_required)
-        self.parent = parent
+        super(ChallengeBase, self).__init__(game, priority, 0, name, instructions, num_shots_required)
         self.initial_time = initial_time
         self.num_balls = num_balls
         self.ball_save_time = ball_save_time
@@ -147,8 +148,8 @@ class ChallengeBase(TimedMode):
 class DarkJudge(ChallengeBase):
     """Base class for dark judge wizard modes"""
 
-    def __init__(self, parent, priority, initial_time, instructions, num_shots_required, num_balls, ball_save_time):
-        super(DarkJudge, self).__init__(parent, priority, initial_time, instructions, num_shots_required, num_balls, ball_save_time)
+    def __init__(self, game, priority, initial_time, instructions, num_shots_required, num_balls, ball_save_time):
+        super(DarkJudge, self).__init__(game, priority, initial_time, instructions, num_shots_required, num_balls, ball_save_time)
         self.taunt_sound = self.name.lower() + ' - taunt'
 
     def mode_stopped(self):
@@ -194,9 +195,9 @@ class DarkJudge(ChallengeBase):
         self.stop_timer()
         self.game.enable_flippers(False)
         self.game.update_lamps()
-        text = self.name + ' Defeated' if success else 'You lose!'
+        text = self.name + ' Defeated' if success else 'You lose'
         self.layer = TextLayer(128/2, 13, self.game.fonts['tiny7'], 'center', True).set_text(text)
-        self.parent.level_ended(success)
+        self.exit_callback(success)
 
 
 class Fear(DarkJudge):
@@ -207,8 +208,8 @@ class Fear(DarkJudge):
         Timer is short and reset with every successful shot
     """
 
-    def __init__(self, parent, priority):
-        super(Fear, self).__init__(parent, priority, initial_time=20, instructions='Shoot lit ramps then subway',
+    def __init__(self, game, priority):
+        super(Fear, self).__init__(game, priority, initial_time=20, instructions='Shoot lit ramps then subway',
                     num_shots_required=5, num_balls=1, ball_save_time=10)
 
     def mode_started(self):
@@ -311,8 +312,8 @@ class Mortis(DarkJudge):
         No timer, mode ends when last ball is lost
     """
 
-    def __init__(self, parent, priority):
-        super(Mortis, self).__init__(parent, priority, initial_time=0, instructions='Shoot lit shots twice',
+    def __init__(self, game, priority):
+        super(Mortis, self).__init__(game, priority, initial_time=0, instructions='Shoot lit shots twice',
                     num_shots_required=10, num_balls=2, ball_save_time=10)
         self.lamp_names = ['mystery', 'perp1G', 'perp3G', 'perp5G', 'stopMeltdown']
         self.lamp_styles = ['off', 'fast', 'medium']
@@ -367,8 +368,8 @@ class Death(DarkJudge, CrimeSceneShots):
         Timer is long and always counts down.
     """
 
-    def __init__(self, parent, priority):
-        super(Death, self).__init__(parent, priority, initial_time=180, instructions='Shoot lit shots quickly',
+    def __init__(self, game, priority):
+        super(Death, self).__init__(game, priority, initial_time=180, instructions='Shoot lit shots quickly',
                     num_shots_required=5, num_balls=1, ball_save_time=20)
         self.shot_order = [4, 2, 0, 3, 1] # from easiest to hardest
 
@@ -424,8 +425,8 @@ class Fire(DarkJudge, CrimeSceneShots):
         No timer, mode ends when last ball is lost
     """
 
-    def __init__(self, parent, priority):
-        super(Fire, self).__init__(parent, priority, initial_time=0, instructions='Shoot lit shots',
+    def __init__(self, game, priority):
+        super(Fire, self).__init__(game, priority, initial_time=0, instructions='Shoot lit shots',
                          num_shots_required=5, num_balls=4, ball_save_time=0)
 
     def mode_started(self):
@@ -478,8 +479,8 @@ class Celebration(ChallengeBase, CrimeSceneShots):
         No timer, mode ends when a single ball remains.
     """
 
-    def __init__(self, parent, priority):
-        super(Celebration, self).__init__(parent, priority, initial_time=0, instructions='All shots score',
+    def __init__(self, game, priority):
+        super(Celebration, self).__init__(game, priority, initial_time=0, instructions='All shots score',
                      num_shots_required=0, num_balls=6, ball_save_time=20)
 
     def mode_started(self):
@@ -517,7 +518,7 @@ class Celebration(ChallengeBase, CrimeSceneShots):
         if (self.started and self.game.trough.num_balls_in_play == 1 and
              self.game.trough.num_balls_to_launch == 0):
             # down to just one ball, revert to regular play
-            self.parent.level_ended(False)
+            self.exit_callback(False)
         # else celebration continues until we are really down to the last ball
 
     def sw_mystery_active(self, sw):
