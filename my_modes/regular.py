@@ -1,7 +1,7 @@
 from procgame.dmd import ScriptedLayer, TextLayer
 from procgame.game import Mode
 from chain import Chain
-from crimescenes import CityBlocks
+from blocks import CityBlocks
 from intro import Introduction
 from multiball import Multiball
 from missile import MissileAwardMode
