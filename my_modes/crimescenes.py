@@ -93,8 +93,8 @@ class CityBlocks(Mode):
     def end_multiball(self):
         self.game.modes.remove(self.block_war)
         self.game.modes.remove(self.block_war_bonus)
-        self.city_block.next_level()
-        # next_level updated the lamps
+        self.city_block.next_block()
+        # next_block updated the lamps
         self.start_city_block()
         self.end_multiball_callback()
 
@@ -104,10 +104,15 @@ class CityBlocks(Mode):
             self.end_multiball()
 
     def update_lamps(self):
-        # Count the number of block wars for this round
-        block = self.game.getPlayerState('current_block', 0)
-        free_block_wars = int((16 - self.game.blocks_required) / 4)
-        num_block_wars = free_block_wars + int(block * 4 / self.game.blocks_required)
+        # Count the number of block wars applicable to starting the next Ultimate Challenge
+        # Block wars applicable to an already played Ultimate Challenge don't count for the lamps
+        if self.game.getPlayerState('blocks_complete', False):
+            num_block_wars = 4 # this avoids the confusion when modulo blocks_required returns 0
+        else:
+            num_blocks = self.game.getPlayerState('num_blocks', 0)
+            played_block_wars = int((num_blocks % self.game.blocks_required) / 4)
+            free_block_wars = int((16 - self.game.blocks_required) / 4)
+            num_block_wars = free_block_wars + played_block_wars
         for num in range(1, 5):
             lamp_name = 'crimeLevel' + str(num)
             style = 'on' if num <= num_block_wars else 'off'
@@ -120,9 +125,9 @@ class CityBlock(CrimeSceneShots):
     def __init__(self, game, priority):
         super(CityBlock, self).__init__(game, priority)
 
-        # we always award the most difficult target that remains in the current level
+        # we always award the most difficult target that remains in the current block
         self.target_award_order = [1, 3 ,0, 2, 4]
-        self.extra_ball_level = 3 # that means when completing the 4th level
+        self.extra_ball_block = 4 # securing 4 blocks awards an extra ball
 
         difficulty = self.game.user_settings['Gameplay']['Block difficulty']
         if difficulty == 'easy':
@@ -151,28 +156,22 @@ class CityBlock(CrimeSceneShots):
             self.level_num_shots = [1, 1, 2, 2, 2, 3, 3, 3, 3, 3, 4, 4, 4, 4, 5, 5]
 
     def reset(self):
-        # force the mode to initialize at level 0 the next time it starts
+        # force the mode to initialize at block 0 the next time it starts
+        # num_blocks continue to accrue
         self.game.setPlayerState('current_block', -1)
         self.game.setPlayerState('blocks_complete', False)
 
     def mode_started(self):
-        # restore player state
-        player = self.game.current_player()
-        self.targets = player.getState('block_targets', None)
-        self.num_blocks = player.getState('num_blocks', 0)
+        self.targets = self.game.getPlayerState('block_targets', None)
 
         self.num_advance_hits = 0
-        if player.getState('current_block', -1) == -1:
-            self.next_level()
+        if self.game.getPlayerState('current_block', -1) == -1:
+            self.next_block()
 
     def mode_stopped(self):
         self.layer = None
-
-        # save player state
-        player = self.game.current_player()
-        player.setState('block_targets', self.targets)
-        player.setState('num_blocks', self.num_blocks)
-        # current_block is always kept up to date in the player's state for other modes to see
+        self.game.setPlayerState('block_targets', self.targets)
+        # num_blocks and current_block are always up to date in the player state for other modes to see
 
     #
     # Award One Crime Scene Shot
@@ -202,43 +201,45 @@ class CityBlock(CrimeSceneShots):
 
             if not any(self.targets):
                 # all targets hit already
-                self.level_complete()
+                self.block_complete()
             else:
                 self.game.sound.play_voice('crime')
             self.game.update_lamps()
 
-    def level_complete(self):
+    def block_complete(self):
         self.game.score(10000)
         self.game.lampctrl.play_show('advance_level', False, self.game.update_lamps)
-        self.num_blocks += 1
+        self.game.addPlayerState('num_blocks', 1) 
+        num_blocks = self.game.getPlayerState('num_blocks', 0) 
 
-        level = self.game.getPlayerState('current_block', -1)
-        if level == self.extra_ball_level:
+        if num_blocks == self.extra_ball_block:
             self.game.base_play.light_extra_ball()
 
-        if level % 4 == 3:
+        if num_blocks % 4 == 0:
             self.start_block_war()
         else:
-            self.display_level_complete(level + 1, 10000)
-            self.game.sound.play_voice('block complete ' + str(level + 1))
-            self.next_level()
+            # internally blocks start at 0, on the display blocks start at 1
+            current_block = self.game.getPlayerState('current_block', -1)
+            self.display_block_complete(current_block + 1, 10000)
+            self.game.sound.play_voice('block complete ' + str(current_block + 1))
+            self.next_block()
 
-    def next_level(self):
-        level = self.game.getPlayerState('current_block', -1)
-        if level < self.game.blocks_required:
-            level += 1
-            self.game.setPlayerState('current_block', level)
-            if level == self.game.blocks_required:
+    def next_block(self):
+        current_block = self.game.getPlayerState('current_block', -1)
+        if current_block < self.game.blocks_required:
+            current_block += 1
+            self.game.setPlayerState('current_block', current_block)
+            if current_block == self.game.blocks_required:
                 self.city_blocks_completed()
             else:
-                # the level consists of num_to_pick many targets chosen among the targets listed in pick_from
+                # the block consists of num_to_pick many targets chosen among the targets listed in pick_from
                 # every selected target needs to be hit once
-                pick_from = self.level_pick_from[level]
+                pick_from = self.level_pick_from[current_block]
                 shuffle(pick_from)
 
-                num_to_pick = self.level_num_shots[level]
+                num_to_pick = self.level_num_shots[current_block]
                 if num_to_pick > len(pick_from):
-                    raise ValueError('Number of targets necessary for level ' + level + ' exceeds the list of targets in the template')
+                    raise ValueError('Number of targets necessary for block ' + current_block + ' exceeds the list of targets in the template')
 
                 # Now fill targets according to shuffled template
                 self.targets = [0] * 5
@@ -246,12 +247,12 @@ class CityBlock(CrimeSceneShots):
                     self.targets[pick_from[i]] = 1
         self.game.update_lamps()
 
-    def display_level_complete(self, level, points):
+    def display_block_complete(self, block, points):
         small_font = self.game.fonts['07x5']
         title_layer = TextLayer(128/2, 7, small_font, 'center').set_text('Advance Blocks', 1.5)
-        level_layer = TextLayer(128/2, 14, small_font, 'center').set_text('Block ' + str(level) + ' secured', 1.5)
+        block_layer = TextLayer(128/2, 14, small_font, 'center').set_text('Block ' + str(block) + ' secured', 1.5)
         award_layer = TextLayer(128/2, 21, small_font, 'center').set_text('Award: ' + self.game.format_score(points) + ' points', 1.5)
-        self.layer = GroupedLayer(128, 32, [title_layer, level_layer, award_layer])
+        self.layer = GroupedLayer(128, 32, [title_layer, block_layer, award_layer])
 
     #
     # Lamps
@@ -262,8 +263,8 @@ class CityBlock(CrimeSceneShots):
         style = styles[self.num_advance_hits]
         self.game.drive_lamp('advanceCrimeLevel', style)
 
-        level = self.game.getPlayerState('current_block', -1)
-        lamp_color = level % 4
+        current_block = self.game.getPlayerState('current_block', -1)
+        lamp_color = current_block % 4
         for shot in range(0, 5):
             for color in range(0, 4):
                 lamp_name = 'perp' + str(shot + 1) + self.lamp_colors[color]

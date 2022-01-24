@@ -18,10 +18,12 @@ class StatusReport(Mode):
         chain_layer = GroupedLayer(128, 32, [attempted_layer, completed_layer])
 
         # city blocks
-        block = player.getState('current_block', 0)
+        # if block war is currently playing, next block war is in 4 blocks
+        current_block = player.getState('current_block', 0)
+        num_blocks = player.getState('num_blocks', 0)
         block_title_layer = TextLayer(128/2, 7, tiny_font, 'center').set_text('Blocks')
-        current_block_layer = TextLayer(128/2, 16, tiny_font, 'center').set_text('Current Block: ' + str(block + 1) + '/' + str(self.game.blocks_required))
-        block_war_layer = TextLayer(128/2, 25, tiny_font, 'center').set_text('Block War in ' + str(4-(block % 4)) + ' blocks')
+        current_block_layer = TextLayer(128/2, 16, tiny_font, 'center').set_text('Current Block: ' + str(current_block + 1) + '/' + str(self.game.blocks_required))
+        block_war_layer = TextLayer(128/2, 25, tiny_font, 'center').set_text('Next Block War in ' + str(4-(num_blocks % 4)) + ' blocks')
         block_layer = GroupedLayer(128, 32, [block_title_layer, current_block_layer, block_war_layer])
 
         # combos

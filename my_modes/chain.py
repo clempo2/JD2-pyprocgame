@@ -116,7 +116,7 @@ class Chain(Mode):
             if self.game.getPlayerState('blocks_complete', False):
                 self.game.score(10000)
             else:
-                self.game.base_play.regular_play.city_blocks.city_block.level_complete()
+                self.game.base_play.regular_play.city_blocks.city_block.block_complete()
     
             if self.game.getPlayerState('multiball_active', 0):
                 self.game.score(100000)
