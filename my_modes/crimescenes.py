@@ -148,6 +148,8 @@ class CityBlock(CrimeSceneShots):
                 [0,1,2,3,4], [0,1,2,3,4], [0,1,2,3,4], [0,1,2,3,4]
             ]
             self.level_num_shots = [1, 1, 2, 2, 2, 3, 3, 3, 3, 3, 4, 4, 4, 4, 5, 5]
+            
+        self.block_outcome = ['neutralized', 'pacified', 'secured'] 
 
     def reset(self):
         # force the mode to initialize at block 0 the next time it starts
@@ -214,8 +216,11 @@ class CityBlock(CrimeSceneShots):
         else:
             # internally blocks start at 0, on the display blocks start at 1
             current_block = self.game.getPlayerState('current_block', -1)
-            self.display_block_complete(current_block + 1, 10000)
-            self.game.sound.play_voice('block complete ' + str(current_block + 1))
+            
+            shuffle(self.block_outcome)
+            block_n_outcome = 'block ' + str(current_block + 1) + ' ' + self.block_outcome[0]
+            self.display_block_complete(block_n_outcome, 10000)
+            self.game.sound.play_voice(block_n_outcome)
             self.next_block()
 
     def next_block(self):
@@ -241,9 +246,9 @@ class CityBlock(CrimeSceneShots):
                     self.targets[pick_from[i]] = 1
         self.game.update_lamps()
 
-    def display_block_complete(self, block, points):
+    def display_block_complete(self, outcome, points):
         small_font = self.game.fonts['07x5']
-        block_layer = TextLayer(128/2, 9, small_font, 'center').set_text('Block ' + str(block) + ' secured', 2)
+        block_layer = TextLayer(128/2, 9, small_font, 'center').set_text(outcome, 2)
         award_layer = TextLayer(128/2, 19, small_font, 'center').set_text(self.game.format_score(points) + ' points', 2)
         self.layer = GroupedLayer(128, 32, [block_layer, award_layer])
 
