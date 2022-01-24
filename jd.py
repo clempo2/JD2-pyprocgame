@@ -55,12 +55,13 @@ class JDGame(BasicGame):
         self.sound = SoundController(self)
         self.lampctrl = LampController(self)
         self.logging_enabled = False
-        self.lamp_schedules = {'slow':0x00ff00ff, 'medium':0x0f0f0f0f, 'fast':0x55555555, 'on':0xffffffff, 'off':0x00000000}
 
         # don't use the locale, always insert commas in groups of 3 digits
         self.score_display.format_score = self.format_score
 
         self.load_config('config/JD.yaml')
+        self.lamp_schedules = {'slow':0x00ff00ff, 'medium':0x0f0f0f0f, 'fast':0x55555555, 'on':0xffffffff, 'off':0x00000000}
+        self.create_high_score_categories()
 
         # Assets
         asset_loader = AssetLoader(self)
@@ -104,7 +105,9 @@ class JDGame(BasicGame):
         # Reset the entire game framework
         super(JDGame, self).reset()
 
-        self.load_settings_and_stats()
+        # reload the settings since they might have changed in service mode
+        self.load_game_settings()
+        self.load_game_stats()
 
         # Service mode
         self.switch_monitor = SwitchMonitor(game=self)
@@ -146,106 +149,9 @@ class JDGame(BasicGame):
         # Make sure flippers are off, especially for user initiated resets.
         self.enable_flippers(enable=False)
 
-    def add_modes(self, mode_list):
-        for mode in mode_list:
-            self.modes.add(mode)
-
-    def remove_modes(self, mode_list):
-        for m in mode_list:
-            self.modes.remove(m)
-
-    def remove_all_modes(self):
-        for m in self.modes[:]:
-            self.modes.remove(m)
-
-    def send_event(self, event):
-        for mode in self.modes[:]:
-            handler = getattr(mode, event, None)
-            if handler:
-                ret = handler()
-                if ret:
-                    # skip lower priority modes
-                    return ret
-
-    def stop_all_sounds(self):
-        # workaround for pyprocgame's SoundController lack of functionality
-        for key in self.sound.sounds:
-            self.sound.sounds[key][0].stop()
-        self.sound.voice_end_time = 0
-
-    def load_settings_and_stats(self):
-        self.load_settings(settings_template_path, settings_path)
-        self.sound.music_volume_offset = self.user_settings['Machine']['Music volume offset']
-        self.sound.set_volume(self.user_settings['Machine']['Initial volume'])
-
-        self.load_game_data(game_data_template_path, game_data_path)
-
-        self.balls_per_game = self.user_settings['Gameplay']['Balls per game']
-        self.score_display.set_left_players_justify(self.user_settings['Display']['Left side score justify'])
-
-        num_blocks_setting = int(self.user_settings['Gameplay']['Blocks for Ultimate Challenge'])
-        self.blocks_required = min(16, 4 * ceil(num_blocks_setting / 4)) # a multiple of 4 less than or equal to 16
-
-        # High Score stuff
-        classic_category = HighScoreCategory()
-        classic_category.game_data_key = 'ClassicHighScoreData'
-
-        blocks_category = self.create_high_score_category('BlocksHighScoreData', 'Block Champ', 'num_blocks', ' block')
-        innerLoops_category = self.create_high_score_category('InnerLoopsHighScoreData', 'Inner Loop Champ', 'best_inner_loops', ' loop')
-        outerLoops_category = self.create_high_score_category('OuterLoopsHighScoreData', 'Outer Loop Champ', 'best_outer_loops', ' loop')
-
-        self.highscore_categories = [classic_category, blocks_category, innerLoops_category, outerLoops_category]
-
-        supergame_category = HighScoreCategory()
-        supergame_category.game_data_key = 'SuperGameHighScoreData'
-        supergame_category.titles = ['SuperGame Champion', 'SuperGame High Score #1', 'SuperGame High Score #2', 'SuperGame High Score #3', 'SuperGame High Score #4']
-        
-        self.supergame_highscore_categories = [supergame_category, blocks_category, innerLoops_category, outerLoops_category]
-        
-        self.all_highscore_categories = [classic_category, supergame_category, blocks_category, innerLoops_category, outerLoops_category]
-        for category in self.all_highscore_categories:
-            category.load_from_game(self)
-
-    # workaround for procgame.service.SettingsEditor calling this method with only one argument
-    def save_settings(self, filename=None):
-        super(JDGame, self).save_settings(filename if filename else settings_path)
-
-    def create_high_score_category(self, key, title, state_key, suffix):
-        category = HighScoreCategory()
-        category.game_data_key = key
-        category.titles = [title]
-        category.score_for_player = lambda player: player.getState(state_key, 0)
-        category.score_suffix_singular = suffix
-        category.score_suffix_plural = suffix + 's'
-        return category
-
-    def start_service_mode(self):
-        """ remove all existing modes that are running
-            stop music, stop lamp shows, disable flippers
-            then add the service mode.
-        """
-
-        self.remove_all_modes()
-
-        self.lampctrl.stop_show()
-        for lamp in self.lamps:
-            lamp.disable()
-
-        self.sound.stop_music()
-        self.enable_flippers(False)
-        self.modes.add(self.service_mode)
-
-    def service_mode_ended(self):
-        self.reset()
-        self.update_lamps()
-
-    def volume_down(self):
-        volume = self.sound.volume_down()
-        self.set_status('Volume Down : ' + str(volume))
-
-    def volume_up(self):
-        volume = self.sound.volume_up()
-        self.set_status('Volume Up : ' + str(volume))
+    #
+    # Players
+    #
 
     def create_player(self, name):
         return JDPlayer(name)
@@ -267,6 +173,18 @@ class JDGame(BasicGame):
     def addPlayerState(self, key, delta):
         value = self.current_player().getState(key, 0)
         self.current_player().setState(key, value + delta)
+
+        # High Score Stuff
+        seq_manager = EntrySequenceManager(game=self, priority=2)
+        seq_manager.finished_handler = self.highscore_entry_finished
+        categories = self.supergame_highscore_categories if self.supergame else self.highscore_categories
+        seq_manager.logic = CategoryLogic(game=self, categories=categories)
+        seq_manager.ready_handler = self.highscore_entry_ready_to_prompt
+        self.modes.add(seq_manager)
+
+    #
+    # Game
+    #
 
     def start_game(self, supergame):
         super(JDGame, self).start_game()
@@ -310,13 +228,37 @@ class JDGame(BasicGame):
         super(JDGame, self).game_ended()
         self.deadworld.mode_stopped()
 
-        # High Score Stuff
-        seq_manager = EntrySequenceManager(game=self, priority=2)
-        seq_manager.finished_handler = self.highscore_entry_finished
-        categories = self.supergame_highscore_categories if self.supergame else self.highscore_categories
-        seq_manager.logic = CategoryLogic(game=self, categories=categories)
-        seq_manager.ready_handler = self.highscore_entry_ready_to_prompt
-        self.modes.add(seq_manager)
+    def set_status(self, text):
+        self.dmd.set_message(text, 3)
+
+    #
+    # Modes
+    #
+
+    def add_modes(self, mode_list):
+        for mode in mode_list:
+            self.modes.add(mode)
+
+    def remove_modes(self, mode_list):
+        for m in mode_list:
+            self.modes.remove(m)
+
+    def remove_all_modes(self):
+        for m in self.modes[:]:
+            self.modes.remove(m)
+
+    def send_event(self, event):
+        for mode in self.modes[:]:
+            handler = getattr(mode, event, None)
+            if handler:
+                ret = handler()
+                if ret:
+                    # skip lower priority modes
+                    return ret
+
+    #
+    # Tilt
+    #
 
     def tilt_warning(self, times_warned):
         self.sound.play('tilt warning')
@@ -340,6 +282,104 @@ class JDGame(BasicGame):
             self.coils.shooterR.pulse(50)
         if self.switches.shooterL.is_active():
             self.coils.shooterL.pulse(20)
+
+    #
+    # Ball Search
+    #
+
+    def perform_ball_search(self):
+        self.set_status('Ball Search!')
+        self.ball_search.perform_search(5)
+        if self.deadworld.num_balls_locked > 0:
+            self.deadworld.perform_ball_search()
+            
+    def disable_ball_search(self):
+        # workaround for a bug in pyprocgame's BallSearch.disable
+        self.ball_search.disable()
+        self.ball_search.cancel_delayed(name='ball_search_countdown')
+        self.ball_search.cancel_delayed('ball_search_coil1')
+        
+    # Empty callback
+    # Calling self.game.trough.launch_balls() with a None callback preserves the previous callback
+    # to erase the callback completely, you have to pass an empty callback instead
+    def no_op_callback(self):
+        pass
+
+    #
+    # Settings
+    #
+
+    def load_game_settings(self):
+        self.load_settings(settings_template_path, settings_path)
+
+        self.sound.music_volume_offset = self.user_settings['Machine']['Music volume offset']
+        self.sound.set_volume(self.user_settings['Machine']['Initial volume'])
+
+        self.balls_per_game = self.user_settings['Gameplay']['Balls per game']
+        self.score_display.set_left_players_justify(self.user_settings['Display']['Left side score justify'])
+
+        num_blocks_setting = int(self.user_settings['Gameplay']['Blocks for Ultimate Challenge'])
+        self.blocks_required = min(16, 4 * ceil(num_blocks_setting / 4)) # a multiple of 4 less than or equal to 16
+
+    # workaround for procgame.service.SettingsEditor calling this method with only one argument
+    def save_settings(self, filename=None):
+        super(JDGame, self).save_settings(filename if filename else settings_path)
+
+    #
+    # Stats
+    #
+
+    def load_game_stats(self):
+        self.load_game_data(game_data_template_path, game_data_path)
+        for category in self.all_highscore_categories:
+            category.load_from_game(self)
+
+    def calc_time_average_string(self, prev_total, prev_x, new_value):
+        prev_time_list = prev_x.split(':')
+        prev_time = (int(prev_time_list[0]) * 60) + int(prev_time_list[1])
+        avg_game_time = int((int(prev_total) * int(prev_time)) + int(new_value)) / (int(prev_total) + 1)
+        avg_game_time_min = avg_game_time/60
+        avg_game_time_sec = str(avg_game_time%60)
+        if len(avg_game_time_sec) == 1:
+            avg_game_time_sec = '0' + avg_game_time_sec
+
+        return_str = str(avg_game_time_min) + ':' + avg_game_time_sec
+        return return_str
+
+    def calc_number_average(self, prev_total, prev_x, new_value):
+        avg_game_time = int((prev_total * prev_x) + new_value) / (prev_total + 1)
+        return int(avg_game_time)
+
+    #
+    # High Scores
+    #
+    
+    def create_high_score_categories(self):
+        classic_category = HighScoreCategory()
+        classic_category.game_data_key = 'ClassicHighScoreData'
+
+        blocks_category = self.create_high_score_category('BlocksHighScoreData', 'Block Champ', 'num_blocks', ' block')
+        innerLoops_category = self.create_high_score_category('InnerLoopsHighScoreData', 'Inner Loop Champ', 'best_inner_loops', ' loop')
+        outerLoops_category = self.create_high_score_category('OuterLoopsHighScoreData', 'Outer Loop Champ', 'best_outer_loops', ' loop')
+
+        self.highscore_categories = [classic_category, blocks_category, innerLoops_category, outerLoops_category]
+
+        supergame_category = HighScoreCategory()
+        supergame_category.game_data_key = 'SuperGameHighScoreData'
+        supergame_category.titles = ['SuperGame Champion', 'SuperGame High Score #1', 'SuperGame High Score #2', 'SuperGame High Score #3', 'SuperGame High Score #4']
+        
+        self.supergame_highscore_categories = [supergame_category, blocks_category, innerLoops_category, outerLoops_category]
+        
+        self.all_highscore_categories = [classic_category, supergame_category, blocks_category, innerLoops_category, outerLoops_category]
+
+    def create_high_score_category(self, key, title, state_key, suffix):
+        category = HighScoreCategory()
+        category.game_data_key = key
+        category.titles = [title]
+        category.score_for_player = lambda player: player.getState(state_key, 0)
+        category.score_suffix_singular = suffix
+        category.score_suffix_plural = suffix + 's'
+        return category
 
     def highscore_entry_ready_to_prompt(self, mode, prompt):
         self.sound.play_voice('high score')
@@ -378,26 +418,51 @@ class JDGame(BasicGame):
         # disregard the locale, always insert commas between groups of 3 digits
         return '00' if score == 0 else '{:,}'.format(score)
 
-    def set_status(self, text):
-        self.dmd.set_message(text, 3)
+    #
+    # Service Mode
+    #
 
-    def perform_ball_search(self):
-        self.set_status('Ball Search!')
-        self.ball_search.perform_search(5)
-        if self.deadworld.num_balls_locked > 0:
-            self.deadworld.perform_ball_search()
-            
-    def disable_ball_search(self):
-        # workaround for a bug in pyprocgame's BallSearch.disable
-        self.ball_search.disable()
-        self.ball_search.cancel_delayed(name='ball_search_countdown')
-        self.ball_search.cancel_delayed('ball_search_coil1')
-        
-    # Empty callback
-    # Calling self.game.trough.launch_balls() with a None callback preserves the previous callback
-    # to erase the callback completely, you have to pass an empty callback instead
-    def no_op_callback(self):
-        pass
+    def start_service_mode(self):
+        """ remove all existing modes that are running
+            stop music, stop lamp shows, disable flippers
+            then add the service mode.
+        """
+
+        self.remove_all_modes()
+
+        self.lampctrl.stop_show()
+        for lamp in self.lamps:
+            lamp.disable()
+
+        self.sound.stop_music()
+        self.enable_flippers(False)
+        self.modes.add(self.service_mode)
+
+    def service_mode_ended(self):
+        self.reset()
+        self.update_lamps()
+
+    #
+    # Sound
+    #
+
+    def stop_all_sounds(self):
+        # workaround for pyprocgame's SoundController lack of functionality
+        for key in self.sound.sounds:
+            self.sound.sounds[key][0].stop()
+        self.sound.voice_end_time = 0
+
+    def volume_down(self):
+        volume = self.sound.volume_down()
+        self.set_status('Volume Down : ' + str(volume))
+
+    def volume_up(self):
+        volume = self.sound.volume_up()
+        self.set_status('Volume Up : ' + str(volume))
+
+    #
+    # lamps
+    #
 
     def drive_lamp(self, lamp_name, style='on'):
         lamp_schedule = self.lamp_schedules[style]
@@ -418,22 +483,6 @@ class JDGame(BasicGame):
                 self.lamps[gi].enable()
             else:
                 self.lamps[gi].disable()
-
-    def calc_time_average_string(self, prev_total, prev_x, new_value):
-        prev_time_list = prev_x.split(':')
-        prev_time = (int(prev_time_list[0]) * 60) + int(prev_time_list[1])
-        avg_game_time = int((int(prev_total) * int(prev_time)) + int(new_value)) / (int(prev_total) + 1)
-        avg_game_time_min = avg_game_time/60
-        avg_game_time_sec = str(avg_game_time%60)
-        if len(avg_game_time_sec) == 1:
-            avg_game_time_sec = '0' + avg_game_time_sec
-
-        return_str = str(avg_game_time_min) + ':' + avg_game_time_sec
-        return return_str
-
-    def calc_number_average(self, prev_total, prev_x, new_value):
-        avg_game_time = int((prev_total * prev_x) + new_value) / (prev_total + 1)
-        return int(avg_game_time)
 
 def main():
     game = None
