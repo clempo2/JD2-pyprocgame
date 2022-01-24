@@ -51,7 +51,7 @@ class ShootingGallery(Mode):
 
         self.intro_layer_3 = TextLayer(128/2, 7, self.game.fonts['jazz18'], 'center', opaque=False).set_text('Video Mode').set_text('Ready...')
 
-        self.intro_layer_4 = TextLayer(128/2, 7, self.game.fonts['jazz18'], 'center', opaque=False).set_text('Video Mode').set_text('Begin!')
+        self.intro_layer_4 = TextLayer(128/2, 7, self.game.fonts['jazz18'], 'center', opaque=False).set_text('Video Mode').set_text('Begin')
 
         self.layer = ScriptedLayer(128, 32, [
             {'seconds':3.0, 'layer':self.intro_layer_0},
@@ -112,7 +112,7 @@ class ShootingGallery(Mode):
 
     def finish(self):
         self.state = 'complete'
-        self.status_layer.set_text('Completed!')
+        self.status_layer.set_text('Completed')
         self.intro_layer_21.set_text('Completion Bonus:')
         self.intro_layer_22.set_text(str(100000))
         self.layer = self.intro_layer_2
@@ -129,7 +129,7 @@ class ShootingGallery(Mode):
             self.delay(name='wrap_up', event_type=None, delay=3.0, handler=self.wrap_up)
 
     def perfect(self):
-        self.status_layer.set_text('Perfect!')
+        self.status_layer.set_text('Perfect')
         self.layer = self.status_layer
         self.layer.opaque = True
         self.delay(name='wrap_up', event_type=None, delay=2.0, handler=self.wrap_up)
@@ -234,7 +234,7 @@ class ShootingGallery(Mode):
     def friend_shot(self):
         self.game.sound.play('good guy shot')
         self.state = 'complete'
-        self.status_layer.set_text('Failed!')
+        self.status_layer.set_text('Failed')
         self.cancel_delayed(['empty_shot', 'enemy_shot', 'enemy_remove', 'friend_shot', 'add', 'finish'])
         self.delay(name='wrap_up', event_type=None, delay=2.0, handler=self.wrap_up)
         self.success = False

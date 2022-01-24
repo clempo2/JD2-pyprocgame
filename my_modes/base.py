@@ -214,7 +214,7 @@ class BasePlay(Mode):
         else:
             self.extra_balls_lit += 1
             self.game.update_lamps()
-            self.show_on_display('Extra Ball Lit!')
+            self.show_on_display('Extra Ball Lit')
 
     def sw_leftScorePost_active(self, sw):
         self.extra_ball_switch_hit()
@@ -375,7 +375,7 @@ class BasePlay(Mode):
         self.skill_shot.skill_shot_expired()
         if not self.game.getPlayerState('multiball_active', 0):
             self.game.sound.play_voice('ball saved')
-            self.show_on_display('Ball Saved!')
+            self.show_on_display('Ball Saved')
 
     def drain_callback(self):
         if not self.tilt.tilted:

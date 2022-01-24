@@ -42,16 +42,9 @@ class CityBlocks(Mode):
 
     def __init__(self, game, priority):
         super(CityBlocks, self).__init__(game, priority)
-
-        self.city_block = CityBlock(game, priority + 1)
-        self.city_block.start_block_war = self.start_block_war
-        self.city_block.city_blocks_completed = self.city_blocks_completed
-
-        self.block_war = BlockWar(game, priority + 5)
-        self.block_war.start_block_war_bonus = self.start_block_war_bonus
-
-        self.block_war_bonus = BlockWarBonus(game, priority + 5)
-        self.block_war_bonus.end_block_war_bonus = self.end_block_war_bonus
+        self.city_block = CityBlock(self, priority + 1)
+        self.block_war = BlockWar(self, priority + 5)
+        self.block_war_bonus = BlockWarBonus(self, priority + 5)
 
     def mode_started(self):
         self.start_city_block()
@@ -122,8 +115,9 @@ class CityBlocks(Mode):
 class CityBlock(CrimeSceneShots):
     """Mode using the crime scene shot to secure a city block"""
 
-    def __init__(self, game, priority):
-        super(CityBlock, self).__init__(game, priority)
+    def __init__(self, parent, priority):
+        super(CityBlock, self).__init__(parent.game, priority)
+        self.parent = parent
 
         # we always award the most difficult target that remains in the current block
         self.target_award_order = [1, 3 ,0, 2, 4]
@@ -216,7 +210,7 @@ class CityBlock(CrimeSceneShots):
             self.game.base_play.light_extra_ball()
 
         if num_blocks % 4 == 0:
-            self.start_block_war()
+            self.parent.start_block_war()
         else:
             # internally blocks start at 0, on the display blocks start at 1
             current_block = self.game.getPlayerState('current_block', -1)
@@ -230,7 +224,7 @@ class CityBlock(CrimeSceneShots):
             current_block += 1
             self.game.setPlayerState('current_block', current_block)
             if current_block == self.game.blocks_required:
-                self.city_blocks_completed()
+                self.parent.city_blocks_completed()
             else:
                 # the block consists of num_to_pick many targets chosen among the targets listed in pick_from
                 # every selected target needs to be hit once
@@ -249,10 +243,9 @@ class CityBlock(CrimeSceneShots):
 
     def display_block_complete(self, block, points):
         small_font = self.game.fonts['07x5']
-        title_layer = TextLayer(128/2, 7, small_font, 'center').set_text('Advance Blocks', 1.5)
-        block_layer = TextLayer(128/2, 14, small_font, 'center').set_text('Block ' + str(block) + ' secured', 1.5)
-        award_layer = TextLayer(128/2, 21, small_font, 'center').set_text('Award: ' + self.game.format_score(points) + ' points', 1.5)
-        self.layer = GroupedLayer(128, 32, [title_layer, block_layer, award_layer])
+        block_layer = TextLayer(128/2, 9, small_font, 'center').set_text('Block ' + str(block) + ' secured', 2)
+        award_layer = TextLayer(128/2, 19, small_font, 'center').set_text(self.game.format_score(points) + ' points', 2)
+        self.layer = GroupedLayer(128, 32, [block_layer, award_layer])
 
     #
     # Lamps
@@ -275,8 +268,9 @@ class CityBlock(CrimeSceneShots):
 class BlockWar(CrimeSceneShots):
     """Multiball activated by securing city blocks"""
 
-    def __init__(self, game, priority):
-        super(BlockWar, self).__init__(game, priority)
+    def __init__(self, parent, priority):
+        super(BlockWar, self).__init__(parent.game, priority)
+        self.parent = parent
         self.countdown_layer = TextLayer(128/2, 7, self.game.fonts['jazz18'], 'center')
         self.banner_layer = TextLayer(128/2, 7, self.game.fonts['jazz18'], 'center')
         self.score_reason_layer = TextLayer(128/2, 7, self.game.fonts['07x5'], 'center')
@@ -286,7 +280,7 @@ class BlockWar(CrimeSceneShots):
 
     def mode_started(self):
         self.game.addPlayerState('multiball_active', 0x2)
-        self.banner_layer.set_text('Block War!', 3)
+        self.banner_layer.set_text('Block War', 3)
         self.game.sound.play_voice('block war start')
         self.game.trough.launch_balls(1, self.start_callback)
 
@@ -334,7 +328,7 @@ class BlockWar(CrimeSceneShots):
     def round_complete(self):
         self.game.score(10000)
         self.game.lampctrl.play_show('advance_level', False, self.game.update_lamps)
-        self.start_block_war_bonus()
+        self.parent.start_block_war_bonus()
 
     def update_lamps(self):
         self.game.drive_lamp('advanceCrimeLevel', 'off')
@@ -348,8 +342,9 @@ class BlockWar(CrimeSceneShots):
 class BlockWarBonus(CrimeSceneShots):
     """Bonus round after a successful block war round, shoot the rotating target"""
 
-    def __init__(self, game, priority):
-        super(BlockWarBonus, self).__init__(game, priority)
+    def __init__(self, parent, priority):
+        super(BlockWarBonus, self).__init__(parent.game, priority)
+        self.parent = parent
         self.banner_layer = TextLayer(128/2, 7, self.game.fonts['jazz18'], 'center')
 
     def mode_started(self):
@@ -368,7 +363,7 @@ class BlockWarBonus(CrimeSceneShots):
             bonus_step = -1
         self.bonus_shot += bonus_step
         if self.bonus_shot == -1:
-            self.end_block_war_bonus(False)
+            self.parent.end_block_war_bonus(False)
         else:
             self.delay(name='rotate_bonus_target', event_type=None, delay=3, handler=self.rotate_bonus_target, param=bonus_step)
         self.game.update_lamps()
@@ -380,10 +375,10 @@ class BlockWarBonus(CrimeSceneShots):
 
     def bonus_round_collected(self):
         self.game.score(200000)
-        self.banner_layer.set_text('Jackpot!', 2)
+        self.banner_layer.set_text('Jackpot', 2)
         self.game.sound.play_voice('jackpot')
         self.game.lampctrl.play_show('advance_level', False, self.game.update_lamps)
-        self.end_block_war_bonus(True)
+        self.parent.end_block_war_bonus(True)
 
     def update_lamps(self):
         self.game.drive_lamp('advanceCrimeLevel', 'off')

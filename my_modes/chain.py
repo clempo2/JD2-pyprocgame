@@ -187,7 +187,7 @@ class ChainHurryUp(TimedMode):
         self.game.sound.play_voice('collected')
         self.cancel_delayed('trip_check')
         self.already_collected = True
-        self.game.base_play.show_on_display('Well Done!')
+        self.game.base_play.show_on_display('Well Done')
         self.exit_callback(True)
 
 

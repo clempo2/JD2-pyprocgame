@@ -64,14 +64,14 @@ class Multiball(Mode):
         if self.virtual_locks_needed < 0:
             # enable the lock so the player can quickly re-lock
             self.enable_lock()
-            self.display_text('Lock is Lit!')
+            self.display_text('Lock is Lit')
             self.num_balls_locked = self.game.deadworld.num_balls_locked
             #self.num_locks_lit = 0 - self.virtual_locks_needed
         elif self.virtual_locks_needed > 0:
             self.enable_virtual_lock()
         elif self.num_balls_locked < self.num_locks_lit:
             self.enable_lock()
-            self.display_text('Lock is Lit!')
+            self.display_text('Lock is Lit')
 
     def mode_stopped(self):
         # save player state
@@ -104,7 +104,7 @@ class Multiball(Mode):
         self.game.sound.play_voice('multiball')
         self.num_balls_locked = 0
         self.state = 'multiball'
-        self.display_text('Multiball!')
+        self.display_text('Multiball')
         self.start_callback()
         self.game.addPlayerState('multiball_active', 0x1)
         self.num_left_ramp_shots_hit = 0
@@ -155,7 +155,7 @@ class Multiball(Mode):
 
     def sw_subwayEnter2_active(self, sw):
         if self.jackpot_lit:
-            self.display_text('Jackpot!')
+            self.display_text('Jackpot')
             self.game.sound.play_voice('jackpot')
             self.jackpot_lit = False
             self.delay(name='jackpot', event_type=None, delay=1.5, handler=self.jackpot)
@@ -213,7 +213,7 @@ class Multiball(Mode):
         if self.lock_enabled:
             self.game.coils.flasherGlobe.schedule(schedule=0xAAAAAAAA, cycle_seconds=2, now=True)
             self.num_balls_locked += 1
-            self.display_text('Ball ' + str(self.num_balls_locked) + ' Locked!')
+            self.display_text('Ball ' + str(self.num_balls_locked) + ' Locked')
             if self.num_balls_locked == 1:
                 self.game.sound.play_voice('ball 1 locked')
             elif self.num_balls_locked == 2:
@@ -262,7 +262,7 @@ class Multiball(Mode):
         dw_balls_locked_adj = 0
         if mode == 'sneaky':
             dw_balls_locked_adj = 1
-            self.game.set_status('Sneaky Lock!')
+            self.game.set_status('Sneaky Lock')
 
         if self.state == 'load' and not self.paused:
             # Prepare to lock
@@ -285,10 +285,10 @@ class Multiball(Mode):
                 # Don't enable locks if doing virtual locks.
                 if self.virtual_locks_needed <= 0:
                     self.enable_lock()
-                    self.display_text('Lock is Lit!')
+                    self.display_text('Lock is Lit')
                 else:
                     self.enable_virtual_lock()
-                    self.display_text('Lock is Lit!')
+                    self.display_text('Lock is Lit')
 
             self.game.update_lamps()
 
