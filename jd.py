@@ -174,14 +174,6 @@ class JDGame(BasicGame):
         value = self.current_player().getState(key, 0)
         self.current_player().setState(key, value + delta)
 
-        # High Score Stuff
-        seq_manager = EntrySequenceManager(game=self, priority=2)
-        seq_manager.finished_handler = self.highscore_entry_finished
-        categories = self.supergame_highscore_categories if self.supergame else self.highscore_categories
-        seq_manager.logic = CategoryLogic(game=self, categories=categories)
-        seq_manager.ready_handler = self.highscore_entry_ready_to_prompt
-        self.modes.add(seq_manager)
-
     #
     # Game
     #
@@ -227,6 +219,14 @@ class JDGame(BasicGame):
     def game_ended(self):
         super(JDGame, self).game_ended()
         self.deadworld.mode_stopped()
+
+        # High Score Stuff
+        seq_manager = EntrySequenceManager(game=self, priority=2)
+        seq_manager.finished_handler = self.highscore_entry_finished
+        categories = self.supergame_highscore_categories if self.supergame else self.highscore_categories
+        seq_manager.logic = CategoryLogic(game=self, categories=categories)
+        seq_manager.ready_handler = self.highscore_entry_ready_to_prompt
+        self.modes.add(seq_manager)
 
     def set_status(self, text):
         self.dmd.set_message(text, 3)

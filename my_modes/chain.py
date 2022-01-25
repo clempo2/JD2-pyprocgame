@@ -414,6 +414,7 @@ class Impersonator(ChainFeature):
         self.game.sound.stop('bi - boo')
 
     def play_music(self):
+        # this mode talks all the time, we don't want any music
         pass
 
     def song_restart(self):

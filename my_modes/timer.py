@@ -86,6 +86,7 @@ class TimedMode(Timer):
     def mode_started(self):
         self.game.modes.add(self.intro)
         self.num_shots = 0
+        self.play_music()
 
     def mode_stopped(self):
         self.game.modes.remove(self.intro)
@@ -95,7 +96,6 @@ class TimedMode(Timer):
         self.game.modes.remove(self.intro)
         if self.mode_time > 0:
             self.start_timer(self.mode_time)
-        self.play_music()
         self.update_status()
 
     def play_music(self):
