@@ -218,7 +218,7 @@ class JDGame(BasicGame):
 
     def game_ended(self):
         super(JDGame, self).game_ended()
-        self.deadworld.mode_stopped()
+        self.deadworld.stop()
 
         # High Score Stuff
         seq_manager = EntrySequenceManager(game=self, priority=2)

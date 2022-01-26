@@ -242,12 +242,11 @@ class BlockWar(CrimeSceneShots):
     def __init__(self, parent, priority):
         super(BlockWar, self).__init__(parent.game, priority)
         self.parent = parent
-        self.countdown_layer = TextLayer(128/2, 7, self.game.fonts['jazz18'], 'center')
         self.banner_layer = TextLayer(128/2, 7, self.game.fonts['jazz18'], 'center')
         self.score_reason_layer = TextLayer(128/2, 7, self.game.fonts['07x5'], 'center')
         self.score_value_layer = TextLayer(128/2, 17, self.game.fonts['07x5'], 'center')
         self.anim_layer = self.game.animations['blockwars']
-        self.layer = GroupedLayer(128, 32, [self.anim_layer, self.countdown_layer, self.banner_layer, self.score_reason_layer, self.score_value_layer])
+        self.layer = GroupedLayer(128, 32, [self.anim_layer, self.banner_layer, self.score_reason_layer, self.score_value_layer])
 
     def mode_started(self):
         self.game.addPlayerState('multiball_active', 0x2)

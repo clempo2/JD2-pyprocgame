@@ -243,7 +243,7 @@ class BasePlay(Mode):
     def replay_callback(self):
         award = self.game.user_settings['Replay']['Replay Award']
         self.game.coils.knocker.pulse(50)
-        self.show_on_display('Reolay')
+        self.show_on_display('Replay')
         if award == 'Extra Ball':
             if self.total_extra_balls < self.game.user_settings['Gameplay']['Max extra balls per game']:
                 if self.extra_balls_lit + self.total_extra_balls == self.game.user_settings['Gameplay']['Max extra balls per game']:
