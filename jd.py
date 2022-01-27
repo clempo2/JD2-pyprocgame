@@ -102,6 +102,10 @@ class JDGame(BasicGame):
                 self.desktop.add_key_map(key, switch_number)
 
     def reset(self):
+        # work-around for poor implementation of reset by the framework
+        # this is important when the game is aborted with a long press to the startButton
+        self.remove_all_modes()
+        
         # Reset the entire game framework
         super(JDGame, self).reset()
 

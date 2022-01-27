@@ -65,7 +65,7 @@ class Multiball(Mode):
     def mode_stopped(self):
         # save player state
         player = self.game.current_player()
-        player.setState('multiball_active', player.getState('multiball_active', 0) and ~0x1) # in case of tilt
+        player.setState('multiball_active', player.getState('multiball_active', 0) & ~0x1) # in case of tilt
         player.setState('num_balls_locked', self.num_balls_locked)
         player.setState('num_locks_lit', self.num_locks_lit)
         player.setState('multiball_played', self.multiball_played)
