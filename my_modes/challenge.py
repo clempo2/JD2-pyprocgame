@@ -36,7 +36,7 @@ class UltimateChallenge(Mode):
         if self.game.trough.num_balls_in_play == 0:
             # serve one ball in the shooter lane and wait for player to plunge
             self.game.base_play.auto_plunge = False
-            self.launch_balls(1)
+            self.game.launch_balls(1)
         self.game.modes.add(self.mode_list[self.active_mode])
         self.game.update_lamps()
         self.game.sound.play_music('mode', loops=-1)
@@ -123,19 +123,9 @@ class ChallengeBase(TimedMode):
         self.game.base_play.auto_plunge = True
         balls_to_launch = self.num_balls - self.game.trough.num_balls_in_play
         if balls_to_launch > 0:
-            self.launch_balls(balls_to_launch)
+            self.game.launch_balls(balls_to_launch)
 
         self.started = True
-
-    def launch_balls(self, balls_to_launch):
-        # launch balls from the trough if it has sufficient balls, else eject additional balls from Deadworld
-        trough_balls = self.game.trough.num_balls()
-        trough_balls_to_launch = balls_to_launch if balls_to_launch <= trough_balls else trough_balls
-        deadworld_balls_to_launch = balls_to_launch - trough_balls_to_launch
-        if trough_balls_to_launch:
-            self.game.trough.launch_balls(balls_to_launch, self.game.no_op_callback)
-        if deadworld_balls_to_launch:
-            self.game.deadworld.eject_balls(deadworld_balls_to_launch)
 
     def sw_shooterR_inactive_for_900ms(self, sw):
         if not self.started:
@@ -456,7 +446,7 @@ class Fire(DarkJudge, CrimeSceneShots):
         if self.mystery_lit:
             self.mystery_lit = False
             self.game.set_status('Add 2 balls')
-            self.launch_balls(2)
+            self.game.launch_balls(2)
             self.game.update_lamps()
 
     def switch_hit(self, num):

@@ -204,6 +204,16 @@ class JDGame(BasicGame):
         self.ball_save.timer = 0
         self.ball_save.start(num_balls_to_save, time, now, allow_multiple_saves)
 
+    def launch_balls(self, balls_to_launch):
+        # launch balls from the trough if it has sufficient balls, else eject additional balls from Deadworld
+        trough_balls = self.trough.num_balls()
+        trough_balls_to_launch = balls_to_launch if balls_to_launch <= trough_balls else trough_balls
+        deadworld_balls_to_launch = balls_to_launch - trough_balls_to_launch
+        if trough_balls_to_launch:
+            self.trough.launch_balls(balls_to_launch, self.no_op_callback)
+        if deadworld_balls_to_launch:
+            self.deadworld.eject_balls(deadworld_balls_to_launch)
+
     # Override to create a flag signaling extra ball.
     def shoot_again(self):
         super(JDGame, self).shoot_again()
