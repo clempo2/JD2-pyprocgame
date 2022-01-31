@@ -33,9 +33,7 @@ class Multiball(Mode):
         self.num_ramp_shots = 0
         self.ramp_shots_required = 1
 
-        self.delay(name='voice instructions', event_type=None, delay=10, handler=self.voice_instructions)
-        self.game.deadworld.stop()
-        self.game.deadworld.disable_lock()
+        self.game.deadworld.stop_spinning()
         self.install_rule(enable=False)
         self.game.modes.add(self.drops)
 
@@ -69,8 +67,9 @@ class Multiball(Mode):
         player.setState('num_balls_locked', self.num_balls_locked)
         player.setState('num_locks_lit', self.num_locks_lit)
         player.setState('multiball_played', self.multiball_played)
+        # multiball_jackpot_collected is sticky until it is reset at the end of Ultimate Challenge
 
-        self.cancel_delayed(['trip_check', 'voice instructions'])
+        self.cancel_delayed(['trip_check', 'multiball_instructions'])
         self.game.modes.remove(self.drops)
 
     def reset(self):
@@ -81,6 +80,7 @@ class Multiball(Mode):
 
     def start_multiball(self):
         self.game.sound.play_voice('multiball')
+        self.delay(name='multiball_instructions', event_type=None, delay=10, handler=self.multiball_instructions)
         self.state = 'multiball'
         self.display_text('Multiball')
         self.num_balls_locked = 0
@@ -92,7 +92,7 @@ class Multiball(Mode):
         self.game.update_lamps()
 
     def end_multiball(self):
-        self.cancel_delayed(name='trip_check')
+        self.cancel_delayed(['trip_check', 'multiball_instructions'])
         self.game.coils.flasherGlobe.disable()
         self.state = 'load'
         self.num_locks_lit = 0
@@ -103,11 +103,10 @@ class Multiball(Mode):
         self.reset_active_drops()
         self.game.update_lamps()
 
-    def voice_instructions(self):
-        self.delay(name='voice instructions', event_type=None, delay=10, handler=self.voice_instructions)
-        if self.state == 'multiball':
-            voice = 'shoot the subway' if self.jackpot_lit else 'shoot the left ramp'
-            self.game.sound.play_voice(voice)
+    def multiball_instructions(self):
+        voice = 'shoot the subway' if self.jackpot_lit else 'shoot the left ramp'
+        self.game.sound.play_voice(voice)
+        self.delay(name='multiball_instructions', event_type=None, delay=10, handler=self.multiball_instructions)
 
     def install_rule(self, enable):
         switch_num = self.game.switches['leftRampEnter'].number
@@ -116,12 +115,12 @@ class Multiball(Mode):
         self.game.install_switch_rule_coil_schedule(switch_num, 'closed_debounced', 'diverter', 0x00000fff, 1, True, True, enable)
 
     def stop_globe(self):
-        self.game.deadworld.stop()
+        self.game.deadworld.stop_spinning()
 
     def evt_ball_drained(self):
         # End multiball if there is now only one ball in play
-        if self.game.trough.num_balls_in_play == 1:
-            if self.state == 'multiball':
+        if self.state == 'multiball':
+            if self.game.trough.num_balls_in_play == 1:
                 self.end_multiball()
 
     def light_jackpot(self):
@@ -145,15 +144,14 @@ class Multiball(Mode):
 
     def disable_lock(self):
         self.lock_enabled = False
-        self.game.deadworld.disable_lock()
         self.install_rule(enable=False)
 
     def enable_lock(self):
         self.lock_enabled = True
-        self.game.sound.play_voice('locks lit')
         self.game.deadworld.enable_lock()
-        self.game.coils.flasherGlobe.schedule(schedule=0x0000AAAA, cycle_seconds=2, now=True)
         self.install_rule(enable=True)
+        self.game.sound.play_voice('locks lit')
+        self.game.coils.flasherGlobe.schedule(schedule=0x0000AAAA, cycle_seconds=2, now=True)
 
     def enable_virtual_lock(self):
         # Make sure deadworld will eject a ball if one happens to enter.
@@ -162,6 +160,7 @@ class Multiball(Mode):
         self.game.coils.flasherGlobe.schedule(schedule=0x0000AAAA, cycle_seconds=2, now=True)
 
     def possibly_light_lock(self, mode):
+        # called when drops are completed or there was a sneaky lock
         dw_balls_locked_adj = 0
         if mode == 'sneaky':
             dw_balls_locked_adj = 1
@@ -209,6 +208,11 @@ class Multiball(Mode):
 
     def trip_check(self):
         if self.game.switches.dropTargetD.is_inactive():
+            self.game.coils.tripDropTarget.pulse(40)
+            self.delay(name='trip_check', event_type=None, delay=.400, handler=self.trip_check)
+
+    def sw_dropTargetD_inactive_for_400ms(self, sw):
+        if self.jackpot_lit:
             self.game.coils.tripDropTarget.pulse(40)
             self.delay(name='trip_check', event_type=None, delay=.400, handler=self.trip_check)
 
@@ -274,11 +278,6 @@ class Multiball(Mode):
                     self.game.sound.play_voice('again')
 
         self.game.update_lamps()
-
-    def sw_dropTargetD_inactive_for_400ms(self, sw):
-        if self.jackpot_lit:
-            self.game.coils.tripDropTarget.pulse(40)
-            self.delay(name='trip_check', event_type=None, delay=.400, handler=self.trip_check)
 
     def sw_subwayEnter2_active(self, sw):
         if self.jackpot_lit:

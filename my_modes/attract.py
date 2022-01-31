@@ -59,9 +59,8 @@ class Attract(Mode):
 [Travis Highrise]
 
 [Special Thanks to:]
+[Steven Duchac]
 [Rob Anthony]
-[Michael Ocean]
-[Josh Kugler]
 
 [www.multimorphic.com]
 [pyprocgame.pindev.org]

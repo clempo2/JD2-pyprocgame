@@ -142,7 +142,7 @@ class JDGame(BasicGame):
         # Instantiate basic game features
         self.attract_mode = Attract(self)
         self.base_play = BasePlay(self)
-        self.deadworld = Deadworld(self, 20, self.settings['Machine']['Deadworld mod installed'])
+        self.deadworld = Deadworld(self, 20)
 
         self.shooting_again = False
 
@@ -232,7 +232,7 @@ class JDGame(BasicGame):
 
     def game_ended(self):
         super(JDGame, self).game_ended()
-        self.deadworld.stop()
+        self.deadworld.stop_spinning()
 
         # High Score Stuff
         seq_manager = EntrySequenceManager(game=self, priority=2)

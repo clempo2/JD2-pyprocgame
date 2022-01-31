@@ -5,83 +5,38 @@ from procgame.service import ServiceModeSkeleton
 class Deadworld(Mode):
     """Controls the Deadworld planet"""
 
-    def __init__(self, game, priority, deadworld_mod_installed):
+    def __init__(self, game, priority):
         super(Deadworld, self).__init__(game, priority)
-        self.deadworld_mod_installed = deadworld_mod_installed
         self.fast_eject = self.game.user_settings['Machine']['Deadworld fast eject']
-        self.lock_enabled = False
         self.num_balls_locked = 0
         self.num_balls_to_eject = 0
+        self.setting_up_eject = False
         self.ball_eject_in_progress = False
         self.crane_delay_active = False
-        self.setting_up_eject = False
 
     def mode_stopped(self):
-        self.stop()
+        self.stop_spinning()
+        self.cancel_delayed(['globe_restart', 'crane_release_check', 'crane_restart', 'crane_delay']) # in case of tilt
 
-    def stop(self):
+    def start_spinning(self):
+        self.game.coils.globeMotor.pulse(0)
+
+    def stop_spinning(self):
         self.game.coils.globeMotor.disable()
-
-    def enable_lock(self):
-        self.lock_enabled = True
-        self.game.coils.globeMotor.pulse(0)
-        # Make sure globe disable rule is off.
-        switch_num = self.game.switches['globePosition2'].number
-        self.game.install_switch_rule_coil_disable(switch_num, 'closed_debounced', 'globeMotor', True, False)
-
-    def disable_lock(self):
-        self.lock_enabled = False
-
-    def crane_activate(self):
-        if self.ball_eject_in_progress:
-            self.game.coils.crane.pulse(0)
-
-    def globe_start(self):
-        self.game.coils.globeMotor.pulse(0)
-
-    def crane_start(self):
-        self.game.coils.crane.pulse(0)
-
-    def crane_release(self):
-        if self.fast_eject:
-            self.delay(name='globe_restart_delay', event_type=None, delay=1, handler=self.globe_start)
-
-        self.game.coils.craneMagnet.disable()
-        self.game.coils.crane.disable()
-        self.delay(name='crane_release_check', event_type=None, delay=1, handler=self.crane_release_check)
-
-    def crane_release_check(self):
-        if self.num_balls_to_eject > 0:
-            if self.fast_eject:
-                # Fast mode just keeps going until finished
-                self.delay(name='crane_restart_delay', event_type=None, delay=0.9, handler=self.crane_start)
-            else:
-                # restart when not in fast mode
-                self.perform_ball_eject()
-        else:
-            self.game.coils.crane.disable()
-            if self.num_balls_locked > 0:
-                self.game.coils.globeMotor.pulse(0)
-            else:
-                self.game.coils.globeMotor.disable()
-
-            self.ball_eject_in_progress = False
-
-    def end_crane_delay(self):
-        self.crane_delay_active = False
 
     def get_num_balls_locked(self):
         return self.num_balls_locked - self.num_balls_to_eject
 
-    def sw_globePosition2_active(self, sw):
-        if self.fast_eject:
-            if self.setting_up_eject:
-                self.setting_up_eject = False
-                self.delay(name='crane_restart_delay', event_type=None, delay=0.9, handler=self.crane_start)
-                switch_num = self.game.switches['globePosition2'].number
-                self.game.install_switch_rule_coil_disable(switch_num, 'closed_debounced', 'globeMotor', True, True)
-        else:
-            self.crane_activate()
+    def install_rule(self, auto_disable):
+        # when auto_disable is True, the globe will stop spinning when it reaches its start position (globePosition2)
+        # when auto_disable is False, the globe will keep spinning
+        switch_num = self.game.switches.globePosition2.number
+        self.game.install_switch_rule_coil_disable(switch_num, 'closed_debounced', 'globeMotor', True, auto_disable)
+
+    def enable_lock(self):
+        # start and keep spinning
+        self.install_rule(auto_disable=False)
+        self.start_spinning()
 
     def sw_leftRampToLock_active(self, sw):
         self.num_balls_locked += 1
@@ -105,28 +60,43 @@ class Deadworld(Mode):
         if self.ball_eject_in_progress:
             return
         
+        # this flag tells the crane and crane magnet to activate at the proper time
         self.ball_eject_in_progress = True
 
         # Make sure globe is turning
-        self.game.coils.globeMotor.pulse(0)
+        self.start_spinning()
 
         if self.fast_eject:
-            # If globe not in position to start (globePosition2), it needs to get there first.
-            if self.game.switches['globePosition2'].is_inactive():
+            if self.game.switches.globePosition2.is_inactive():
+                # we must get the globe in the start position (globePosition2) first
                 self.setting_up_eject = True
-                switch_num = self.game.switches['globePosition2'].number
-                self.game.install_switch_rule_coil_disable(switch_num, 'closed_debounced', 'globeMotor', True, False)
+                self.install_rule(auto_disable=False)
             else:
-                self.delay(name='crane_restart_delay', event_type=None, delay=1.9, handler=self.crane_start)
-                switch_num = self.game.switches['globePosition2'].number
-                self.game.install_switch_rule_coil_disable(switch_num, 'closed_debounced', 'globeMotor', True, True)
+                self.delay(name='crane_restart', event_type=None, delay=1.9, handler=self.start_crane)
+                self.install_rule(auto_disable=True)
 
-            self.delay(name='globe_restart_delay', event_type=None, delay=1, handler=self.globe_start)
+            # TODO: this method already started the globe spinning, do we expect to stop spinning within 1sec and require a restart?
+            self.delay(name='globe_restart', event_type=None, delay=1, handler=self.start_spinning)
         else:
-            switch_num = self.game.switches['globePosition2'].number
-            self.game.install_switch_rule_coil_disable(switch_num, 'closed_debounced', 'globeMotor', True, True)
+            self.install_rule(auto_disable=True)
+
+    def start_crane(self):
+        # start the crane moving
+        self.game.coils.crane.pulse(0)
+
+    def sw_globePosition2_active(self, sw):
+        if self.fast_eject:
+            if self.setting_up_eject:
+                self.setting_up_eject = False
+                self.delay(name='crane_restart', event_type=None, delay=0.9, handler=self.start_crane)
+                self.install_rule(auto_disable=True)
+        elif self.ball_eject_in_progress:
+            self.start_crane
 
     def sw_craneRelease_active(self, sw):
+        # this switch detects a ball was indeed ejected
+        # We can now update the ball counts with confidence
+        # After a successful ball release, we ignore the switch for the next 2 seconds.
         if not self.crane_delay_active:
             self.crane_delay_active = True
             self.delay(name='crane_delay', event_type=None, delay=2, handler=self.end_crane_delay)
@@ -136,10 +106,48 @@ class Deadworld(Mode):
             if self.num_balls_locked < 0:
                 self.num_balls_locked = 0
 
+    def end_crane_delay(self):
+        # make the craneRelease switch sensitive again
+        self.crane_delay_active = False
+
     def sw_magnetOverRing_open(self, sw):
         if self.ball_eject_in_progress:
+            # this turns the crane magnet on for 2 seconds
             self.game.coils.craneMagnet.pulse(0)
             self.delay(name='crane_release', event_type=None, delay=2, handler=self.crane_release)
+
+    def crane_release(self):
+        # this is called 2sec after the magnet grabbed the ball
+        # it is now time to drop the ball to release it
+        
+        if self.fast_eject:
+            self.delay(name='globe_restart', event_type=None, delay=1, handler=self.start_spinning)
+
+        # drop the ball and stop the crane movement
+        self.game.coils.craneMagnet.disable()
+        self.game.coils.crane.disable()
+        self.delay(name='crane_release_check', event_type=None, delay=1, handler=self.crane_release_check)
+
+    def crane_release_check(self):
+        # this is called 1sec after the crane dropped the ball to release it 
+        if self.num_balls_to_eject > 0:
+            if self.fast_eject:
+                # Fast mode just keeps going until finished
+                self.delay(name='crane_restart', event_type=None, delay=0.9, handler=self.start_crane)
+            else:
+                # restart when not in fast mode
+                # TODO: only way to get here is if ball_eject_in_progress is True so I would expect calling perform_ball_eject is a no-op???
+                # TODO: are we still spinning and we just keep going, or do we really need a restart when not in fast_eject mode??? 
+                self.perform_ball_eject()
+        else:
+            # TODO: crane_release already stopped the crane, do we expect we restarted the crane within 1 sec and now need to stop it again????
+            self.game.coils.crane.disable()
+            if self.num_balls_locked > 0:
+                self.start_spinning()
+            else:
+                self.stop_spinning()
+
+            self.ball_eject_in_progress = False
 
 
 class DeadworldTest(ServiceModeSkeleton):
@@ -161,7 +169,7 @@ class DeadworldTest(ServiceModeSkeleton):
         self.globe_state = False
         self.crane_state = False
         self.magnet_state = False
-        self.game.coils.globeMotor.disable()
+        self.stop_spinning()
         self.game.coils.crane.disable()
         self.game.coils.craneMagnet.disable()
         self.game.drive_lamp('startButton', lamp_style)
