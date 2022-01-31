@@ -8,9 +8,6 @@ Machine:
   'Deadworld mod installed':
     options: [true, false]
     default: false
-  'Deadworld fast eject':
-    options: [true, false]
-    default: true
   'Initial volume':
     options: [1,10]
     increments: 1

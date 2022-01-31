@@ -96,7 +96,8 @@ class RegularPlay(Mode):
 
     def evt_ball_started(self):
         ball_save_time = self.game.user_settings['Gameplay']['New ball ballsave time']
-        self.game.ball_save_start(num_balls_to_save=1, time=ball_save_time, now=True, allow_multiple_saves=False)
+        repeating_ballsave = self.game.user_settings['Gameplay']['New ball repeating ballsave']
+        self.game.ball_save_start(num_balls_to_save=1, time=ball_save_time, now=True, allow_multiple_saves=repeating_ballsave)
         self.game.modes.remove(self.shoot_again_intro)
         self.game.update_lamps()
 

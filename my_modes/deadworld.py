@@ -7,7 +7,6 @@ class Deadworld(Mode):
 
     def __init__(self, game, priority):
         super(Deadworld, self).__init__(game, priority)
-        self.fast_eject = self.game.user_settings['Machine']['Deadworld fast eject']
         self.num_balls_locked = 0
         self.num_balls_to_eject = 0
         self.setting_up_eject = False
@@ -65,33 +64,26 @@ class Deadworld(Mode):
 
         # Make sure globe is turning
         self.start_spinning()
-
-        if self.fast_eject:
-            if self.game.switches.globePosition2.is_inactive():
-                # we must get the globe in the start position (globePosition2) first
-                self.setting_up_eject = True
-                self.install_rule(auto_disable=False)
-            else:
-                self.delay(name='crane_restart', event_type=None, delay=1.9, handler=self.start_crane)
-                self.install_rule(auto_disable=True)
-
-            # TODO: this method already started the globe spinning, do we expect to stop spinning within 1sec and require a restart?
-            self.delay(name='globe_restart', event_type=None, delay=1, handler=self.start_spinning)
+        if self.game.switches.globePosition2.is_inactive():
+            # we must get the globe in the start position (globePosition2) first
+            self.setting_up_eject = True
+            self.install_rule(auto_disable=False)
         else:
+            self.delay(name='crane_restart', event_type=None, delay=1.9, handler=self.start_crane)
             self.install_rule(auto_disable=True)
+
+        # TODO: this method already started the globe spinning, do we expect to stop spinning within 1sec and require a restart?
+        self.delay(name='globe_restart', event_type=None, delay=1, handler=self.start_spinning)
 
     def start_crane(self):
         # start the crane moving
         self.game.coils.crane.pulse(0)
 
     def sw_globePosition2_active(self, sw):
-        if self.fast_eject:
-            if self.setting_up_eject:
-                self.setting_up_eject = False
-                self.delay(name='crane_restart', event_type=None, delay=0.9, handler=self.start_crane)
-                self.install_rule(auto_disable=True)
-        elif self.ball_eject_in_progress:
-            self.start_crane
+        if self.setting_up_eject:
+            self.setting_up_eject = False
+            self.delay(name='crane_restart', event_type=None, delay=0.9, handler=self.start_crane)
+            self.install_rule(auto_disable=True)
 
     def sw_craneRelease_active(self, sw):
         # this switch detects a ball was indeed ejected
@@ -120,8 +112,7 @@ class Deadworld(Mode):
         # this is called 2sec after the magnet grabbed the ball
         # it is now time to drop the ball to release it
         
-        if self.fast_eject:
-            self.delay(name='globe_restart', event_type=None, delay=1, handler=self.start_spinning)
+        self.delay(name='globe_restart', event_type=None, delay=1, handler=self.start_spinning)
 
         # drop the ball and stop the crane movement
         self.game.coils.craneMagnet.disable()
@@ -131,14 +122,8 @@ class Deadworld(Mode):
     def crane_release_check(self):
         # this is called 1sec after the crane dropped the ball to release it 
         if self.num_balls_to_eject > 0:
-            if self.fast_eject:
-                # Fast mode just keeps going until finished
-                self.delay(name='crane_restart', event_type=None, delay=0.9, handler=self.start_crane)
-            else:
-                # restart when not in fast mode
-                # TODO: only way to get here is if ball_eject_in_progress is True so I would expect calling perform_ball_eject is a no-op???
-                # TODO: are we still spinning and we just keep going, or do we really need a restart when not in fast_eject mode??? 
-                self.perform_ball_eject()
+            # keep going until finished
+            self.delay(name='crane_restart', event_type=None, delay=0.9, handler=self.start_crane)
         else:
             # TODO: crane_release already stopped the crane, do we expect we restarted the crane within 1 sec and now need to stop it again????
             self.game.coils.crane.disable()
