@@ -57,7 +57,7 @@ class JDGame(BasicGame):
         self.logging_enabled = False
 
         # don't use the locale, always insert commas in groups of 3 digits
-        self.score_display.format_score = self.format_score
+        self.score_display.format_points = self.format_points
 
         self.load_config('config/JD.yaml')
         self.lamp_schedules = {'slow':0x00ff00ff, 'medium':0x0f0f0f0f, 'fast':0x55555555, 'on':0xffffffff, 'off':0x00000000}
@@ -428,9 +428,9 @@ class JDGame(BasicGame):
 
         self.save_game_data(game_data_path)
 
-    def format_score(self, score):
+    def format_points(self, points):
         # disregard the locale, always insert commas between groups of 3 digits
-        return '00' if score == 0 else '{:,}'.format(score)
+        return '00' if points == 0 else '{:,}'.format(points)
 
     #
     # Service Mode

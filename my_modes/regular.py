@@ -13,7 +13,7 @@ class RegularPlay(Mode):
         super(RegularPlay, self).__init__(game, priority)
 
         big_font = self.game.fonts['jazz18']
-        shoot_again_layer = TextLayer(128/2, 9, big_font, 'center').set_text('Shoot Again', 3)
+        shoot_again_layer = TextLayer(128/2, 7, big_font, 'center').set_text('Shoot Again', 3)
         script = [{'seconds':99999999.0, 'layer':shoot_again_layer}]
         self.shoot_again_intro = Introduction(self.game, priority + 1, delay=1.0)
         self.shoot_again_intro.setup(ScriptedLayer(width=128, height=32, script=script))
@@ -84,15 +84,15 @@ class RegularPlay(Mode):
     def high_score_mention(self):
         if self.game.ball == self.game.balls_per_game:
             if self.game.base_play.replay.replay_achieved[0]:
-                text = 'Highest Score'
+                text = 'High Score'
                 game_data_key = 'SuperGameHighScoreData' if self.game.supergame else 'ClassicHighScoreData'
                 high_score_data = self.game.game_data[game_data_key][0]
                 score = str(high_score_data['inits']) + '  {:,}'.format(high_score_data['score'])
             else:
                 text = 'Replay'
-                score = self.game.format_score(self.game.base_play.replay.replay_scores[0])
+                score = self.game.format_points(self.game.base_play.replay.replay_scores[0])
             #this needs a redesign, it hides too much and/or looks ugly
-            #self.game.base_play.show_on_display(text, score)
+            #self.game.base_play.display(text, score)
 
     def evt_ball_started(self):
         ball_save_time = self.game.user_settings['Gameplay']['New ball ballsave time']

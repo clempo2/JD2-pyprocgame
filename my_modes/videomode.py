@@ -112,15 +112,14 @@ class ShootingGallery(Mode):
 
     def finish(self):
         self.state = 'complete'
-        self.status_layer.set_text('Completed')
-        self.intro_layer_21.set_text('Completion Bonus:')
-        self.intro_layer_22.set_text(str(100000))
+        self.intro_layer_21.set_text('Completion Bonus')
+        self.intro_layer_22.set_text('100,000')
         self.layer = self.intro_layer_2
         self.game.score(100000)
         self.delay(name='show_num_shot', event_type=None, delay=2.0, handler=self.show_num_shot)
 
     def show_num_shot(self):
-        self.intro_layer_21.set_text('Enemies Shot:')
+        self.intro_layer_21.set_text('Enemies Shot')
         self.intro_layer_22.set_text(str(self.num_enemies_shot) + ' of ' + str(self.num_enemies))
         self.success = self.num_enemies_shot == self.num_enemies
         if self.success:

@@ -35,8 +35,8 @@ class BasePlay(Mode):
         self.replay = Replay(self.game, 18)
         self.replay.replay_callback = self.replay_callback
 
-        self.display_mode = ModesDisplay(self.game, 210)
-        self.animation_mode = ModesAnimation(self.game, 200)
+        self.display_mode = ModesDisplay(self.game, 1000)
+        self.animation_mode = ModesAnimation(self.game, 1200)
 
     def mode_started(self):
         # init player state
@@ -108,8 +108,8 @@ class BasePlay(Mode):
     # Display text or animation
     #
 
-    def show_on_display(self, text=None, score=None):
-        self.display_mode.display(text, score)
+    def display(self, text=None, points=None):
+        self.display_mode.display(text, points)
 
     def play_animation(self, anim_name, frame_time=1):
         anim = self.game.animations[anim_name]
@@ -132,11 +132,11 @@ class BasePlay(Mode):
         self.cancel_show_status_timer()
 
     def cancel_show_status_timer(self):
-        self.cancel_delayed("show_status")
+        self.cancel_delayed('show_status')
  
     def start_show_status_timer(self):
         self.cancel_show_status_timer()
-        self.delay("show_status", event_type=None, delay=6.0, handler=self.display_status_report)
+        self.delay('show_status', event_type=None, delay=6.0, handler=self.display_status_report)
 
     def display_status_report(self):
         if not self.status_report in self.game.modes:
@@ -214,7 +214,7 @@ class BasePlay(Mode):
         else:
             self.extra_balls_lit += 1
             self.game.update_lamps()
-            self.show_on_display('Extra Ball Lit')
+            self.display('Extra Ball Lit')
 
     def sw_leftScorePost_active(self, sw):
         self.extra_ball_switch_hit()
@@ -227,7 +227,7 @@ class BasePlay(Mode):
         if self.extra_balls_lit > 0:
             self.extra_balls_lit -= 1
             self.game.update_lamps()
-            self.show_on_display('Extra Ball')
+            self.display('Extra Ball')
             self.extra_ball()
 
     def extra_ball(self):
@@ -243,7 +243,7 @@ class BasePlay(Mode):
     def replay_callback(self):
         award = self.game.user_settings['Replay']['Replay Award']
         self.game.coils.knocker.pulse(50)
-        self.show_on_display('Replay')
+        self.display('Replay')
         if award == 'Extra Ball':
             if self.total_extra_balls < self.game.user_settings['Gameplay']['Max extra balls per game']:
                 if self.extra_balls_lit + self.total_extra_balls == self.game.user_settings['Gameplay']['Max extra balls per game']:
@@ -375,7 +375,7 @@ class BasePlay(Mode):
         self.skill_shot.skill_shot_expired()
         if not self.game.getPlayerState('multiball_active', 0):
             self.game.sound.play_voice('ball saved')
-            self.show_on_display('Ball Saved')
+            self.display('Ball Saved')
 
     def drain_callback(self):
         if not self.tilt.tilted:
@@ -431,11 +431,11 @@ class BasePlay(Mode):
         player = self.game.current_player()
         bonus_x = player.getState('bonus_x') + 1
         player.setState('bonus_x', bonus_x)
-        self.show_on_display('Bonus at ' + str(bonus_x) + 'X')
+        self.display('Bonus at ' + str(bonus_x) + 'X')
 
     def hold_bonus_x(self):
         self.game.setPlayerState('hold_bonus_x', True)
-        self.show_on_display('Hold Bonus X')
+        self.display('Hold Bonus X')
 
 
 class ModesDisplay(Mode):
@@ -445,17 +445,17 @@ class ModesDisplay(Mode):
         super(ModesDisplay, self).__init__(game, priority)
         self.big_text_layer = TextLayer(128/2, 7, self.game.fonts['jazz18'], 'center')
         self.small_text_layer = TextLayer(128/2, 7, self.game.fonts['07x5'], 'center')
-        self.score_layer = TextLayer(128/2, 17, self.game.fonts['num_14x10'], 'center')
+        self.points_layer = TextLayer(128/2, 17, self.game.fonts['num_14x10'], 'center')
 
-    def display(self, text=None, score=None):
+    def display(self, text=None, points=None):
         layers = []
         if text:
-            text_layer = self.small_text_layer if score else self.big_text_layer
+            text_layer = self.small_text_layer if points is not None else self.big_text_layer
             text_layer.set_text(text, 3)
             layers.append(text_layer)
-        if score:
-            self.score_layer.set_text(str(score), 3)
-            layers.append(self.score_layer)
+        if points is not None:
+            self.points_layer.set_text(self.game.format_points(points), 3)
+            layers.append(self.points_layer)
         self.layer = GroupedLayer(128, 32, layers)
 
 

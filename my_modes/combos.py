@@ -1,4 +1,3 @@
-from procgame.dmd import GroupedLayer, TextLayer
 from procgame.game import Mode
 
 class Combos(Mode):
@@ -21,9 +20,9 @@ class Combos(Mode):
             self.inner_loop_combos += 1
             if self.inner_loop_combos > self.game.getPlayerState('best_inner_loops', 0):
                 self.game.setPlayerState('best_inner_loops', self.inner_loop_combos)
-            score = 10000 * self.inner_loop_combos
-            self.game.score(score)
-            self.game.base_play.show_on_display('inner loop: ' + str(self.inner_loop_combos), score)
+            points = 10000 * self.inner_loop_combos
+            self.game.score(points)
+            self.game.base_play.display('inner loop: ' + str(self.inner_loop_combos), points)
             self.game.base_play.play_animation('bike_across_screen', frame_time=3)
             self.game.update_lamps()
             self.cancel_delayed('inner_loop')
@@ -37,9 +36,9 @@ class Combos(Mode):
             self.outer_loop_combos += 1
             if self.outer_loop_combos > self.game.getPlayerState('best_outer_loops', 0):
                 self.game.getPlayerState('best_outer_loops', self.outer_loop_combos)
-            score = 5000 * self.outer_loop_combos
-            self.game.score(score)
-            self.game.base_play.show_on_display('outer loop: ' + str(self.outer_loop_combos), score)
+            points = 5000 * self.outer_loop_combos
+            self.game.score(points)
+            self.game.base_play.display('outer loop: ' + str(self.outer_loop_combos), points)
             self.game.base_play.play_animation('bike_across_screen', frame_time=3)
             self.game.update_lamps()
             self.cancel_delayed('outer_loop')

@@ -115,7 +115,7 @@ class CityBlock(CrimeSceneShots):
             ]
             self.level_num_shots = [1, 1, 2, 2, 2, 3, 3, 3, 3, 3, 4, 4, 4, 4, 5, 5]
             
-        self.block_outcome = ['neutralized', 'pacified', 'secured'] 
+        self.block_outcome = ['Neutralized', 'Pacified', 'Secured'] 
 
     def reset(self):
         # force the mode to initialize at block 0 the next time it starts
@@ -184,8 +184,8 @@ class CityBlock(CrimeSceneShots):
             current_block = self.game.getPlayerState('current_block', -1)
             
             shuffle(self.block_outcome)
-            block_n_outcome = 'block ' + str(current_block + 1) + ' ' + self.block_outcome[0]
-            self.display_block_complete(block_n_outcome, 10000)
+            block_n_outcome = 'Block ' + str(current_block + 1) + ' ' + self.block_outcome[0]
+            self.game.base_play.display(block_n_outcome, 10000)
             self.game.sound.play_voice(block_n_outcome)
             self.next_block()
 
@@ -212,12 +212,6 @@ class CityBlock(CrimeSceneShots):
                     self.targets[pick_from[i]] = 1
         self.game.update_lamps()
 
-    def display_block_complete(self, outcome, points):
-        small_font = self.game.fonts['07x5']
-        block_layer = TextLayer(128/2, 9, small_font, 'center').set_text(outcome, 2)
-        award_layer = TextLayer(128/2, 19, small_font, 'center').set_text(self.game.format_score(points) + ' points', 2)
-        self.layer = GroupedLayer(128, 32, [block_layer, award_layer])
-
     #
     # Lamps
     #
@@ -242,15 +236,14 @@ class BlockWar(CrimeSceneShots):
     def __init__(self, parent, priority):
         super(BlockWar, self).__init__(parent.game, priority)
         self.parent = parent
-        self.banner_layer = TextLayer(128/2, 7, self.game.fonts['jazz18'], 'center')
         self.score_reason_layer = TextLayer(128/2, 7, self.game.fonts['07x5'], 'center')
         self.score_value_layer = TextLayer(128/2, 17, self.game.fonts['07x5'], 'center')
         self.anim_layer = self.game.animations['blockwars']
-        self.layer = GroupedLayer(128, 32, [self.anim_layer, self.banner_layer, self.score_reason_layer, self.score_value_layer])
+        self.layer = GroupedLayer(128, 32, [self.anim_layer, self.score_reason_layer, self.score_value_layer])
 
     def mode_started(self):
         self.game.addPlayerState('multiball_active', 0x2)
-        self.banner_layer.set_text('Block War', 3)
+        self.game.base_play.display('Block War')
         self.game.sound.play_voice('block war start')
         self.game.trough.launch_balls(1, self.start_callback)
 
@@ -281,12 +274,12 @@ class BlockWar(CrimeSceneShots):
         if self.shots_required[shot] > 0:
             self.shots_required[shot] -= 1
             multiplier = self.game.getPlayerState('num_hurry_ups', 0) + 1
-            score = 5000 * multiplier
-            self.score_value_layer.set_text(str(score), 2)
-            self.game.score(score)
+            points = 5000 * multiplier
+            self.score_value_layer.set_text(self.game.format_points(points), 2)
+            self.game.score(points)
             self.game.sound.play('block_war_target')
             if self.shots_required[shot] == 0:
-                self.score_reason_layer.set_text('Block ' + str(shot + 1) + ' secured!', 2)
+                self.score_reason_layer.set_text('Block ' + str(shot + 1) + ' Secured', 2)
 
             if not any(self.shots_required):
                 # all shots hit already
@@ -315,7 +308,6 @@ class BlockWarBonus(CrimeSceneShots):
     def __init__(self, parent, priority):
         super(BlockWarBonus, self).__init__(parent.game, priority)
         self.parent = parent
-        self.banner_layer = TextLayer(128/2, 7, self.game.fonts['jazz18'], 'center')
 
     def mode_started(self):
         self.game.addPlayerState('multiball_active', 0x4)
@@ -345,7 +337,7 @@ class BlockWarBonus(CrimeSceneShots):
 
     def bonus_round_collected(self):
         self.game.score(200000)
-        self.banner_layer.set_text('Jackpot', 2)
+        self.game.base_play.display('Jackpot')
         self.game.sound.play_voice('jackpot')
         self.game.lampctrl.play_show('advance_level', False, self.game.update_lamps)
         self.parent.end_block_war_bonus(True)

@@ -527,4 +527,4 @@ class Celebration(ChallengeBase, CrimeSceneShots):
         self.update_status()
         
     def update_status(self):
-        self.status_layer.set_text("Shots made: " + str(self.num_shots))
+        self.status_layer.set_text('Shots made: ' + str(self.num_shots))

@@ -15,7 +15,7 @@ class MissileAwardMode(Timer):
             self.video_mode = ShootingGallery(self.game, priority + 11, self.video_mode_setting)
             self.video_mode.on_complete = self.video_mode_complete
 
-        self.initial_awards = ['Secure one Block', 'Light Extra Ball', '30000 Points', 'Bonus +1X', 'Hold Bonus X']
+        self.initial_awards = ['Secure One Block', 'Light Extra Ball', '30,000 Points', 'Bonus +1X', 'Hold Bonus X']
         self.repeatable_award = [True, False, True, True, False]
         self.current_award_ptr = 0
 
@@ -90,7 +90,7 @@ class MissileAwardMode(Timer):
 
     def start_selection(self):
         blocks_complete = self.game.getPlayerState('blocks_complete', False)
-        self.available_awards[0] = '50000 Points' if blocks_complete else 'Secure One Block'
+        self.available_awards[0] = '50,000 Points' if blocks_complete else 'Secure One Block'
         self.rotate_awards()
         self.layer = self.selection_layer
         self.start_timer(70, self.timer_delay)
@@ -111,10 +111,12 @@ class MissileAwardMode(Timer):
 
     def award(self):
         award = self.available_awards[self.current_award_ptr]
+        self.game.base_play.display(award)
+        
         if award.endswith('Points'):
             award_words = award.rsplit(' ')
-            self.game.score(int(award_words[0]))
-            self.game.base_play.show_on_display(award)
+            points = award_words[0].replace(',', '')
+            self.game.score(int(points))
         elif award == 'Light Extra Ball':
             self.game.base_play.light_extra_ball()
         elif award == 'Secure One Block':
@@ -125,7 +127,7 @@ class MissileAwardMode(Timer):
             self.game.base_play.hold_bonus_x()
 
         if not self.repeatable_award[self.current_award_ptr]:
-            self.available_awards[self.current_award_ptr] = str(10000*(self.current_award_ptr + 1)) + ' Points'
+            self.available_awards[self.current_award_ptr] = self.game.format_points(10000*(self.current_award_ptr + 1)) + ' Points'
             
         self.end_missile_award()
 

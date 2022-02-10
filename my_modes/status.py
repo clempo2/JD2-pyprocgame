@@ -1,58 +1,45 @@
-from procgame.dmd import GroupedLayer, TextLayer
 from procgame.game import Mode
 
 class StatusReport(Mode):
     """Display status report"""
 
     def mode_started(self):
-        tiny_font = self.game.fonts['tiny7']
+        self.game.base_play.display('Status')
+        
         player = self.game.current_player()
-
-        report_title_layer = TextLayer(128/2, 9, tiny_font, 'center').set_text('Status Report')
-        extra_ball_layer = TextLayer(128/2, 19, tiny_font, 'center').set_text('Extra Balls: ' + str(player.extra_balls))
-        main_title_layer = GroupedLayer(128, 32, [report_title_layer, extra_ball_layer])
-
-        # chain features
-        attempted_layer = TextLayer(128/2, 9, tiny_font, 'center').set_text('Chain features: ' + str(player.getState('num_chain_features', 0)))
-        completed_layer = TextLayer(128/2, 19, tiny_font, 'center').set_text('Hurry Ups: ' + str(player.getState('num_hurry_ups', 0)))
-        chain_layer = GroupedLayer(128, 32, [attempted_layer, completed_layer])
-
-        # city blocks
-        # if block war is currently playing, next block war is in 4 blocks
-        current_block = player.getState('current_block', 0)
         num_blocks = player.getState('num_blocks', 0)
-        block_title_layer = TextLayer(128/2, 7, tiny_font, 'center').set_text('Blocks')
-        current_block_layer = TextLayer(128/2, 16, tiny_font, 'center').set_text('Current Block: ' + str(current_block + 1) + '/' + str(self.game.blocks_required))
-        block_war_layer = TextLayer(128/2, 25, tiny_font, 'center').set_text('Next Block War in ' + str(4-(num_blocks % 4)) + ' blocks')
-        block_layer = GroupedLayer(128, 32, [block_title_layer, current_block_layer, block_war_layer])
 
-        # combos
-        combo_title_layer = TextLayer(128/2, 7, tiny_font, 'center').set_text('Best Combos')
-        inner_loops_layer = TextLayer(128/2, 16, tiny_font, 'center').set_text('Inner Loops: ' + str(player.getState('best_inner_loops', 0)).rjust(3))
-        outer_loops_layer = TextLayer(128/2, 25, tiny_font, 'center').set_text('Outer Loops: ' + str(player.getState('best_outer_loops', 0)).rjust(3))
-        combo_layer = GroupedLayer(128, 32, [combo_title_layer, inner_loops_layer, outer_loops_layer])
+        self.status_items = [
+            {'text': 'Extra Balls', 'value': player.extra_balls},
+            {'text': 'Chain Features', 'value': player.getState('num_chain_features', 0)},
+            {'text': 'Hurry Ups', 'value': player.getState('num_hurry_ups', 0)},
+            {'text': 'Blocks', 'value': num_blocks}]
+        
+        if num_blocks >= self.game.blocks_required:
+            self.status_items += [{'text': 'Current Block', 'value': 1 + player.getState('current_block', 0)}]
+            
+        self.status_items += [
+            {'text': 'Blocks Remaining', 'value': self.game.blocks_required - player.getState('current_block', 0)},
+            {'text': 'Inner Loop Combos', 'value': player.getState('best_inner_loops', 0)},
+            {'text': 'Outer Loop Combos', 'value': player.getState('best_outer_loops', 0)}]
 
-        self.report_layers = [main_title_layer, chain_layer, block_layer, combo_layer]
+        self.num_items = len(self.status_items)
         self.index = 0
-        self.index_max = len(self.report_layers) - 1
-        self.update_display()
+        self.delay(name='show_status', event_type=None, delay=1.5, handler=self.show_status)
 
     def mode_stopped(self):
-        self.cancel_delayed('delayed_progression')
-        self.report_layers = []
+        self.game.base_play.display('')
+        self.cancel_delayed('show_status')
 
-    def update_display(self):
-        self.layer = self.report_layers[self.index]
-        self.delay(name='delayed_progression', event_type=None, delay=3.0, handler=self.progress, param=1)
+    def show_status(self):
+        status_item = self.status_items[self.index]
+        self.game.base_play.display(status_item['text'], status_item['value'])
+        self.delay(name='show_status', event_type=None, delay=1.5, handler=self.progress, param=1)
 
     def progress(self, step):
-        self.cancel_delayed('delayed_progression')
-        self.index += step
-        if self.index < 0:
-            self.index = self.index_max
-        elif self.index > self.index_max:
-            self.index = 0
-        self.update_display()
+        self.cancel_delayed('show_status')
+        self.index = (self.index + step + self.num_items) % self.num_items
+        self.show_status()
 
     def sw_flipperLwL_active(self, sw):
         if self.game.switches.flipperLwR.is_active():

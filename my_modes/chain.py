@@ -146,7 +146,7 @@ class ChainHurryUp(TimedMode):
     def mode_started(self):
         super(ChainHurryUp, self).mode_started()
         self.game.coils.tripDropTarget.pulse(40)
-        self.delay(name='trip_check', event_type=None, delay=.400, handler=self.trip_check)
+        self.trip_check()
         self.already_collected = False
 
     def mode_stopped(self):
@@ -163,14 +163,18 @@ class ChainHurryUp(TimedMode):
     def expired(self):
         self.exit_callback(False)
 
-    def trip_check(self):
-        if self.game.switches.dropTargetD.is_inactive():
-            self.game.coils.tripDropTarget.pulse(40)
-            self.delay(name='trip_check', event_type=None, delay=.400, handler=self.trip_check)
-
     def sw_dropTargetD_inactive_for_400ms(self, sw):
+        # newly detected raised letter D
+        self.trip_drop_target()
+
+    def trip_drop_target(self):
+        # drop letter D and run a delayed handler to verify it stayed down
         self.game.coils.tripDropTarget.pulse(40)
         self.delay(name='trip_check', event_type=None, delay=.400, handler=self.trip_check)
+
+    def trip_check(self):
+        if self.game.switches.dropTargetD.is_inactive():
+            self.trip_drop_target()
 
     def update_lamps(self):
         self.game.drive_lamp('pickAPrize', 'fast')
@@ -187,7 +191,7 @@ class ChainHurryUp(TimedMode):
         self.game.sound.play_voice('collected')
         self.cancel_delayed('trip_check')
         self.already_collected = True
-        self.game.base_play.show_on_display('Well Done')
+        self.game.base_play.display('Well Done')
         self.exit_callback(True)
 
 
@@ -548,7 +552,7 @@ class Safecracker(ChainFeature):
     def mode_started(self):
         super(Safecracker, self).mode_started()
         self.start_using_drops()
-        self.delay(name='trip_check', event_type=None, delay=1, handler=self.trip_check)
+        self.trip_check()
         self.delay(name='bad guys', event_type=None, delay=randint(10, 20), handler=self.bad_guys)
 
     def mode_stopped(self):
@@ -564,12 +568,17 @@ class Safecracker(ChainFeature):
         self.check_for_completion()
 
     def sw_dropTargetD_inactive_for_400ms(self, sw):
-        self.game.coils.tripDropTarget.pulse(30)
+        # newly detected raised letter D
+        self.trip_drop_target()
+
+    def trip_drop_target(self):
+        # drop letter D and run a delayed handler to verify it stayed down
+        self.game.coils.tripDropTarget.pulse(40)
+        self.delay(name='trip_check', event_type=None, delay=.400, handler=self.trip_check)
 
     def trip_check(self):
         if self.game.switches.dropTargetD.is_inactive():
-            self.game.coils.tripDropTarget.pulse(40)
-            self.delay(name='trip_check', event_type=None, delay=.400, handler=self.trip_check)
+            self.trip_drop_target()
 
     def check_for_completion(self):
         self.update_status()

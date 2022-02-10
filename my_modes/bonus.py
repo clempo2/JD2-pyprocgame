@@ -1,4 +1,3 @@
-from procgame.dmd import GroupedLayer, TextLayer
 from procgame.game import Mode
 
 class Bonus(Mode):
@@ -6,69 +5,47 @@ class Bonus(Mode):
 
     def __init__(self, game, priority):
         super(Bonus, self).__init__(game, priority)
-        font_big = self.game.fonts['jazz18']
-        self.title_layer = TextLayer(128/2, 7, font_big, 'center').set_text('BONUS')
-        self.title_layer.opaque = True
-        self.text_layers = [self.create_text_layer(i) for i in range(0, 9)]
-        self.tabular_layer = GroupedLayer(128, 32, self.text_layers)
 
     def mode_started(self):
         self.game.stop_all_sounds()
         self.game.sound.play_voice('drain')
-        self.layer = self.title_layer
+        self.game.base_play.display('Bonus')
 
-        # compute everything before we start so we can easily skip pages
-        player = self.game.current_player()
-        self.chain_features = player.getState('chain_features', 0)
-        self.hurry_ups = player.getState('num_hurry_ups', 0)
-        self.blocks = player.getState('num_blocks', 0)
-     
-        self.chain_features_bonus = self.chain_features * 4000
-        self.hurry_ups_bonus = self.hurry_ups * 12000
-        self.blocks_bonus = self.blocks * 2000
-        self.base_bonus =  self.chain_features_bonus + self.hurry_ups_bonus + self.blocks_bonus
+        # compute everything before we start so we can easily skip to the end
+        # do not show bonus items worth zero
+        self.bonus_items = (self.create_item('num_chain_features', 'Chain Feature', 4000) +
+            self.create_item('num_hurry_ups', 'Hurry Up', 12000) +
+            self.create_item('num_blocks', 'Block', 2000))
 
-        self.bonus_x = self.game.getPlayerState('bonus_x', 1)
-        self.total = self.base_bonus * self.bonus_x
-        self.game.score(self.total)
+        bonus = sum(item['points'] for item in self.bonus_items)
+        bonus_x = self.game.getPlayerState('bonus_x', 1)
+        if bonus > 0 and bonus_x > 1:
+            self.bonus_items += [{'text': str(bonus_x) + 'X', 'points': None}]
+            bonus *= bonus_x
+        self.game.score(bonus)
 
-        self.delay(name='show_bonus', event_type=None, delay=1.5, handler=self.show_page1)
+        self.bonus_items += [{'text': 'Total', 'points': bonus}]
+        self.delay(name='show_bonus', event_type=None, delay=1.5, handler=self.show_bonus, param=0)
 
     def mode_stopped(self):
         self.cancel_delayed('show_bonus')
 
-    def show_page1(self):
-        self.game.sound.play('bonus')
-        self.layer = self.tabular_layer
+    def create_item(self, state, title, value):
+        num = self.game.getPlayerState(state, 0)
+        return [] if num == 0 else [{'text': self.format_text(num, title), 'points': num * value}]
+    
+    def format_text(self, value, title):
+        return str(value) + ' ' + title + ('s' if value > 1 else '')
 
-        self.set_line_text(0, self.chain_features, 'FEATURE', 'FEATURES', self.chain_features_bonus)
-        self.set_line_text(1, self.hurry_ups, 'HURRY UP', 'HURRY UPS', self.hurry_ups_bonus)
-        self.set_line_text(2, self.blocks, 'BLOCK', 'BLOCKS', self.blocks_bonus)
-
-        self.delay(name='show_bonus', event_type=None, delay=3, handler=self.show_page2)
-
-    def show_page2(self):
-        self.game.sound.play('bonus')
-        self.layer = self.tabular_layer # in case we skipped to page 2
-
-        self.set_line_text(0, -1, 'BASE', None, self.base_bonus)
-        self.set_line_text(1, -1, 'BONUS X', None, self.bonus_x)
-        self.set_line_text(2, -1, 'TOTAL', None, self.total)
-
-        self.delay(name='show_bonus', event_type=None, delay=3, handler=self.exit_callback)
-
-    def create_text_layer(self, index):
-        font_small = self.game.fonts['07x5']
-        x = [20, 24, 118][index % 3]
-        y = 3 + 10 * int(index / 3)
-        justify = ['right', 'left', 'right'][index % 3]
-        return TextLayer(x, y, font_small, justify)
-
-    def set_line_text(self, line_index, count, singular, plural, value):
-        index = line_index * 3
-        self.text_layers[index].set_text('' if count < 0 else str(count))
-        self.text_layers[index + 1].set_text(singular if count < 2 else plural)
-        self.text_layers[index + 2].set_text(self.game.format_score(value))
+    def show_bonus(self, index):
+        if index == len(self.bonus_items):
+            self.game.base_play.display('')
+            self.exit_callback()
+        else:
+            self.game.sound.play('bonus')
+            bonus_item = self.bonus_items[index]
+            self.game.base_play.display(bonus_item['text'], bonus_item['points'])
+            self.delay(name='show_bonus', event_type=None, delay=1.5, handler=self.show_bonus, param=index + 1)
 
     def sw_flipperLwL_active(self, sw):
         self.flipper_active()
@@ -79,4 +56,4 @@ class Bonus(Mode):
     def flipper_active(self):
         # skip to total
         self.cancel_delayed('show_bonus')
-        self.show_page2()
+        self.show_bonus(len(self.bonus_items) - 1)

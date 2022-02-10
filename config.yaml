@@ -43,5 +43,5 @@ keyboard_switch_map:                                # this is the mapping of key
     '.': S68 # captiveBall3
     x: S27 # mystery
     q: S36 # leftScorePost
-
+    w: S37 # subwayEnter1
     

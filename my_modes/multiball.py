@@ -1,4 +1,3 @@
-from procgame.dmd import GroupedLayer, TextLayer
 from procgame.game import Mode
 from procgame.modes import BasicDropTargetBank
 
@@ -15,10 +14,6 @@ class Multiball(Mode):
         self.drops.on_advance = self.on_drops_advance
         self.drops.on_completed = self.possibly_light_lock
         self.drops.auto_reset = True
-
-        font = self.game.fonts['jazz18']
-        self.banner_layer = TextLayer(128/2, 7, font, 'center')
-        self.layer = GroupedLayer(128, 32, [self.banner_layer])
 
     def mode_started(self):
         # restore player state
@@ -52,13 +47,13 @@ class Multiball(Mode):
         if self.virtual_locks_needed < 0:
             # enable the lock so the player can quickly re-lock
             self.enable_lock()
-            self.display_text('Lock is Lit')
+            self.game.base_play.display('Lock is Lit')
             self.num_balls_locked = self.game.deadworld.num_balls_locked
         elif self.virtual_locks_needed > 0:
             self.enable_virtual_lock()
         elif self.num_balls_locked < self.num_locks_lit:
             self.enable_lock()
-            self.display_text('Lock is Lit')
+            self.game.base_play.display('Lock is Lit')
 
     def mode_stopped(self):
         # save player state
@@ -82,7 +77,7 @@ class Multiball(Mode):
         self.game.sound.play_voice('multiball')
         self.delay(name='multiball_instructions', event_type=None, delay=10, handler=self.multiball_instructions)
         self.state = 'multiball'
-        self.display_text('Multiball')
+        self.game.base_play.display('Multiball')
         self.num_balls_locked = 0
         self.num_ramp_shots = 0
         self.ramp_shots_required = 1
@@ -126,21 +121,16 @@ class Multiball(Mode):
     def light_jackpot(self):
         self.jackpot_lit = True
         self.game.sound.play_voice('jackpot is lit')
-        if self.game.switches.dropTargetD.is_inactive():
-            self.game.coils.tripDropTarget.pulse(40)
-            self.delay(name='trip_check', event_type=None, delay=.400, handler=self.trip_check)
+        self.trip_check()
 
     def jackpot(self):
         self.game.setPlayerState('multiball_jackpot_collected', True)
-        self.display_text('Jackpot')
+        self.game.base_play.display('Jackpot')
         self.game.sound.play_voice('jackpot')
         self.game.lampctrl.play_show('jackpot', False, self.game.update_lamps)
         self.num_ramp_shots = 0
         self.ramp_shots_required += 1
         self.game.score(100000)
-
-    def display_text(self, text):
-        self.banner_layer.set_text(text, 3)
 
     def disable_lock(self):
         self.lock_enabled = False
@@ -178,14 +168,14 @@ class Multiball(Mode):
                     # first time player starts multiball
                     self.num_locks_lit = 3
                     if self.deadworld_mod_installed:
-                        self.virtual_locks_needed = (self.game.deadworld.num_balls_locked - dw_balls_locked_adj)
+                        self.virtual_locks_needed = self.game.deadworld.num_balls_locked - dw_balls_locked_adj
 
                 # Don't enable locks if doing virtual locks.
                 if self.virtual_locks_needed <= 0:
                     self.enable_lock()
                 else:
                     self.enable_virtual_lock()
-                self.display_text('Lock is Lit')
+                self.game.base_play.display('Lock is Lit')
 
             self.game.update_lamps()
 
@@ -206,21 +196,25 @@ class Multiball(Mode):
                 self.game.switches.dropTargetE.is_active()):
             self.game.coils.resetDropTarget.pulse(40)
 
+    def sw_dropTargetD_inactive_for_400ms(self, sw):
+        # newly detected raised letter D
+        if self.jackpot_lit:
+            self.trip_drop_target()
+
+    def trip_drop_target(self):
+        # drop letter D and run a delayed handler to verify it stayed down
+        self.game.coils.tripDropTarget.pulse(40)
+        self.delay(name='trip_check', event_type=None, delay=.400, handler=self.trip_check)
+
     def trip_check(self):
         if self.game.switches.dropTargetD.is_inactive():
-            self.game.coils.tripDropTarget.pulse(40)
-            self.delay(name='trip_check', event_type=None, delay=.400, handler=self.trip_check)
-
-    def sw_dropTargetD_inactive_for_400ms(self, sw):
-        if self.jackpot_lit:
-            self.game.coils.tripDropTarget.pulse(40)
-            self.delay(name='trip_check', event_type=None, delay=.400, handler=self.trip_check)
+            self.trip_drop_target()
 
     def sw_leftRampToLock_active(self, sw):
         if self.lock_enabled:
             self.game.coils.flasherGlobe.schedule(schedule=0xAAAAAAAA, cycle_seconds=2, now=True)
             self.num_balls_locked += 1
-            self.display_text('Ball ' + str(self.num_balls_locked) + ' Locked')
+            self.game.base_play.display('Ball ' + str(self.num_balls_locked) + ' Locked')
             if self.num_balls_locked <= 2:
                 self.game.sound.play_voice('ball ' + str(self.num_balls_locked) + ' locked')
 

@@ -113,7 +113,7 @@ class TimedMode(Timer):
 
     def mode_tick(self):
         score = self.game.current_player().score
-        text = self.game.format_score(score)
+        text = self.game.format_points(score)
         self.score_layer.set_text(text)
 
     def timer_update(self, time):
