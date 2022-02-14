@@ -125,7 +125,6 @@ Collect a multiball jackpot
     def mode_stopped(self):
         self.game.lamps.startButton.enable()
         self.game.lamps.superGame.enable()
-        self.cancel_delayed(name='lampshow')
         self.game.lampctrl.stop_show()
 
     def display(self):

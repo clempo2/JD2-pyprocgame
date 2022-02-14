@@ -40,7 +40,8 @@ keyboard_switch_map:                                # this is the mapping of key
     "'": S72 # topRightOpto
     z: S15 # shooterL
     '/': S41 # shooterR
-    '.': S68 # captiveBall3
+    '.': S31 # buyIn
+    ',': S68 # captiveBall3
     x: S27 # mystery
     q: S36 # leftScorePost
     w: S37 # subwayEnter1

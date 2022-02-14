@@ -186,7 +186,7 @@ class JDGame(BasicGame):
         super(JDGame, self).start_game()
         self.game_data['Audits']['Games Started'] += 1
         self.supergame = supergame
-        self.modes.remove(self.attract_mode)
+        self.remove_modes([self.attract_mode])
         self.update_lamps()
 
         # Add the first player
@@ -227,7 +227,7 @@ class JDGame(BasicGame):
         self.game_data['Audits']['Balls Played'] += 1
 
     def ball_ended(self):
-        self.modes.remove(self.base_play)
+        self.remove_modes([self.base_play])
         self.trough.drain_callback = self.no_op_callback
 
     def game_ended(self):
@@ -256,10 +256,11 @@ class JDGame(BasicGame):
     def remove_modes(self, mode_list):
         for m in mode_list:
             self.modes.remove(m)
+            # cancel all delayed handlers
+            m._Mode__delayed = []
 
     def remove_all_modes(self):
-        for m in self.modes[:]:
-            self.modes.remove(m)
+        self.remove_modes(self.modes[:])
 
     def send_event(self, event):
         for mode in self.modes[:]:
@@ -409,12 +410,12 @@ class JDGame(BasicGame):
         self.modes.add(banner_mode)
 
     def highscore_banner_complete(self, banner_mode, highscore_entry_mode):
-        self.modes.remove(banner_mode)
+        self.remove_modes([banner_mode])
         self.update_lamps()
         highscore_entry_mode.prompt()
 
     def highscore_entry_finished(self, mode):
-        self.modes.remove(mode)
+        self.remove_modes([mode])
         self.modes.add(self.attract_mode)
         self.attract_mode.game_over_display()
         self.update_lamps()

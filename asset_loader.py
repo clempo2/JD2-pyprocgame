@@ -48,10 +48,6 @@ class AssetLoader(object):
             {'key': 'multiball', 'file': '40 Second guitar solo.aif'},
             {'key': 'multiball', 'file': '55 second loopable -- Sonya.aif'},
             {'key': 'multiball', 'file': '105 second loopable -- Sisyphus.aif'},
-            {'key': 'mode', 'file': 'Heroes and Angels -- Loopable.aif'},
-            {'key': 'mode', 'file': '40 Second guitar solo.aif'},
-            {'key': 'mode', 'file': '55 second loopable -- Sonya.aif'},
-            {'key': 'mode', 'file': '105 second loopable -- Sisyphus.aif'},
         ]
 
         effects_files = [
@@ -253,6 +249,7 @@ class AssetLoader(object):
             {'key': 'ball 2 locked', 'file': 'multiball/jd - ball 2 locked.wav'},
             {'key': 'multiball', 'file': 'multiball/calling all units the gang has escaped.wav'},
             {'key': 'multiball', 'file': 'multiball/escape from detention block aa23.wav'},
+            {'key': 'moo', 'file': 'jd - moo.wav'},
             {'key': 'bad guy shot', 'file': 'shooting_gallery/man shot 1.wav'},
             {'key': 'bad guy shot', 'file': 'shooting_gallery/man shot 2.wav'},
             {'key': 'bad guy shot', 'file': 'shooting_gallery/man shot 3.wav'},
@@ -295,7 +292,6 @@ class AssetLoader(object):
             {'key': 'curse', 'file': 'jd - curse 2.wav'},
             {'key': 'curse', 'file': 'jd - curse 3.wav'},
             {'key': 'curse', 'file': 'jd - curse 4.wav'},
-            {'key': 'curse', 'file': 'jd - curse 4.wav'},
             {'key': 'curse', 'file': 'jd - curse 5.wav'},
             {'key': 'curse', 'file': 'jd - curse 6.wav'},
             {'key': 'curse', 'file': 'jd - curse 7.wav'},
@@ -306,7 +302,6 @@ class AssetLoader(object):
             {'key': 'welcome', 'file': 'welcome.wav'},
             {'key': 'welcome', 'file': 'jd - reporting for duty.wav'},
             {'key': 'welcome', 'file': 'judge death - i have come to bring law to the city my law.wav'},
-            {'key': 'welcome', 'file': 'judge death - i have come to stop this world again.wav'},
             {'key': 'welcome', 'file': 'judge death - i have come to stop this world again.wav'},
             {'key': 'shoot again 1', 'file': 'shoot again player 1.wav'},
             {'key': 'shoot again 2', 'file': 'shoot again player 2.wav'},

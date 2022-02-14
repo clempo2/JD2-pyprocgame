@@ -29,7 +29,7 @@ class UltimateChallenge(Mode):
     def mode_stopped(self):
         # when celebration was awarded, the next challenge starts from the beginning
         self.game.setPlayerState('challenge_mode', self.active_mode if self.active_mode < 4 else 0)
-        self.game.modes.remove(self.mode_list[self.active_mode])
+        self.game.remove_modes([self.mode_list[self.active_mode]])
 
     def start_level(self):
         self.game.enable_flippers(True)
@@ -62,13 +62,13 @@ class UltimateChallenge(Mode):
 
     def next_level(self):
         # all balls have intentionally drained, move to the next mode
-        self.game.modes.remove(self.mode_list[self.active_mode])
+        self.game.remove_modes([self.mode_list[self.active_mode]])
         self.active_mode += 1 # next mode
         self.start_level()
 
     def end_challenge(self):
         # go back to regular play
-        self.game.modes.remove(self)
+        self.game.remove_modes([self])
         self.game.update_lamps()
         self.exit_callback()
 
@@ -141,14 +141,6 @@ class DarkJudge(ChallengeBase):
     def __init__(self, game, priority, initial_time, instructions, num_shots_required, num_balls, ball_save_time):
         super(DarkJudge, self).__init__(game, priority, initial_time, instructions, num_shots_required, num_balls, ball_save_time)
         self.taunt_sound = self.name.lower() + ' - taunt'
-
-    def mode_stopped(self):
-        super(DarkJudge, self).mode_stopped()
-        self.cancel_delayed('taunt')
-
-    def start(self):
-        super(DarkJudge, self).start()
-        self.delay(name='taunt', event_type=None, delay=10, handler=self.taunt)
 
     def expired(self):
         self.finish(success=False)

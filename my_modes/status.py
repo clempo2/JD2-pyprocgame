@@ -29,7 +29,6 @@ class StatusReport(Mode):
 
     def mode_stopped(self):
         self.game.base_play.display('')
-        self.cancel_delayed('show_status')
 
     def show_status(self):
         status_item = self.status_items[self.index]
@@ -58,5 +57,5 @@ class StatusReport(Mode):
             self.exit()
 
     def exit(self):
-        self.game.modes.remove(self)
+        self.game.remove_modes([self])
         # this mode owns no lamps so no need to update lamps

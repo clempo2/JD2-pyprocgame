@@ -27,7 +27,7 @@ class SkillShot(Mode):
     def skill_shot_expired(self):
         # timer expired or external caller cancels the skillshot (for example after a ball save)
         self.cancel_delayed('skill_shot_delay')
-        self.game.modes.remove(self)
+        self.game.remove_modes([self])
         self.game.update_lamps()
 
     def sw_leftRollover_active(self, sw):

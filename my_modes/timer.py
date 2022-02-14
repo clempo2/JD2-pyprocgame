@@ -89,11 +89,11 @@ class TimedMode(Timer):
         self.play_music()
 
     def mode_stopped(self):
-        self.game.modes.remove(self.intro)
+        self.game.remove_modes([self.intro])
         self.stop_timer()
 
     def intro_ended(self):
-        self.game.modes.remove(self.intro)
+        self.game.remove_modes([self.intro])
         if self.mode_time > 0:
             self.start_timer(self.mode_time)
         self.update_status()

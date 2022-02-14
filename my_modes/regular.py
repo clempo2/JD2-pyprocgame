@@ -51,6 +51,7 @@ class RegularPlay(Mode):
     #### DEBUG: push the buy in button to go straight to ultimate challenge from regular mode
     ####        press multiple times in a row to skip Dark Judge modes
     def sw_buyIn_active(self, sw):
+        # self.game.base_play.sw_shooterL_active_for_500ms(None)
         self.game.remove_modes([self.chain, self.city_blocks])
         if self.is_ultimate_challenge_ready() and self.game.getPlayerState('challenge_mode', 0) < 3:
             self.game.addPlayerState('challenge_mode', 1)
@@ -98,7 +99,7 @@ class RegularPlay(Mode):
         ball_save_time = self.game.user_settings['Gameplay']['New ball ballsave time']
         repeating_ballsave = self.game.user_settings['Gameplay']['New ball repeating ballsave']
         self.game.ball_save_start(num_balls_to_save=1, time=ball_save_time, now=True, allow_multiple_saves=repeating_ballsave)
-        self.game.modes.remove(self.shoot_again_intro)
+        self.game.remove_modes([self.shoot_again_intro])
         self.game.update_lamps()
 
     #
@@ -116,7 +117,7 @@ class RegularPlay(Mode):
             if self.is_ultimate_challenge_ready():
                 # player needs to shoot the right popper to start the finale
                 self.state = 'challenge_ready'
-                self.game.modes.remove(self.multiball)
+                self.game.remove_modes([self.multiball])
                 self.mystery_lit = False
             elif self.game.getPlayerState('chain_complete', False):
                 self.state = 'chain_complete'
@@ -158,7 +159,7 @@ class RegularPlay(Mode):
             self.state = 'busy'
             self.game.sound.fadeout_music()
             self.game.sound.play_music('multiball', loops=-1)
-            self.game.modes.remove(self.missile_award_mode)
+            self.game.remove_modes([self.missile_award_mode])
             # Light mystery once for free.
             self.mystery_lit = False
             self.game.update_lamps()

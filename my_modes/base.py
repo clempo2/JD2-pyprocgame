@@ -80,7 +80,6 @@ class BasePlay(Mode):
         self.game.disable_ball_search()
         self.game.trough.drain_callback = self.game.no_op_callback
         self.game.ball_save.callback = None
-        self.cancel_show_status_timer()
 
         player = self.game.current_player()
         player.setState('extra_balls_lit', self.extra_balls_lit)
@@ -260,12 +259,12 @@ class BasePlay(Mode):
     #
 
     def start_ultimate_challenge(self):
-        self.game.modes.remove(self.regular_play)
+        self.game.remove_modes([self.regular_play])
         self.game.modes.add(self.ultimate_challenge)
         self.game.update_lamps()
 
     def ultimate_challenge_ended(self):
-        self.game.modes.remove(self.ultimate_challenge)
+        self.game.remove_modes([self.ultimate_challenge])
         self.game.modes.add(self.regular_play)
         self.game.update_lamps()
 
@@ -410,8 +409,8 @@ class BasePlay(Mode):
     # Final processing for the ball
     # If bonus was calculated, it is finished by now.
     def end_ball(self):
-        self.game.modes.remove(self.bonus)
-        self.game.modes.remove(self.replay)
+        self.game.remove_modes([self.bonus])
+        self.game.remove_modes([self.replay])
         self.game.update_lamps()
 
         self.game.enable_flippers(True)

@@ -15,7 +15,6 @@ class Deadworld(Mode):
 
     def mode_stopped(self):
         self.stop_spinning()
-        self.cancel_delayed(['globe_restart', 'crane_release_check', 'crane_restart', 'crane_delay']) # in case of tilt
 
     def start_spinning(self):
         self.game.coils.globeMotor.pulse(0)
@@ -176,7 +175,7 @@ class DeadworldTest(ServiceModeSkeleton):
             self.game.coils[coil_name].disable()
         
     def sw_exit_active(self, sw):
-        self.game.modes.remove(self)
+        self.game.remove_modes([self])
         self.game.update_lamps()
         return SwitchStop
 

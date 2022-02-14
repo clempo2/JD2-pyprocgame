@@ -46,7 +46,7 @@ class TiltMonitorMode(Mode):
         self.tilt_reset()
 
     def mode_stopped(self):
-        self.game.modes.remove(self.tilted_mode)
+        self.game.remove_modes([self.tilted_mode])
 
     def tilt_handler(self, sw):
         now = time.time()

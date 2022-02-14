@@ -40,8 +40,8 @@ class Chain(Mode):
         player.setState('modes_remaining_ptr', self.modes_remaining_ptr)
 
         if self.mode != None:
-            self.game.modes.remove(self.mode)
-        self.game.modes.remove(self.hurry_up)
+            self.game.remove_modes([self.mode])
+        self.game.remove_modes([self.hurry_up])
 
     def reset(self):
         player = self.game.current_player()
@@ -98,7 +98,7 @@ class Chain(Mode):
 
     # called when the mode has completed or expired but before the hurry up
     def chain_mode_ended(self, success):
-        self.game.modes.remove(self.mode)
+        self.game.remove_modes([self.mode])
 
         if success:
             # mode was completed successfully, start hurry up award
@@ -122,7 +122,7 @@ class Chain(Mode):
                 self.game.score(100000)
 
         self.mode = None
-        self.game.modes.remove(self.hurry_up)
+        self.game.remove_modes([self.hurry_up])
         self.game.base_play.regular_play.chain_mode_completed()
         self.game.update_lamps()
 
@@ -148,10 +148,6 @@ class ChainHurryUp(TimedMode):
         self.game.coils.tripDropTarget.pulse(40)
         self.trip_check()
         self.already_collected = False
-
-    def mode_stopped(self):
-        super(ChainHurryUp, self).mode_stopped()
-        self.cancel_delayed('trip_check')
 
     def play_music(self):
         # don't change the music for the hurry up, that mode is too short
@@ -320,9 +316,6 @@ class Sniper(ChainFeature):
         time = randint(2, 7)
         self.delay(name='gunshot', event_type=None, delay=time, handler=self.gunshot)
 
-    def mode_stopped(self):
-        self.cancel_delayed('gunshot')
-
     def update_lamps(self):
         self.game.lamps.awardSniper.schedule(schedule=0x00FF00FF, cycle_seconds=0, now=True)
 
@@ -413,7 +406,6 @@ class Impersonator(ChainFeature):
 
     def mode_stopped(self):
         self.stop_using_drops()
-        self.cancel_delayed(['song_restart', 'boo_restart', 'shutup_restart', 'end_sound'])
         self.game.sound.stop('bi - song')
         self.game.sound.stop('bi - boo')
 
@@ -556,7 +548,6 @@ class Safecracker(ChainFeature):
         self.delay(name='bad guys', event_type=None, delay=randint(10, 20), handler=self.bad_guys)
 
     def mode_stopped(self):
-        self.cancel_delayed(['trip_check', 'bad guys'])
         self.stop_using_drops()
 
     def update_lamps(self):
@@ -642,9 +633,6 @@ class Stakeout(ChainFeature):
     def mode_started(self):
         super(Stakeout, self).mode_started()
         self.delay(name='boring', event_type=None, delay=15, handler=self.boring_expired)
-
-    def mode_stopped(self):
-        self.cancel_delayed('boring')
 
     def update_lamps(self):
         self.game.coils.flasherPursuitR.schedule(schedule=0x000F000F, cycle_seconds=0, now=True)

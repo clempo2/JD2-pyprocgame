@@ -27,9 +27,6 @@ class Bonus(Mode):
         self.bonus_items += [{'text': 'Total', 'points': bonus}]
         self.delay(name='show_bonus', event_type=None, delay=1.5, handler=self.show_bonus, param=0)
 
-    def mode_stopped(self):
-        self.cancel_delayed('show_bonus')
-
     def create_item(self, state, title, value):
         num = self.game.getPlayerState(state, 0)
         return [] if num == 0 else [{'text': self.format_text(num, title), 'points': num * value}]

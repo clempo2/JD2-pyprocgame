@@ -82,7 +82,7 @@ class MissileAwardMode(Timer):
         self.game.base_play.regular_play.chain.resume()
 
     def video_mode_complete(self, success):
-        self.game.modes.remove(self.video_mode)
+        self.game.remove_modes([self.video_mode])
         self.launch_ball()
         if success:
             self.game.base_play.light_extra_ball()

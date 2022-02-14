@@ -7,9 +7,6 @@ class Boring(Mode):
         self.enable_reset = False
         self.reset()
 
-    def mode_stopped(self):
-        self.cancel_delayed('timer')
-
     def timer_expired(self):
         self.delay(name='timer', event_type=None, delay=8, handler=self.timer_expired)
         self.game.sound.play('boring')

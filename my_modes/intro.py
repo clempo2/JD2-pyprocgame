@@ -18,15 +18,12 @@ class Introduction(Mode):
         self.layer = None
         self.delay(name='start', event_type=None, delay=self.start_delay, handler=self.start)
 
-    def mode_stopped(self):
-        self.cancel_delayed(['start'])
-
     def start(self):
         self.intro_layer.reset()
         self.layer = self.intro_layer
 
     def finish(self):
-        self.game.modes.remove(self)
+        self.game.remove_modes([self])
         if self.exit_callback:
             self.exit_callback()
 

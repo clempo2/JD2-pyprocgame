@@ -64,8 +64,7 @@ class Multiball(Mode):
         player.setState('multiball_played', self.multiball_played)
         # multiball_jackpot_collected is sticky until it is reset at the end of Ultimate Challenge
 
-        self.cancel_delayed(['trip_check', 'multiball_instructions'])
-        self.game.modes.remove(self.drops)
+        self.game.remove_modes([self.drops])
 
     def reset(self):
         self.game.setPlayerState('multiball_jackpot_collected', False)

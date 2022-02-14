@@ -9,9 +9,6 @@ class Combos(Mode):
         self.inner_loop_combos = 0
         self.outer_loop_combos = 0
 
-    def mode_stopped(self):
-        self.cancel_delayed(['inner_loop', 'outer_loop'])
-
     def sw_topRightOpto_active(self, sw):
         # See if ball came around inner left loop
         if self.game.switches.topCenterRollover.time_since_change() < 1.5:

@@ -26,32 +26,32 @@ class CityBlocks(Mode):
             self.game.modes.add(self.city_block)
 
     def city_blocks_completed(self):
-        self.game.modes.remove(self.city_block)
+        self.game.remove_modes([self.city_block])
         self.game.update_lamps()
         self.game.setPlayerState('blocks_complete', True)
         self.game.base_play.regular_play.city_blocks_completed()
 
     def start_block_war(self):
-        self.game.modes.remove(self.city_block)
+        self.game.remove_modes([self.city_block])
         self.block_war.reset()
         self.start_multiball_callback()
         self.game.modes.add(self.block_war)
         self.game.update_lamps()
 
     def start_block_war_bonus(self):
-        self.game.modes.remove(self.block_war)
+        self.game.remove_modes([self.block_war])
         self.game.modes.add(self.block_war_bonus)
         self.game.update_lamps()
 
     def end_block_war_bonus(self, bonus_collected):
-        self.game.modes.remove(self.block_war_bonus)
+        self.game.remove_modes([self.block_war_bonus])
         self.block_war.next_round(bonus_collected)
         self.game.modes.add(self.block_war)
         self.game.update_lamps()
 
     def end_multiball(self):
-        self.game.modes.remove(self.block_war)
-        self.game.modes.remove(self.block_war_bonus)
+        self.game.remove_modes([self.block_war])
+        self.game.remove_modes([self.block_war_bonus])
         self.city_block.next_block()
         # next_block updated the lamps
         self.start_city_block()
@@ -249,7 +249,6 @@ class BlockWar(CrimeSceneShots):
 
     def mode_stopped(self):
         self.game.addPlayerState('multiball_active', -0x2)
-        self.cancel_delayed('rotate_bonus_target')
 
     # trough callback
     def start_callback(self):
@@ -317,7 +316,6 @@ class BlockWarBonus(CrimeSceneShots):
 
     def mode_stopped(self):
         self.game.addPlayerState('multiball_active', -0x4)
-        self.cancel_delayed('rotate_bonus_target')
 
     # rotate all the way to the end and back only once
     def rotate_bonus_target(self, bonus_step):
