@@ -45,5 +45,10 @@ Copyright (c) 2021-2022 Clement Pellerin
 Original JD-pyprocgame is  
 Copyright (c) 2009-2011 Adam Preble and Gerry Stellenberg
 
+The JD-pyprocgame media pack is distributed under a restricted custom license.  
+Copyright (c) 2009-2011 Gerry Stellenberg  
+JD-pyprocgame media pack used by permission of the author.
+
 Small portions copied from [PyProcGameHD-SkeletonGame](https://github.com/mjocean/PyProcGameHD-SkeletonGame) are  
 Copyright (c) 2014-2015 Michael Ocean and Josh Kugler
+
