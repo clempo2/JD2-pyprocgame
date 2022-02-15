@@ -134,6 +134,24 @@ class ChallengeBase(TimedMode):
     def sw_leftRampToLock_active(self, sw):
         self.game.deadworld.eject_balls(1)
 
+    def sw_dropTargetJ_active_for_250ms(self, sw):
+        self.drop_target_active()
+
+    def sw_dropTargetU_active_for_250ms(self, sw):
+        self.drop_target_active()
+
+    def sw_dropTargetD_active_for_250ms(self, sw):
+        self.drop_target_active()
+
+    def sw_dropTargetG_active_for_250ms(self, sw):
+        self.drop_target_active()
+
+    def sw_dropTargetE_active_for_250ms(self, sw):
+        self.drop_target_active()
+
+    def reset_drops(self):
+        self.game.coils.resetDropTarget.pulse(40)
+
 
 class DarkJudge(ChallengeBase):
     """Base class for dark judge wizard modes"""
@@ -149,23 +167,8 @@ class DarkJudge(ChallengeBase):
         self.game.sound.play_voice(self.taunt_sound)
         self.delay(name='taunt', event_type=None, delay=20, handler=self.taunt)
 
-    def sw_dropTargetJ_active_for_250ms(self, sw):
+    def drop_target_active(self):
         self.reset_drops()
-
-    def sw_dropTargetU_active_for_250ms(self, sw):
-        self.reset_drops()
-
-    def sw_dropTargetD_active_for_250ms(self, sw):
-        self.reset_drops()
-
-    def sw_dropTargetG_active_for_250ms(self, sw):
-        self.reset_drops()
-
-    def sw_dropTargetE_active_for_250ms(self, sw):
-        self.reset_drops()
-
-    def reset_drops(self):
-        self.game.coils.resetDropTarget.pulse(40)
 
     def check_for_completion(self):
         self.update_status()
@@ -496,34 +499,60 @@ class Celebration(ChallengeBase, CrimeSceneShots):
     # but remember RegularPlay does not run when UltimateChallenge is running.)
     # Celebration is the only multiball Challenge mode that ends on the last ball in play
     # therefore it has to trap evt_ball_drained and implement that behavior itself.
-    
+
     def evt_ball_drained(self):
         # The trough does not expect a multiball to start from 0 balls and gets confused,
         # It calls the end multiball callback when launching the first ball
         # thinking we got down to 1 ball when in fact we are going up to 6 balls.
         # The ball saver might also bring back the second ball from the dead,
         # so wait until the first ball is in play and we requested all the balls we wanted
-        # and we are indeed on the last ball. 
+        # and we are indeed on the last ball.
         if (self.started and self.game.trough.num_balls_in_play == 1 and
              self.game.trough.num_balls_to_launch == 0):
             # down to just one ball, revert to regular play
             self.exit_callback(False)
         # else celebration continues until we are really down to the last ball
 
-    def sw_mystery_active(self, sw):
+    def evt_shooterL_active_500ms(self):
         self.switch_hit(6)
-        
-    def sw_captiveBall2_active(self, sw): # make it easier with captive switch 2 instead of 3
+
+    def sw_mystery_active(self, sw):
         self.switch_hit(7)
 
-    def reset_drops(self):
-        super(Celebration, self).reset_drops()
+    def sw_leftScorePost_active(self, sw):
         self.switch_hit(8)
+
+    def drop_target_active(self):
+        self.switch_hit(9)
+        if (self.game.switches.dropTargetJ.is_active() and
+                self.game.switches.dropTargetU.is_active() and
+                self.game.switches.dropTargetD.is_active() and
+                self.game.switches.dropTargetG.is_active() and
+                self.game.switches.dropTargetE.is_active()):
+            self.reset_drops()
+
+    def sw_subwayEnter2_closed(self, sw):
+        self.switch_hit(10)
+
+    def sw_rightTopPost_active(self, sw):
+        self.switch_hit(11)
+
+    def sw_threeBankTargets_active(self, sw):
+        self.switch_hit(12)
+
+    def sw_captiveBall1_active(self, sw):
+        self.switch_hit(13)
+
+    def sw_captiveBall2_active(self, sw):
+        self.switch_hit(14)
+
+    def sw_captiveBall3_active(self, sw):
+        self.switch_hit(15)
 
     def switch_hit(self, unused): # unused variable is the shot number
         self.game.score(5000)
         self.num_shots += 1
         self.update_status()
-        
+
     def update_status(self):
         self.status_layer.set_text('Shots made: ' + str(self.num_shots))

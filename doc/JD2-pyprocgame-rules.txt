@@ -242,7 +242,7 @@ when the last fire is extinguished.
 
 === Final Level: Celebration ===
 All dark judges have been defeated and banished. This level is a 6 ball
-multiball with all shots awarding points. This mode (and subsequently
+multiball with all shots awarding 5,000 points. This mode (and subsequently
 the entire Ultimate Challenge) ends when there is only 1 ball remaining
 in play. The game then begins anew.
 
