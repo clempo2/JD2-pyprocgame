@@ -11,6 +11,7 @@ class StatusReport(Mode):
 
         self.status_items = [
             {'text': 'Extra Balls', 'value': player.extra_balls},
+            {'text': 'Extra Balls Lit', 'value': player.getState('extra_balls_lit', 0)},
             {'text': 'Chain Features', 'value': player.getState('num_chain_features', 0)},
             {'text': 'Hurry Ups', 'value': player.getState('num_hurry_ups', 0)},
             {'text': 'Blocks', 'value': num_blocks}]

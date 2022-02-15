@@ -41,7 +41,6 @@ class BasePlay(Mode):
     def mode_started(self):
         # init player state
         player = self.game.current_player()
-        self.extra_balls_lit = player.getState('extra_balls_lit', 0)
         self.total_extra_balls = player.getState('total_extra_balls', 0)
 
         bonus_x = player.getState('bonus_x', 1) if player.getState('hold_bonus_x', False) else 1
@@ -81,9 +80,7 @@ class BasePlay(Mode):
         self.game.trough.drain_callback = self.game.no_op_callback
         self.game.ball_save.callback = None
 
-        player = self.game.current_player()
-        player.setState('extra_balls_lit', self.extra_balls_lit)
-        player.setState('total_extra_balls', self.total_extra_balls)
+        self.game.setPlayerState('total_extra_balls', self.total_extra_balls)
 
     def update_lamps(self):
         # Disable all flashers
@@ -97,10 +94,10 @@ class BasePlay(Mode):
 
         self.game.enable_gi(True)
 
-        style = 'on' if self.game.current_player().extra_balls > 0 else 'off'
+        style = 'on' if self.game.current_player().extra_balls else 'off'
         self.game.drive_lamp('judgeAgain', style)
 
-        style = 'off' if self.extra_balls_lit == 0 else 'slow'
+        style = 'slow' if self.game.getPlayerState('extra_balls_lit', 0) else 'off'
         self.game.drive_lamp('extraBall2', style)
 
     #
@@ -206,12 +203,13 @@ class BasePlay(Mode):
     #
 
     def light_extra_ball(self):
-        if self.extra_balls_lit + self.total_extra_balls == self.game.user_settings['Gameplay']['Max extra balls per game']:
+        extra_balls_lit = self.game.getPlayerState('extra_balls_lit', 0)
+        if extra_balls_lit + self.total_extra_balls == self.game.user_settings['Gameplay']['Max extra balls per game']:
             self.game.set_status('No more extras this game.')
-        elif self.extra_balls_lit == self.game.user_settings['Gameplay']['Max extra balls lit']:
+        elif extra_balls_lit == self.game.user_settings['Gameplay']['Max extra balls lit']:
             self.game.set_status('Extra balls lit maxed.')
         else:
-            self.extra_balls_lit += 1
+            self.game.setPlayerState('extra_balls_lit', extra_balls_lit + 1)
             self.game.update_lamps()
             self.display('Extra Ball Lit')
 
@@ -223,8 +221,9 @@ class BasePlay(Mode):
 
     def extra_ball_switch_hit(self):
         self.game.sound.play('extra_ball_target')
-        if self.extra_balls_lit > 0:
-            self.extra_balls_lit -= 1
+        extra_balls_lit = self.game.getPlayerState('extra_balls_lit', 0)
+        if extra_balls_lit:
+            self.game.setPlayerState('extra_balls_lit', extra_balls_lit - 1)
             self.game.update_lamps()
             self.display('Extra Ball')
             self.extra_ball()
@@ -245,9 +244,10 @@ class BasePlay(Mode):
         self.display('Replay')
         if award == 'Extra Ball':
             if self.total_extra_balls < self.game.user_settings['Gameplay']['Max extra balls per game']:
-                if self.extra_balls_lit + self.total_extra_balls == self.game.user_settings['Gameplay']['Max extra balls per game']:
+                extra_balls_lit = self.game.getPlayerState('extra_balls_lit', 0)
+                if extra_balls_lit + self.total_extra_balls == self.game.user_settings['Gameplay']['Max extra balls per game']:
                     # already maximum allocated, convert a lit extra ball to an extra ball instead
-                    self.extra_balls_lit -= 1
+                    self.game.setPlayerState('extra_balls_lit', extra_balls_lit - 1)
                 self.extra_ball()
             else:
                 self.game.set_status('100,000 points')
