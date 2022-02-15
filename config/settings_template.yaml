@@ -45,11 +45,11 @@ Replay:
   'Replay Level 3':
     options: [50000,10000000]
     increments: 50000
-    default: 2000000
+    default: 1500000
   'Replay Level 4':
     options: [50000,10000000]
     increments: 50000
-    default: 3000000
+    default: 2000000
   'Replay Boost':
     options: [50000,10000000]
     increments: 50000
@@ -59,12 +59,18 @@ Gameplay:
     options: [0,10]
     increments: 1
     default: 2
+  'Allow restarts':
+    options: [true, false]
   'Balls per game':
     options: [1,10]
     increments: 1
     default: 3
-  'Allow restarts':
-    options: [true, false]
+  'Max extra balls per game':
+    options: [0,1,2,3,4,5,99]
+    default: 99
+  'Max extra balls lit':
+    options: [0,1,2,3,4,5,99]
+    default: 99
   'New ball ballsave time':
     options: [6,8,10,12,15]
     default: 10
@@ -82,17 +88,34 @@ Gameplay:
   'Chain feature difficulty':
     options: ['easy', 'medium', 'hard']
     default: 'medium'
-  'Blocks for Ultimate Challenge':
-    options: [8,12,16]
-    default: 16
   'Block difficulty':
     options: ['easy', 'medium', 'hard']
     default: 'medium'
+  'Blocks for Ultimate Challenge':
+    options: [8,12,16]
+    default: 16
   'Video mode':
     options: ['enemies', 'cows', 'off']
-  'Max extra balls per game':
-    options: [0,1,2,3,4,5,99]
-    default: 99
-  'Max extra balls lit':
-    options: [0,1,2,3,4,5,99]
-    default: 99
+  'Time for Fear shot':
+    options: [10,15,20,25,30,35]
+    default: 20
+  'Fear ballsave time':
+    options: [5,6,7,8,9,10,15,20,25,30]
+    default: 10
+  'Mortis ballsave time':
+    options: [5,6,7,8,9,10,15,20,25,30]
+    default: 10
+  'Time for Death':
+    options: [150,160,170,180,190,200]
+    default: 180
+  'Death ballsave time':
+    options: [5,6,7,8,9,10,15,20,25,30]
+    default: 20
+  'Time for Death shot':
+    options: [5,6,7,8,9,10,15,20,25,30]
+    default: 10
+  'Celebration ballsave time':
+    options: [5,6,7,8,9,10,15,20,25,30]
+    default: 20
+    
+ 

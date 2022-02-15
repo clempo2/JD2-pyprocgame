@@ -191,8 +191,10 @@ class Fear(DarkJudge):
     """
 
     def __init__(self, game, priority):
-        super(Fear, self).__init__(game, priority, initial_time=20, instructions='Shoot lit ramps then subway',
-                    num_shots_required=5, num_balls=1, ball_save_time=10)
+        self.time_for_shot = game.user_settings['Gameplay']['Time for Fear shot']
+        ball_save_time = game.user_settings['Gameplay']['Fear ballsave time']
+        super(Fear, self).__init__(game, priority, initial_time=self.time_for_shot, instructions='Shoot lit ramps then subway',
+                    num_shots_required=5, num_balls=1, ball_save_time=ball_save_time)
 
     def mode_started(self):
         super(Fear, self).mode_started()
@@ -224,7 +226,7 @@ class Fear(DarkJudge):
         self.game.sound.play('mystery')
         if self.mystery_lit:
             self.mystery_lit = False
-            self.timer = 20
+            self.timer = self.time_for_shot
             self.game.update_lamps()
 
     def sw_leftRampExit_active(self, sw):
@@ -243,7 +245,7 @@ class Fear(DarkJudge):
                 self.state = 'subway'
             else:
                 self.switch_ramps()
-        self.reset_timer(20)
+        self.reset_timer(self.time_for_shot)
         self.game.update_lamps()
 
     def switch_ramps(self):
@@ -295,8 +297,9 @@ class Mortis(DarkJudge):
     """
 
     def __init__(self, game, priority):
+        ball_save_time = game.user_settings['Gameplay']['Mortis ballsave time']
         super(Mortis, self).__init__(game, priority, initial_time=0, instructions='Shoot lit shots twice',
-                    num_shots_required=10, num_balls=2, ball_save_time=10)
+                    num_shots_required=10, num_balls=2, ball_save_time=ball_save_time)
         self.lamp_names = ['mystery', 'perp1G', 'perp3G', 'perp5G', 'stopMeltdown']
         self.lamp_styles = ['off', 'fast', 'medium']
 
@@ -351,13 +354,16 @@ class Death(DarkJudge, CrimeSceneShots):
     """
 
     def __init__(self, game, priority):
-        super(Death, self).__init__(game, priority, initial_time=180, instructions='Shoot lit shots quickly',
-                    num_shots_required=5, num_balls=1, ball_save_time=20)
+        initial_time = game.user_settings['Gameplay']['Time for Death']
+        ball_save_time = game.user_settings['Gameplay']['Death ballsave time']
+        self.time_for_shot = game.user_settings['Gameplay']['Time for Death shot']
+        super(Death, self).__init__(game, priority, initial_time=initial_time, instructions='Shoot lit shots quickly',
+                    num_shots_required=5, num_balls=1, ball_save_time=ball_save_time)
         self.shot_order = [4, 2, 0, 3, 1] # from easiest to hardest
 
     def mode_started(self):
         super(Death, self).mode_started()
-        self.shot_timer = 10
+        self.shot_timer = self.time_for_shot
         self.active_shots = [1, 1, 1, 1, 1]
         self.game.coils.resetDropTarget.pulse(40)
 
@@ -375,7 +381,7 @@ class Death(DarkJudge, CrimeSceneShots):
             self.num_shots += 1
             self.game.lampctrl.play_show('shot_hit', False, self.game.update_lamps)
             self.game.score(10000)
-            self.shot_timer = 10
+            self.shot_timer = self.time_for_shot
             self.check_for_completion()
 
     def add_shot(self):
@@ -391,7 +397,7 @@ class Death(DarkJudge, CrimeSceneShots):
         if self.shot_timer > 0:
             self.shot_timer -= 1
         else:
-            self.shot_timer = 10
+            self.shot_timer = self.time_for_shot
             self.add_shot()
 
     def finish(self, success):
@@ -462,8 +468,9 @@ class Celebration(ChallengeBase, CrimeSceneShots):
     """
 
     def __init__(self, game, priority):
+        ball_save_time = game.user_settings['Gameplay']['Celebration ballsave time']
         super(Celebration, self).__init__(game, priority, initial_time=0, instructions='All shots score',
-                     num_shots_required=0, num_balls=6, ball_save_time=20)
+                     num_shots_required=0, num_balls=6, ball_save_time=ball_save_time)
 
     def mode_started(self):
         super(Celebration, self).mode_started()
