@@ -67,7 +67,6 @@ class Attract(Mode):
 """)
 
         self.credits_layer = FastPanningLayer(width=128, height=32, frame=credits_frame, origin=(0, 0), translate=(0, 1), bounce=False)
-        self.guntech_layer = self.game.animations['guntech']
         self.judges_layer = self.game.animations['darkjudges_no_bg']
         self.longwalk_layer = self.game.animations['longwalk']
         

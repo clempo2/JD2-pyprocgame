@@ -47,11 +47,11 @@ class JDPlayer(Player):
         return self.state_tracking.get(key, default)
 
 
-class JDGame(BasicGame):
+class JD2Game(BasicGame):
     """Judge Dredd pinball game"""
 
     def __init__(self):
-        super(JDGame, self).__init__(pinproc.MachineTypeWPC)
+        super(JD2Game, self).__init__(pinproc.MachineTypeWPC)
         self.sound = SoundController(self)
         self.lampctrl = LampController(self)
         self.logging_enabled = False
@@ -107,7 +107,7 @@ class JDGame(BasicGame):
         self.remove_all_modes()
         
         # Reset the entire game framework
-        super(JDGame, self).reset()
+        super(JD2Game, self).reset()
 
         # reload the settings since they might have changed in service mode
         self.load_game_settings()
@@ -183,7 +183,7 @@ class JDGame(BasicGame):
     #
 
     def start_game(self, supergame):
-        super(JDGame, self).start_game()
+        super(JD2Game, self).start_game()
         self.game_data['Audits']['Games Started'] += 1
         self.supergame = supergame
         self.remove_modes([self.attract_mode])
@@ -195,7 +195,7 @@ class JDGame(BasicGame):
         self.start_ball()
 
     def ball_starting(self):
-        super(JDGame, self).ball_starting()
+        super(JD2Game, self).ball_starting()
         self.modes.add(self.base_play)
         self.update_lamps()
 
@@ -216,12 +216,12 @@ class JDGame(BasicGame):
 
     # Override to create a flag signaling extra ball.
     def shoot_again(self):
-        super(JDGame, self).shoot_again()
+        super(JD2Game, self).shoot_again()
         self.shooting_again = True
 
     def end_ball(self):
         self.shooting_again = False
-        super(JDGame, self).end_ball()
+        super(JD2Game, self).end_ball()
 
         self.game_data['Audits']['Avg Ball Time'] = self.calc_time_average_string(self.game_data['Audits']['Balls Played'], self.game_data['Audits']['Avg Ball Time'], self.ball_time)
         self.game_data['Audits']['Balls Played'] += 1
@@ -231,7 +231,7 @@ class JDGame(BasicGame):
         self.trough.drain_callback = self.no_op_callback
 
     def game_ended(self):
-        super(JDGame, self).game_ended()
+        super(JD2Game, self).game_ended()
         self.deadworld.stop_spinning()
 
         # High Score Stuff
@@ -338,7 +338,7 @@ class JDGame(BasicGame):
 
     # workaround for procgame.service.SettingsEditor calling this method with only one argument
     def save_settings(self, filename=None):
-        super(JDGame, self).save_settings(filename if filename else settings_path)
+        super(JD2Game, self).save_settings(filename if filename else settings_path)
 
     #
     # Stats
@@ -502,7 +502,7 @@ class JDGame(BasicGame):
 def main():
     game = None
     try:
-        game = JDGame()
+        game = JD2Game()
         game.run_loop()
     finally:
         del game
