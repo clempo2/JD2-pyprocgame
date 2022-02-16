@@ -5,7 +5,7 @@ import pygame.locals
 from procgame.config import value_for_key_path
 from procgame.dmd import FrameLayer, MarkupFrameGenerator, ScriptedLayer
 from procgame.game import BasicGame, Mode, Player
-from procgame.highscore import CategoryLogic, HighScoreCategory
+from procgame.highscore import HighScoreCategory
 from procgame.lamps import LampController
 from procgame.modes import BallSave, BallSearch, Trough
 from procgame.service import ServiceMode
@@ -58,7 +58,7 @@ class JD2Game(BasicGame):
         self.logging_enabled = False
 
         # don't use the locale, always insert commas in groups of 3 digits
-        self.score_display.format_points = self.format_points
+        self.score_display.format_score = self.format_points
 
         self.load_config('config/JD.yaml')
         self.lamp_schedules = {'slow':0x00ff00ff, 'medium':0x0f0f0f0f, 'fast':0x55555555, 'on':0xffffffff, 'off':0x00000000}
