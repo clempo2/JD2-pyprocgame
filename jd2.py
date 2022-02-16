@@ -5,16 +5,17 @@ import pygame.locals
 from procgame.config import value_for_key_path
 from procgame.dmd import FrameLayer, MarkupFrameGenerator, ScriptedLayer
 from procgame.game import BasicGame, Mode, Player
-from procgame.highscore import CategoryLogic, EntrySequenceManager, HighScoreCategory
+from procgame.highscore import CategoryLogic, HighScoreCategory
 from procgame.lamps import LampController
 from procgame.modes import BallSave, BallSearch, Trough
 from procgame.service import ServiceMode
 from procgame.sound import SoundController
 from asset_loader import AssetLoader
-from my_modes.switchmonitor import SwitchMonitor
 from my_modes.attract import Attract
 from my_modes.base import BasePlay
 from my_modes.deadworld import Deadworld, DeadworldTest
+from my_modes.initials import JDEntrySequenceManager
+from my_modes.switchmonitor import SwitchMonitor
 
 import logging
 logging.basicConfig(level=logging.ERROR, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
@@ -235,10 +236,9 @@ class JD2Game(BasicGame):
         self.deadworld.stop_spinning()
 
         # High Score Stuff
-        seq_manager = EntrySequenceManager(game=self, priority=2)
-        seq_manager.finished_handler = self.highscore_entry_finished
         categories = self.supergame_highscore_categories if self.supergame else self.highscore_categories
-        seq_manager.logic = CategoryLogic(game=self, categories=categories)
+        seq_manager = JDEntrySequenceManager(game=self, priority=2, categories=categories)
+        seq_manager.finished_handler = self.highscore_entry_finished
         seq_manager.ready_handler = self.highscore_entry_ready_to_prompt
         self.modes.add(seq_manager)
 
