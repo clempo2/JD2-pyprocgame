@@ -244,7 +244,7 @@ class BlockWar(CrimeSceneShots):
     def mode_started(self):
         self.game.addPlayerState('multiball_active', 0x2)
         self.game.base_play.display('Block War')
-        self.game.sound.play_voice('block war start')
+        self.game.sound.play_voice('block war')
         self.game.trough.launch_balls(1, self.start_callback)
 
     def mode_stopped(self):

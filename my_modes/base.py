@@ -232,7 +232,7 @@ class BasePlay(Mode):
         player = self.game.current_player()
         player.extra_balls += 1
         self.total_extra_balls += 1
-        self.play_animation('EBAnim')
+        self.play_animation('extra ball')
 
     #
     # Replay

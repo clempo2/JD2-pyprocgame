@@ -184,7 +184,7 @@ class ChainHurryUp(TimedMode):
             self.collect_hurry_up()
 
     def collect_hurry_up(self):
-        self.game.sound.play_voice('collected')
+        self.game.sound.play_voice('good shot')
         self.cancel_delayed('trip_check')
         self.already_collected = True
         self.game.base_play.display('Well Done')
@@ -232,7 +232,7 @@ class Pursuit(ChainFeature):
         self.delay(name='response', event_type=None, delay=time+0.5, handler=self.response)
 
     def response(self):
-        self.game.sound.play_voice('in pursuit')
+        self.game.sound.play_voice('pursuit')
 
     def update_lamps(self):
         self.game.coils.flasherPursuitL.schedule(schedule=0x00030003, cycle_seconds=0, now=True)
@@ -258,14 +258,14 @@ class Pursuit(ChainFeature):
     def check_for_completion(self):
         self.update_status()
         if self.num_shots == self.num_shots_required:
-            self.game.sound.play_voice('complete')
+            self.game.sound.play_voice('pursuit complete')
             self.game.score(50000)
             self.exit_callback(True)
         else:
             self.game.sound.play_voice('good shot')
 
     def expired(self):
-        self.game.sound.play_voice('failed')
+        self.game.sound.play_voice('pursuit failed')
         super(Pursuit, self).expired()
 
 
@@ -406,25 +406,25 @@ class Impersonator(ChainFeature):
 
     def mode_stopped(self):
         self.stop_using_drops()
-        self.game.sound.stop('bi - song')
-        self.game.sound.stop('bi - boo')
+        self.game.sound.stop('bad impersonator song')
+        self.game.sound.stop('bad impersonator boo')
 
     def play_music(self):
         # this mode talks all the time, we don't want any music
         pass
 
     def song_restart(self):
-        self.game.sound.play('bi - song')
+        self.game.sound.play('bad impersonator song')
         self.delay(name='song_restart', event_type=None, delay=6, handler=self.song_restart)
 
     def boo_restart(self):
         time = randint(2, 7)
-        self.game.sound.play('bi - boo')
+        self.game.sound.play('bad impersonator boo')
         self.delay(name='boo_restart', event_type=None, delay=time, handler=self.boo_restart)
 
     def shutup_restart(self):
         time = randint(2, 7)
-        self.game.sound.play('bi - shutup')
+        self.game.sound.play('bad impersonator shutup')
         self.delay(name='shutup_restart', event_type=None, delay=time, handler=self.shutup_restart)
 
     def end_sound(self):
@@ -467,10 +467,10 @@ class Impersonator(ChainFeature):
         if self.timer % 6 in matches:
             self.num_shots += 1
             self.game.score(10000)
-        self.game.sound.stop('bi - song')
+        self.game.sound.stop('bad impersonator song')
         if not self.sound_active:
             self.sound_active = True
-            self.game.sound.play('bi - ouch')
+            self.game.sound.play('bad impersonator ouch')
             self.delay(name='end_sound', event_type=None, delay=1, handler=self.end_sound)
         self.game.coils.resetDropTarget.pulse(40)
         self.check_for_completion()
@@ -539,7 +539,7 @@ class Safecracker(ChainFeature):
 
     def bad_guys(self):
         self.delay(name='bad guys', event_type=None, delay=randint(5, 10), handler=self.bad_guys)
-        self.game.sound.play_voice('bad guys')
+        self.game.sound.play_voice('safecracker bad guys')
 
     def mode_started(self):
         super(Safecracker, self).mode_started()
@@ -574,11 +574,11 @@ class Safecracker(ChainFeature):
     def check_for_completion(self):
         self.update_status()
         if self.num_shots == self.num_shots_required:
-            self.game.sound.play_voice('complete')
+            self.game.sound.play_voice('safecracker complete')
             self.game.score(50000)
             self.exit_callback(True)
         else:
-            self.game.sound.play_voice('shot')
+            self.game.sound.play_voice('safecracker shot')
 
 
 class ManhuntMillions(ChainFeature):
@@ -592,7 +592,7 @@ class ManhuntMillions(ChainFeature):
 
     def mode_started(self):
         super(ManhuntMillions, self).mode_started()
-        self.game.sound.play_voice('mm - intro')
+        self.game.sound.play_voice('manhunt - intro')
 
     def update_lamps(self):
         self.game.coils.flasherPursuitL.schedule(schedule=0x000F000F, cycle_seconds=0, now=True)
@@ -614,11 +614,11 @@ class ManhuntMillions(ChainFeature):
     def check_for_completion(self):
         self.update_status()
         if self.num_shots == self.num_shots_required:
-            self.game.sound.play_voice('mm - done')
+            self.game.sound.play_voice('manhunt - done')
             self.game.score(50000)
             self.exit_callback(True)
         else:
-            self.game.sound.play_voice('mm - shot')
+            self.game.sound.play_voice('manhunt - shot')
 
 
 class Stakeout(ChainFeature):
@@ -638,20 +638,20 @@ class Stakeout(ChainFeature):
         self.game.coils.flasherPursuitR.schedule(schedule=0x000F000F, cycle_seconds=0, now=True)
 
     def boring_expired(self):
-        self.game.sound.play_voice('so - boring')
+        self.game.sound.play_voice('stakeout boring')
         self.delay(name='boring', event_type=None, delay=5, handler=self.boring_expired)
 
     def sw_rightRampExit_active(self, sw):
         self.num_shots += 1
         self.game.score(10000)
         self.cancel_delayed('boring')
-        self.game.sound.stop('so - boring')
+        self.game.sound.stop('stakeout boring')
         if self.num_shots == 1:
-            self.game.sound.play_voice('so - over there')
+            self.game.sound.play_voice('stakeout over there')
         elif self.num_shots == 2:
-            self.game.sound.play_voice('so - surrounded')
+            self.game.sound.play_voice('stakeout surrounded')
         elif self.num_shots == 3:
-            self.game.sound.play_voice('so - move in')
+            self.game.sound.play_voice('stakeout move in')
         self.check_for_completion()
 
     def check_for_completion(self):

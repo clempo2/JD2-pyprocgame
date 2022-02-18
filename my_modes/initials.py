@@ -1,3 +1,6 @@
+# Originally copied from pyprocgame
+# Copyright (c) 2009-2011 Adam Preble and Gerry Stellenberg
+
 from procgame.game import Mode, SwitchStop
 from procgame.dmd import Frame, FrameLayer, FrameQueueLayer, GroupedLayer, ScriptedLayer, font_named
 from procgame.highscore import CategoryLogic, EntrySequenceManager
