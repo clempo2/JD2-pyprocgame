@@ -244,6 +244,7 @@ class AssetLoader(object):
             {'key': 'good guy shot', 'file': 'shooting gallery/mother 1.wav'},
             {'key': 'good guy shot', 'file': 'shooting gallery/mother 2.wav'},
             {'key': 'moo', 'file': 'shooting gallery/jd - moo.wav'},
+            {'key': 'perfect', 'file': 'shooting gallery/perfect.wav'},
             {'key': 'tilt warning', 'file': 'tilt/warning.wav'},
             {'key': 'tilt warning', 'file': 'tilt/jd - im warning you.wav'},
             {'key': 'tilt', 'file': 'tilt/jd - put down your weapons.wav'},

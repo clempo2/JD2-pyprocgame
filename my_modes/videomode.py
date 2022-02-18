@@ -240,6 +240,7 @@ class ShootingGallery(Mode):
 
     def perfect(self):
         self.status_layer.set_text('Perfect')
+        self.game.sound.play('perfect')
         self.layer = self.status_layer
         self.layer.opaque = True
         self.delay(name='wrap_up', event_type=None, delay=2.0, handler=self.wrap_up)
