@@ -100,7 +100,6 @@ class JDInitialEntryMode(Mode):
         self.animate_to_index(0)
 
     def mode_started(self):
-        self.cursor_visible = True
         self.delay(name='blink_cursor', event_type=None, delay=0.25, handler=self.blink_cursor)
 
     def mode_stopped(self):
@@ -173,7 +172,7 @@ class JDInitialEntryMode(Mode):
         elif letter == self.char_done:
             self.initials = self.initials[:-1] # Strip off the done character
             if self.entered_handler != None:
-                self.entered_handler(mode=self, initials=self.initials)
+                self.entered_handler(self, self.initials)
             else:
                 self.game.logger.warning('InitialEntryMode finished but no entered_handler to notify!')
             self.cancel_delayed('blink_cursor')

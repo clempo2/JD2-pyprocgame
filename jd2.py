@@ -400,12 +400,9 @@ class JD2Game(BasicGame):
         self.sound.play_voice('high score')
         banner_mode = Mode(game=self, priority=8)
         markup = MarkupFrameGenerator()
-        tiny7 = self.fonts['tiny7']
-        markup.font_plain = tiny7
-        markup.font_bold = tiny7
-        text = '\n[GREAT JOB]\n#%s#\n' % (prompt.left.upper()) # we know that the left is the player name
+        text = '\n#GREAT JOB#\n[%s]' % (prompt.left.upper()) # we know that the left is the player name
         frame = markup.frame_for_markup(markup=text, y_offset=0)
-        banner_mode.layer = ScriptedLayer(width=128, height=32, script=[{'seconds':4.0, 'layer':FrameLayer(frame=frame)}])
+        banner_mode.layer = ScriptedLayer(width=128, height=32, script=[{'seconds':3.0, 'layer':FrameLayer(frame=frame)}])
         banner_mode.layer.on_complete = lambda: self.highscore_banner_complete(banner_mode=banner_mode, highscore_entry_mode=mode)
         self.modes.add(banner_mode)
 
