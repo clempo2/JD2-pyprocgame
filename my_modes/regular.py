@@ -110,7 +110,7 @@ class RegularPlay(Mode):
     # the rule is: multiball can be stacked with a running mode, you cannot start a new mode during multiball
     def setup_next_mode(self):
         # a mode could still be running if modes were stacked, in that case do nothing and stay 'busy'
-        if not (self.game.getPlayerState('multiball_active', 0) or self.chain.is_active()):
+        if not (self.game.getPlayerState('multiball_active', 0) or self.game.getPlayerState('chain_active', 0)):
             self.game.sound.fadeout_music()
             self.game.sound.play_music('background', loops=-1)
 
@@ -218,7 +218,7 @@ class RegularPlay(Mode):
                     self.game.set_status('save ' + str(self.game.trough.num_balls_in_play) + ' balls')
                     self.game.ball_save_start(num_balls_to_save=self.game.trough.num_balls_in_play, time=10, now=True, allow_multiple_saves=True)
 
-            elif self.chain.is_active():
+            elif self.game.getPlayerState('chain_active', 0):
                 self.chain.mode.add_time(10)
                 self.game.set_status('Adding 10 seconds')
             else:

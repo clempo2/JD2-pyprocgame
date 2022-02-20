@@ -41,6 +41,7 @@ class Chain(Mode):
 
         if self.mode != None:
             self.game.remove_modes([self.mode])
+            self.game.setPlayerState('chain_active', 0)
         self.game.remove_modes([self.hurry_up])
 
     def reset(self):
@@ -49,9 +50,6 @@ class Chain(Mode):
         player.setState('modes_remaining_ptr', 0)
         player.setState('chain_complete', False)
         # num_chain_features and num_hurry_ups continue to accrue
-
-    def is_active(self):
-        return self.mode != None
 
     def sw_slingL_active(self, sw):
         self.rotate_modes(-1)
@@ -83,6 +81,7 @@ class Chain(Mode):
     # start a chain mode by showing the instructions
     def start_chain_mode(self):
         self.mode = self.modes_remaining[self.modes_remaining_ptr]
+        self.game.setPlayerState('chain_active', 1)
         self.modes_remaining.remove(self.mode)
         if len(self.modes_remaining) == 0:
             self.game.setPlayerState('chain_complete', True)
@@ -122,6 +121,8 @@ class Chain(Mode):
                 self.game.score(100000)
 
         self.mode = None
+        self.game.setPlayerState('chain_active', 0)
+
         self.game.remove_modes([self.hurry_up])
         self.game.base_play.regular_play.chain_mode_completed()
         self.game.update_lamps()

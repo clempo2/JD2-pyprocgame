@@ -71,7 +71,7 @@ class MissileAwardMode(Timer):
         # but keep video mode for later if another mode is running
         # this way we don't pause the running mode for too long
         video_mode_lit = self.game.getPlayerState('video_mode_lit', self.video_mode_setting)
-        if video_mode_lit and not self.game.base_play.regular_play.chain.is_active():
+        if video_mode_lit and not self.game.getPlayerState('chain_active', 0):
             self.game.setPlayerState('video_mode_lit', False)
             self.game.modes.add(self.video_mode)
         else:

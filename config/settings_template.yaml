@@ -9,11 +9,11 @@ Machine:
     options: [true, false]
     default: false
   'Initial volume':
-    options: [1,10]
+    options: [1,20]
     increments: 1
-    default: 5
+    default: 10
   'Music volume offset':
-    options: [-4,4]
+    options: [-9,9]
     increments: 1
     default: 0
 Display:

@@ -327,8 +327,13 @@ class JD2Game(BasicGame):
     def load_game_settings(self):
         self.load_settings(settings_template_path, settings_path)
 
-        self.sound.music_volume_offset = self.user_settings['Machine']['Music volume offset']
-        self.sound.set_volume(self.user_settings['Machine']['Initial volume'])
+        # GameController.load_settings() discarded the options and the increments already
+        # Let's keep the work-around simple and hardcode the value we expect in the yaml file
+        self.volume_scale = 20.0
+        self.volume_increments = 1
+        
+        self.sound.music_volume_offset = self.user_settings['Machine']['Music volume offset'] / self.volume_scale
+        self.sound.set_volume(self.user_settings['Machine']['Initial volume'] / self.volume_scale)
 
         self.balls_per_game = self.user_settings['Gameplay']['Balls per game']
         self.score_display.set_left_players_justify(self.user_settings['Display']['Left side score justify'])
@@ -465,12 +470,17 @@ class JD2Game(BasicGame):
         self.sound.voice_end_time = 0
 
     def volume_down(self):
-        volume = self.sound.volume_down()
-        self.set_status('Volume Down : ' + str(volume))
+        # implementing volume_down()/volume_up() ourselves allows more than 10 steps
+        volume = round(self.sound.volume * self.volume_scale)
+        volume = max(0, volume - self.volume_increments)
+        self.sound.set_volume(volume / self.volume_scale)
+        self.set_status('Volume Down : ' + str(int(volume)))
 
     def volume_up(self):
-        volume = self.sound.volume_up()
-        self.set_status('Volume Up : ' + str(volume))
+        volume = round(self.sound.volume * self.volume_scale)
+        volume = min(self.volume_scale, volume + self.volume_increments)
+        self.sound.set_volume(volume / self.volume_scale)
+        self.set_status('Volume Up : ' + str(int(volume)))
 
     #
     # lamps
