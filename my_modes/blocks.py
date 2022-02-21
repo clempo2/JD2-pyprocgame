@@ -334,7 +334,7 @@ class BlockWarBonus(CrimeSceneShots):
             self.bonus_round_collected()
 
     def bonus_round_collected(self):
-        self.game.score(200000)
+        self.game.score(100000)
         self.game.base_play.display('Jackpot')
         self.game.sound.play_voice('jackpot')
         self.game.lampctrl.play_show('advance_level', False, self.game.update_lamps)

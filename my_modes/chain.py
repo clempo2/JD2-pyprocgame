@@ -224,13 +224,18 @@ class Pursuit(ChainFeature):
 
     def __init__(self, game, priority):
         num_shots_required = self.pick_num_shots_required(game, {'easy':3, 'medium':4, 'hard':5})
-        instructions = 'Shoot ' + str(num_shots_required) + ' L/R ramp shots'
-        super(Pursuit, self).__init__(game, priority, 'Pursuit', instructions, num_shots_required, lamp_name='pursuit')
+        super(Pursuit, self).__init__(game, priority, 'Pursuit', 'Shoot L/R ramp shots',
+                      num_shots_required, lamp_name='pursuit')
 
     def mode_started(self):
         super(Pursuit, self).mode_started()
         time = self.game.sound.play_voice('pursuit intro')
         self.delay(name='response', event_type=None, delay=time+0.5, handler=self.response)
+
+    def play_music(self):
+        # always pick the quieter music to make it easier to hear the intro voice of this mode
+        self.game.sound.stop_music()
+        self.game.sound.play_music('pursuit', loops=-1)
 
     def response(self):
         self.game.sound.play_voice('pursuit')
@@ -297,10 +302,10 @@ class Blackout(ChainFeature):
     def check_for_completion(self):
         self.update_status()
         if self.num_shots == self.num_shots_required - 1:
-            self.game.score(50000)
+            self.game.score(10000)
             self.game.update_lamps()
         elif self.num_shots == self.num_shots_required:
-            self.game.score(110000)
+            self.game.score(30000)
             self.exit_callback(True)
 
 
@@ -309,7 +314,7 @@ class Sniper(ChainFeature):
 
     def __init__(self, game, priority):
         num_shots_required = self.pick_num_shots_required(game, {'easy':2, 'medium':2, 'hard':3})
-        super(Sniper, self).__init__(game, priority, 'Sniper', 'Shoot Sniper Tower twice',
+        super(Sniper, self).__init__(game, priority, 'Sniper', 'Shoot Sniper Tower',
                      num_shots_required, lamp_name='sniper')
 
     def mode_started(self):
@@ -392,8 +397,7 @@ class Impersonator(ChainFeature):
 
     def __init__(self, game, priority):
         num_shots_required = self.pick_num_shots_required(game, {'easy':3, 'medium':5, 'hard':7})
-        instructions = 'Shoot ' + str(num_shots_required) + ' lit drop targets'
-        super(Impersonator, self).__init__(game, priority, 'Impersonator', instructions,
+        super(Impersonator, self).__init__(game, priority, 'Impersonator', 'Shoot lit drop targets',
                      num_shots_required, lamp_name='impersonator')
 
     def mode_started(self):
@@ -492,8 +496,7 @@ class Meltdown(ChainFeature):
 
     def __init__(self, game, priority):
         num_shots_required = self.pick_num_shots_required(game, {'easy':3, 'medium':4, 'hard':5})
-        instructions = 'Hit ' + str(num_shots_required) + ' captive ball switches'
-        super(Meltdown, self).__init__(game, priority, 'Meltdown', instructions,
+        super(Meltdown, self).__init__(game, priority, 'Meltdown', 'Hit captive ball switches',
                      num_shots_required, lamp_name='meltdown')
 
     def mode_started(self):
@@ -534,8 +537,7 @@ class Safecracker(ChainFeature):
 
     def __init__(self, game, priority):
         num_shots_required = self.pick_num_shots_required(game, {'easy':2, 'medium':3, 'hard':4})
-        instructions = 'Shoot subway ' + str(num_shots_required) + ' times'
-        super(Safecracker, self).__init__(game, priority, 'Safe Cracker', instructions,
+        super(Safecracker, self).__init__(game, priority, 'Safe Cracker', 'Shoot subway',
                      num_shots_required, lamp_name='safecracker')
 
     def bad_guys(self):
@@ -587,8 +589,7 @@ class ManhuntMillions(ChainFeature):
 
     def __init__(self, game, priority):
         num_shots_required = self.pick_num_shots_required(game, {'easy':2, 'medium':3, 'hard':4})
-        instructions = 'Shoot left ramp ' + str(num_shots_required) + ' times'
-        super(ManhuntMillions, self).__init__(game, priority, 'Manhunt', instructions,
+        super(ManhuntMillions, self).__init__(game, priority, 'Manhunt', 'Shoot left ramp',
                      num_shots_required, lamp_name='manhunt')
 
     def mode_started(self):
@@ -627,8 +628,7 @@ class Stakeout(ChainFeature):
 
     def __init__(self, game, priority):
         num_shots_required = self.pick_num_shots_required(game, {'easy':3, 'medium':4, 'hard':5})
-        instructions = 'Shoot right ramp ' + str(num_shots_required) + ' times'
-        super(Stakeout, self).__init__(game, priority, 'Stakeout', instructions,
+        super(Stakeout, self).__init__(game, priority, 'Stakeout', 'Shoot right ramp',
                      num_shots_required, lamp_name='stakeout')
 
     def mode_started(self):

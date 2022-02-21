@@ -13,11 +13,10 @@ Dots: Travis Highrise
 Special Thanks to: Steven Duchac, Rob Anthony, Michael Ocean, Josh Kugler
 
 == Chain Features ==
-
-There are 9 chain features, corresponding to the 9 inserts in the center of the
-playfield. Each feature represents a mode. The left and right Fire buttons
-change the next mode, as do the slingshots. The upper right ‘build chain
-feature’ shot is active when not already in a mode or in multiball.
+There are 9 chain features, corresponding to the 9 inserts in the center of
+the playfield. Each feature represents a mode. The left and right Fire buttons
+change the next mode, as do the slingshots. The upper right 'build chain
+feature' shot is active when not already in a mode or in multiball.
 Shooting that shot starts the next mode. A video intro provides directions
 before the ball is put back into play. The video can be cancelled with
 the flipper buttons.
@@ -35,7 +34,7 @@ during the hurry-up countdown extends the hurry-up timer.
 The number of shots required to complete a chain feature is determined by
 a user configurable setting.
 
-Each attempted feature contributes 4000 points to the bonus. Each feature
+Each attempted feature contributes 4,000 points to the bonus. Each feature
 completed successfully contributes 12,000 to the bonus. This bonus contribution
 is not reset between balls.
 
@@ -49,7 +48,7 @@ For the last required shot, the left center ramp re-lights for a double award
 completion.
 
 ==== Sniper ====
-Shoot the upper right VUK repeatedly to locate and kill the ‘bad guy’ sniper.
+Shoot the upper right VUK repeatedly to locate and kill the 'bad guy' sniper.
 
 ==== Battle Tank ====
 Shoot the 3 battle tank shots: left outer loop, center target bank,
@@ -76,7 +75,7 @@ depends on a user configurable setting but is always a multiple of 4.
 For each block, one or more of the crime scene inserts scattered around the
 playfield is lit. Higher blocks require more shots to complete. Shooting the
 3 target bank in the center of the playfield 3 times awards one shot.
-Each shot to an active crime scene target awards 1000 points, and each time
+Each shot to an active crime scene target awards 1,000 points, and each time
 a block is a completed 10,000 points are awarded. An extra ball is lit after
 completing 4 blocks. Completing all required blocks is needed before
 Ultimate Challenge can be lit.
@@ -88,16 +87,16 @@ The blocks are tracked in groups of 4. The 4 crime scene inserts
 in the front-center of the playfield indicate which group is active.
 
 The block number restarts at 1 after Ultimate Challenge.
-Each completed block contributes 2000 points into the bonus.
+Each completed block contributes 2,000 points to the bonus.
 This bonus contribution is not reset between balls.
 
 ==== Block War Multiball ====
 After every 4th block is completed, a 2-ball Block War multiball begins.
-This progressive multiball mode starts with the crime scene
-insert lamps lit. When all 5 crime scene shots are completed, a rotating
-jackpot shot is lit. If the jackpot shot is lit, the mode starts again but
-this time each shot must be hit twice. The third round requires 3 hits
-per shot, and so on. The mode ends when a single ball remains.
+This progressive multiball mode starts with the crime scene insert lamps lit.
+When all 5 crime scene shots are completed, a rotating jackpot shot is lit.
+Collecting the jackpot awards 100,000 points and the mode starts again but
+this time each shot must be hit twice. The third round requires 3 hits per shot,
+and so on. The mode ends when a single ball remains.
 
 == Deadworld Multiball ==
 Locks are lit by completing all of the JUDGE drop targets. Each time the
@@ -105,8 +104,8 @@ targets are completed, another lock is lit. After the first multiball,
 it becomes increasingly difficult to light a lock. When a lock is lit,
 a shot to the left ramp is diverted into the Deadworld and locked.
 3 lock shots are required to start multiball. The left ramp lights the jackpot.
-Shoot the subway to collect the jackpot. The number of required left ramp
-shots increases by 1 for every jackpot collected.
+Shoot the subway to collect the jackpot worth 100,000 points. The number
+of required left ramp shots increases by 1 for every jackpot collected.
 
 Deadworld Multiball can be started while a Chain Feature mode is active.
 When that happens, both the Chain Feature mode and multiball continue
@@ -179,11 +178,11 @@ After Video Mode ends, the ball is automatically launched back into play.
 == Miscellaneous Features ==
 Consecutive shots to the right loop from the upper left flipper are counted
 and awarded progressively higher points per shot. The player to achieve
-the most consecutive shots is the ‘Outer Loop Champion’.
+the most consecutive shots is the 'Outer Loop Champion'.
 
 Similarly, consecutive shots to the inner left loop from the upper right
 flipper are counted and awarded progressively higher points per shot.
-The player to achieve the most consecutive shots is the ‘Inner Loop Champion’.
+The player to achieve the most consecutive shots is the 'Inner Loop Champion'.
 
 Full shots to the captive balls, resulting in the 3rd switch being hit,
 light the Mystery shot and increase the Bonus multiplier by 1X.
@@ -199,18 +198,20 @@ requirements are met:
 * All required blocks are secured
 * At least one Deadworld Multiball jackpot collected
 
-Once Ultimate Challenge is lit, a shot to the upper right ‘build chain feature’
+Once Ultimate Challenge is lit, a shot to the upper right 'build chain feature'
 shot initiates it. The player is presented with an Ultimate Challenge
 introduction with instructions before Level 1 begins. Each time a level
 is successfully completed, the machine goes dead, allowing all of the balls
 to drain. Then the player is presented with instructions for the next
 level before any balls are re-launched and put back into play.
-If all balls drain before the player completes a level, the player’s
+If all balls drain before the player completes a level, the player's
 ball ends and Ultimate Challenge is aborted. Re-lighting Ultimate Challenge
 requires the player to complete the 3 major requirements again.
 Subsequent Ultimate Challenge attempts begin at the first level not yet
 completed by the player. In other words, previously completed levels
 do not need to be completed again.
+
+Successfully completing a dark judge mode awards 100,000 points.
 
 === Level 1: Fear ===
 Fear uses timed shots to force the player to be accurate. This is a
@@ -219,20 +220,21 @@ must be hit, in order, before a shot timer (20 seconds) expires:
 Left Ramp, Right Ramp, Left Ramp, Right Ramp, D drop target, Subway.
 Each shot resets the timer back to 20 seconds. If the timer expires
 before a shot is hit, the game goes dead forcing the balls to drain
-and ending the player’s turn.
+and ending the player's turn. 
 
 === Level 2: Mortis ===
 This level is a 2-ball multiball with a temporary ball save. Each of the
 following 5 shots must be hit twice in any order: Mystery, Left Loop,
-Upper Right VUK, Right Ramp, and the 3rd Captive Ball. Each shot’s insert
+Upper Right VUK, Right Ramp, and the 3rd Captive Ball. Each shot's insert
 lamp blinks slowly to indicate 2 shots are required, blinks quickly to
 indicate 1 shot is required, and is turned off when the shot is complete.
+
 
 === Level 3: Death ===
 This level is a single ball mode with a temporary ball save. The player
 has 3 minutes to clear all 5 shots. Every few seconds, a previously cleared
 shot is relit. If the 3 minute timer expires, the game goes dead forcing
-the balls to drain and ending the player’s turn.
+the balls to drain and ending the player's turn.
 
 === Level 4: Fire ===
 All 5 crime scene shots are lit, representing fires that Judge Dredd needs
@@ -242,7 +244,7 @@ when the last fire is extinguished.
 
 === Final Level: Celebration ===
 All dark judges have been defeated and banished. This level is a 6 ball
-multiball with all shots awarding 5,000 points. This mode (and subsequently
+multiball with all shots awarding 10,000 points. This mode (and subsequently
 the entire Ultimate Challenge) ends when there is only 1 ball remaining
 in play. The game then begins anew.
 

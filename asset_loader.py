@@ -41,6 +41,7 @@ class AssetLoader(object):
             {'key': 'mode', 'file': '40 Second guitar solo.aif'},
             {'key': 'mode', 'file': '55 second loopable -- Sonya.aif'},
             {'key': 'mode', 'file': '105 second loopable -- Sisyphus.aif'},
+            {'key': 'pursuit', 'file': '105 second loopable -- Sisyphus.aif'},
             {'key': 'multiball', 'file': 'Heroes and Angels -- Loopable.aif'},
         ]
 

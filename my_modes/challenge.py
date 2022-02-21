@@ -182,6 +182,8 @@ class DarkJudge(ChallengeBase):
         self.game.update_lamps()
         text = self.name + ' Defeated' if success else 'You lose'
         self.layer = TextLayer(128/2, 13, self.game.fonts['tiny7'], 'center', True).set_text(text)
+        if success:
+            self.game.score(100000)
         self.exit_callback(success)
 
 
@@ -242,19 +244,17 @@ class Fear(DarkJudge):
 
     def ramp_shot_hit(self):
         if self.num_shots < self.num_shots_required - 1:
+            self.game.score(10000)
             self.num_shots += 1
             self.update_status()
+            self.game.lampctrl.play_show('shot_hit', False, self.game.update_lamps)
             if self.num_shots == self.num_shots_required -1:
                 self.state = 'subway'
             else:
-                self.switch_ramps()
+                # switch ramp
+                self.active_ramp = 'right' if self.active_ramp == 'left' else 'left'
         self.reset_timer(self.time_for_shot)
         self.game.update_lamps()
-
-    def switch_ramps(self):
-        self.game.lampctrl.play_show('shot_hit', False, self.game.update_lamps)
-        self.game.score(10000)
-        self.active_ramp = 'right' if self.active_ramp == 'left' else 'left'
 
     def sw_dropTargetD_inactive_for_400ms(self, sw):
         if self.state == 'subway':
@@ -550,7 +550,7 @@ class Celebration(ChallengeBase, CrimeSceneShots):
         self.switch_hit(15)
 
     def switch_hit(self, unused): # unused variable is the shot number
-        self.game.score(5000)
+        self.game.score(10000)
         self.num_shots += 1
         self.update_status()
 

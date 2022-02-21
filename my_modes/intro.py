@@ -3,10 +3,9 @@ from procgame.game import Mode
 class Introduction(Mode):
     """Display instructions for a mode"""
 
-    def __init__(self, game, priority, delay=0, gi=True):
+    def __init__(self, game, priority, delay=0):
         super(Introduction, self).__init__(game, priority)
         self.start_delay = delay
-        self.gi = gi
         self.exit_callback = None
 
     def setup(self, intro_layer):
@@ -38,6 +37,3 @@ class Introduction(Mode):
 
     def sw_fireR_active(self, sw):
         self.finish()
-
-    def update_lamps(self):
-        self.game.enable_gi(self.gi)

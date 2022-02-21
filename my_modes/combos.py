@@ -33,7 +33,7 @@ class Combos(Mode):
             self.outer_loop_combos += 1
             if self.outer_loop_combos > self.game.getPlayerState('best_outer_loops', 0):
                 self.game.getPlayerState('best_outer_loops', self.outer_loop_combos)
-            points = 5000 * self.outer_loop_combos
+            points = 10000 * self.outer_loop_combos
             self.game.score(points)
             self.game.base_play.display('outer loop: ' + str(self.outer_loop_combos), points)
             self.game.base_play.play_animation('bike_across_screen', frame_time=3)

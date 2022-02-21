@@ -73,7 +73,7 @@ class TimedMode(Timer):
         script = [{'seconds':1, 'layer':intro_name_layer}, {'seconds':3, 'layer':intro_page_layer}]
         intro_layer = ScriptedLayer(width=128, height=32, script=script)
     
-        self.intro = Introduction(game, priority + 1, 0)
+        self.intro = Introduction(game, priority + 1, delay=0)
         self.intro.setup(intro_layer)
         self.intro.exit_callback = self.intro_ended
 

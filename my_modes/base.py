@@ -274,25 +274,25 @@ class BasePlay(Mode):
 
     def sw_dropTargetJ_active(self, sw):
         self.game.sound.play('drop_target')
-        self.game.score(200)
+        self.game.score(1000)
 
     def sw_dropTargetU_active(self, sw):
         self.game.sound.play('drop_target')
-        self.game.score(200)
+        self.game.score(1000)
 
     def sw_dropTargetD_active(self, sw):
         pass
 
     def sw_dropTargetG_active(self, sw):
         self.game.sound.play('drop_target')
-        self.game.score(200)
+        self.game.score(1000)
 
     def sw_dropTargetE_active(self, sw):
         self.game.sound.play('drop_target')
-        self.game.score(200)
+        self.game.score(1000)
 
     def sw_subwayEnter2_active(self, sw):
-        self.game.score(500)
+        self.game.score(1000)
 
     #
     # Ramps
@@ -316,24 +316,28 @@ class BasePlay(Mode):
 
     def sw_slingL_active(self, sw):
         self.game.sound.play('slingshot')
-        self.game.score(100)
+        self.game.score(110)
 
     def sw_slingR_active(self, sw):
         self.game.sound.play('slingshot')
-        self.game.score(100)
+        self.game.score(110)
 
     #
     # Inlanes
     #
 
     def sw_inlaneL_active(self, sw):
-        self.game.sound.play('inlane')
+        self.inlane_active()
 
     def sw_inlaneR_active(self, sw):
-        self.game.sound.play('inlane')
+        self.inlane_active()
 
     def sw_inlaneFarR_active(self, sw):
+        self.inlane_active()
+
+    def inlane_active(self):
         self.game.sound.play('inlane')
+        self.game.score(500)
 
     #
     # Outlanes
