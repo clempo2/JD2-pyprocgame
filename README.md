@@ -2,15 +2,24 @@
 
 JD2-pyprocgame is new software for the [Judge Dredd](https://www.ipdb.org/machine.cgi?id=1322) pinball machine written against [pyprocgame](http://pyprocgame.pindev.org/) running on a [P-ROC](https://www.multimorphic.com/store/circuit-boards/p-roc/) controller. It is a more polished version of [JD-pyprocgame](https://github.com/preble/JD-pyprocgame) by Gerry Stellenberg et al. The goal is to achieve near commercial quality while minimizing the amount of code. The rules are nearly identical to JD-pyprocgame with minimal changes dictated by bug fixing.
 
-In honnor of JD-pyprocgame, the first version of JD2-pyprocgame will be 2.0
-
 ## Installation
 
 The easiest is to run the all-in-one [SkeletonGame installer](http://skeletongame.com/step-1-installation-and-testing-the-install-windows/) to install Python 2.7 and supporting libraries. Note JD2-pyprocgame is not compatible with SkeletonGame, that portion of the all-in-one installation can be ignored afterwards.
 
-Copy the pyprocgame dev branch to C:\P-ROC\pyprocgame-dev  
-Copy the JD2-pyprocgame dev2 branch to C:\P-ROC\JD2-pyprocgame-dev2  
-Install the JD-pyprocgame media pack in C:\P-ROC\JD2-pyprocgame-dev2\assets
+Copy the [pyprocgame dev branch](https://github.com/preble/pyprocgame/tree/dev) to C:\P-ROC\pyprocgame-dev  
+Copy the [JD2-pyprocgame dev2 branch](https://github.com/clempo2/JD2-pyprocgame/tree/dev2) to C:\P-ROC\JD2-pyprocgame-dev2  
+Copy the JD-pyprocgame media kit to the JD2-pyprocgame source.
+- Copy [part 1 of the media kit](https://github.com/clempo3/JD-pyprocgame/blob/jd_media/jd_media_02a.tar.gz?raw=true) to C:\P-ROC\JD-pyprocgame-media\jd_media_02a.tar.gz
+- Copy [part 2 of the media kit](https://github.com/clempo3/JD-pyprocgame/blob/jd_media/jd_media_02b.tar.gz?raw=true) to C:\P-ROC\JD-pyprocgame-media\jd_media_02b.tar.gz
+- Extract assets from part 1 and part 2 of the media kit  
+  cd c:\P-ROC\JD-pyprocgame-media  
+  tar xf jd_media_02a.tar.gz  
+  tar xf jd_media_02b.tar.gz  
+- Run a script to copy the assets in a structure suitable for JD2-pyprocgame  
+  cd c:\P-ROC\JD2-pyprocgame-dev2  
+  copy_media.bat  
+  (For Linux, run ./copy_media.sh instead)
+- You can now delete c:\JD-pyprocgame-media to save space if you want.
 
 Edit config.yaml to comment out this line when using a real P-ROC  
 #pinproc_class: procgame.fakepinproc.FakePinPROC # comment out this line when using a real P-ROC. 
@@ -45,10 +54,9 @@ Copyright (c) 2021-2022 Clement Pellerin
 Original JD-pyprocgame is  
 Copyright (c) 2009-2011 Adam Preble and Gerry Stellenberg
 
-The JD-pyprocgame media pack is distributed under a restricted custom license.  
-Copyright (c) 2009-2011 Gerry Stellenberg  
+The JD-pyprocgame media kit is distributed under a restricted custom license.  
+Copyright (c) 2011 Gerry Stellenberg  
 JD-pyprocgame media pack used by permission of the author.
 
 Small portions copied from [PyProcGameHD-SkeletonGame](https://github.com/mjocean/PyProcGameHD-SkeletonGame) are  
 Copyright (c) 2014-2015 Michael Ocean and Josh Kugler
-
