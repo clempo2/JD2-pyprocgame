@@ -1,7 +1,7 @@
 rem This batch file copies the JD-pyprocgame media kit
 rem creating a directory structure suitable for JD2-pyprocgame
 
-set media=c:\P-ROC\jd_media_02
+set media=c:\P-ROC\JD-pyprocgame-media
 
 copy %media%\LICENSE.media assets\LICENSE.media
 

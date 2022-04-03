@@ -2,7 +2,7 @@
 # This script copies the JD-pyprocgame media kit
 # creating a directory structure suitable for JD2-pyprocgame
 
-media=jd_media_02
+media=../JD-pyprocgame-media
 
 cp $media/LICENSE.media assets/LICENSE.media
 
