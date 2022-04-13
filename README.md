@@ -8,19 +8,7 @@ The easiest is to run the all-in-one [SkeletonGame installer](http://skeletongam
 
 Copy the [pyprocgame dev branch](https://github.com/preble/pyprocgame/tree/dev) to C:\P-ROC\pyprocgame-dev  
 Copy the [JD2-pyprocgame dev2 branch](https://github.com/clempo2/JD2-pyprocgame/tree/dev2) to C:\P-ROC\JD2-pyprocgame-dev2  
-Copy the JD-pyprocgame media kit to the JD2-pyprocgame source.
-- Copy [part 1 of the media kit](https://github.com/clempo3/JD-pyprocgame/blob/jd_media/jd_media_02a.tar.gz?raw=true) to C:\P-ROC\JD-pyprocgame-media\jd_media_02a.tar.gz
-- Copy [part 2 of the media kit](https://github.com/clempo3/JD-pyprocgame/blob/jd_media/jd_media_02b.tar.gz?raw=true) to C:\P-ROC\JD-pyprocgame-media\jd_media_02b.tar.gz
-- Extract assets from part 1 and part 2 of the media kit  
-  cd c:\P-ROC\JD-pyprocgame-media  
-  tar xf jd_media_02a.tar.gz  
-  tar xf jd_media_02b.tar.gz  
-- Run a script to copy the assets in a structure suitable for JD2-pyprocgame  
-  cd c:\P-ROC\JD2-pyprocgame-dev2  
-  copy_media.bat  
-  (For Linux, run ./copy_media.sh instead)
-- You can now delete c:\JD-pyprocgame-media to save space if you want.
-
+Install the [JD2-pyprocgame media kit](https://github.com/clempo2/JD2-pyprocgame). Follow the instructions in that repository to extract the assets over the JD2-pyprocgame dev2 branch.  
 Edit config.yaml to comment out this line when using a real P-ROC  
 #pinproc_class: procgame.fakepinproc.FakePinPROC # comment out this line when using a real P-ROC. 
 
