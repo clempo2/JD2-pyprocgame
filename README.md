@@ -9,15 +9,15 @@ JD2-pyprocgame is new software for the [Judge Dredd](https://www.ipdb.org/machin
 - Copy the [JD2-pyprocgame dev2 branch](https://github.com/clempo2/JD2-pyprocgame/tree/dev2) to C:\P-ROC\JD2-pyprocgame-dev2  
 - Install the [JD2-pyprocgame media kit](https://github.com/clempo2/JD2-pyprocgame-media). Follow the instructions in the media kit repository to extract the assets over the JD2-pyprocgame dev2 branch.  
 - Edit config.yaml to comment out this line when using a real P-ROC
-```
-#pinproc_class: procgame.fakepinproc.FakePinPROC # comment out this line when using a real P-ROC.
-```
+    ```
+    #pinproc_class: procgame.fakepinproc.FakePinPROC # comment out this line when using a real P-ROC.
+    ```
 - Run these commands:
-```
-set PYTHONPATH=C:\P-ROC\JD-pyprocgame-dev2;C:\P-ROC\pyprocgame-dev;C:\P-ROC\pypinproc-dev;C:\Python27\DLLs;C:\Python27\lib;C:\Python27\lib\lib-tk;C:\Python27;C:\Python27\lib\site-packages;C:\Python27\lib\site-packages\win32;C:\Python27\lib\site-packages\win32\lib;C:\Python27\lib\site-packages\Pythonwin;C:\Python27\lib\site-packages\wx-3.0-msw  
-cd C:\P-ROC\JD2-pyprocgame-dev2  
-python jd2.py
-```
+    ```
+    set PYTHONPATH=C:\P-ROC\JD-pyprocgame-dev2;C:\P-ROC\pyprocgame-dev;C:\P-ROC\pypinproc-dev;C:\Python27\DLLs;C:\Python27\lib;C:\Python27\lib\lib-tk;C:\Python27;C:\Python27\lib\site-packages;C:\Python27\lib\site-packages\win32;C:\Python27\lib\site-packages\win32\lib;C:\Python27\lib\site-packages\Pythonwin;C:\Python27\lib\site-packages\wx-3.0-msw  
+    cd C:\P-ROC\JD2-pyprocgame-dev2  
+    python jd2.py
+    ```
 
 JD2-pyprocgame should also run on Linux but this has not been tested.
 
