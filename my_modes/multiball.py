@@ -2,7 +2,7 @@ from procgame.game import Mode
 from procgame.modes import BasicDropTargetBank
 
 class Multiball(Mode):
-    """Multiball activated by locking balls in the Deadworld planet"""
+    """3-ball Multiball activated by locking balls in the Deadworld planet"""
 
     def __init__(self, game, priority):
         super(Multiball, self).__init__(game, priority)
@@ -12,7 +12,7 @@ class Multiball(Mode):
 
         self.drops = BasicDropTargetBank(self.game, priority=priority + 1, prefix='dropTarget', letters='JUDGE')
         self.drops.on_advance = self.on_drops_advance
-        self.drops.on_completed = self.possibly_light_lock
+        self.drops.on_completed = self.on_drops_completed
         self.drops.auto_reset = True
 
     def mode_started(self):
@@ -21,39 +21,21 @@ class Multiball(Mode):
         self.num_balls_locked = player.getState('num_balls_locked', 0)
         self.num_locks_lit = player.getState('num_locks_lit', 0)
         self.multiball_played = player.getState('multiball_played', False)
+        # multiball_jackpot_collected and multiball_active are accessed directly in the player state
+        
+        if self.deadworld_mod_installed and self.game.deadworld.num_balls_locked < self.num_balls_locked:
+            # The planet holds fewer balls than the player has locked balls.
+            # The player must unfortunately re-lock the balls he lost to another player
+            self.num_balls_locked = self.game.deadworld.num_balls_locked
 
         self.state = 'load'
         self.jackpot_lit = False
-        self.lock_enabled = False
+        self.physical_lock_enabled = False
         self.num_ramp_shots = 0
         self.ramp_shots_required = 1
-
         self.game.deadworld.stop_spinning()
-        self.install_rule(enable=False)
         self.game.modes.add(self.drops)
-
-        # Virtual locks are needed when there are more balls physically locked
-        # than the player has locked through play.  This happens when
-        # another player locks more balls than the current player.  Use
-        # Virtual locks > 0 for this case.
-        # Use Virtual locks < 0 when the player has locked more balls than are
-        # physically locked.  This could happen when another player plays
-        # multiball and empties the locked balls.
-        if self.deadworld_mod_installed and self.num_locks_lit > 0:
-            self.virtual_locks_needed = self.game.deadworld.num_balls_locked - self.num_balls_locked
-        else:
-            self.virtual_locks_needed = 0
-
-        if self.virtual_locks_needed < 0:
-            # enable the lock so the player can quickly re-lock
-            self.enable_lock()
-            self.game.base_play.display('Lock is Lit')
-            self.num_balls_locked = self.game.deadworld.num_balls_locked
-        elif self.virtual_locks_needed > 0:
-            self.enable_virtual_lock()
-        elif self.num_balls_locked < self.num_locks_lit:
-            self.enable_lock()
-            self.game.base_play.display('Lock is Lit')
+        self.configure_lock()
 
     def mode_stopped(self):
         # save player state
@@ -62,33 +44,47 @@ class Multiball(Mode):
         player.setState('num_balls_locked', self.num_balls_locked)
         player.setState('num_locks_lit', self.num_locks_lit)
         player.setState('multiball_played', self.multiball_played)
-        # multiball_jackpot_collected is sticky until it is reset at the end of Ultimate Challenge
 
         self.game.remove_modes([self.drops])
 
     def reset(self):
+        # multiball_jackpot_collected is sticky until it is reset at the end of Ultimate Challenge
         self.game.setPlayerState('multiball_jackpot_collected', False)
 
-    def on_drops_advance(self, mode):
-        pass
-
     def start_multiball(self):
-        self.game.sound.play_voice('multiball')
-        self.delay(name='multiball_instructions', event_type=None, delay=10, handler=self.multiball_instructions)
+        # start a 3 ball multiball
         self.state = 'multiball'
         self.game.base_play.display('Multiball')
+        self.game.sound.play_voice('multiball')
+        self.delay(name='multiball_instructions', event_type=None, delay=10, handler=self.multiball_instructions)
         self.num_balls_locked = 0
         self.num_ramp_shots = 0
         self.ramp_shots_required = 1
         self.jackpot_lit = False
+        self.disable_lock()
+        
+        # launch the balls
+        if self.deadworld_mod_installed:
+            # all balls coming from deadworld planet
+            self.game.deadworld.eject_balls(3)
+            # Need to convert previously locked balls to balls in play.
+            # Impossible for trough logic to do it itself.
+            self.game.trough.num_balls_in_play += 2
+            self.start_ball_save()
+        else:
+            # 1 ball from the planet and 2 from the trough
+            self.game.deadworld.eject_balls(1)
+            self.game.ball_save.start_lamp()
+            self.game.trough.launch_balls(2, self.start_ball_save)
+
         self.start_callback()
         self.game.addPlayerState('multiball_active', 0x1)
         self.game.update_lamps()
 
     def end_multiball(self):
+        self.state = 'load'
         self.cancel_delayed(['trip_check', 'multiball_instructions'])
         self.game.coils.flasherGlobe.disable()
-        self.state = 'load'
         self.num_locks_lit = 0
         self.jackpot_lit = False
         self.multiball_played = True
@@ -97,19 +93,9 @@ class Multiball(Mode):
         self.reset_active_drops()
         self.game.update_lamps()
 
-    def multiball_instructions(self):
-        voice = 'shoot the subway' if self.jackpot_lit else 'shoot the left ramp'
-        self.game.sound.play_voice(voice)
-        self.delay(name='multiball_instructions', event_type=None, delay=10, handler=self.multiball_instructions)
-
-    def install_rule(self, enable):
-        switch_num = self.game.switches['leftRampEnter'].number
-        self.game.install_switch_rule_coil_schedule(switch_num, 'closed_debounced', 'diverter', 0x00000fff, 1, True, True, enable)
-        switch_num = self.game.switches['leftRampEnterAlt'].number
-        self.game.install_switch_rule_coil_schedule(switch_num, 'closed_debounced', 'diverter', 0x00000fff, 1, True, True, enable)
-
-    def stop_globe(self):
-        self.game.deadworld.stop_spinning()
+    def start_ball_save(self):
+        num_balls_to_save = self.game.trough.num_balls_in_play
+        self.game.ball_save_start(num_balls_to_save=num_balls_to_save, time=self.ball_save_time, now=True, allow_multiple_saves=True)
 
     def evt_ball_drained(self):
         # End multiball if there is now only one ball in play
@@ -117,83 +103,82 @@ class Multiball(Mode):
             if self.game.trough.num_balls_in_play == 1:
                 self.end_multiball()
 
-    def light_jackpot(self):
-        self.jackpot_lit = True
-        self.game.sound.play_voice('jackpot is lit')
-        self.trip_check()
+    def multiball_instructions(self):
+        voice = 'shoot the subway' if self.jackpot_lit else 'shoot the left ramp'
+        self.game.sound.play_voice(voice)
+        self.delay(name='multiball_instructions', event_type=None, delay=10, handler=self.multiball_instructions)
 
-    def jackpot(self):
-        self.game.setPlayerState('multiball_jackpot_collected', True)
-        self.game.base_play.display('Jackpot')
-        self.game.sound.play_voice('jackpot')
-        self.game.lampctrl.play_show('jackpot', False, self.game.update_lamps)
-        self.num_ramp_shots = 0
-        self.ramp_shots_required += 1
-        self.game.score(100000)
+    def install_diverter_rule(self, enable):
+        self.physical_lock_enabled = enable
+        for switch in ['leftRampEnter', 'leftRampEnterAlt']:
+            switch_num = self.game.switches[switch].number
+            self.game.install_switch_rule_coil_schedule(switch_num, 'closed_debounced', 'diverter', 0x00000fff, 1, True, True, enable)
 
-    def disable_lock(self):
-        self.lock_enabled = False
-        self.install_rule(enable=False)
+    def configure_lock(self, sneaky_ball_adjust=0):
+        # Decide between enabling a physical lock, a virtual lock or disabling locks altogether.
+        # Without the deadworld mod, we lock each ball physically and eject it immediately.
+        #   We never use a virtual lock unlike the original game.
+        # With the deadworld mod, we physically lock 3 balls.
+        #   A virtual lock happens if the mod-ed planet holds more balls than
+        #   the player has locked balls, allowing the count to catch up to the planet.
+        # The planet counts a sneaky lock as a real lock.
+        #   If we know there is a sneaky lock ball currently being ejected,
+        #   we need to remove it from the count to get the real number of locked balls in the planet.
+        dw_num_balls_locked = self.game.deadworld.num_balls_locked - sneaky_ball_adjust
+        if (self.deadworld_mod_installed and self.num_locks_lit > 0 and
+                    dw_num_balls_locked > self.num_balls_locked):
+            self.virtual_locks_needed = dw_num_balls_locked - self.num_balls_locked
+        else:
+            self.virtual_locks_needed = 0    
+        
+        if self.num_balls_locked < self.num_locks_lit:
+            self.enable_lock()
+        else:
+            self.disable_lock()
 
     def enable_lock(self):
-        self.lock_enabled = True
-        self.game.deadworld.enable_lock()
-        self.install_rule(enable=True)
-        self.game.sound.play_voice('locks lit')
+        self.install_diverter_rule(enable=self.virtual_locks_needed == 0)
+        self.game.deadworld.start_spinning()
         self.game.coils.flasherGlobe.schedule(schedule=0x0000AAAA, cycle_seconds=2, now=True)
 
-    def enable_virtual_lock(self):
-        # Make sure deadworld will eject a ball if one happens to enter.
-        self.lock_enabled = False
-        self.game.deadworld.enable_lock()
-        self.game.coils.flasherGlobe.schedule(schedule=0x0000AAAA, cycle_seconds=2, now=True)
+    def disable_lock(self):
+        self.install_diverter_rule(enable=False)
 
-    def possibly_light_lock(self, mode):
-        # called when drops are completed or there was a sneaky lock
-        dw_balls_locked_adj = 0
-        if mode == 'sneaky':
-            dw_balls_locked_adj = 1
-            self.game.set_status('Sneaky Lock')
+    def light_lock(self, sneaky_ball_adjust=0):
+        if self.state == 'load' and self.num_locks_lit < 3:
+            self.num_locks_lit = self.num_locks_lit + 1 if self.multiball_played else 3
+            self.configure_lock(sneaky_ball_adjust)
+            self.game.base_play.display('Lock is Lit')
+            self.game.sound.play_voice('locks lit')
+            self.game.update_lamps()
+        
+    def ball_locked(self, launch_ball=True):
+        # a ball was locked through a physical or a virtual lock
+        self.game.coils.flasherGlobe.schedule(schedule=0xAAAAAAAA, cycle_seconds=2, now=True)
 
-        if self.state == 'load':
-            # Prepare to lock
-            if self.num_locks_lit < 3:
-                if self.multiball_played:
-                    self.num_locks_lit += 1
-                    new_num_to_lock = self.num_locks_lit - self.num_balls_locked
-                    extra_in_dw = (self.game.deadworld.num_balls_locked - dw_balls_locked_adj) - self.num_balls_locked
-                    self.virtual_locks_needed = min(new_num_to_lock, extra_in_dw)
+        self.num_balls_locked += 1
+        if self.num_balls_locked == 3:
+            self.start_multiball()
+        else:
+            self.game.base_play.display('Ball ' + str(self.num_balls_locked) + ' Locked')
+            self.game.sound.play_voice('ball ' + str(self.num_balls_locked) + ' locked')
+            self.configure_lock()
+
+            if launch_ball:
+                # Not yet multiball, launch a new ball each time a ball is physically locked.
+                if self.deadworld_mod_installed:
+                    # Use stealth launch so another ball isn't counted in play.
+                    self.game.trough.launch_balls(1, self.game.no_op_callback, stealth=True)
                 else:
-                    # first time player starts multiball
-                    self.num_locks_lit = 3
-                    if self.deadworld_mod_installed:
-                        self.virtual_locks_needed = self.game.deadworld.num_balls_locked - dw_balls_locked_adj
-
-                # Don't enable locks if doing virtual locks.
-                if self.virtual_locks_needed <= 0:
-                    self.enable_lock()
-                else:
-                    self.enable_virtual_lock()
-                self.game.base_play.display('Lock is Lit')
-
+                    self.game.deadworld.eject_balls(1)
             self.game.update_lamps()
 
-    def multiball_launch_callback(self):
-        # Balls launched are already in play.
-        local_num_balls_to_save = self.game.trough.num_balls_in_play
-        self.game.ball_save_start(num_balls_to_save=local_num_balls_to_save, time=self.ball_save_time, now=True, allow_multiple_saves=True)
-
-    def start_ballsave(self):
-        local_num_balls_to_save = self.game.trough.num_balls_in_play + 2
-        self.game.ball_save_start(num_balls_to_save=local_num_balls_to_save, time=self.ball_save_time, now=True, allow_multiple_saves=True)
-
-    def reset_active_drops(self):
-        if (self.game.switches.dropTargetJ.is_active() or
-                self.game.switches.dropTargetU.is_active() or
-                self.game.switches.dropTargetD.is_active() or
-                self.game.switches.dropTargetG.is_active() or
-                self.game.switches.dropTargetE.is_active()):
-            self.game.coils.resetDropTarget.pulse(40)
+    def sneaky_lock(self):
+        # A ball trickled into the ramp to lock when the physical lock is disabled
+        # Award a lock light and eject the sneaky ball
+        self.game.set_status('Sneaky Lock')
+        self.light_lock(sneaky_ball_adjust=1)
+        self.game.deadworld.eject_balls(1)
 
     def sw_dropTargetD_inactive_for_400ms(self, sw):
         # newly detected raised letter D
@@ -209,59 +194,31 @@ class Multiball(Mode):
         if self.game.switches.dropTargetD.is_inactive():
             self.trip_drop_target()
 
+    def reset_active_drops(self):
+        if (self.game.switches.dropTargetJ.is_active() or
+                self.game.switches.dropTargetU.is_active() or
+                self.game.switches.dropTargetD.is_active() or
+                self.game.switches.dropTargetG.is_active() or
+                self.game.switches.dropTargetE.is_active()):
+            self.game.coils.resetDropTarget.pulse(40)
+
+    def on_drops_advance(self, drops):
+        pass
+
+    def on_drops_completed(self, drops):
+        self.light_lock()
+
     def sw_leftRampToLock_active(self, sw):
-        if self.lock_enabled:
-            self.game.coils.flasherGlobe.schedule(schedule=0xAAAAAAAA, cycle_seconds=2, now=True)
-            self.num_balls_locked += 1
-            self.game.base_play.display('Ball ' + str(self.num_balls_locked) + ' Locked')
-            if self.num_balls_locked <= 2:
-                self.game.sound.play_voice('ball ' + str(self.num_balls_locked) + ' locked')
-
-            if self.num_balls_locked == 3:
-                self.disable_lock()
-                if self.deadworld_mod_installed:
-                    # 3 ball multiball with all balls coming from deadworld planet
-                    self.game.deadworld.eject_balls(3)
-                    self.start_ballsave()
-                    # Need to convert previously locked balls to balls in play.
-                    # Impossible for trough logic to do it itself, as is.
-                    self.game.trough.num_balls_in_play += 2
-                else:
-                    self.game.deadworld.eject_balls(1)
-                    self.game.ball_save.start_lamp()
-                    # launch 2 more balls for 3 ball multiball
-                    self.game.trough.launch_balls(2, self.multiball_launch_callback)
-                    self.delay(name='stop_globe', event_type=None, delay=7.0, handler=self.stop_globe)
-                self.start_multiball()
-            elif self.num_balls_locked == self.num_locks_lit:
-                self.disable_lock()
-                if self.deadworld_mod_installed:
-                    # Use stealth launch so another ball isn't counted in play.
-                    self.game.trough.launch_balls(1, self.game.no_op_callback, stealth=True)
-                else:
-                    self.game.deadworld.eject_balls(1)
-
-            # When not yet multiball, launch a new ball each time one is locked.
-            elif self.deadworld_mod_installed:
-                # Use stealth launch so another ball isn't counted in play.
-                self.game.trough.launch_balls(1, self.game.no_op_callback, stealth=True)
-            else:
-                self.game.deadworld.eject_balls(1)
-
+        if self.physical_lock_enabled:
+            self.ball_locked()
         else:
-            self.possibly_light_lock('sneaky')
-            self.game.deadworld.eject_balls(1)
-
-        self.game.update_lamps()
+            self.sneaky_lock()
 
     def sw_leftRampExit_active(self, sw):
         if self.state == 'load':
             if self.virtual_locks_needed > 0:
-                self.num_balls_locked += 1
                 self.virtual_locks_needed -= 1
-                if (self.virtual_locks_needed == 0 and
-                        self.num_balls_locked < self.num_locks_lit):
-                    self.enable_lock()
+                self.ball_locked(launch_ball=False)
         elif self.state == 'multiball':
             if not self.jackpot_lit:
                 self.num_ramp_shots += 1
@@ -270,13 +227,26 @@ class Multiball(Mode):
                 else:
                     self.game.sound.play_voice('again')
 
-        self.game.update_lamps()
-
     def sw_subwayEnter2_active(self, sw):
         if self.jackpot_lit:
             self.jackpot_lit = False
             self.jackpot()
             self.game.update_lamps()
+
+    def light_jackpot(self):
+        self.jackpot_lit = True
+        self.game.sound.play_voice('jackpot is lit')
+        self.trip_check()
+        self.game.update_lamps()
+
+    def jackpot(self):
+        self.game.setPlayerState('multiball_jackpot_collected', True)
+        self.game.base_play.display('Jackpot')
+        self.game.sound.play_voice('jackpot')
+        self.game.lampctrl.play_show('jackpot', False, self.game.update_lamps)
+        self.num_ramp_shots = 0
+        self.ramp_shots_required += 1
+        self.game.score(100000)
 
     def update_lamps(self):
         if self.state == 'load':
