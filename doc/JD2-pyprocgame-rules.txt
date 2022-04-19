@@ -99,13 +99,14 @@ this time each shot must be hit twice. The third round requires 3 hits per shot,
 and so on. The mode ends when a single ball remains.
 
 == Deadworld Multiball ==
-Locks are lit by completing all of the JUDGE drop targets. Each time the
-targets are completed, another lock is lit. After the first multiball,
-it becomes increasingly difficult to light a lock. When a lock is lit,
+Locks are lit by completing all of the JUDGE drop targets. The first time
+the targets are completed, all 3 locks are lit. After the first multiball,
+completing all targets lights a single lock. When a lock is lit,
 a shot to the left ramp is diverted into the Deadworld and locked.
-3 lock shots are required to start multiball. The left ramp lights the jackpot.
-Shoot the subway to collect the jackpot worth 100,000 points. The number
-of required left ramp shots increases by 1 for every jackpot collected.
+3 lock shots are required to start this 3-ball multiball. The left ramp
+lights the jackpot. The number of required left ramp shots always starts at 1
+and increases by 1 for every jackpot collected. When the jackpot is lit,
+shoot the subway to collect 100,000 points.
 
 Deadworld Multiball can be started while a Chain Feature mode is active.
 When that happens, both the Chain Feature mode and multiball continue

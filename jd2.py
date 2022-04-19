@@ -153,6 +153,10 @@ class JD2Game(BasicGame):
 
         # Make sure flippers are off, especially for user initiated resets.
         self.enable_flippers(enable=False)
+        
+    # Empty callback
+    def no_op_callback(self):
+        pass
 
     #
     # Players
@@ -211,6 +215,7 @@ class JD2Game(BasicGame):
         trough_balls_to_launch = balls_to_launch if balls_to_launch <= trough_balls else trough_balls
         deadworld_balls_to_launch = balls_to_launch - trough_balls_to_launch
         if trough_balls_to_launch:
+            # warning: must pass a real callback since passing None preserves the previous callback
             self.trough.launch_balls(balls_to_launch, self.no_op_callback)
         if deadworld_balls_to_launch:
             self.deadworld.eject_balls(deadworld_balls_to_launch)
@@ -302,23 +307,22 @@ class JD2Game(BasicGame):
     # Ball Search
     #
 
-    def perform_ball_search(self):
-        self.set_status('Ball Search!')
-        self.ball_search.perform_search(5)
-        if self.deadworld.num_balls_locked > 0:
+    def attract_ball_search(self):
+        # called when the trough is not full in attract mode
+        if (self.deadworld.num_balls_locked > 0 and
+               (self.deadworld.num_balls_locked + self.trough.num_balls()) == self.num_balls_total):
+            # all the missing balls are in the planet, just empty the planet
+            self.deadworld.eject_balls(self.deadworld.num_balls_locked)
+        else:
+            # don't know where the balls are, do full search
+            #self.set_status('Ball Missing')
+            self.ball_search.perform_search(5)
             self.deadworld.perform_ball_search()
             
     def disable_ball_search(self):
         # workaround for a bug in pyprocgame's BallSearch.disable
         self.ball_search.disable()
-        self.ball_search.cancel_delayed(name='ball_search_countdown')
-        self.ball_search.cancel_delayed('ball_search_coil1')
-        
-    # Empty callback
-    # Calling self.game.trough.launch_balls() with a None callback preserves the previous callback
-    # to erase the callback completely, you have to pass an empty callback instead
-    def no_op_callback(self):
-        pass
+        self.ball_search.cancel_delayed(['ball_search_countdown', 'ball_search_coil1'])
 
     #
     # Settings

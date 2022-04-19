@@ -170,7 +170,7 @@ class Multiball(Mode):
                     # Use stealth launch so another ball isn't counted in play.
                     self.game.trough.launch_balls(1, self.game.no_op_callback, stealth=True)
                 else:
-                    self.game.deadworld.eject_balls(1)
+                    self.game.deadworld.eject_balls(1, self.configure_lock)
             self.game.update_lamps()
 
     def sneaky_lock(self):
@@ -178,7 +178,7 @@ class Multiball(Mode):
         # Award a lock light and eject the sneaky ball
         self.game.set_status('Sneaky Lock')
         self.light_lock(sneaky_ball_adjust=1)
-        self.game.deadworld.eject_balls(1)
+        self.game.deadworld.eject_balls(1, self.configure_lock)
 
     def sw_dropTargetD_inactive_for_400ms(self, sw):
         # newly detected raised letter D

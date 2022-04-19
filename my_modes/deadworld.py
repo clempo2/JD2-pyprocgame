@@ -11,6 +11,8 @@ class Deadworld(Mode):
         self.num_balls_to_eject = 0
         self.preparing_eject = False
         self.ejecting = False
+        self.eject_callback = None
+        self.searching_balls = False
         self.crane_release_sensitive = True
 
     def mode_stopped(self):
@@ -36,10 +38,19 @@ class Deadworld(Mode):
         self.game.trough.num_balls_locked += 1
 
     def perform_ball_search(self):
-        self.init_eject()
+        # called in attract mode when the trough should be full but isn't
+        if not self.searching_balls and not self.ejecting:
+            self.searching_balls = True
+            self.delay('stop_ball_search', event_type=None, delay=90, self.stop_ball_search)
+            self.init_eject()
+        
+    def stop_ball_search(self):
+        self.searching_balls = False
+        self.cancel_delayed('stop_ball_search')
 
-    def eject_balls(self, num):
+    def eject_balls(self, num, eject_callback=None):
         self.num_balls_to_eject += num
+        self.eject_callback = eject_callback
 
         # Tell the trough the balls aren't locked anymore so it can count properly.
         # Using max is a self-correcting error check, value must never be negative
@@ -66,7 +77,7 @@ class Deadworld(Mode):
       
     def start_eject(self):
         # the globe is in position 2, we can start the eject cycle
-        # this code is slight redundant on purpose to make it more resilient upon unforeseen error
+        # this code is slightly redundant on purpose to make it more resilient upon unforeseen error
         self.preparing_eject = False
         self.start_spinning(auto_stop=True)
         self.delay(name='start_crane', event_type=None, delay=0.9, handler=self.start_crane)
@@ -109,13 +120,22 @@ class Deadworld(Mode):
     def crane_done(self):
         # this is called 1 second after the crane dropped the ball to release it
         # determine what the crane and globe should do next
-        if self.num_balls_to_eject > 0:
-            # keep going until finished
-            self.start_eject()
+        if self.searching_balls:
+            if self.game.trough.is_full():
+                self.searching_balls = False
+                self.ejecting = False
+                self.cancel_delayed('stop_ball_search')
+                self.stop_spinning()
+            else:
+                # keep searching
+                self.start_eject()
+        elif self.num_balls_to_eject > 0:
+                # keep ejecting until finished
+                self.start_eject()
         else:
             self.ejecting = False
-            if self.num_balls_locked > 0:
-                self.start_spinning()
+            if self.eject_callback:
+                self.eject_callback()
             else:
                 self.stop_spinning()
 

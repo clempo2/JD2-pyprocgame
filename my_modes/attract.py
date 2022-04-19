@@ -102,8 +102,8 @@ Collect a multiball jackpot
         self.instruct_layer = PanningLayer(width=128, height=32, frame=instruct_frame, origin=(0,0), translate=(0,1), bounce=False)
 
     def mode_started(self):
-        if self.game.deadworld.num_balls_locked > 0:
-            self.game.deadworld.eject_balls(self.game.deadworld.num_balls_locked)
+        if not self.game.trough.is_full():
+            self.game.attract_ball_search()
 
         # Blink the start buttons in alternation to notify player about starting a game.
         self.game.lamps.startButton.schedule(schedule=0x00ff00ff, cycle_seconds=0, now=False)
