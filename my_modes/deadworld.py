@@ -41,7 +41,7 @@ class Deadworld(Mode):
         # called in attract mode when the trough should be full but isn't
         if not self.searching_balls and not self.ejecting:
             self.searching_balls = True
-            self.delay('stop_ball_search', event_type=None, delay=90, self.stop_ball_search)
+            self.delay('stop_ball_search', event_type=None, delay=90, handler=self.stop_ball_search)
             self.init_eject()
         
     def stop_ball_search(self):
