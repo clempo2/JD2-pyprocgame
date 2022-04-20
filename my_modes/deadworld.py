@@ -41,7 +41,7 @@ class Deadworld(Mode):
         # called in attract mode when the trough should be full but isn't
         if not self.searching_balls and not self.ejecting:
             self.searching_balls = True
-            self.delay('stop_ball_search', event_type=None, delay=90, handler=self.stop_ball_search)
+            self.delay('stop_ball_search', event_type=None, delay=45, handler=self.stop_ball_search)
             self.init_eject()
         
     def stop_ball_search(self):
@@ -80,7 +80,7 @@ class Deadworld(Mode):
         # this code is slightly redundant on purpose to make it more resilient upon unforeseen error
         self.preparing_eject = False
         self.start_spinning(auto_stop=True)
-        self.delay(name='start_crane', event_type=None, delay=0.9, handler=self.start_crane)
+        self.delay(name='start_crane', event_type=None, delay=0.8, handler=self.start_crane)
 
     def start_crane(self):
         # start the crane moving
@@ -97,7 +97,7 @@ class Deadworld(Mode):
         # stop the crane movement and drop the ball to release it
         self.game.coils.crane.disable()
         self.game.coils.craneMagnet.disable()
-        self.delay(name='crane_done', event_type=None, delay=1, handler=self.crane_done)
+        self.delay(name='crane_done', event_type=None, delay=0.25, handler=self.crane_done)
 
     def sw_craneRelease_active(self, sw):
         # this switch detects a ball was indeed ejected
