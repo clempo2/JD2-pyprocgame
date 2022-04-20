@@ -38,6 +38,9 @@ class Multiball(Mode):
         self.configure_lock()
 
     def mode_stopped(self):
+        # remove switch rule
+        self.disable_lock()
+
         # save player state
         player = self.game.current_player()
         player.setState('multiball_active', player.getState('multiball_active', 0) & ~0x1) # in case of tilt
