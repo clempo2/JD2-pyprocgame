@@ -141,15 +141,15 @@ class JD2Game(BasicGame):
         self.ball_save.trough_enable_ball_save = self.trough.enable_ball_save
 
         # Instantiate basic game features
-        self.attract_mode = Attract(self)
+        self.attract = Attract(self)
         self.base_play = BasePlay(self)
         self.deadworld = Deadworld(self, 20)
 
         self.shooting_again = False
 
         # Add the basic modes to the mode queue
-        self.add_modes([self.switch_monitor, self.ball_search, self.deadworld, self.ball_save, self.trough, self.attract_mode])
-        self.attract_mode.display()
+        self.add_modes([self.switch_monitor, self.ball_search, self.deadworld, self.ball_save, self.trough, self.attract])
+        self.attract.display()
 
         # Make sure flippers are off, especially for user initiated resets.
         self.enable_flippers(enable=False)
@@ -191,7 +191,7 @@ class JD2Game(BasicGame):
         super(JD2Game, self).start_game()
         self.game_data['Audits']['Games Started'] += 1
         self.supergame = supergame
-        self.remove_modes([self.attract_mode])
+        self.remove_modes([self.attract])
         self.update_lamps()
 
         # Add the first player
@@ -406,8 +406,8 @@ class JD2Game(BasicGame):
 
     def highscore_entry_finished(self, mode):
         self.remove_modes([mode])
-        self.modes.add(self.attract_mode)
-        self.attract_mode.game_over_display()
+        self.modes.add(self.attract)
+        self.attract.game_over_display()
         self.update_lamps()
 
         # Handle game stats.

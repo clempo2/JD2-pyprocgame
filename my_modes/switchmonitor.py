@@ -44,7 +44,7 @@ class SwitchMonitor(Mode):
             if isinstance(m, EntrySequenceManager):
                 return SwitchContinue
 
-        if self.game.attract_mode in self.game.modes:
+        if self.game.attract in self.game.modes:
             if self.game.trough.is_full():
                 # Start_game takes care of adding the first player and starting a ball
                 self.game.start_game(supergame)
