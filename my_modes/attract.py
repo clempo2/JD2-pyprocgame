@@ -103,7 +103,7 @@ Collect a multiball jackpot
 
     def mode_started(self):
         if not self.game.trough.is_full():
-            self.game.attract_ball_search()
+            self.ball_search()
 
         # Blink the start buttons in alternation to notify player about starting a game.
         self.game.lamps.startButton.schedule(schedule=0x00ff00ff, cycle_seconds=0, now=False)
@@ -113,18 +113,39 @@ Collect a multiball jackpot
         self.game.enable_gi(False)
         self.game.lamps.gi01.enable()
 
-        # Release the ball from places it could be stuck.
-        for name in ['popperL', 'popperR', 'shooterL', 'shooterR']:
-            if self.game.switches[name].is_active():
-                self.game.coils[name].pulse()
-
         self.change_lampshow()
         self.display()
 
     def mode_stopped(self):
+        # Stop deadworld ball search (if active) before we eject the first ball
+        # otherwise deadworld might not see the trough was momentarily full
+        # I wish there was a trough full event for this.
+        self.deadworld.stop_ball_search()
+
         self.game.lamps.startButton.enable()
         self.game.lamps.superGame.enable()
         self.game.lampctrl.stop_show()
+
+    def ball_search(self):
+        # called when the trough is not full in attract mode
+        num_balls_missing = self.num_balls_total - self.trough.num_balls()
+        if num_balls_missing > 0: # error check
+            if self.deadworld.num_balls_locked == num_balls_missing:
+                # found all missing balls in the planet, empty the planet and keep other coils quiet
+                self.deadworld.eject_balls(self.deadworld.num_balls_locked)
+            else:
+                switched_coils = ['popperL', 'popperR', 'shooterL', 'shooterR']
+                num_sw_active = sum([1 if self.game.switches[name].is_active() else 0 for name in switched_coils])
+                if num_sw_active == num_balls_missing:
+                    # found all missing balls in switched coils, trigger active coils and keep others quiet
+                    for name in switched_coils:
+                        if self.game.switches[name].is_active():
+                            self.game.coils[name].pulse()
+                else:
+                    # don't know where all the missing balls are, do a full search
+                    #self.set_status('Ball Missing')
+                    self.ball_search.perform_search(5)
+                    self.deadworld.perform_ball_search()
 
     def display(self):
         self.game.score_display.update_layer()

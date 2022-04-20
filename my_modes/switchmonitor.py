@@ -49,7 +49,7 @@ class SwitchMonitor(Mode):
                 # Start_game takes care of adding the first player and starting a ball
                 self.game.start_game(supergame)
             else:
-                self.game.attract_ball_search()
+                self.game.attract.ball_search()
         else:
             # game already started, add another player to current game
             # it does not have to be the same button that started the game

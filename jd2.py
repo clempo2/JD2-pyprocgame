@@ -148,7 +148,7 @@ class JD2Game(BasicGame):
         self.shooting_again = False
 
         # Add the basic modes to the mode queue
-        self.add_modes([self.switch_monitor, self.attract_mode, self.ball_search, self.deadworld, self.ball_save, self.trough])
+        self.add_modes([self.switch_monitor, self.ball_search, self.deadworld, self.ball_save, self.trough, self.attract_mode])
         self.attract_mode.display()
 
         # Make sure flippers are off, especially for user initiated resets.
@@ -250,6 +250,11 @@ class JD2Game(BasicGame):
     def set_status(self, text):
         self.dmd.set_message(text, 3)
 
+    def disable_ball_search(self):
+        # workaround for a bug in pyprocgame's BallSearch.disable
+        self.ball_search.disable()
+        self.ball_search.cancel_delayed(['ball_search_countdown', 'ball_search_coil1'])
+
     #
     # Modes
     #
@@ -302,27 +307,6 @@ class JD2Game(BasicGame):
             self.coils.shooterR.pulse(50)
         if self.switches.shooterL.is_active():
             self.coils.shooterL.pulse(20)
-
-    #
-    # Ball Search
-    #
-
-    def attract_ball_search(self):
-        # called when the trough is not full in attract mode
-        if (self.deadworld.num_balls_locked > 0 and
-               (self.deadworld.num_balls_locked + self.trough.num_balls()) == self.num_balls_total):
-            # all the missing balls are in the planet, just empty the planet
-            self.deadworld.eject_balls(self.deadworld.num_balls_locked)
-        else:
-            # don't know where the balls are, do full search
-            #self.set_status('Ball Missing')
-            self.ball_search.perform_search(5)
-            self.deadworld.perform_ball_search()
-            
-    def disable_ball_search(self):
-        # workaround for a bug in pyprocgame's BallSearch.disable
-        self.ball_search.disable()
-        self.ball_search.cancel_delayed(['ball_search_countdown', 'ball_search_coil1'])
 
     #
     # Settings
