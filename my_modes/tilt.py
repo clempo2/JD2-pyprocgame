@@ -20,6 +20,20 @@ class Tilted(Mode):
         self.game.game_tilted = False
         self.game.base_play.tilt.tilt_reset()
 
+    # Eject any balls that get stuck before returning to the trough.
+    def sw_popperL_active_for_500ms(self, sw):
+        self.game.coils.popperL.pulse(40)
+
+    def sw_popperR_active_for_500ms(self, sw):
+        self.game.coils.popperR.pulse(40)
+
+    def sw_shooterL_active_for_500ms(self, sw):
+        self.game.coils.shooterL.pulse(40)
+
+    def sw_shooterR_active_for_500ms(self, sw):
+        self.game.coils.shooterR.pulse(40)
+
+
 class TiltMonitorMode(Mode):
     """Monitor tilt warnings and slam tilt"""
 
@@ -58,14 +72,14 @@ class TiltMonitorMode(Mode):
 
         if self.times_warned == self.num_tilt_warnings:
             if not self.tilted:
-                self.tilted = True
-                self.tilt_callback()
+                self.call_tilt_callback(self.game.tilted)
         else:
             self.times_warned += 1
             self.game.tilt_warning(self.times_warned)
 
     def slam_tilt_handler(self, sw):
-        self.slam_tilt_callback()
+        self.call_tilt_callback(self.game.slam_tilted)
+        return True
 
     def tilt_delay(self, fn, secs_since_bob_tilt=2.0):
         """ calls the specified `fn` if it has been at least `secs_since_bob_tilt`
@@ -77,8 +91,7 @@ class TiltMonitorMode(Mode):
         else:
             return fn()
 
-    # Reset game on slam tilt
-    def slam_tilt_callback(self):
+    def call_tilt_callback(self, callback):
         # Disable flippers so the ball will drain.
         self.game.enable_flippers(enable=False)
 
@@ -96,30 +109,4 @@ class TiltMonitorMode(Mode):
         self.game.modes.add(self.tilted_mode)
         #play sound
         #play video
-        self.game.slam_tilted()
-
-        return True
-
-    def tilt_callback(self):
-        # Process tilt.
-        # First check to make sure tilt hasn't already been processed once.
-        # No need to do this stuff again if for some reason tilt already occurred.
-        if not self.tilted:
-            # Disable flippers so the ball will drain.
-            self.game.enable_flippers(enable=False)
-
-            # Make sure ball won't be saved when it drains.
-            self.game.ball_save.disable()
-
-            # Ensure all lamps are off.
-            for lamp in self.game.lamps:
-                lamp.disable()
-
-            # Kick balls out of places it could be stuck.
-            # TODO: ball search!!
-            self.tilted = True
-
-            self.game.modes.add(self.tilted_mode)
-            #play sound
-            #play video
-            self.game.tilted()
+        callback()

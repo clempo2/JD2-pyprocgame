@@ -214,10 +214,10 @@ Collect a multiball jackpot
         self.instruction_display()
 
     # Eject any balls that get stuck before returning to the trough.
-    def sw_popperL_active_for_500ms(self, sw): # opto!
+    def sw_popperL_active_for_500ms(self, sw):
         self.game.coils.popperL.pulse(40)
 
-    def sw_popperR_active_for_500ms(self, sw): # opto!
+    def sw_popperR_active_for_500ms(self, sw):
         self.game.coils.popperR.pulse(40)
 
     def sw_shooterL_active_for_500ms(self, sw):

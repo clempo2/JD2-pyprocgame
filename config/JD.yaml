@@ -78,6 +78,7 @@ PRSwitches:
         number: S14
     shooterL:
         number: S15
+        tags: tilt_visible
     outlaneL:
         number: S16
     inlaneL:
@@ -119,6 +120,7 @@ PRSwitches:
         number: S38
     shooterR:
         number: S41
+        tags: tilt_visible
     outlaneR:
         number: S42
     inlaneFarR:
@@ -186,9 +188,11 @@ PRSwitches:
     popperL:
         number: S73
         type: 'NC'
+        tags: tilt_visible
     popperR:
         number: S74
         type: 'NC'
+        tags: tilt_visible
     topRampExit:
         number: S75
         type: 'NC'
