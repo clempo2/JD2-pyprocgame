@@ -93,7 +93,7 @@ class Multiball(Mode):
         self.multiball_played = True
         self.game.addPlayerState('multiball_active', -0x1)
         self.end_callback()
-        self.reset_active_drops()
+        self.drops.reset_drop_target_bank()
         self.game.update_lamps()
 
     def start_ball_save(self):
@@ -196,14 +196,6 @@ class Multiball(Mode):
     def trip_check(self):
         if self.game.switches.dropTargetD.is_inactive():
             self.trip_drop_target()
-
-    def reset_active_drops(self):
-        if (self.game.switches.dropTargetJ.is_active() or
-                self.game.switches.dropTargetU.is_active() or
-                self.game.switches.dropTargetD.is_active() or
-                self.game.switches.dropTargetG.is_active() or
-                self.game.switches.dropTargetE.is_active()):
-            self.game.coils.resetDropTarget.pulse(40)
 
     def on_drops_advance(self, drops):
         pass

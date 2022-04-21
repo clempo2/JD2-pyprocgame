@@ -215,8 +215,7 @@ class ChainFeature(TimedMode):
         self.reset_drops()
 
     def reset_drops(self):
-        self.game.base_play.regular_play.multiball.drops.animated_reset(.1)
-        self.game.base_play.regular_play.multiball.reset_active_drops()
+        self.game.base_play.regular_play.multiball.drops.reset_drop_target_bank()
 
 
 class Pursuit(ChainFeature):
@@ -477,7 +476,7 @@ class Impersonator(ChainFeature):
             self.sound_active = True
             self.game.sound.play('bad impersonator ouch')
             self.delay(name='end_sound', event_type=None, delay=1, handler=self.end_sound)
-        self.game.coils.resetDropTarget.pulse(40)
+        self.game.coils.resetDropTarget.pulse(30)
         self.check_for_completion()
 
     def timer_update(self, time):

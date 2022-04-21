@@ -112,6 +112,10 @@ Deadworld Multiball can be started while a Chain Feature mode is active.
 When that happens, both the Chain Feature mode and multiball continue
 simultaneously.
 
+A sneaky lock occurs when the ball trickles into the lock ramp without a
+lock lit. This awards a lock light but does not award a lock. The ball is
+ejected immediately.
+
 == Missile Launch Award ==
 Missile launch is fed via the center ramp. When missile launch is lit and
 the ball is in the left shooter lane, the DMD scrolls through a set of award.

@@ -22,7 +22,7 @@ class UltimateChallenge(Mode):
 
     def mode_started(self):
         self.active_mode = self.game.getPlayerState('challenge_mode', 0)
-        self.game.coils.resetDropTarget.pulse(40)
+        self.game.coils.resetDropTarget.pulse(30)
         self.intentional_drain = False
         self.start_level()
 
@@ -150,7 +150,7 @@ class ChallengeBase(TimedMode):
         self.drop_target_active()
 
     def reset_drops(self):
-        self.game.coils.resetDropTarget.pulse(40)
+        self.game.coils.resetDropTarget.pulse(30)
 
 
 class DarkJudge(ChallengeBase):
@@ -268,7 +268,7 @@ class Fear(DarkJudge):
 
     def reset_drops(self):
         if self.state != 'subway':
-            self.game.coils.resetDropTarget.pulse(40)
+            super(Fear, self).reset_drops()
 
     def sw_subwayEnter1_closed(self, sw):
         self.subway_hit()
@@ -368,7 +368,7 @@ class Death(DarkJudge, CrimeSceneShots):
         super(Death, self).mode_started()
         self.shot_timer = self.time_for_shot
         self.active_shots = [1, 1, 1, 1, 1]
-        self.game.coils.resetDropTarget.pulse(40)
+        self.reset_drops()
 
     def update_lamps(self):
         schedule = 0x80808080 if any(self.active_shots) else 0

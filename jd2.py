@@ -106,6 +106,8 @@ class JD2Game(BasicGame):
         # work-around for poor implementation of reset by the framework
         # this is important when the game is aborted with a long press to the startButton
         self.remove_all_modes()
+        self.stop_all_sounds()
+        self.sound.stop_music()
         
         # Reset the entire game framework
         super(JD2Game, self).reset()

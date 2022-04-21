@@ -127,9 +127,9 @@ Collect a multiball jackpot
 
     def ball_search(self):
         if not self.game.trough.is_full():
-            #self.set_status('Ball Missing')
             self.game.ball_search.perform_search(5)
             self.game.deadworld.perform_ball_search()
+            #self.game.set_status('Ball Missing')
 
     def display(self):
         self.game.score_display.update_layer()

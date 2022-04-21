@@ -5,7 +5,11 @@ JD2-pyprocgame is new software for the [Judge Dredd](https://www.ipdb.org/machin
 ## Installation
 
 - Install Python 2.7 and supporting libraries. The easiest is to run the all-in-one [SkeletonGame installer](http://skeletongame.com/step-1-installation-and-testing-the-install-windows/). Note JD2-pyprocgame is not compatible with SkeletonGame, that portion of the all-in-one installation can be ignored afterwards.  
-- Copy the [pyprocgame dev branch](https://github.com/preble/pyprocgame/tree/dev) to C:\P-ROC\pyprocgame-dev  
+- Copy the [pyprocgame dev branch](https://github.com/preble/pyprocgame/tree/dev) to C:\P-ROC\pyprocgame-dev
+- Edit C:\P-ROC\pyprocgame-dev\procgame\dmd\animation.py, delete line 8 to fix a compilation error.
+    ```
+    import Image
+    ```
 - Copy the [JD2-pyprocgame dev2 branch](https://github.com/clempo2/JD2-pyprocgame/tree/dev2) to C:\P-ROC\JD2-pyprocgame  
 - Install the [JD2-pyprocgame media kit](https://github.com/clempo2/JD2-pyprocgame-media). Follow the instructions in the media kit repository to extract the assets over the JD2-pyprocgame dev2 branch.  
 - Edit config.yaml to comment out this line when using a real P-ROC
