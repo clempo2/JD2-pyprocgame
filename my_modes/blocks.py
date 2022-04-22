@@ -236,6 +236,8 @@ class BlockWar(CrimeSceneShots):
     def __init__(self, parent, priority):
         super(BlockWar, self).__init__(parent.game, priority)
         self.parent = parent
+        self.ball_save_time = self.game.user_settings['Gameplay']['Block War ballsave time']
+
         self.score_reason_layer = TextLayer(128/2, 7, self.game.fonts['07x5'], 'center')
         self.score_value_layer = TextLayer(128/2, 17, self.game.fonts['07x5'], 'center')
         self.anim_layer = self.game.animations['blockwars']
@@ -245,18 +247,11 @@ class BlockWar(CrimeSceneShots):
         self.game.addPlayerState('multiball_active', 0x2)
         self.game.base_play.display('Block War')
         self.game.sound.play_voice('block war')
-        self.game.trough.launch_balls(1, self.start_callback)
+        self.game.trough.launch_balls(1, self.game.no_op_callback)
+        self.game.ball_save_start(num_balls_to_save=2, time=self.ball_save_time, now=False, allow_multiple_saves=True)
 
     def mode_stopped(self):
         self.game.addPlayerState('multiball_active', -0x2)
-
-    # trough callback
-    def start_callback(self):
-        ball_save_time = self.game.user_settings['Gameplay']['Block Wars ballsave time']
-        # 1 ball added already from launcher.  So ask ball_save to save
-        # new total of balls in play.
-        local_num_balls_to_save = self.game.trough.num_balls_in_play
-        self.game.ball_save_start(num_balls_to_save=local_num_balls_to_save, time=ball_save_time, now=False, allow_multiple_saves=True)
 
     def reset(self):
         # go back to the first round

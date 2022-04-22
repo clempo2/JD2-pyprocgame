@@ -162,6 +162,7 @@ PRSwitches:
     craneRelease: 
         number: S62
         type: 'NC'
+        tags: tilt_visible
     leftRampToLock:
         number: S63
         type: 'NC'
@@ -182,6 +183,7 @@ PRSwitches:
     magnetOverRing:
         number: S71
         type: 'NO' # Manual says NC
+        tags: tilt_visible
     topRightOpto:
         number: S72
         type: 'NC'
@@ -202,6 +204,7 @@ PRSwitches:
     globePosition2:
         number: S77
         type: 'NO' # Manual says NC
+        tags: tilt_visible
     s78:
         number: S78
     trough1:

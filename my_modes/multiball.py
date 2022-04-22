@@ -73,13 +73,13 @@ class Multiball(Mode):
             # Need to convert previously locked balls to balls in play.
             # Impossible for trough logic to do it itself.
             self.game.trough.num_balls_in_play += 2
-            self.start_ball_save()
         else:
             # 1 ball from the planet and 2 from the trough
             self.game.deadworld.eject_balls(1)
             self.game.ball_save.start_lamp()
-            self.game.trough.launch_balls(2, self.start_ball_save)
+            self.game.trough.launch_balls(2, self.game.no_op_callback)
 
+        self.game.ball_save_start(num_balls_to_save=3, time=self.ball_save_time, now=True, allow_multiple_saves=True)
         self.start_callback()
         self.game.addPlayerState('multiball_active', 0x1)
         self.game.update_lamps()
@@ -95,10 +95,6 @@ class Multiball(Mode):
         self.end_callback()
         self.drops.reset_drop_target_bank()
         self.game.update_lamps()
-
-    def start_ball_save(self):
-        num_balls_to_save = self.game.trough.num_balls_in_play
-        self.game.ball_save_start(num_balls_to_save=num_balls_to_save, time=self.ball_save_time, now=True, allow_multiple_saves=True)
 
     def evt_ball_drained(self):
         # End multiball if there is now only one ball in play

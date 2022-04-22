@@ -9,11 +9,16 @@ class Deadworld(Mode):
         super(Deadworld, self).__init__(game, priority)
         self.num_balls_locked = 0
         self.num_balls_to_eject = 0
+        self.stowing_away = True
         self.preparing_eject = False
         self.ejecting = False
         self.eject_callback = None
         self.searching_balls = False
         self.crane_release_sensitive = True
+
+    def mode_started(self):
+        # stow away crane in rest position when powering up the machine
+        self.start_crane()
 
     def mode_stopped(self):
         # remove the switch rule
@@ -87,7 +92,7 @@ class Deadworld(Mode):
         self.game.coils.crane.pulse(0)
 
     def sw_magnetOverRing_open(self, sw):
-        if self.ejecting:
+        if self.ejecting or self.stowing_away:
             # turn the crane magnet on for 2 seconds
             self.game.coils.craneMagnet.pulse(0)
             self.delay(name='crane_release', event_type=None, delay=2, handler=self.crane_release)
@@ -134,6 +139,7 @@ class Deadworld(Mode):
                 self.start_eject()
         else:
             self.ejecting = False
+            self.stowing_away = False
             if self.eject_callback:
                 self.eject_callback()
             else:
