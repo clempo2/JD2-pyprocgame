@@ -13,7 +13,7 @@ class Multiball(Mode):
         self.drops = BasicDropTargetBank(self.game, priority=priority + 1, prefix='dropTarget', letters='JUDGE')
         self.drops.on_advance = self.on_drops_advance
         self.drops.on_completed = self.on_drops_completed
-        self.drops.auto_reset = True
+        self.drops.auto_reset = False
 
     def mode_started(self):
         # restore player state
@@ -197,6 +197,7 @@ class Multiball(Mode):
         pass
 
     def on_drops_completed(self, drops):
+        drops.animated_reset(seconds=1.0)
         self.light_lock()
 
     def sw_leftRampToLock_active(self, sw):

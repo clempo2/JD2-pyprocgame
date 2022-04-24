@@ -17,7 +17,7 @@ class Deadworld(Mode):
         self.crane_release_sensitive = True
 
     def mode_started(self):
-        # stow away crane in rest position when powering up the machine
+        # when powering up the machine, position the crane in rest position (farthest from the ring) 
         self.start_crane()
 
     def mode_stopped(self):

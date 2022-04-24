@@ -219,33 +219,34 @@ do not need to be completed again.
 Successfully completing a dark judge mode awards 100,000 points.
 
 === Level 1: Fear ===
-Fear uses timed shots to force the player to be accurate. This is a
-single ball mode with a temporary ball saver. Each of the following shots
-must be hit, in order, before a shot timer (20 seconds) expires:
-Left Ramp, Right Ramp, Left Ramp, Right Ramp, D drop target, Subway.
-Each shot resets the timer back to 20 seconds. If the timer expires
-before a shot is hit, the game goes dead forcing the balls to drain
-and ending the player's turn. 
+Judge Fear is reigning terror on the city. This level uses timed shots to
+force the player to be accurate. This is a single ball mode with a temporary
+ball saver. Each of the following shots must be hit, in order, before a
+20-second shot timer expires: Left Ramp, Right Ramp, Left Ramp, Right Ramp,
+D drop target, Subway. Each shot resets the timer back to 20 seconds.
+If the timer expires before a shot is hit, the game goes dead forcing the balls
+to drain and ending the player's turn. 
 
 === Level 2: Mortis ===
-This level is a 2-ball multiball with a temporary ball save. Each of the
-following 5 shots must be hit twice in any order: Mystery, Left Loop,
-Upper Right VUK, Right Ramp, and the 3rd Captive Ball. Each shot's insert
-lamp blinks slowly to indicate 2 shots are required, blinks quickly to
-indicate 1 shot is required, and is turned off when the shot is complete.
-
+Judge Mortis is spreading disease throughout the city. This level is a 2-ball
+multiball with a temporary ball save. The mode is completed successfully
+when the following 5 shots are hit in any order: Mystery, Left Loop,
+Upper Right VUK, Right Ramp, and the 3rd Captive Ball. There is no timer,
+the level ends when the last ball is lost.
 
 === Level 3: Death ===
-This level is a single ball mode with a temporary ball save. The player
-has 3 minutes to clear all 5 shots. Every few seconds, a previously cleared
-shot is relit. If the 3 minute timer expires, the game goes dead forcing
-the balls to drain and ending the player's turn.
+Judge Death is on a murder spree. This level is a single ball mode with a
+temporary ball save. The player has 3 minutes to clear all 5 shots. Every few
+seconds, a previously cleared shot is relit. If the 3 minute timer expires,
+the game goes dead forcing the balls to drain and ending the player's turn.
 
 === Level 4: Fire ===
-All 5 crime scene shots are lit, representing fires that Judge Dredd needs
-to extinguish. This level is a 4-ball multiball with no ball save.
-Hitting mystery adds two balls. The mode is completed successfully
-when the last fire is extinguished.
+Judge Fire is lighting fires all over Mega City One. All 5 crime scene shots
+are flashing representing fires lit by Judge Fire. Hit a crime scene shot once
+to dampen the flame. Hit the shot again to fully extinguish the fire. This
+level is a 4-ball multiball with no ball save. Hitting mystery adds two balls.
+The mode is completed successfully when the last fire is extinguished.
+There is no timer, the mode ends when the last ball is lost.
 
 === Final Level: Celebration ===
 All dark judges have been defeated and banished. This level is a 6 ball
@@ -258,7 +259,7 @@ Pressing the SuperGame button starts a game in Ultimate Challenge.
 
 Each ball starts at the first ultimate challenge level not yet completed by
 the player. When Celebration ends, that player continues the rest of the game
-like regular play.
+in regular play.
 
 == High Scores ==
 The following high scores are tracked:

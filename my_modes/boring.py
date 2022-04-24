@@ -3,6 +3,12 @@ from procgame.game import Mode
 class Boring(Mode):
     """Taunt player if nothing happens for a while"""
 
+    def __init__(self, game, priority):
+        super(Boring, self).__init__(game, priority)
+        for switch in ['subwayEnter2', 'rightRampExit', 'leftRampExit', 'leftRollover', 'outlaneR', 'outlaneL', 'craneRelease', 'leftRampToLock', 
+                       'trough1', 'trough6', 'dropTargetJ', 'dropTargetU', 'dropTargetD', 'dropTargetG', 'dropTargetE']:
+            self.add_switch_handler(name=switch, event_type='active', delay=None, handler=self.reset)
+
     def mode_started(self):
         self.enable_reset = False
         self.reset()
@@ -27,15 +33,6 @@ class Boring(Mode):
             self.enable_reset = False
             self.reset()
 
-    def sw_subwayEnter2_active(self, sw):
-        self.reset()
-
-    def sw_rightRampExit_active(self, sw):
-        self.reset()
-
-    def sw_leftRampExit_active(self, sw):
-        self.reset()
-
     def sw_popperR_active_for_1s(self, sw):
         self.popper_active()
 
@@ -43,59 +40,19 @@ class Boring(Mode):
         self.popper_inactive()
 
     def sw_popperL_active_for_1s(self, sw):
-        self.pause()
-        self.enable_reset = True
+        self.popper_active()
 
     def sw_popperL_inactive_for_1s(self, sw):
         self.popper_inactive()
 
     def sw_shooterL_active_for_1s(self, sw):
-        self.pause()
-        self.enable_reset = True
+        self.popper_active()
 
     def sw_shooterL_inactive_for_1s(self, sw):
-        if self.enable_reset:
-            self.reset()
-            self.enable_reset = False
+        self.popper_inactive()
 
     def sw_shooterR_active(self, sw):
         self.pause()
 
     def sw_shooterR_inactive_for_1s(self, sw):
-        self.reset()
-
-    def sw_leftRollover_active(self, sw):
-        self.reset()
-
-    def sw_outlaneR_active(self, sw):
-        self.reset()
-
-    def sw_outlaneL_active(self, sw):
-        self.reset()
-
-    def sw_craneRelease_active(self, sw):
-        self.reset()
-
-    def sw_leftRampToLock_active(self, sw):
-        self.reset()
-
-    def sw_trough1_active(self, sw):
-        self.reset()
-
-    def sw_trough6_active(self, sw):
-        self.reset()
-
-    def sw_dropTargetJ_active(self, sw):
-        self.reset()
-
-    def sw_dropTargetU_active(self, sw):
-        self.reset()
-
-    def sw_dropTargetD_active(self, sw):
-        self.reset()
-
-    def sw_dropTargetG_active(self, sw):
-        self.reset()
-
-    def sw_dropTargetE_active(self, sw):
         self.reset()

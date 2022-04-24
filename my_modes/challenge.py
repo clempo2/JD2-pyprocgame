@@ -48,6 +48,7 @@ class UltimateChallenge(Mode):
             # drain intentionally before starting next mode
             self.game.sound.fadeout_music()
             self.intentional_drain = True
+            self.game.base_play.boring.pause()
         else:
             # level failed because the timer expired
             self.end_challenge()
@@ -192,7 +193,7 @@ class Fear(DarkJudge):
         Judge Fear is reigning terror on the city.
         Shoot alternating ramps then subway
         1 ball with temporary ball save.
-        Timer is short and reset with every successful shot
+        Timer is short and resets with every successful shot
     """
 
     def __init__(self, game, priority):
@@ -231,7 +232,7 @@ class Fear(DarkJudge):
         self.game.sound.play('mystery')
         if self.mystery_lit:
             self.mystery_lit = False
-            self.timer = self.time_for_shot
+            self.reset_timer(2 * self.time_for_shot)
             self.game.update_lamps()
 
     def sw_leftRampExit_active(self, sw):
@@ -248,7 +249,7 @@ class Fear(DarkJudge):
             self.num_shots += 1
             self.update_status()
             self.game.lampctrl.play_show('shot_hit', False, self.game.update_lamps)
-            if self.num_shots == self.num_shots_required -1:
+            if self.num_shots == self.num_shots_required - 1:
                 self.state = 'subway'
             else:
                 # switch ramp
@@ -294,32 +295,31 @@ class Fear(DarkJudge):
 class Mortis(DarkJudge):
     """ Mortis wizard mode
         Judge Mortis is spreading disease throughout the city.
-        Shoot each shot twice.
+        Shoot the lit shots.
         2 ball multiball with temporary ball save.
         No timer, mode ends when last ball is lost
     """
 
     def __init__(self, game, priority):
         ball_save_time = game.user_settings['Gameplay']['Mortis ballsave time']
-        super(Mortis, self).__init__(game, priority, initial_time=0, instructions='Shoot lit shots twice',
-                    num_shots_required=10, num_balls=2, ball_save_time=ball_save_time)
+        super(Mortis, self).__init__(game, priority, initial_time=0, instructions='Shoot lit shots',
+                         num_shots_required=5, num_balls=2, ball_save_time=ball_save_time)
         self.lamp_names = ['mystery', 'perp1G', 'perp3G', 'perp5G', 'stopMeltdown']
-        self.lamp_styles = ['off', 'fast', 'medium']
 
     def mode_started(self):
         super(Mortis, self).mode_started()
-        self.state = 'ramps'
-        self.shots_required = [2, 2, 2, 2, 2]
+        self.targets = [1, 1, 1, 1, 1]
 
     def timer_update(self, time):
         pass
 
     def update_lamps(self):
-        schedule = 0x80808080 if self.num_shots < self.num_shots_required else 0
+        schedule = 0x80808080 if any(self.targets) else 0
         self.game.coils.flasherMortis.schedule(schedule=schedule, cycle_seconds=0, now=True)
+
         for shot in range(0, 5):
             lamp_name = self.lamp_names[shot]
-            style = self.lamp_styles[self.shots_required[shot]]
+            style = 'medium' if self.targets[shot] else 'off'
             self.game.drive_lamp(lamp_name, style)
 
     def sw_mystery_active(self, sw):
@@ -336,12 +336,12 @@ class Mortis(DarkJudge):
     def sw_rightRampExit_active(self, sw):
         self.switch_hit(3)
 
-    def sw_captiveBall2_active(self, sw): # make it easier with switch 2 instead of 3
+    def sw_captiveBall2_active(self, sw): # make it easier with captiveBall2 instead of captiveBall3
         self.switch_hit(4)
 
     def switch_hit(self, index):
-        if self.shots_required[index] > 0:
-            self.shots_required[index] -= 1
+        if self.targets[index]:
+            self.targets[index] = 0
             self.num_shots += 1
             self.game.lampctrl.play_show('shot_hit', False, self.game.update_lamps)
             self.game.score(10000)
@@ -411,19 +411,20 @@ class Death(DarkJudge, CrimeSceneShots):
 class Fire(DarkJudge, CrimeSceneShots):
     """ Fire wizard mode
         Judge Fire is lighting fires all over Mega City One.
-        Shooting the lit crime scene shots.
+        Shoot each crime scene shot twice.
         4 ball multiball.  No ball save. Possibility to add two more balls.
         No timer, mode ends when last ball is lost
     """
 
     def __init__(self, game, priority):
-        super(Fire, self).__init__(game, priority, initial_time=0, instructions='Shoot lit shots',
-                         num_shots_required=5, num_balls=4, ball_save_time=0)
+        super(Fire, self).__init__(game, priority, initial_time=0, instructions='Shoot lit shots twice',
+                    num_shots_required=10, num_balls=4, ball_save_time=0)
+        self.lamp_styles = ['off', 'medium', 'fast']
 
     def mode_started(self):
         super(Fire, self).mode_started()
         self.mystery_lit = True
-        self.targets = [1, 1, 1, 1, 1]
+        self.shots_required = [2, 2, 2, 2, 2]
 
     def timer_update(self, time):
         pass
@@ -431,16 +432,13 @@ class Fire(DarkJudge, CrimeSceneShots):
     def update_lamps(self):
         self.game.enable_gi(False)
 
-        schedule = 0x80808080 if any(self.targets) else 0
+        schedule = 0x80808080 if self.num_shots < self.num_shots_required else 0
         self.game.coils.flasherFire.schedule(schedule=schedule, cycle_seconds=0, now=True)
 
         for shot in range(0, 5):
-            lampname = 'perp' + str(shot + 1) + 'R'
-            style = 'medium' if self.targets[shot] else 'off'
-            self.game.drive_lamp(lampname, style)
-
-        style = 'on' if self.mystery_lit else 'off'
-        self.game.drive_lamp('mystery', style)
+            lamp_name = 'perp' + str(shot + 1) + 'R'
+            style = self.lamp_styles[self.shots_required[shot]]
+            self.game.drive_lamp(lamp_name, style)
 
     def sw_mystery_active(self, sw):
         self.game.sound.play('mystery')
@@ -450,9 +448,9 @@ class Fire(DarkJudge, CrimeSceneShots):
             self.game.launch_balls(2)
             self.game.update_lamps()
 
-    def switch_hit(self, num):
-        if self.targets[num]:
-            self.targets[num] = 0
+    def switch_hit(self, index):
+        if self.shots_required[index] > 0:
+            self.shots_required[index] -= 1
             self.num_shots += 1
             self.game.lampctrl.play_show('shot_hit', False, self.game.update_lamps)
             self.game.score(10000)

@@ -303,12 +303,8 @@ class JD2Game(BasicGame):
         self.sound.fadeout_music()
         self.sound.play('tilt')
         self.set_status('TILT')
-
-        # Kick balls out of places it could be stuck.
-        if self.switches.shooterR.is_active():
-            self.coils.shooterR.pulse(50)
-        if self.switches.shooterL.is_active():
-            self.coils.shooterL.pulse(20)
+        # stop all mode timers
+        self.send_event('pause')
 
     #
     # Settings

@@ -50,8 +50,7 @@ class CityBlocks(Mode):
         self.game.update_lamps()
 
     def end_multiball(self):
-        self.game.remove_modes([self.block_war])
-        self.game.remove_modes([self.block_war_bonus])
+        self.game.remove_modes([self.block_war, self.block_war_bonus])
         self.city_block.next_block()
         # next_block updated the lamps
         self.start_city_block()
