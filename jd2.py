@@ -209,7 +209,14 @@ class JD2Game(BasicGame):
     def ball_save_start(self, num_balls_to_save, time, now, allow_multiple_saves):
         # work-around for ball_save.start() that always adds to the timer
         self.ball_save.timer = 0
-        self.ball_save.start(num_balls_to_save, time, now, allow_multiple_saves)
+        # Normally, the 2sec grace period is included in the ball save time
+        # as evidenced by the Drain Shield lamp turning off 2sec before the timer expires.
+        # This is apparent when looking at the countdown timer of a timed mode and looks like a bug.
+        # By adding 2sec, we move the grace period after the ball save time,
+        # and the Drain Shield light will now turn off at the time given.
+        # The player gets 2sec extra ball save time compared to the configured setting,
+        # but I don't think anybody will complain!
+        self.ball_save.start(num_balls_to_save, 2 + time, now, allow_multiple_saves)
 
     def launch_balls(self, balls_to_launch):
         # launch balls from the trough if it has sufficient balls, else eject additional balls from Deadworld
