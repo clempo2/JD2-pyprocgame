@@ -49,6 +49,8 @@ class UltimateChallenge(Mode):
             self.game.sound.fadeout_music()
             self.intentional_drain = True
             self.game.base_play.boring.pause()
+            # delay ball search, hopefully we can drain quietly before ball search triggers
+            self.game.ball_search.reset(None)
         else:
             # level failed because the timer expired
             self.end_challenge()

@@ -3,7 +3,7 @@ import os
 import pinproc
 import pygame.locals
 from procgame.config import value_for_key_path
-from procgame.dmd import FrameLayer, MarkupFrameGenerator, ScriptedLayer
+from procgame.dmd import Frame, FrameLayer, MarkupFrameGenerator, ScriptedLayer
 from procgame.game import BasicGame, Mode, Player
 from procgame.highscore import HighScoreCategory
 from procgame.lamps import LampController
@@ -258,6 +258,14 @@ class JD2Game(BasicGame):
 
     def set_status(self, text):
         self.dmd.set_message(text, 3)
+        # add a thin black margin around the text to cover player 3 and 4 scores if applicable
+        frame = self.dmd.message_layer.frame
+        if frame:
+            margin_frame = Frame(frame.width + 2, frame.height + 2)
+            Frame.copy_rect(margin_frame, 1, 1, frame, 0, 0, frame.width, frame.height)
+            self.dmd.message_layer.frame = margin_frame
+            self.dmd.message_layer.target_x_offset -= 1
+            self.dmd.message_layer.target_y_offset -= 1
 
     def disable_ball_search(self):
         # workaround for a bug in pyprocgame's BallSearch.disable
