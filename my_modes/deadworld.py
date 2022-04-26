@@ -18,7 +18,7 @@ class Deadworld(Mode):
 
     def mode_started(self):
         # when powering up the machine, position the crane in rest position (farthest from the ring) 
-        self.start_crane()
+        self.delay(name='start_crane', event_type=None, delay=0.2, handler=self.start_crane)
 
     def mode_stopped(self):
         # remove the switch rule
