@@ -161,7 +161,7 @@ class RegularPlay(Mode):
             self.game.sound.play_music('multiball', loops=-1)
             self.game.remove_modes([self.missile_award_mode])
             # Light mystery once for free.
-            self.mystery_lit = False
+            self.mystery_lit = True
             self.game.update_lamps()
 
     def multiball_ended(self):
