@@ -209,6 +209,7 @@ class CityBlock(CrimeSceneShots):
                 self.targets = [0] * 5
                 for i in range(0, num_to_pick):
                     self.targets[pick_from[i]] = 1
+                self.game.setPlayerState('block_targets', self.targets)
         self.game.update_lamps()
 
     #
