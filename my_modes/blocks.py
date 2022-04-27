@@ -274,13 +274,13 @@ class BlockWar(CrimeSceneShots):
             self.game.sound.play('block_war_target')
             if self.shots_required[shot] == 0:
                 self.score_reason_layer.set_text('Block ' + str(shot + 1) + ' Secured', 2)
+            self.game.update_lamps()
 
             if not any(self.shots_required):
                 # all shots hit already
                 self.round_complete()
         else:
             self.game.sound.play_voice('good shot')
-            self.game.update_lamps()
 
     def round_complete(self):
         self.game.score(10000)
