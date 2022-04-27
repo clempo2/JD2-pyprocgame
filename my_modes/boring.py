@@ -20,7 +20,7 @@ class Boring(Mode):
     def pause(self):
         self.cancel_delayed('timer')
 
-    def reset(self):
+    def reset(self, sw=None):
         self.cancel_delayed('timer')
         self.delay(name='timer', event_type=None, delay=20, handler=self.timer_expired)
 
