@@ -13,7 +13,7 @@ class RegularPlay(Mode):
         super(RegularPlay, self).__init__(game, priority)
 
         big_font = self.game.fonts['jazz18']
-        shoot_again_layer = TextLayer(128/2, 7, big_font, 'center').set_text('Shoot Again', 3)
+        shoot_again_layer = TextLayer(128/2, 7, big_font, 'center').set_text('Shoot Again', 99999999)
         script = [{'seconds':99999999.0, 'layer':shoot_again_layer}]
         self.shoot_again_intro = Introduction(self.game, priority + 1, delay=1.0)
         self.shoot_again_intro.setup(ScriptedLayer(width=128, height=32, script=script))

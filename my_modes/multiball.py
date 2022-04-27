@@ -60,6 +60,7 @@ class Multiball(Mode):
         self.game.base_play.display('Multiball')
         self.game.sound.play_voice('multiball')
         self.delay(name='multiball_instructions', event_type=None, delay=10, handler=self.multiball_instructions)
+        self.num_locks_lit = 0
         self.num_balls_locked = 0
         self.num_ramp_shots = 0
         self.ramp_shots_required = 1
@@ -88,7 +89,6 @@ class Multiball(Mode):
         self.state = 'load'
         self.cancel_delayed(['trip_check', 'multiball_instructions'])
         self.game.coils.flasherGlobe.disable()
-        self.num_locks_lit = 0
         self.jackpot_lit = False
         self.multiball_played = True
         self.game.addPlayerState('multiball_active', -0x1)
@@ -150,9 +150,10 @@ class Multiball(Mode):
             self.game.base_play.display('Lock is Lit')
             self.game.sound.play_voice('locks lit')
             self.game.update_lamps()
-        
+
     def ball_locked(self, launch_ball=True):
         # a ball was locked through a physical or a virtual lock
+        # This method can only be called when self.state is 'load'
         self.game.coils.flasherGlobe.schedule(schedule=0xAAAAAAAA, cycle_seconds=2, now=True)
 
         self.num_balls_locked += 1
@@ -175,6 +176,7 @@ class Multiball(Mode):
     def sneaky_lock(self):
         # A ball trickled into the ramp to lock when the physical lock is disabled
         # Award a lock light and eject the sneaky ball
+        # This method can only be called when self.state is 'load'
         self.game.set_status('Sneaky Lock')
         self.light_lock(sneaky_ball_adjust=1)
         self.game.deadworld.eject_balls(1, self.configure_lock)
@@ -201,10 +203,13 @@ class Multiball(Mode):
         self.light_lock()
 
     def sw_leftRampToLock_active(self, sw):
-        if self.physical_lock_enabled:
-            self.ball_locked()
+        if self.state == 'load':
+            if self.physical_lock_enabled:
+                self.ball_locked()
+            else:
+                self.sneaky_lock()
         else:
-            self.sneaky_lock()
+            self.game.deadworld.eject_balls(1)
 
     def sw_leftRampExit_active(self, sw):
         if self.state == 'load':
