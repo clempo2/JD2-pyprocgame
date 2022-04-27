@@ -11,6 +11,7 @@ class CityBlocks(Mode):
         self.city_block = CityBlock(self, priority + 1)
         self.block_war = BlockWar(self, priority + 5)
         self.block_war_bonus = BlockWarBonus(self, priority + 5)
+        self.ball_save_time = self.game.user_settings['Gameplay']['Block War ballsave time']
 
     def mode_started(self):
         self.start_city_block()
@@ -36,6 +37,8 @@ class CityBlocks(Mode):
         self.block_war.reset()
         self.start_multiball_callback()
         self.game.modes.add(self.block_war)
+        self.game.trough.launch_balls(1, self.game.no_op_callback)
+        self.game.ball_save_start(num_balls_to_save=2, time=self.ball_save_time, now=False, allow_multiple_saves=True)
         self.game.update_lamps()
 
     def start_block_war_bonus(self):
@@ -236,7 +239,6 @@ class BlockWar(CrimeSceneShots):
     def __init__(self, parent, priority):
         super(BlockWar, self).__init__(parent.game, priority)
         self.parent = parent
-        self.ball_save_time = self.game.user_settings['Gameplay']['Block War ballsave time']
 
         self.score_reason_layer = TextLayer(128/2, 7, self.game.fonts['07x5'], 'center')
         self.score_value_layer = TextLayer(128/2, 17, self.game.fonts['07x5'], 'center')
@@ -247,8 +249,6 @@ class BlockWar(CrimeSceneShots):
         self.game.addPlayerState('multiball_active', 0x2)
         self.game.base_play.display('Block War')
         self.game.sound.play_voice('block war')
-        self.game.trough.launch_balls(1, self.game.no_op_callback)
-        self.game.ball_save_start(num_balls_to_save=2, time=self.ball_save_time, now=False, allow_multiple_saves=True)
 
     def mode_stopped(self):
         self.game.addPlayerState('multiball_active', -0x2)
@@ -262,7 +262,7 @@ class BlockWar(CrimeSceneShots):
         if inc_num_shots:
             if self.num_shots_required_per_target < 4:
                 self.num_shots_required_per_target += 1
-        self.num_shots_required = [self.num_shots_required_per_target] * 5
+        self.shots_required = [self.num_shots_required_per_target] * 5
 
     def switch_hit(self, shot):
         if self.shots_required[shot] > 0:
