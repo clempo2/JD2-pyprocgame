@@ -72,9 +72,9 @@ class Deadworld(Mode):
                 self.prepare_eject()
 
     def prepare_eject(self):
-            # wait for the globe to be in its home position
-            self.preparing_eject = True
-            self.start_spinning()
+        # wait for the globe to be in its home position
+        self.preparing_eject = True
+        self.start_spinning()
 
     def sw_globePosition2_active(self, sw):
         if self.preparing_eject:
@@ -135,8 +135,8 @@ class Deadworld(Mode):
                 # keep searching
                 self.start_eject()
         elif self.num_balls_to_eject > 0:
-                # keep ejecting until finished
-                self.start_eject()
+            # keep ejecting until finished
+            self.start_eject()
         else:
             self.ejecting = False
             self.stowing_away = False

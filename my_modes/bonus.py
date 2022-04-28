@@ -3,9 +3,6 @@ from procgame.game import Mode
 class Bonus(Mode):
     """Display end of ball bonus"""
 
-    def __init__(self, game, priority):
-        super(Bonus, self).__init__(game, priority)
-
     def mode_started(self):
         self.game.stop_all_sounds()
         self.game.sound.play_voice('drain')

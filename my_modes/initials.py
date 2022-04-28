@@ -106,7 +106,7 @@ class JDInitialEntryMode(Mode):
         # we must explicitly cancel this delayed handler since it is removed within pyprocgame
         self.cancel_delayed('blink cursor')
 
-    def animate_to_index(self, new_index, inc = 0):
+    def animate_to_index(self, new_index, inc=0):
         letter_spread = 10
         letter_width = 5
         if inc < 0:
@@ -126,9 +126,9 @@ class JDInitialEntryMode(Mode):
                     index = index - len(self.letters)
                 self.letters_font.draw(frame, self.letters[index], 128/2 - offset * letter_spread - letter_width/2 + x, 1)
             # inverse the colors of the current index letter
-            for x in range(61, 69):
-                for y in range(0, 10):
-                    frame.set_dot(x, y, 15 - frame.get_dot(x, y))
+            for x2 in range(61, 69):
+                for y2 in range(0, 10):
+                    frame.set_dot(x2, y2, 15 - frame.get_dot(x2, y2))
             self.lowerhalf_layer.frames += [frame]
         self.current_letter_index = new_index
 

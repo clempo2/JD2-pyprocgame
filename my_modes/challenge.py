@@ -152,6 +152,9 @@ class ChallengeBase(TimedMode):
     def sw_dropTargetE_active_for_250ms(self, sw):
         self.drop_target_active()
 
+    def drop_target_active(self):
+        self.reset_drops()
+
     def reset_drops(self):
         self.game.coils.resetDropTarget.pulse(30)
 
@@ -169,9 +172,6 @@ class DarkJudge(ChallengeBase):
     def taunt(self):
         self.game.sound.play_voice(self.taunt_sound)
         self.delay(name='taunt', event_type=None, delay=20, handler=self.taunt)
-
-    def drop_target_active(self):
-        self.reset_drops()
 
     def check_for_completion(self):
         self.update_status()
@@ -549,7 +549,7 @@ class Celebration(ChallengeBase, CrimeSceneShots):
     def sw_captiveBall3_active(self, sw):
         self.switch_hit(15)
 
-    def switch_hit(self, unused): # unused variable is the shot number
+    def switch_hit(self, index):
         self.game.score(10000)
         self.num_shots += 1
         self.update_status()

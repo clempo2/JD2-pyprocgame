@@ -1,7 +1,8 @@
 from math import ceil
+import logging
 import os
-import pinproc
 import pygame.locals
+import pinproc
 from procgame.config import value_for_key_path
 from procgame.dmd import Frame, FrameLayer, MarkupFrameGenerator, ScriptedLayer
 from procgame.game import BasicGame, Mode, Player
@@ -17,7 +18,6 @@ from my_modes.deadworld import Deadworld, DeadworldTest
 from my_modes.initials import JDEntrySequenceManager
 from my_modes.switchmonitor import SwitchMonitor
 
-import logging
 logging.basicConfig(level=logging.ERROR, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 
 curr_file_path = os.path.dirname(os.path.abspath(__file__))
@@ -380,18 +380,18 @@ class JD2Game(BasicGame):
         classic_category.game_data_key = 'ClassicHighScoreData'
 
         blocks_category = self.create_high_score_category('BlocksHighScoreData', 'Block Champ', 'num_blocks', ' block')
-        innerLoops_category = self.create_high_score_category('InnerLoopsHighScoreData', 'Inner Loop Champ', 'best_inner_loops', ' loop')
-        outerLoops_category = self.create_high_score_category('OuterLoopsHighScoreData', 'Outer Loop Champ', 'best_outer_loops', ' loop')
+        inner_loops_category = self.create_high_score_category('InnerLoopsHighScoreData', 'Inner Loop Champ', 'best_inner_loops', ' loop')
+        outer_loops_category = self.create_high_score_category('OuterLoopsHighScoreData', 'Outer Loop Champ', 'best_outer_loops', ' loop')
 
-        self.highscore_categories = [classic_category, blocks_category, innerLoops_category, outerLoops_category]
+        self.highscore_categories = [classic_category, blocks_category, inner_loops_category, outer_loops_category]
 
         supergame_category = HighScoreCategory()
         supergame_category.game_data_key = 'SuperGameHighScoreData'
         supergame_category.titles = ['SuperGame Champion', 'SuperGame High Score #1', 'SuperGame High Score #2', 'SuperGame High Score #3', 'SuperGame High Score #4']
 
-        self.supergame_highscore_categories = [supergame_category, blocks_category, innerLoops_category, outerLoops_category]
+        self.supergame_highscore_categories = [supergame_category, blocks_category, inner_loops_category, outer_loops_category]
 
-        self.all_highscore_categories = [classic_category, supergame_category, blocks_category, innerLoops_category, outerLoops_category]
+        self.all_highscore_categories = [classic_category, supergame_category, blocks_category, inner_loops_category, outer_loops_category]
 
     def create_high_score_category(self, key, title, state_key, suffix):
         category = HighScoreCategory()
