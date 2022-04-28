@@ -17,7 +17,7 @@ class Deadworld(Mode):
         self.crane_release_sensitive = True
 
     def mode_started(self):
-        # when powering up the machine, position the crane in rest position (farthest from the ring) 
+        # when powering up the machine, position the crane in rest position (farthest from the ring)
         self.delay(name='start_crane', event_type=None, delay=0.2, handler=self.start_crane)
 
     def mode_stopped(self):
@@ -48,7 +48,7 @@ class Deadworld(Mode):
             self.searching_balls = True
             self.delay('stop_ball_search', event_type=None, delay=45, handler=self.stop_ball_search)
             self.init_eject()
-        
+
     def stop_ball_search(self):
         self.searching_balls = False
         self.cancel_delayed('stop_ball_search')
@@ -67,10 +67,10 @@ class Deadworld(Mode):
             # this flag tells the crane and crane magnet to activate at the proper time
             self.ejecting = True
             if self.game.switches.globePosition2.is_active():
-                self.start_eject() 
+                self.start_eject()
             else:
                 self.prepare_eject()
-            
+
     def prepare_eject(self):
             # wait for the globe to be in its home position
             self.preparing_eject = True
@@ -79,7 +79,7 @@ class Deadworld(Mode):
     def sw_globePosition2_active(self, sw):
         if self.preparing_eject:
             self.start_eject()
-      
+
     def start_eject(self):
         # the globe is in position 2, we can start the eject cycle
         # this code is slightly redundant on purpose to make it more resilient upon unforeseen error
@@ -151,7 +151,7 @@ class DeadworldTest(ServiceModeSkeleton):
     def __init__(self, game, priority, font):
         super(DeadworldTest, self).__init__(game, priority, font)
         self.name = 'DeadWorld Test'
-        
+
         self.title_layer = TextLayer(1, 1, font, 'left')
         self.title_layer.set_text(self.name)
 
@@ -184,7 +184,7 @@ class DeadworldTest(ServiceModeSkeleton):
             self.game.coils[coil_name].pulse(0)
         else:
             self.game.coils[coil_name].disable()
-        
+
     def sw_exit_active(self, sw):
         self.game.remove_modes([self])
         self.game.update_lamps()
@@ -244,7 +244,7 @@ class DeadworldTest(ServiceModeSkeleton):
     def set_texts(self):
         state = 'On' if self.crane_state else 'Off'
         self.arm_layer.set_text('SUPERGAME BTN: Crane:   ' + state)
-        
+
         state = 'On' if self.globe_state else 'Off'
         self.globe_layer.set_text('START BTN:      Globe:  ' + state)
 

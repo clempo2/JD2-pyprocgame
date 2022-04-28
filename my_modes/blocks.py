@@ -88,7 +88,7 @@ class CityBlock(CrimeSceneShots):
         self.parent = parent
 
         # we always award the most difficult target that remains in the current block
-        self.target_award_order = [1, 3 ,0, 2, 4]
+        self.target_award_order = [1, 3, 0, 2, 4]
         self.extra_ball_block = 4 # securing 4 blocks awards an extra ball
 
         difficulty = self.game.user_settings['Gameplay']['Block difficulty']
@@ -116,8 +116,8 @@ class CityBlock(CrimeSceneShots):
                 [0,1,2,3,4], [0,1,2,3,4], [0,1,2,3,4], [0,1,2,3,4]
             ]
             self.level_num_shots = [1, 1, 2, 2, 2, 3, 3, 3, 3, 3, 4, 4, 4, 4, 5, 5]
-            
-        self.block_outcome = ['Neutralized', 'Pacified', 'Secured'] 
+
+        self.block_outcome = ['Neutralized', 'Pacified', 'Secured']
 
     def reset(self):
         # force the mode to initialize at block 0 the next time it starts
@@ -173,8 +173,8 @@ class CityBlock(CrimeSceneShots):
     def block_complete(self):
         self.game.score(10000)
         self.game.lampctrl.play_show('advance_level', False, self.game.update_lamps)
-        self.game.addPlayerState('num_blocks', 1) 
-        num_blocks = self.game.getPlayerState('num_blocks', 0) 
+        self.game.addPlayerState('num_blocks', 1)
+        num_blocks = self.game.getPlayerState('num_blocks', 0)
 
         if num_blocks == self.extra_ball_block:
             self.game.base_play.light_extra_ball()
@@ -184,7 +184,7 @@ class CityBlock(CrimeSceneShots):
         else:
             # internally blocks start at 0, on the display blocks start at 1
             current_block = self.game.getPlayerState('current_block', -1)
-            
+
             shuffle(self.block_outcome)
             block_n_outcome = 'Block ' + str(current_block + 1) + ' ' + self.block_outcome[0]
             self.game.base_play.display(block_n_outcome, 10000)

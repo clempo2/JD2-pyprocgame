@@ -5,7 +5,7 @@ class StatusReport(Mode):
 
     def mode_started(self):
         self.game.base_play.display('Status')
-        
+
         player = self.game.current_player()
         num_blocks = player.getState('num_blocks', 0)
 
@@ -15,10 +15,10 @@ class StatusReport(Mode):
             {'text': 'Chain Features', 'value': player.getState('num_chain_features', 0)},
             {'text': 'Hurry Ups', 'value': player.getState('num_hurry_ups', 0)},
             {'text': 'Blocks', 'value': num_blocks}]
-        
+
         if num_blocks >= self.game.blocks_required:
             self.status_items += [{'text': 'Current Block', 'value': 1 + player.getState('current_block', 0)}]
-            
+
         self.status_items += [
             {'text': 'Blocks Remaining', 'value': self.game.blocks_required - player.getState('current_block', 0)},
             {'text': 'Inner Loop Combos', 'value': player.getState('best_inner_loops', 0)},

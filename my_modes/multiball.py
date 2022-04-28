@@ -22,7 +22,7 @@ class Multiball(Mode):
         self.num_locks_lit = player.getState('num_locks_lit', 0)
         self.multiball_played = player.getState('multiball_played', False)
         # multiball_jackpot_collected and multiball_active are accessed directly in the player state
-        
+
         if self.deadworld_mod_installed and self.game.deadworld.num_balls_locked < self.num_balls_locked:
             # The planet holds fewer balls than the player has locked balls.
             # The player must unfortunately re-lock the balls he lost to another player
@@ -66,7 +66,7 @@ class Multiball(Mode):
         self.ramp_shots_required = 1
         self.jackpot_lit = False
         self.disable_lock()
-        
+
         # launch the balls
         if self.deadworld_mod_installed:
             # all balls coming from deadworld planet
@@ -128,8 +128,8 @@ class Multiball(Mode):
                     dw_num_balls_locked > self.num_balls_locked):
             self.virtual_locks_needed = dw_num_balls_locked - self.num_balls_locked
         else:
-            self.virtual_locks_needed = 0    
-        
+            self.virtual_locks_needed = 0
+
         if self.num_balls_locked < self.num_locks_lit:
             self.enable_lock()
         else:
@@ -145,7 +145,7 @@ class Multiball(Mode):
 
     def light_lock(self, sneaky_ball_adjust=0):
         if self.state == 'load' and self.num_locks_lit < 3:
-            self.num_locks_lit = self.num_locks_lit + 1 if self.multiball_played else 3
+            self.num_locks_lit = self.num_locks_lit + (1 if self.multiball_played else 3)
             self.configure_lock(sneaky_ball_adjust)
             self.game.base_play.display('Lock is Lit')
             self.game.sound.play_voice('locks lit')

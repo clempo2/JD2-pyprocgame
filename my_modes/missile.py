@@ -104,7 +104,7 @@ class MissileAwardMode(Timer):
 
     def expired(self):
         self.layer = None
-        
+
     def rotate_awards(self):
         self.current_award_ptr = (self.current_award_ptr + randint(1, 4)) % len(self.available_awards)
         self.value_layer.set_text(self.available_awards[self.current_award_ptr])
@@ -112,7 +112,7 @@ class MissileAwardMode(Timer):
     def award(self):
         award = self.available_awards[self.current_award_ptr]
         self.game.base_play.display(award)
-        
+
         if award.endswith('Points'):
             award_words = award.rsplit(' ')
             points = award_words[0].replace(',', '')
@@ -128,7 +128,7 @@ class MissileAwardMode(Timer):
 
         if not self.repeatable_award[self.current_award_ptr]:
             self.available_awards[self.current_award_ptr] = self.game.format_points(10000*(self.current_award_ptr + 1)) + ' Points'
-            
+
         self.end_missile_award()
 
     def update_lamps(self):

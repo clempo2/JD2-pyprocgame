@@ -17,7 +17,7 @@ class RegularPlay(Mode):
         script = [{'seconds':99999999.0, 'layer':shoot_again_layer}]
         self.shoot_again_intro = Introduction(self.game, priority + 1, delay=1.0)
         self.shoot_again_intro.setup(ScriptedLayer(width=128, height=32, script=script))
-        
+
         self.chain = Chain(self.game, priority)
 
         self.city_blocks = CityBlocks(game, priority + 1)
@@ -124,7 +124,7 @@ class RegularPlay(Mode):
             else:
                 # player needs to shoot the right popper to start the next chain mode
                 self.state = 'chain_ready'
-                
+
         self.game.update_lamps()
 
     # starts a mode if a mode is available
@@ -238,6 +238,6 @@ class RegularPlay(Mode):
 
         style = 'slow' if self.state == 'chain_ready' or self.state == 'challenge_ready' else 'off'
         self.game.drive_lamp('rightStartFeature', style)
-        
+
         style = 'slow' if self.state == 'challenge_ready' else 'off'
         self.game.drive_lamp('ultChallenge', style)

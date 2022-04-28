@@ -108,7 +108,7 @@ class JD2Game(BasicGame):
         self.remove_all_modes()
         self.stop_all_sounds()
         self.sound.stop_music()
-        
+
         # Reset the entire game framework
         super(JD2Game, self).reset()
 
@@ -131,7 +131,7 @@ class JD2Game(BasicGame):
                      coils=self.ballsearch_coils, reset_switches=self.ballsearch_resetSwitches,
                      stop_switches=self.ballsearch_stopSwitches, special_handler_modes=[])
         self.disable_ball_search()
-        
+
         # Trough
         trough_switchnames = ['trough1', 'trough2', 'trough3', 'trough4', 'trough5', 'trough6']
         early_save_switchnames = ['outlaneR', 'outlaneL']
@@ -155,7 +155,7 @@ class JD2Game(BasicGame):
 
         # Make sure flippers are off, especially for user initiated resets.
         self.enable_flippers(enable=False)
-        
+
     # Empty callback
     def no_op_callback(self):
         pass
@@ -332,7 +332,7 @@ class JD2Game(BasicGame):
         # Let's keep the work-around simple and hardcode the value we expect in the yaml file
         self.volume_scale = 20.0
         self.volume_increments = 1
-        
+
         self.sound.music_volume_offset = self.user_settings['Machine']['Music volume offset'] / self.volume_scale
         self.sound.set_volume(self.user_settings['Machine']['Initial volume'] / self.volume_scale)
 
@@ -374,7 +374,7 @@ class JD2Game(BasicGame):
     #
     # High Scores
     #
-    
+
     def create_high_score_categories(self):
         classic_category = HighScoreCategory()
         classic_category.game_data_key = 'ClassicHighScoreData'
@@ -388,9 +388,9 @@ class JD2Game(BasicGame):
         supergame_category = HighScoreCategory()
         supergame_category.game_data_key = 'SuperGameHighScoreData'
         supergame_category.titles = ['SuperGame Champion', 'SuperGame High Score #1', 'SuperGame High Score #2', 'SuperGame High Score #3', 'SuperGame High Score #4']
-        
+
         self.supergame_highscore_categories = [supergame_category, blocks_category, innerLoops_category, outerLoops_category]
-        
+
         self.all_highscore_categories = [classic_category, supergame_category, blocks_category, innerLoops_category, outerLoops_category]
 
     def create_high_score_category(self, key, title, state_key, suffix):

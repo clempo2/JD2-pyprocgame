@@ -69,7 +69,7 @@ class Attract(Mode):
         self.credits_layer = FastPanningLayer(width=128, height=32, frame=credits_frame, origin=(0, 0), translate=(0, 1), bounce=False)
         self.judges_layer = self.game.animations['darkjudges']
         self.longwalk_layer = self.game.animations['longwalk']
-        
+
         instruct_frame = MarkupFrameGenerator().frame_for_markup("""
 
 
@@ -133,7 +133,7 @@ Collect a multiball jackpot
 
     def display(self):
         self.game.score_display.update_layer()
-        
+
         script = [
             {'seconds':3.0, 'layer':self.gun_layer},
             {'seconds':3.0, 'layer':self.jd_layer},
@@ -157,7 +157,7 @@ Collect a multiball jackpot
 
     def game_over_display(self):
         self.game.score_display.update_layer()
-        
+
         script = [
             {'seconds':3.4, 'layer':self.longwalk_layer}, # stop this anim early, Game Over font does not fit rest of the game
             {'seconds':3.0, 'layer':self.game_over_layer},
@@ -168,7 +168,7 @@ Collect a multiball jackpot
         self.reset_script(script)
         self.layer = ScriptedLayer(width=128, height=32, script=script)
         self.layer.on_complete = self.display
-        
+
     def instruction_display(self):
         script = [{'seconds':20.1, 'layer':self.instruct_layer}]
         self.reset_script(script)

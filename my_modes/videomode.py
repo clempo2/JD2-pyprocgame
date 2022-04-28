@@ -14,15 +14,15 @@ class ShootingGallery(Mode):
             self.bad_guy_shot = 'moo'
             cows_anim = self.game.animations['cows']
             image_frames = cows_anim.frames[0].create_frames_from_grid(2, 1)
-            self.all_friends = [image_frames[0]] * 4 
-            self.all_enemies = [image_frames[1]] * 4 
+            self.all_friends = [image_frames[0]] * 4
+            self.all_enemies = [image_frames[1]] * 4
         else:
             self.enemy_text = 'Shoot enemies'
             self.friend_text = 'Do NOT shoot friends'
             self.bad_guy_shot = 'bad guy shot'
             gallery_anim = self.game.animations['jdpeople']
             image_frames = gallery_anim.frames[0].create_frames_from_grid(6, 2)
-            self.all_enemies = image_frames[0:6] 
+            self.all_enemies = image_frames[0:6]
             self.all_friends = image_frames[6:12]
 
         self.scope_frames = self.game.animations['scopeandshot'].frames[0:4]

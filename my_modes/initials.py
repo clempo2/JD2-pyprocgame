@@ -31,7 +31,7 @@ class JDInitialEntryMode(Mode):
 
     char_back = '<'
     char_done = '='
-    
+
     max_length = 12
 
     init_font = None
@@ -137,7 +137,7 @@ class JDInitialEntryMode(Mode):
         while len(self.lowerhalf_layer.frames) > 15 and x < (len(self.lowerhalf_layer.frames)-1):
             del self.lowerhalf_layer.frames[x]
             x += 2
- 
+
     def draw_initials(self):
         # Draw the middle panel, with the selected initials in order
         self.inits_frame.clear()
@@ -155,7 +155,7 @@ class JDInitialEntryMode(Mode):
         self.cursor_visible = not self.cursor_visible
         self.draw_initials()
         self.delay(name='blink_cursor', event_type=None, delay=0.25, handler=self.blink_cursor)
-        
+
     def letter_increment(self, inc):
         new_index = (self.current_letter_index + inc)
         if new_index < 0:

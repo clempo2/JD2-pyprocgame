@@ -129,7 +129,7 @@ class BasePlay(Mode):
 
     def cancel_show_status_timer(self):
         self.cancel_delayed('show_status')
- 
+
     def start_show_status_timer(self):
         self.cancel_show_status_timer()
         self.delay('show_status', event_type=None, delay=6.0, handler=self.display_status_report)
@@ -407,7 +407,7 @@ class BasePlay(Mode):
             self.end_ball()
         else:
             self.game.modes.add(self.bonus)
-            
+
         self.game.update_lamps()
 
     # Final processing for the ball

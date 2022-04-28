@@ -30,7 +30,7 @@ class Bonus(Mode):
     def create_item(self, state, title, value):
         num = self.game.getPlayerState(state, 0)
         return [] if num == 0 else [{'text': self.format_text(num, title), 'points': num * value}]
-    
+
     def format_text(self, value, title):
         return str(value) + ' ' + title + ('s' if value > 1 else '')
 
