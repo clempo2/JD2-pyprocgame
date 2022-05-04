@@ -81,7 +81,7 @@ class TimedMode(Timer):
         self.name_layer = TextLayer(1, 1, font_small, 'left').set_text(name)
         self.score_layer = TextLayer(128/2, 10, font_num, 'center')
         self.status_layer = TextLayer(128/2, 26, font_small, 'center')
-        self.layer = GroupedLayer(128, 32, [self.countdown_layer, self.name_layer, self.score_layer, self.status_layer])
+        self.mode_layer = GroupedLayer(128, 32, [self.countdown_layer, self.name_layer, self.score_layer, self.status_layer])
 
     def mode_started(self):
         self.game.modes.add(self.intro)
@@ -94,6 +94,7 @@ class TimedMode(Timer):
 
     def intro_ended(self):
         self.game.remove_modes([self.intro])
+        self.layer = self.mode_layer
         if self.mode_time > 0:
             self.start_timer(self.mode_time)
         self.update_status()

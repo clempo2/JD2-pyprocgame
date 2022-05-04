@@ -1,5 +1,5 @@
 from random import shuffle
-from procgame.dmd import TextLayer
+from procgame.dmd import GroupedLayer, TextLayer
 from procgame.game import Mode
 from crimescenes import CrimeSceneShots
 from timer import TimedMode
@@ -17,13 +17,14 @@ class UltimateChallenge(Mode):
         self.celebration = Celebration(game, self.priority + 1)
 
         self.mode_list = [self.fear, self.mortis, self.death, self.fire, self.celebration]
-        for mode in self.mode_list:
-            mode.exit_callback = self.level_ended
+        for mode in self.mode_list[0:4]:
+            mode.exit_callback = self.judge_level_ended
+        self.celebration.exit_callback = self.end_challenge
 
     def mode_started(self):
         self.active_mode = self.game.getPlayerState('challenge_mode', 0)
         self.game.coils.resetDropTarget.pulse(30)
-        self.intentional_drain = False
+        self.continue_after_drain = False
         self.start_level()
 
     def mode_stopped(self):
@@ -42,23 +43,22 @@ class UltimateChallenge(Mode):
         self.game.sound.play_music('mode', loops=-1)
         self.mode_list[self.active_mode].ready()
 
-    def level_ended(self, success=True):
+    def judge_level_ended(self, success=True):
         self.game.ball_save.disable()
-        if success:
-            # drain intentionally before starting next mode
-            self.game.sound.fadeout_music()
-            self.intentional_drain = True
-            self.game.base_play.boring.pause()
-            # delay ball search, hopefully we can drain quietly before ball search triggers
-            self.game.ball_search.reset(None)
-        else:
-            # level failed because the timer expired
-            self.end_challenge()
+        self.game.sound.fadeout_music()
+
+        # drain intentionally
+        # delay ball search, hopefully we can drain quietly before ball search triggers
+        self.game.enable_flippers(False)
+        self.game.base_play.boring.pause()
+        self.game.ball_search.reset(None)
+        # success will start next level, failure will end player's turn
+        self.continue_after_drain = success
 
     def evt_ball_drained(self):
-        if self.intentional_drain:
+        if self.continue_after_drain:
             if self.game.trough.num_balls_in_play == 0:
-                self.intentional_drain = False
+                self.continue_after_drain = False
                 self.next_level()
                 # abort the event to ignore this drain
                 return True
@@ -70,7 +70,7 @@ class UltimateChallenge(Mode):
         self.start_level()
 
     def end_challenge(self):
-        # go back to regular play
+        # go back to regular play after Celebration
         self.game.remove_modes([self])
         self.game.update_lamps()
         self.exit_callback()
@@ -96,6 +96,9 @@ class ChallengeBase(TimedMode):
     def mode_started(self):
         super(ChallengeBase, self).mode_started()
         self.started = False
+        if self.initial_time > 0:
+            # display initial time without starting countdown
+            self.timer_update(self.initial_time)
         if self.num_balls > 1:
             self.game.addPlayerState('multiball_active', 0x8)
 
@@ -166,6 +169,14 @@ class DarkJudge(ChallengeBase):
         super(DarkJudge, self).__init__(game, priority, initial_time, instructions, num_shots_required, num_balls, ball_save_time)
         self.taunt_sound = self.name.lower() + ' - taunt'
 
+        self.text_layer = TextLayer(128/2, 7, self.game.fonts['tiny7'], 'center', opaque=True)
+        wait_layer = TextLayer(128/2, 20, self.game.fonts['tiny7'], 'center', opaque=False).set_text('Wait, balls draining...')
+        self.finish_layer = GroupedLayer(128, 32, [self.text_layer, wait_layer])
+
+    def mode_stopped(self):
+        super(DarkJudge, self).mode_stopped()
+        self.layer = None
+
     def expired(self):
         self.finish(success=False)
 
@@ -181,10 +192,9 @@ class DarkJudge(ChallengeBase):
     def finish(self, success):
         self.cancel_delayed('taunt')
         self.stop_timer()
-        self.game.enable_flippers(False)
         self.game.update_lamps()
-        text = self.name + ' Defeated' if success else 'You lose'
-        self.layer = TextLayer(128/2, 13, self.game.fonts['tiny7'], 'center', True).set_text(text)
+        self.text_layer.set_text(self.name + ' Defeated' if success else 'You lose')
+        self.layer = self.finish_layer
         if success:
             self.game.score(100000)
         self.exit_callback(success)
@@ -231,11 +241,12 @@ class Fear(DarkJudge):
             self.game.drive_lamp(lamp, style)
 
     def sw_mystery_active(self, sw):
-        self.game.sound.play('mystery')
-        if self.mystery_lit:
-            self.mystery_lit = False
-            self.reset_timer(2 * self.time_for_shot)
-            self.game.update_lamps()
+        if self.state != 'finished':
+            self.game.sound.play('mystery')
+            if self.mystery_lit:
+                self.mystery_lit = False
+                self.reset_timer(2 * self.time_for_shot)
+                self.game.update_lamps()
 
     def sw_leftRampExit_active(self, sw):
         if self.state == 'ramps' and self.active_ramp == 'left':
@@ -406,6 +417,7 @@ class Death(DarkJudge, CrimeSceneShots):
             self.add_shot()
 
     def finish(self, success):
+        # disable all shots, also disables all shot lamps
         self.active_shots = [0, 0, 0, 0, 0]
         super(Death, self).finish(success)
 
@@ -510,16 +522,21 @@ class Celebration(ChallengeBase, CrimeSceneShots):
         if (self.started and self.game.trough.num_balls_in_play == 1 and
              self.game.trough.num_balls_to_launch == 0):
             # down to just one ball, revert to regular play
-            self.exit_callback(False)
+            self.exit_callback()
         # else celebration continues until we are really down to the last ball
 
+    # shots 0 to 4 are crime scene shots
+
     def evt_shooterL_active_500ms(self):
-        self.switch_hit(6)
+        self.switch_hit(5)
 
     def sw_mystery_active(self, sw):
-        self.switch_hit(7)
+        self.switch_hit(6)
 
     def sw_leftScorePost_active(self, sw):
+        self.switch_hit(7)
+
+    def sw_leftRampExit_active(self, sw):
         self.switch_hit(8)
 
     def drop_target_active(self):
@@ -534,20 +551,23 @@ class Celebration(ChallengeBase, CrimeSceneShots):
     def sw_subwayEnter2_closed(self, sw):
         self.switch_hit(10)
 
-    def sw_rightTopPost_active(self, sw):
+    def sw_centerRampExit_active(self, sw):
         self.switch_hit(11)
 
-    def sw_threeBankTargets_active(self, sw):
+    def sw_rightTopPost_active(self, sw):
         self.switch_hit(12)
 
-    def sw_captiveBall1_active(self, sw):
+    def sw_threeBankTargets_active(self, sw):
         self.switch_hit(13)
 
-    def sw_captiveBall2_active(self, sw):
+    def sw_captiveBall1_active(self, sw):
         self.switch_hit(14)
 
-    def sw_captiveBall3_active(self, sw):
+    def sw_captiveBall2_active(self, sw):
         self.switch_hit(15)
+
+    def sw_captiveBall3_active(self, sw):
+        self.switch_hit(16)
 
     def switch_hit(self, index):
         self.game.score(10000)
