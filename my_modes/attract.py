@@ -201,11 +201,11 @@ Collect a multiball jackpot
 
     def sw_fireL_active(self, sw):
         self.game.sound.play_voice('attract')
-        self.layer.force_next(False)
+        self.layer.force_next(forward=False)
 
     def sw_fireR_active(self, sw):
         self.game.sound.play_voice('attract')
-        self.layer.force_next(True)
+        self.layer.force_next(forward=True)
 
     def sw_flipperLwL_active(self, sw):
         self.instruction_display()

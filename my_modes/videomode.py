@@ -46,6 +46,7 @@ class ShootingGallery(Mode):
     def intro(self):
         self.game.enable_flippers(False)
         self.status_layer = TextLayer(128/2, 7, self.game.fonts['jazz18'], 'center', opaque=False).set_text('Video Mode')
+
         self.intro_layer_0 = GroupedLayer(128, 32, [self.status_layer])
 
         self.intro_layer_11 = TextLayer(128/2, 7, self.game.fonts['07x5'], 'center').set_text(self.enemy_text)
@@ -56,16 +57,10 @@ class ShootingGallery(Mode):
         self.intro_layer_22 = TextLayer(128/2, 17, self.game.fonts['07x5'], 'center').set_text('Fire buttons shoot')
         self.intro_layer_2 = GroupedLayer(128, 32, [self.intro_layer_21, self.intro_layer_22])
 
-        self.intro_layer_3 = TextLayer(128/2, 7, self.game.fonts['jazz18'], 'center', opaque=False).set_text('Video Mode').set_text('Ready...')
-
-        self.intro_layer_4 = TextLayer(128/2, 7, self.game.fonts['jazz18'], 'center', opaque=False).set_text('Video Mode').set_text('Begin')
-
         self.layer = ScriptedLayer(128, 32, [
             {'seconds':3.0, 'layer':self.intro_layer_0},
             {'seconds':3.0, 'layer':self.intro_layer_1},
-            {'seconds':3.0, 'layer':self.intro_layer_2},
-            {'seconds':3.0, 'layer':self.intro_layer_3},
-            {'seconds':2.0, 'layer':self.intro_layer_4}])
+            {'seconds':3.0, 'layer':self.intro_layer_2}])
 
         self.layer.on_complete = self.start
 

@@ -158,9 +158,10 @@ class BasePlay(Mode):
         self.game.sound.play('ball_launch')
         self.play_animation('bikeacrosscity', frame_time=5)
 
-    # Enable auto-plunge soon after the new ball is launched (by the player).
     def sw_shooterR_inactive_for_1s(self, sw):
+        # Enable auto-plunge soon after the new ball is launched (by the player).
         self.auto_plunge = True
+
         if self.ball_starting:
             self.game.send_event('evt_ball_started')
             # send the event only once per ball
@@ -310,6 +311,7 @@ class BasePlay(Mode):
         self.game.sound.play('right_ramp')
         self.game.coils.flashersRtRamp.schedule(0x33333, cycle_seconds=1, now=False)
         self.game.score(2000)
+
     #
     # Slings
     #
@@ -411,10 +413,9 @@ class BasePlay(Mode):
         self.game.update_lamps()
 
     # Final processing for the ball
-    # If bonus was calculated, it is finished by now.
+    # If bonus was awarded (no tilt), it is finished by now.
     def end_ball(self):
-        self.game.remove_modes([self.bonus])
-        self.game.remove_modes([self.replay])
+        self.game.remove_modes([self.bonus, self.replay])
         self.game.update_lamps()
 
         self.game.enable_flippers(True)
@@ -422,9 +423,6 @@ class BasePlay(Mode):
         # Tell the game object it can process the end of ball
         # (to end player's turn or shoot again)
         self.game.end_ball()
-
-        # TODO: What if the ball doesn't make it into the shooter lane?
-        #       We should check for it on a later mode_tick() and possibly re-pulse.
 
     #
     # Bonus

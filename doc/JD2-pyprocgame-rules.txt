@@ -77,7 +77,7 @@ playfield is lit. Higher blocks require more shots to complete. Shooting the
 3 target bank in the center of the playfield 3 times awards one shot.
 Each shot to an active crime scene target awards 1,000 points, and each time
 a block is a completed 10,000 points are awarded. An extra ball is lit after
-completing 4 blocks. Completing all required blocks is needed before
+completing 6 blocks. Completing all required blocks is needed before
 Ultimate Challenge can be lit.
 
 Difficulty settings determine how many and which crime scene targets are set

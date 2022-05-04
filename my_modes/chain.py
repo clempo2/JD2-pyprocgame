@@ -584,7 +584,7 @@ class Safecracker(ChainFeature):
 
 
 class ManhuntMillions(ChainFeature):
-    """ManhuntMillions chain mode"""
+    """Manhunt Millions chain mode"""
 
     def __init__(self, game, priority):
         num_shots_required = self.pick_num_shots_required(game, {'easy':2, 'medium':3, 'hard':4})

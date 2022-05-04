@@ -77,9 +77,7 @@ class JD2Game(BasicGame):
         # Ignore pylint warning on next line, we by-pass immediate superclass intentionally
         super(BasicGame, self).load_config(path)
 
-        # Setup the key mappings from the config.yaml.
-        # We used to do this in __init__, but at that time the
-        # configuration isn't loaded so we can't peek into self.switches.
+        # Setup the key mappings from config.yaml.
         key_map_config = value_for_key_path(keypath='keyboard_switch_map', default={})
         if self.desktop:
             for k, v in key_map_config.items():
@@ -134,7 +132,7 @@ class JD2Game(BasicGame):
 
         # Trough
         trough_switchnames = ['trough1', 'trough2', 'trough3', 'trough4', 'trough5', 'trough6']
-        early_save_switchnames = ['outlaneR', 'outlaneL']
+        early_save_switchnames = ['outlaneL', 'outlaneR']
         self.ball_save = BallSave(self, self.lamps.drainShield, 'shooterR')
         self.ball_save.disable()
         self.trough = Trough(self, trough_switchnames, 'trough6', 'trough', early_save_switchnames, 'shooterR', self.no_op_callback)
@@ -142,12 +140,12 @@ class JD2Game(BasicGame):
         self.trough.num_balls_to_save = self.ball_save.get_num_balls_to_save
         self.ball_save.trough_enable_ball_save = self.trough.enable_ball_save
 
+        self.shooting_again = False
+
         # Instantiate basic game features
         self.attract = Attract(self)
         self.base_play = BasePlay(self)
         self.deadworld = Deadworld(self, 20)
-
-        self.shooting_again = False
 
         # Add the basic modes to the mode queue
         self.add_modes([self.switch_monitor, self.ball_search, self.deadworld, self.ball_save, self.trough, self.attract])
@@ -198,7 +196,7 @@ class JD2Game(BasicGame):
 
         # Add the first player
         self.add_player()
-        # Start the ball.  This includes ejecting a ball from the trough.
+        # Start the game modes, base_play will eject a ball from the trough
         self.start_ball()
 
     def ball_starting(self):
@@ -328,6 +326,7 @@ class JD2Game(BasicGame):
     def load_game_settings(self):
         self.load_settings(settings_template_path, settings_path)
 
+        # Work-around because the framework cannot handle settings with a floating point increment
         # GameController.load_settings() discarded the options and the increments already
         # Let's keep the work-around simple and hardcode the value we expect in the yaml file
         self.volume_scale = 20.0
@@ -336,6 +335,7 @@ class JD2Game(BasicGame):
         self.sound.music_volume_offset = self.user_settings['Machine']['Music volume offset'] / self.volume_scale
         self.sound.set_volume(self.user_settings['Machine']['Initial volume'] / self.volume_scale)
 
+        # read other game settings
         self.balls_per_game = self.user_settings['Gameplay']['Balls per game']
         self.score_display.set_left_players_justify(self.user_settings['Display']['Left side score justify'])
 
@@ -383,14 +383,12 @@ class JD2Game(BasicGame):
         inner_loops_category = self.create_high_score_category('InnerLoopsHighScoreData', 'Inner Loop Champ', 'best_inner_loops', ' loop')
         outer_loops_category = self.create_high_score_category('OuterLoopsHighScoreData', 'Outer Loop Champ', 'best_outer_loops', ' loop')
 
-        self.highscore_categories = [classic_category, blocks_category, inner_loops_category, outer_loops_category]
-
         supergame_category = HighScoreCategory()
         supergame_category.game_data_key = 'SuperGameHighScoreData'
         supergame_category.titles = ['SuperGame Champion', 'SuperGame High Score #1', 'SuperGame High Score #2', 'SuperGame High Score #3', 'SuperGame High Score #4']
 
+        self.highscore_categories = [classic_category, blocks_category, inner_loops_category, outer_loops_category]
         self.supergame_highscore_categories = [supergame_category, blocks_category, inner_loops_category, outer_loops_category]
-
         self.all_highscore_categories = [classic_category, supergame_category, blocks_category, inner_loops_category, outer_loops_category]
 
     def create_high_score_category(self, key, title, state_key, suffix):
@@ -502,10 +500,7 @@ class JD2Game(BasicGame):
 
     def enable_gi(self, on):
         for gi in ['gi01', 'gi02', 'gi03', 'gi04', 'gi05']:
-            if on:
-                self.lamps[gi].enable()
-            else:
-                self.lamps[gi].disable()
+            self.drive_lamp(gi, 'on' if on else 'off')
 
 def main():
     game = None

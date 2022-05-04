@@ -28,9 +28,9 @@ class CityBlocks(Mode):
 
     def city_blocks_completed(self):
         self.game.remove_modes([self.city_block])
-        self.game.update_lamps()
         self.game.setPlayerState('blocks_complete', True)
         self.game.base_play.regular_play.city_blocks_completed()
+        # lamps were updated by city_blocks_completed()
 
     def start_block_war(self):
         self.game.remove_modes([self.city_block])
@@ -55,9 +55,9 @@ class CityBlocks(Mode):
     def end_multiball(self):
         self.game.remove_modes([self.block_war, self.block_war_bonus])
         self.city_block.next_block()
-        # next_block updated the lamps
         self.start_city_block()
         self.end_multiball_callback()
+        # lamps were updated by end_multiball_callback()
 
     def evt_ball_drained(self):
         # End multiball if there is now only one ball in play
@@ -89,15 +89,15 @@ class CityBlock(CrimeSceneShots):
 
         # we always award the most difficult target that remains in the current block
         self.target_award_order = [1, 3, 0, 2, 4]
-        self.extra_ball_block = 4 # securing 4 blocks awards an extra ball
+        self.extra_ball_block = 6 # securing 6 blocks lights extra ball
 
         difficulty = self.game.user_settings['Gameplay']['Block difficulty']
         if difficulty == 'easy':
             self.level_pick_from = [
                 [2,4], [2,4], [2,4], [2,4],
-                [0,2,4], [0,2,4], [0,2,4], [0,2,4], [0,2,4], [0,2,4],
-                [0,2,3,4], [0,2,3,4], [0,2,3,4], [0,2,3,4],
-                [0,1,2,3,4], [0,1,2,3,4]
+                [0,2,4], [0,2,4], [0,2,4], [0,2,4],
+                [0,2,4], [0,2,4], [0,2,3,4], [0,2,3,4],
+                [0,2,3,4], [0,2,3,4], [0,1,2,3,4], [0,1,2,3,4]
             ]
             self.level_num_shots = [1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 5]
         elif difficulty == 'medium':
@@ -144,8 +144,8 @@ class CityBlock(CrimeSceneShots):
     def sw_threeBankTargets_active(self, sw):
         self.num_advance_hits += 1
         if self.num_advance_hits == 3:
-            self.award_one_hit()
             self.num_advance_hits = 0
+            self.award_one_hit()
         self.game.update_lamps()
 
     def award_one_hit(self):
@@ -184,7 +184,6 @@ class CityBlock(CrimeSceneShots):
         else:
             # internally blocks start at 0, on the display blocks start at 1
             current_block = self.game.getPlayerState('current_block', -1)
-
             shuffle(self.block_outcome)
             block_n_outcome = 'Block ' + str(current_block + 1) + ' ' + self.block_outcome[0]
             self.game.base_play.display(block_n_outcome, 10000)
@@ -220,7 +219,7 @@ class CityBlock(CrimeSceneShots):
     #
 
     def update_lamps(self):
-        styles = ['on', 'slow', 'fast', 'off']
+        styles = ['on', 'slow', 'fast']
         style = styles[self.num_advance_hits]
         self.game.drive_lamp('advanceCrimeLevel', style)
 
