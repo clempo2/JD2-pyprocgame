@@ -216,6 +216,12 @@ class JD2Game(BasicGame):
         # but I don't think anybody will complain!
         self.ball_save.start(num_balls_to_save, 2 + time, now, allow_multiple_saves)
 
+    def num_balls_in_play(self):
+        # work-around for missing functionality in Trough
+        # This function returns how many balls the game has put in play including those not yet launched
+        # whereas trough.num_balls_in_play is how many balls are in play already on the playfield
+        return self.trough.num_balls_in_play + self.trough.num_balls_to_launch
+
     def launch_balls(self, balls_to_launch):
         # launch balls from the trough if it has sufficient balls, else eject additional balls from Deadworld
         trough_balls = self.trough.num_balls()

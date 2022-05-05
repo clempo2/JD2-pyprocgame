@@ -37,7 +37,7 @@ class CityBlocks(Mode):
         self.block_war.reset()
         self.start_multiball_callback()
         self.game.modes.add(self.block_war)
-        self.game.trough.launch_balls(1, self.game.no_op_callback)
+        self.game.launch_balls(1)
         self.game.ball_save_start(num_balls_to_save=2, time=self.ball_save_time, now=False, allow_multiple_saves=True)
         self.game.update_lamps()
 

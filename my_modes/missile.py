@@ -10,8 +10,9 @@ class MissileAwardMode(Timer):
         super(MissileAwardMode, self).__init__(game, priority)
         self.timer_delay = 0.2
 
-        self.video_mode_setting = self.game.user_settings['Gameplay']['Video mode'] != 'off'
-        if self.video_mode_setting:
+        self.video_mode_setting = self.game.user_settings['Gameplay']['Video mode']
+        self.video_mode_enabled = self.video_mode_setting != 'off'
+        if self.video_mode_enabled:
             self.video_mode = ShootingGallery(self.game, priority + 11, self.video_mode_setting)
             self.video_mode.on_complete = self.video_mode_complete
 
@@ -62,7 +63,7 @@ class MissileAwardMode(Timer):
         if self.timer > 3:
             self.reset_timer(3, self.timer_delay)
         elif self.timer == 0:
-            self.launch_ball()
+            self.eject_ball()
 
     def start_missile_award(self):
         self.game.sound.stop_music()
@@ -70,7 +71,7 @@ class MissileAwardMode(Timer):
         # first award is video mode (if enabled in the settings)
         # but keep video mode for later if another mode is running
         # this way we don't pause the running mode for too long
-        video_mode_lit = self.game.getPlayerState('video_mode_lit', self.video_mode_setting)
+        video_mode_lit = self.game.getPlayerState('video_mode_lit', self.video_mode_enabled)
         if video_mode_lit and not self.game.getPlayerState('chain_active', 0):
             self.game.setPlayerState('video_mode_lit', False)
             self.game.modes.add(self.video_mode)
@@ -83,7 +84,7 @@ class MissileAwardMode(Timer):
 
     def video_mode_complete(self, success):
         self.game.remove_modes([self.video_mode])
-        self.launch_ball()
+        self.eject_ball()
         if success:
             self.game.base_play.light_extra_ball()
         self.end_missile_award()
@@ -97,7 +98,7 @@ class MissileAwardMode(Timer):
 
     def timer_update(self, time):
         if time == 3:
-            self.launch_ball()
+            self.eject_ball()
             self.award()
         elif time > 10:
             self.rotate_awards()
@@ -135,5 +136,5 @@ class MissileAwardMode(Timer):
         style = 'medium' if self.missile_award_lit else 'off'
         self.game.drive_lamp('airRaid', style)
 
-    def launch_ball(self):
+    def eject_ball(self):
         self.game.coils.shooterL.pulse(randint(15, 30))

@@ -78,7 +78,7 @@ class Multiball(Mode):
             # 1 ball from the planet and 2 from the trough
             self.game.deadworld.eject_balls(1)
             self.game.ball_save.start_lamp()
-            self.game.trough.launch_balls(2, self.game.no_op_callback)
+            self.game.launch_balls(2)
 
         self.game.ball_save_start(num_balls_to_save=3, time=self.ball_save_time, now=True, allow_multiple_saves=True)
         self.start_callback()
@@ -99,7 +99,7 @@ class Multiball(Mode):
     def evt_ball_drained(self):
         # End multiball if there is now only one ball in play
         if self.state == 'multiball':
-            if self.game.trough.num_balls_in_play == 1:
+            if self.game.num_balls_in_play() == 1:
                 self.end_multiball()
 
     def multiball_instructions(self):

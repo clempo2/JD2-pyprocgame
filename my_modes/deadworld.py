@@ -24,6 +24,7 @@ class Deadworld(Mode):
         # remove the switch rule
         self.install_rule(auto_disable=False)
         self.stop_spinning()
+        self.game.coils.crane.disable()
 
     def start_spinning(self, auto_stop=False):
         self.install_rule(auto_stop)

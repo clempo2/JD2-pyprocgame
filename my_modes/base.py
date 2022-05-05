@@ -51,8 +51,7 @@ class BasePlay(Mode):
         self.game.coils.flasherPursuitL.schedule(0x00001010, cycle_seconds=1, now=False)
         self.game.coils.flasherPursuitR.schedule(0x00000101, cycle_seconds=1, now=False)
 
-        # must pass a no-op callback, passing None keeps the previous callback
-        self.game.trough.launch_balls(1, self.game.no_op_callback)
+        self.game.launch_balls(1)
         self.game.trough.drain_callback = self.drain_callback
         self.game.ball_save.callback = self.ball_save_callback
         self.ball_starting = True
@@ -353,7 +352,7 @@ class BasePlay(Mode):
 
     def outlane_hit(self):
         self.game.score(1000)
-        if self.game.trough.num_balls_in_play > 1 or self.game.trough.ball_save_active:
+        if self.game.num_balls_in_play() > 1 or self.game.trough.ball_save_active:
             self.game.sound.play('outlane')
         else:
             self.game.sound.play_voice('curse')
@@ -388,7 +387,7 @@ class BasePlay(Mode):
                 # drain was intentional, ignore it
                 return
 
-        if self.game.trough.num_balls_in_play == 0:
+        if self.game.num_balls_in_play() == 0:
             # End the ball
             if self.tilt.tilted:
                 self.tilt.tilt_delay(self.finish_ball)

@@ -28,13 +28,13 @@ class UltimateChallenge(Mode):
         self.start_level()
 
     def mode_stopped(self):
-        # when celebration was awarded, the next challenge starts from the beginning
+        # when Celebration was awarded, the next challenge starts from the beginning
         self.game.setPlayerState('challenge_mode', self.active_mode if self.active_mode < 4 else 0)
         self.game.remove_modes([self.mode_list[self.active_mode]])
 
     def start_level(self):
         self.game.enable_flippers(True)
-        if self.game.trough.num_balls_in_play == 0:
+        if self.game.num_balls_in_play() == 0:
             # serve one ball in the shooter lane and wait for player to plunge
             self.game.base_play.auto_plunge = False
             self.game.launch_balls(1)
@@ -57,7 +57,7 @@ class UltimateChallenge(Mode):
 
     def evt_ball_drained(self):
         if self.continue_after_drain:
-            if self.game.trough.num_balls_in_play == 0:
+            if self.game.num_balls_in_play() == 0:
                 self.continue_after_drain = False
                 self.next_level()
                 # abort the event to ignore this drain
@@ -127,7 +127,7 @@ class ChallengeBase(TimedMode):
 
         # launch remaining balls for the mode (if applicable)
         self.game.base_play.auto_plunge = True
-        balls_to_launch = self.num_balls - self.game.trough.num_balls_in_play
+        balls_to_launch = self.num_balls - self.game.num_balls_in_play()
         if balls_to_launch > 0:
             self.game.launch_balls(balls_to_launch)
 
@@ -324,6 +324,7 @@ class Mortis(DarkJudge):
         self.targets = [1, 1, 1, 1, 1]
 
     def timer_update(self, time):
+        # do not show a timer countdown on display
         pass
 
     def update_lamps(self):
@@ -400,14 +401,6 @@ class Death(DarkJudge, CrimeSceneShots):
             self.shot_timer = self.time_for_shot
             self.check_for_completion()
 
-    def add_shot(self):
-        for shot in self.shot_order:
-            if not self.active_shots[shot]:
-                self.active_shots[shot] = 1
-                self.num_shots -= 1
-                break
-        self.game.update_lamps()
-
     def decrement_timer(self):
         super(Death, self).decrement_timer()
         if self.shot_timer > 0:
@@ -415,6 +408,14 @@ class Death(DarkJudge, CrimeSceneShots):
         else:
             self.shot_timer = self.time_for_shot
             self.add_shot()
+
+    def add_shot(self):
+        for shot in self.shot_order:
+            if not self.active_shots[shot]:
+                self.active_shots[shot] = 1
+                self.num_shots -= 1
+                break
+        self.game.update_lamps()
 
     def finish(self, success):
         # disable all shots, also disables all shot lamps
@@ -441,6 +442,7 @@ class Fire(DarkJudge, CrimeSceneShots):
         self.shots_required = [2, 2, 2, 2, 2]
 
     def timer_update(self, time):
+        # do not show a timer countdown on display
         pass
 
     def update_lamps(self):
@@ -516,11 +518,8 @@ class Celebration(ChallengeBase, CrimeSceneShots):
         # The trough does not expect a multiball to start from 0 balls and gets confused,
         # It calls the end multiball callback when launching the first ball
         # thinking we got down to 1 ball when in fact we are going up to 6 balls.
-        # The ball saver might also bring back the second ball from the dead,
-        # so wait until the first ball is in play and we requested all the balls we wanted
-        # and we are indeed on the last ball.
-        if (self.started and self.game.trough.num_balls_in_play == 1 and
-             self.game.trough.num_balls_to_launch == 0):
+        # The work-around is to implement the end multiball callback ourselves
+        if (self.started and self.game.num_balls_in_play() == 1):
             # down to just one ball, revert to regular play
             self.exit_callback()
         # else celebration continues until we are really down to the last ball

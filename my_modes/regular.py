@@ -155,6 +155,7 @@ class RegularPlay(Mode):
 
     def multiball_starting(self):
         # Make sure no other multiball was already active before preparing for multiball.
+        # The caller must update multiball_active in the player state AFTER calling this callback.
         if not self.game.getPlayerState('multiball_active', 0):
             self.state = 'busy'
             self.game.sound.fadeout_music()
@@ -165,6 +166,7 @@ class RegularPlay(Mode):
             self.game.update_lamps()
 
     def multiball_ended(self):
+        # The caller must update multiball_active in the player state BEFORE calling this callback.
         if not self.game.getPlayerState('multiball_active', 0):
             self.game.modes.add(self.missile_award_mode)
         self.setup_next_mode()
@@ -215,8 +217,9 @@ class RegularPlay(Mode):
                     self.game.set_status('+10 second ball saver')
                     self.game.ball_save.add(10)
                 else:
-                    self.game.set_status('save ' + str(self.game.trough.num_balls_in_play) + ' balls')
-                    self.game.ball_save_start(num_balls_to_save=self.game.trough.num_balls_in_play, time=10, now=True, allow_multiple_saves=True)
+                    num_balls_in_play = self.game.num_balls_in_play()
+                    self.game.set_status('save ' + str(num_balls_in_play) + ' balls')
+                    self.game.ball_save_start(num_balls_to_save=num_balls_in_play, time=10, now=True, allow_multiple_saves=True)
 
             elif self.game.getPlayerState('chain_active', 0):
                 self.chain.mode.add_time(10)
