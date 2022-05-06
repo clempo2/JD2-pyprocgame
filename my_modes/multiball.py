@@ -55,7 +55,7 @@ class Multiball(Mode):
         self.game.setPlayerState('multiball_jackpot_collected', False)
 
     def start_multiball(self):
-        # start a 3 ball multiball
+        # start a stackable 3 ball multiball
         self.state = 'multiball'
         self.game.base_play.display('Multiball')
         self.game.sound.play_voice('multiball')
@@ -77,10 +77,13 @@ class Multiball(Mode):
         else:
             # 1 ball from the planet and 2 from the trough
             self.game.deadworld.eject_balls(1)
-            self.game.ball_save.start_lamp()
             self.game.launch_balls(2)
 
-        self.game.ball_save_start(num_balls_to_save=3, time=self.ball_save_time, now=True, allow_multiple_saves=True)
+        if self.game.getPlayerState('multiball_active', 0):
+            # launch one more ball to add 3 balls in total when stacked with an already running multiball
+            self.game.launch_balls(1)
+
+        self.game.ball_save_start(time=self.ball_save_time, now=True, allow_multiple_saves=True)
         self.start_callback()
         self.game.addPlayerState('multiball_active', 0x1)
         self.game.update_lamps()
@@ -99,7 +102,7 @@ class Multiball(Mode):
     def evt_ball_drained(self):
         # End multiball if there is now only one ball in play
         if self.state == 'multiball':
-            if self.game.num_balls_in_play() == 1:
+            if self.game.num_balls_active() == 1:
                 self.end_multiball()
 
     def multiball_instructions(self):

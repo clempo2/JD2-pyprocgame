@@ -98,7 +98,7 @@ class RegularPlay(Mode):
     def evt_ball_started(self):
         ball_save_time = self.game.user_settings['Gameplay']['New ball ballsave time']
         repeating_ballsave = self.game.user_settings['Gameplay']['New ball repeating ballsave']
-        self.game.ball_save_start(num_balls_to_save=1, time=ball_save_time, now=True, allow_multiple_saves=repeating_ballsave)
+        self.game.ball_save_start(time=ball_save_time, now=True, allow_multiple_saves=repeating_ballsave)
         self.game.remove_modes([self.shoot_again_intro])
         self.game.update_lamps()
 
@@ -217,15 +217,14 @@ class RegularPlay(Mode):
                     self.game.set_status('+10 second ball saver')
                     self.game.ball_save.add(10)
                 else:
-                    num_balls_in_play = self.game.num_balls_in_play()
-                    self.game.set_status('save ' + str(num_balls_in_play) + ' balls')
-                    self.game.ball_save_start(num_balls_to_save=num_balls_in_play, time=10, now=True, allow_multiple_saves=True)
+                    self.game.set_status('save ' + self.game.num_balls_active() + ' balls')
+                    self.game.ball_save_start(time=10, now=True, allow_multiple_saves=True)
 
             elif self.game.getPlayerState('chain_active', 0):
                 self.chain.mode.add_time(10)
                 self.game.set_status('Adding 10 seconds')
             else:
-                self.game.ball_save_start(num_balls_to_save=1, time=10, now=True, allow_multiple_saves=True)
+                self.game.ball_save_start(time=10, now=True, allow_multiple_saves=True)
                 self.game.set_status('10 second ball saver')
                 self.missile_award_mode.light_missile_award()
 

@@ -204,8 +204,10 @@ class JD2Game(BasicGame):
         self.modes.add(self.base_play)
         self.update_lamps()
 
-    def ball_save_start(self, num_balls_to_save, time, now, allow_multiple_saves):
+    def ball_save_start(self, time, now, allow_multiple_saves):
         # work-around for ball_save.start() that always adds to the timer
+        # We assume the number of balls to save is the number of active balls
+        # so launch the balls if applicable before calling this method.
         self.ball_save.timer = 0
         # Normally, the 2sec grace period is included in the ball save time
         # as evidenced by the Drain Shield lamp turning off 2sec before the timer expires.
@@ -214,12 +216,11 @@ class JD2Game(BasicGame):
         # and the Drain Shield light will now turn off at the time given.
         # The player gets 2sec extra ball save time compared to the configured setting,
         # but I don't think anybody will complain!
-        self.ball_save.start(num_balls_to_save, 2 + time, now, allow_multiple_saves)
+        self.ball_save.start(self.num_balls_active(), 2 + time, now, allow_multiple_saves)
 
-    def num_balls_in_play(self):
-        # work-around for missing functionality in Trough
+    def num_balls_active(self):
         # This function returns how many balls the game has put in play including those not yet launched
-        # whereas trough.num_balls_in_play is how many balls are in play already on the playfield
+        # whereas trough.num_balls_in_play is how many balls are in play already on the playfield.
         return self.trough.num_balls_in_play + self.trough.num_balls_to_launch
 
     def launch_balls(self, balls_to_launch):

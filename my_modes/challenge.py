@@ -34,7 +34,7 @@ class UltimateChallenge(Mode):
 
     def start_level(self):
         self.game.enable_flippers(True)
-        if self.game.num_balls_in_play() == 0:
+        if self.game.num_balls_active() == 0:
             # serve one ball in the shooter lane and wait for player to plunge
             self.game.base_play.auto_plunge = False
             self.game.launch_balls(1)
@@ -57,7 +57,7 @@ class UltimateChallenge(Mode):
 
     def evt_ball_drained(self):
         if self.continue_after_drain:
-            if self.game.num_balls_in_play() == 0:
+            if self.game.num_balls_active() == 0:
                 self.continue_after_drain = False
                 self.next_level()
                 # abort the event to ignore this drain
@@ -119,18 +119,17 @@ class ChallengeBase(TimedMode):
 
     def start(self):
         # the first ball is now in play (popped from popperR or plunged by player)
-        if self.ball_save_time > 0:
-            self.game.ball_save_start(num_balls_to_save=self.num_balls, time=self.ball_save_time, now=True, allow_multiple_saves=True)
-
-        if self.initial_time > 0:
-            self.start_timer(self.initial_time)
-
         # launch remaining balls for the mode (if applicable)
         self.game.base_play.auto_plunge = True
-        balls_to_launch = self.num_balls - self.game.num_balls_in_play()
+        balls_to_launch = self.num_balls - self.game.num_balls_active()
         if balls_to_launch > 0:
             self.game.launch_balls(balls_to_launch)
 
+        if self.ball_save_time > 0:
+            self.game.ball_save_start(time=self.ball_save_time, now=True, allow_multiple_saves=True)
+
+        if self.initial_time > 0:
+            self.start_timer(self.initial_time)
         self.started = True
 
     def sw_shooterR_inactive_for_900ms(self, sw):
@@ -519,7 +518,7 @@ class Celebration(ChallengeBase, CrimeSceneShots):
         # It calls the end multiball callback when launching the first ball
         # thinking we got down to 1 ball when in fact we are going up to 6 balls.
         # The work-around is to implement the end multiball callback ourselves
-        if (self.started and self.game.num_balls_in_play() == 1):
+        if (self.started and self.game.num_balls_active() == 1):
             # down to just one ball, revert to regular play
             self.exit_callback()
         # else celebration continues until we are really down to the last ball

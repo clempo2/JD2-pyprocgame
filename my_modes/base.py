@@ -352,7 +352,7 @@ class BasePlay(Mode):
 
     def outlane_hit(self):
         self.game.score(1000)
-        if self.game.num_balls_in_play() > 1 or self.game.trough.ball_save_active:
+        if self.game.num_balls_active() > 1 or self.game.trough.ball_save_active:
             self.game.sound.play('outlane')
         else:
             self.game.sound.play_voice('curse')
@@ -387,7 +387,7 @@ class BasePlay(Mode):
                 # drain was intentional, ignore it
                 return
 
-        if self.game.num_balls_in_play() == 0:
+        if self.game.num_balls_active() == 0:
             # End the ball
             if self.tilt.tilted:
                 self.tilt.tilt_delay(self.finish_ball)

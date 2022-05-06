@@ -36,9 +36,11 @@ class CityBlocks(Mode):
         self.game.remove_modes([self.city_block])
         self.block_war.reset()
         self.start_multiball_callback()
+        # launch 2 balls when stacked with an already running multiball,
+        # otherwise launch another ball for a 2 ball multiball
+        self.game.launch_balls(2 if self.game.getPlayerState('multiball_active', 0) else 1)
+        self.game.ball_save_start(time=self.ball_save_time, now=False, allow_multiple_saves=True)
         self.game.modes.add(self.block_war)
-        self.game.launch_balls(1)
-        self.game.ball_save_start(num_balls_to_save=2, time=self.ball_save_time, now=False, allow_multiple_saves=True)
         self.game.update_lamps()
 
     def start_block_war_bonus(self):
