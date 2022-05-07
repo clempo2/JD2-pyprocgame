@@ -217,7 +217,7 @@ class RegularPlay(Mode):
                     self.game.set_status('+10 second ball saver')
                     self.game.ball_save.add(10)
                 else:
-                    self.game.set_status('save ' + self.game.num_balls_active() + ' balls')
+                    self.game.set_status('save ' + self.game.num_balls_requested() + ' balls')
                     self.game.ball_save_start(time=10, now=True, allow_multiple_saves=True)
 
             elif self.game.getPlayerState('chain_active', 0):

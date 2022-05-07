@@ -216,12 +216,14 @@ class JD2Game(BasicGame):
         # and the Drain Shield light will now turn off at the time given.
         # The player gets 2sec extra ball save time compared to the configured setting,
         # but I don't think anybody will complain!
-        self.ball_save.start(self.num_balls_active(), 2 + time, now, allow_multiple_saves)
+        self.ball_save.start(self.num_balls_requested(), 2 + time, now, allow_multiple_saves)
 
-    def num_balls_active(self):
-        # This function returns how many balls the game has put in play including those not yet launched
-        # whereas trough.num_balls_in_play is how many balls are in play already on the playfield.
-        return self.trough.num_balls_in_play + self.trough.num_balls_to_launch
+    def num_balls_requested(self):
+        # Return the number of balls the game wants in play, this includes the balls
+        # that are already in play plus those the game asked to add to the playfield
+        # either by launching new balls or ejecting balls from the planet.
+        # It does not count the balls that are locked.
+        return self.trough.num_balls_in_play + self.trough.num_balls_to_launch + self.deadworld.num_balls_to_eject
 
     def launch_balls(self, balls_to_launch):
         # launch balls from the trough if it has sufficient balls, else eject additional balls from Deadworld

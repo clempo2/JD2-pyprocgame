@@ -67,7 +67,7 @@ class Multiball(Mode):
         self.jackpot_lit = False
         self.disable_lock()
 
-        # launch the balls
+        # launch the balls for a 3 ball multiball and up to 4 balls when stacked with BlockWar
         if self.deadworld_mod_installed:
             # all balls coming from deadworld planet
             self.game.deadworld.eject_balls(3)
@@ -78,10 +78,6 @@ class Multiball(Mode):
             # 1 ball from the planet and 2 from the trough
             self.game.deadworld.eject_balls(1)
             self.game.launch_balls(2)
-
-        if self.game.getPlayerState('multiball_active', 0):
-            # launch one more ball to add 3 balls in total when stacked with an already running multiball
-            self.game.launch_balls(1)
 
         self.game.ball_save_start(time=self.ball_save_time, now=True, allow_multiple_saves=True)
         self.start_callback()
@@ -102,7 +98,7 @@ class Multiball(Mode):
     def evt_ball_drained(self):
         # End multiball if there is now only one ball in play
         if self.state == 'multiball':
-            if self.game.num_balls_active() == 1:
+            if self.game.num_balls_requested() == 1:
                 self.end_multiball()
 
     def multiball_instructions(self):
