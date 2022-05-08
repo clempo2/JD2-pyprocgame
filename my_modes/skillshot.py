@@ -19,7 +19,8 @@ class SkillShot(Mode):
         self.game.sound.stop('good shot')
         self.game.sound.play('good shot')
         self.shots_hit += 1
-        points = self.shots_hit * 5000
+        points = self.shots_hit * 10000
+        self.game.score(points)
         self.game.base_play.display('Skill Shot', points)
         self.cancel_delayed('skill_shot_delay')
         self.delay(name='skill_shot_delay', event_type=None, delay=3.0, handler=self.skill_shot_expired)
