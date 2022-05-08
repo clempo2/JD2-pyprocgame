@@ -205,25 +205,24 @@ class JD2Game(BasicGame):
         self.update_lamps()
 
     def ball_save_start(self, time, now, allow_multiple_saves):
-        # work-around for ball_save.start() that always adds to the timer
-        # We assume the number of balls to save is the number of active balls
-        # so launch the balls if applicable before calling this method.
-        self.ball_save.timer = 0
+        # We assume the number of balls to save is the number of balls requested by the game,
+        # so launch the balls and/or eject from the planet if applicable before calling this method.
+        #
         # Normally, the 2sec grace period is included in the ball save time
         # as evidenced by the Drain Shield lamp turning off 2sec before the timer expires.
         # This is apparent when looking at the countdown timer of a timed mode and looks like a bug.
         # By adding 2sec, we move the grace period after the ball save time,
         # and the Drain Shield light will now turn off at the time given.
-        # The player gets 2sec extra ball save time compared to the configured setting,
-        # but I don't think anybody will complain!
+        # That's the real definition of a grace period in my book.
         self.ball_save.start(self.num_balls_requested(), 2 + time, now, allow_multiple_saves)
 
     def num_balls_requested(self):
-        # Return the number of balls the game wants in play, this includes the balls
-        # that are already in play plus those the game asked to add to the playfield
-        # either by launching new balls or ejecting balls from the planet.
-        # It does not count the balls that are locked.
-        return self.trough.num_balls_in_play + self.trough.num_balls_to_launch + self.deadworld.num_balls_to_eject
+        # Return what the game considers is the number of balls in play.
+        # This includes the balls that are already in play plus those pending to be launched.
+        # It does not count locked balls but it does count balls pending to be ejected from the planet.
+        # That's because the planet immediately adds the balls to be ejected to the count of balls in play
+        # without waiting for the crane to release them.
+        return self.trough.num_balls_in_play + self.trough.num_balls_to_launch
 
     def launch_balls(self, balls_to_launch):
         # launch balls from the trough if it has sufficient balls, else eject additional balls from Deadworld

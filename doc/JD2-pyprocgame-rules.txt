@@ -17,35 +17,38 @@ There are 9 chain features, corresponding to the 9 inserts in the center of
 the playfield. Each feature represents a mode. The left and right Fire buttons
 change the next mode, as do the slingshots. The upper right 'build chain
 feature' shot is active when not already in a mode or in multiball.
-Shooting that shot starts the next mode. A video intro provides directions
-before the ball is put back into play. The video can be cancelled with
-the flipper buttons.
+Shooting that shot starts the next mode. Instructions for the mode appear
+briefly on the screen.
 
 Every time a mode is completed successfully, a 10-second hurryup countdown
 begins, and the D drop target is lowered to expose the subway shot.
 Shooting into the subway before the timer expires awards a block
 (explained below) or 10,000 points if all blocks are secured.
-If multiball was active, it awards an additional 100,000 points.
+If multiball is active, it awards an additional 100,000 points.
 
 The modes are timed. Hitting the Mystery target when lit while in a mode
-extends the mode timer by 10 seconds. Hitting the Mystery target when lit
-during the hurry-up countdown extends the hurry-up timer.
+extends the mode timer by 10 seconds. Similarly, hitting the Mystery target
+when lit during the hurry-up countdown extends the hurry-up timer by
+10 seconds.
 
 The number of shots required to complete a chain feature is determined by
-a user configurable setting.
+a user configurable difficulty setting. Each feature completed successfully
+awards 50,000 points (except for Blackout).
 
-Each attempted feature contributes 4,000 points to the bonus. Each feature
-completed successfully contributes 12,000 to the bonus. This bonus contribution
-is not reset between balls.
+Each attempted feature contributes 4,000 points to the bonus. Each successful
+hurry up contributes 12,000 to the bonus. This bonus contribution is not
+reset between balls.
 
 ==== Pursuit ====
 Left and right ramps are lit with Pursuit flashers flashing.
 
 ==== Blackout ====
 GI turns off. Left center ramp is lit with Blackout flasher flashing.
-For the last required shot, the left center ramp re-lights for a double award
-(2x Blackout flasher also flashes). The double award is required for mode
-completion.
+When two shots are required, the first shot awards 20,000 points.
+When three shots are required, the first shot awards 10,000 points
+and the second shot awards 20,000 points. For the last shot, the left
+center ramp re-lights for a double award (2x Blackout flasher also flashes)
+worth 40,000 points. The double award is required for mode completion.
 
 ==== Sniper ====
 Shoot the upper right VUK repeatedly to locate and kill the 'bad guy' sniper.
@@ -80,7 +83,7 @@ a block is a completed 10,000 points are awarded. An extra ball is lit after
 completing 6 blocks. Completing all required blocks is needed before
 Ultimate Challenge can be lit.
 
-Difficulty settings determine how many and which crime scene targets are set
+A difficulty settings determines how many and which crime scene targets are set
 for each block.
 
 The blocks are tracked in groups of 4. The 4 crime scene inserts
@@ -108,21 +111,27 @@ lights the jackpot. The number of required left ramp shots always starts at 1
 and increases by 1 for every jackpot collected. When the jackpot is lit,
 shoot the subway to collect 100,000 points.
 
-Deadworld Multiball can be started while a Chain Feature mode is active.
-When that happens, both the Chain Feature mode and multiball continue
-simultaneously.
+The balls are physically locked in the planet if the Deadworld mod is installed
+and a settings is enabled.
 
 A sneaky lock occurs when the ball trickles into the lock ramp without a
 lock lit. This awards a lock light but does not award a lock. The ball is
 ejected immediately.
+ 
+Deadworld Multiball can be started while a Chain Feature mode is active.
+When that happens, both the Chain Feature mode and multiball continue
+simultaneously.
+
+Deadworld Multiball and Block War Multiball can be stacked for a maximum
+of 4 balls in play.
 
 == Missile Launch Award ==
-Missile launch is fed via the center ramp. When missile launch is lit and
-the ball is in the left shooter lane, the DMD scrolls through a set of award.
-When the left shooter button is pressed, the active award is awarded.
+Missile launch is fed via the air raid ramp. When missile launch is lit and
+the ball is in the left shooter lane, the DMD scrolls through a set of awards.
+When the left fire button is pressed, the active award is awarded.
 Missile launch is lit when the ball enters the left shooter lane if
 Deadworld Multiball is not active. When lit, the Air Raid lamp flashes
-in front of the center ramp.
+in front of the ramp.
 
 Awards include:
 * Video mode
@@ -137,7 +146,6 @@ in which case it is kept for the next missile launch.
 Video mode can only be collected once per game.
 
 If all blocks are secured, Secure One Block is replaced with 50,000 points.
-
 After Light Extra Ball is collected, it is replaced with 20,000 points.
 After Hold Bonus Multiplier is collected, it is replaced with 50,000 points.
 Secure One Block, points and Increase Bonus Multiplier can be collected
@@ -204,11 +212,13 @@ requirements are met:
 * At least one Deadworld Multiball jackpot collected
 
 Once Ultimate Challenge is lit, a shot to the upper right 'build chain feature'
-shot initiates it. The player is presented with an Ultimate Challenge
-introduction with instructions before Level 1 begins. Each time a level
-is successfully completed, the machine goes dead, allowing all of the balls
-to drain. Then the player is presented with instructions for the next
-level before any balls are re-launched and put back into play.
+shot initiates it. At the start of each mode, instructions appear briefly on
+the screen.
+
+Each time a level is successfully completed, the machine goes dead,
+allowing all of the balls to drain. Then the next level starts with a ball
+served in the shooter lane waiting for the player to launch with the fire button.
+
 If all balls drain before the player completes a level, the player's
 ball ends and Ultimate Challenge is aborted. Re-lighting Ultimate Challenge
 requires the player to complete the 3 major requirements again.
@@ -222,10 +232,11 @@ Successfully completing a dark judge mode awards 100,000 points.
 Judge Fear is reigning terror on the city. This level uses timed shots to
 force the player to be accurate. This is a single ball mode with a temporary
 ball saver. Each of the following shots must be hit, in order, before a
-20-second shot timer expires: Left Ramp, Right Ramp, Left Ramp, Right Ramp,
-D drop target, Subway. Each shot resets the timer back to 20 seconds.
+short shot timer expires: Left Ramp, Right Ramp, Left Ramp, Right Ramp,
+D drop target, Subway. Each shot resets the timer back to its initial value.
 If the timer expires before a shot is hit, the game goes dead forcing the balls
-to drain and ending the player's turn. 
+to drain and ending the player's turn. The timer is configurable with a
+settings and defaults to 25 seconds.
 
 === Level 2: Mortis ===
 Judge Mortis is spreading disease throughout the city. This level is a 2-ball
@@ -242,14 +253,14 @@ the game goes dead forcing the balls to drain and ending the player's turn.
 
 === Level 4: Fire ===
 Judge Fire is lighting fires all over Mega City One. All 5 crime scene shots
-are flashing representing fires lit by Judge Fire. Hit a crime scene shot once
-to dampen the flame. Hit the shot again to fully extinguish the fire. This
+are flashing red representing fires lit by Judge Fire. Hit a crime scene shot
+once to dampen the flame. Hit the shot again to fully extinguish the fire. This
 level is a 4-ball multiball with no ball save. Hitting mystery adds two balls.
 The mode is completed successfully when the last fire is extinguished.
 There is no timer, the mode ends when the last ball is lost.
 
 === Final Level: Celebration ===
-All dark judges have been defeated and banished. This level is a 6 ball
+All dark judges have been defeated and banished. This level is a 6-ball
 multiball with all shots awarding 10,000 points. This mode (and subsequently
 the entire Ultimate Challenge) ends when there is only 1 ball remaining
 in play. The game then begins anew.
