@@ -60,8 +60,10 @@ class Combos(Mode):
             self.delay(name='outer_loop', event_type=None, delay=3.0, handler=self.outer_loop_combo_expired)
 
     def skill_shot_expired(self):
-        self.skill_shot_active = False
-        # outer loop remains active if applicable
+        # cancel the skill shot before the timer expires, for example when a ball is saved
+        if self.skill_shot_active:
+            self.cancel_delayed('outer_loop')
+            self.outer_loop_combo_expired()
 
     def inner_loop_combo_expired(self):
         self.inner_loop_active = False
@@ -69,7 +71,7 @@ class Combos(Mode):
         self.game.update_lamps()
 
     def outer_loop_combo_expired(self):
-        self.skill_shot_expired()
+        self.skill_shot_active = False
         self.outer_loop_active = False
         self.outer_loop_combos = 0
         self.game.update_lamps()
