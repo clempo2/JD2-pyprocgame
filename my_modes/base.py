@@ -7,7 +7,6 @@ from boring import Boring
 from challenge import UltimateChallenge
 from combos import Combos
 from regular import RegularPlay
-from skillshot import SkillShot
 from status import StatusReport
 from tilt import TiltMonitorMode
 
@@ -24,7 +23,6 @@ class BasePlay(Mode):
         self.combos = Combos(self.game, 28)
         self.status_report = StatusReport(self.game, 28)
         self.regular_play = RegularPlay(self.game, 8)
-        self.skill_shot = SkillShot(self.game, 13)
 
         self.bonus = Bonus(self.game, 8)
         self.bonus.exit_callback = self.end_ball
@@ -55,7 +53,6 @@ class BasePlay(Mode):
         self.game.trough.drain_callback = self.drain_callback
         self.game.ball_save.callback = self.ball_save_callback
         self.ball_starting = True
-        self.skill_shot_added = False
 
         # Enable ball search in case a ball gets stuck during gameplay.
         self.game.ball_search.enable()
@@ -73,7 +70,7 @@ class BasePlay(Mode):
             self.game.modes.add(self.regular_play)
 
     def mode_stopped(self):
-        self.game.remove_modes([self.skill_shot, self.display_mode, self.animation_mode])
+        self.game.remove_modes([self.display_mode, self.animation_mode])
         self.game.enable_flippers(False)
         self.game.disable_ball_search()
         self.game.trough.drain_callback = self.game.no_op_callback
@@ -168,7 +165,7 @@ class BasePlay(Mode):
 
     # event called when the ball is initially plunged by the player
     def evt_ball_started(self):
-        self.skill_shot.begin()
+        self.combos.skill_shot_begin()
         self.game.modes.add(self.boring)
         # Tell game to save ball start time now, since ball is now in play.
         self.game.save_ball_start_time()
@@ -176,15 +173,7 @@ class BasePlay(Mode):
     def sw_shooterR_active(self, sw):
         if self.ball_starting:
             self.game.sound.play_music('ball_launch', loops=-1)
-            # Start skill shot, but not if already started.  Ball
-            # might bounce on shooterR switch.  Don't want to
-            # use a delayed switch handler because player
-            # could launch ball immediately (before delay expires).
-            if not self.skill_shot_added:
-                self.game.modes.add(self.skill_shot)
-                self.skill_shot_added = True
-                self.game.update_lamps()
-
+ 
     def sw_shooterR_closed_for_700ms(self, sw):
         if self.auto_plunge:
             self.game.coils.shooterR.pulse(50)
@@ -376,7 +365,7 @@ class BasePlay(Mode):
     #
 
     def ball_save_callback(self):
-        self.skill_shot.skill_shot_expired()
+        self.combos.skill_shot_expired()
         if not self.game.getPlayerState('multiball_active', 0):
             self.game.sound.play_voice('ball saved')
             self.display('Ball Saved')
