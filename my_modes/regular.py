@@ -11,6 +11,8 @@ class RegularPlay(Mode):
 
     def __init__(self, game, priority):
         super(RegularPlay, self).__init__(game, priority)
+        self.ball_save_time = self.game.user_settings['Gameplay']['New ball ballsave time']
+        self.repeating_ballsave = self.game.user_settings['Gameplay']['New ball repeating ballsave']
 
         big_font = self.game.fonts['jazz18']
         shoot_again_layer = TextLayer(128/2, 7, big_font, 'center').set_text('Shoot Again', 99999999)
@@ -30,7 +32,7 @@ class RegularPlay(Mode):
 
         self.missile_award_mode = MissileAwardMode(game, priority + 10)
 
-    def reset_modes(self):
+    def reset(self):
         for mode in [self.chain, self.city_blocks, self.multiball, self.missile_award_mode]:
             mode.reset()
 
@@ -88,7 +90,7 @@ class RegularPlay(Mode):
                 text = 'High Score'
                 game_data_key = 'SuperGameHighScoreData' if self.game.supergame else 'ClassicHighScoreData'
                 high_score_data = self.game.game_data[game_data_key][0]
-                score = str(high_score_data['inits']) + '  {:,}'.format(high_score_data['score'])
+                score = str(high_score_data['inits']) + '  ' + self.game.format_points(high_score_data['score'])
             else:
                 text = 'Replay'
                 score = self.game.format_points(self.game.base_play.replay.replay_scores[0])
@@ -96,9 +98,7 @@ class RegularPlay(Mode):
             #self.game.base_play.display(text, score)
 
     def evt_ball_started(self):
-        ball_save_time = self.game.user_settings['Gameplay']['New ball ballsave time']
-        repeating_ballsave = self.game.user_settings['Gameplay']['New ball repeating ballsave']
-        self.game.ball_save_start(time=ball_save_time, now=True, allow_multiple_saves=repeating_ballsave)
+        self.game.ball_save_start(time=self.ball_save_time, now=True, allow_multiple_saves=self.repeating_ballsave)
         self.game.remove_modes([self.shoot_again_intro])
         self.game.update_lamps()
 
@@ -112,7 +112,7 @@ class RegularPlay(Mode):
         # a mode could still be running if modes were stacked, in that case do nothing and stay 'busy'
         if not (self.game.getPlayerState('multiball_active', 0) or self.game.getPlayerState('chain_active', 0)):
             self.game.sound.fadeout_music()
-            self.game.sound.play_music('background', loops=-1)
+            self.game.base_play.play_background_music()
 
             if self.is_ultimate_challenge_ready():
                 # player needs to shoot the right popper to start the finale
@@ -183,7 +183,7 @@ class RegularPlay(Mode):
 
     def start_ultimate_challenge(self):
         self.game.remove_modes([self.chain, self.city_blocks, self.multiball, self])
-        self.reset_modes()
+        self.reset()
         self.game.base_play.start_ultimate_challenge()
         # ultimate challenge updated the lamps
 

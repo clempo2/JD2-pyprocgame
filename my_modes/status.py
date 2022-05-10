@@ -17,6 +17,8 @@ class StatusReport(Mode):
             {'text': 'Blocks', 'value': num_blocks}]
 
         if num_blocks >= self.game.blocks_required:
+            # UltimateChallenge was played at least once,
+            # Show how many blocks count towards the next UltimateChallenge
             self.status_items += [{'text': 'Current Block', 'value': 1 + player.getState('current_block', 0)}]
 
         self.status_items += [

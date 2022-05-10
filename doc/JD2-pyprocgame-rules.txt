@@ -189,6 +189,9 @@ Shooting all 15 enemies awards 100,000 instead and lights an extra ball.
 After Video Mode ends, the ball is automatically launched back into play.
 
 == Miscellaneous Features ==
+A full shot to the captive balls, resulting in the 3rd switch being hit,
+lights the Mystery shot and increases the Bonus multiplier by 1X.
+
 Consecutive shots to the right loop from the upper left flipper are counted
 and awarded progressively higher points per shot. The player to achieve
 the most consecutive shots is the 'Outer Loop Champion'.
@@ -197,11 +200,10 @@ Similarly, consecutive shots to the inner left loop from the upper right
 flipper are counted and awarded progressively higher points per shot.
 The player to achieve the most consecutive shots is the 'Inner Loop Champion'.
 
-Full shots to the captive balls, resulting in the 3rd switch being hit,
-light the Mystery shot and increase the Bonus multiplier by 1X.
-
 For the skill shot, shoot the right loop from the upper flipper when
 the ball starts. Continue loop shots to receive increasing point awards.
+These loop shots contribute towards achieving the 'Outer Loop Champion'
+but are worth more points.
 
 == Ultimate Challenge ==
 Ultimate Challenge is a multi-stage wizard mode representing final battles

@@ -108,6 +108,13 @@ class BasePlay(Mode):
         self.animation_mode.play(anim, repeat=False, hold=False, frame_time=frame_time)
 
     #
+    # Sound
+    #
+
+    def play_background_music(self):
+        self.game.sound.play_music('background', loops=-1)
+
+    #
     # Status Report
     #
 
@@ -143,7 +150,7 @@ class BasePlay(Mode):
             self.game.coils.shooterR.pulse(50)
             if self.ball_starting:
                 self.game.sound.stop_music()
-                self.game.sound.play_music('background', loops=-1)
+                self.play_background_music()
 
 
     #
@@ -165,6 +172,8 @@ class BasePlay(Mode):
 
     # event called when the ball is initially plunged by the player
     def evt_ball_started(self):
+        # normally a skillshot would be a mode added here
+        # but for us the skillshot is the same as another mode with different scoring
         self.combos.skill_shot_begin()
         self.game.modes.add(self.boring)
         # Tell game to save ball start time now, since ball is now in play.

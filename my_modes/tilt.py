@@ -6,6 +6,7 @@ from procgame.game import Mode, SwitchStop
 
 class Tilted(Mode):
     """ Consumes all switch events to block scoring """
+
     def __init__(self, game):
         super(Tilted, self).__init__(game, priority=99999)
         always_seen_switches = self.game.switches.items_tagged('tilt_visible')
@@ -47,7 +48,8 @@ class TiltMonitorMode(Mode):
             self.add_switch_handler(name=tilt_sw, event_type='active', delay=None, handler=self.tilt_handler)
         if slam_tilt_sw:
             self.add_switch_handler(name=slam_tilt_sw, event_type='active', delay=None, handler=self.slam_tilt_handler)
-        self.num_tilt_warnings = 2
+
+        self.num_tilt_warnings = 2 # BasePlay overwrites this with the value of a settings
         self.tilt_bob_settle_time = 2.0
         self.tilted = False
 
@@ -64,7 +66,7 @@ class TiltMonitorMode(Mode):
 
     def tilt_handler(self, sw):
         now = time.time()
-        if(self.previous_warning_time is not None) and ((now - self.previous_warning_time) < self.tilt_bob_settle_time):
+        if (self.previous_warning_time is not None) and ((now - self.previous_warning_time) < self.tilt_bob_settle_time):
             # tilt bob still swinging from previous warning
             return
         else:

@@ -20,8 +20,7 @@ class Multiball(Mode):
         player = self.game.current_player()
         self.num_balls_locked = player.getState('num_balls_locked', 0)
         self.num_locks_lit = player.getState('num_locks_lit', 0)
-        self.multiball_played = player.getState('multiball_played', False)
-        # multiball_jackpot_collected and multiball_active are accessed directly in the player state
+        # multiball_played, multiball_jackpot_collected and multiball_active are accessed directly in the player state
 
         if self.deadworld_mod_installed and self.game.deadworld.num_balls_locked < self.num_balls_locked:
             # The planet holds fewer balls than the player has locked balls.
@@ -46,7 +45,6 @@ class Multiball(Mode):
         player.setState('multiball_active', player.getState('multiball_active', 0) & ~0x1) # in case of tilt
         player.setState('num_balls_locked', self.num_balls_locked)
         player.setState('num_locks_lit', self.num_locks_lit)
-        player.setState('multiball_played', self.multiball_played)
 
         self.game.remove_modes([self.drops])
 
@@ -55,7 +53,7 @@ class Multiball(Mode):
         self.game.setPlayerState('multiball_jackpot_collected', False)
 
     def start_multiball(self):
-        # start a stackable 3 ball multiball
+        # start a 3-ball multiball or up to 4 balls when stacked with BlockWar
         self.state = 'multiball'
         self.game.base_play.display('Multiball')
         self.game.sound.play_voice('multiball')
@@ -89,7 +87,7 @@ class Multiball(Mode):
         self.cancel_delayed(['trip_check', 'multiball_instructions'])
         self.game.coils.flasherGlobe.disable()
         self.jackpot_lit = False
-        self.multiball_played = True
+        self.game.setPlayerState('multiball_played', True)
         self.game.addPlayerState('multiball_active', -0x1)
         self.end_callback()
         self.drops.reset_drop_target_bank()
@@ -114,9 +112,9 @@ class Multiball(Mode):
 
     def configure_lock(self, sneaky_ball_adjust=0):
         # Decide between enabling a physical lock, a virtual lock or disabling locks altogether.
-        # Without the deadworld mod, we lock each ball physically and eject it immediately.
+        # Without the Deadworld mod, we lock each ball physically and eject it immediately.
         #   We never use a virtual lock unlike the original game.
-        # With the deadworld mod, we physically lock 3 balls.
+        # With the Deadworld mod, we physically lock 3 balls.
         #   A virtual lock happens if the mod-ed planet holds more balls than
         #   the player has locked balls, allowing the count to catch up to the planet.
         # The planet counts a sneaky lock as a real lock.
@@ -144,7 +142,7 @@ class Multiball(Mode):
 
     def light_lock(self, sneaky_ball_adjust=0):
         if self.state == 'load' and self.num_locks_lit < 3:
-            self.num_locks_lit = self.num_locks_lit + (1 if self.multiball_played else 3)
+            self.num_locks_lit = (self.num_locks_lit + 1) if self.game.getPlayerState('multiball_played', False) else 3
             self.configure_lock(sneaky_ball_adjust)
             self.game.base_play.display('Lock is Lit')
             self.game.sound.play_voice('locks lit')
@@ -164,12 +162,15 @@ class Multiball(Mode):
             self.configure_lock()
 
             if launch_ball:
-                # Not yet multiball, launch a new ball each time a ball is physically locked.
+                # Not yet multiball, put one ball back in play
                 if self.deadworld_mod_installed:
+                    # launch a new ball each time a ball is physically locked.
                     # Use stealth launch so another ball isn't counted in play.
                     self.game.trough.launch_balls(1, self.game.no_op_callback, stealth=True)
                 else:
+                    # eject the ball immediately since an un-moded planet can't physically hold balls
                     self.game.deadworld.eject_balls(1, self.configure_lock)
+
             self.game.update_lamps()
 
     def sneaky_lock(self):
@@ -240,9 +241,9 @@ class Multiball(Mode):
         self.game.base_play.display('Jackpot')
         self.game.sound.play_voice('jackpot')
         self.game.lampctrl.play_show('jackpot', False, self.game.update_lamps)
+        self.game.score(100000)
         self.num_ramp_shots = 0
         self.ramp_shots_required += 1
-        self.game.score(100000)
 
     def update_lamps(self):
         if self.state == 'load':
@@ -258,6 +259,7 @@ class Multiball(Mode):
         elif self.state == 'multiball':
             self.game.coils.flasherGlobe.schedule(schedule=0x88888888, cycle_seconds=0, now=True)
 
+            # the 3 lock lights are off or are chasing towards the ramp
             schedules = [0, 0, 0] if self.jackpot_lit else [0x000f000f, 0x003c003c, 0x00f000f0]
             for i in range(1, 4):
                 self.game.lamps['lock' + str(i)].schedule(schedules[i-1], cycle_seconds=0, now=False)

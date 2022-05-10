@@ -71,6 +71,7 @@ class MissileAwardMode(Timer):
         # first award is video mode (if enabled in the settings)
         # but keep video mode for later if another mode is running
         # this way we don't pause the running mode for too long
+        # and the player won't forget what he was doing
         video_mode_lit = self.game.getPlayerState('video_mode_lit', self.video_mode_enabled)
         if video_mode_lit and not self.game.getPlayerState('chain_active', 0):
             self.game.setPlayerState('video_mode_lit', False)
@@ -79,7 +80,7 @@ class MissileAwardMode(Timer):
             self.start_selection()
 
     def end_missile_award(self):
-        self.game.sound.play_music('background', loops=-1)
+        self.game.base_play.play_background_music()
         self.game.base_play.regular_play.chain.resume()
 
     def video_mode_complete(self, success):
@@ -98,6 +99,7 @@ class MissileAwardMode(Timer):
 
     def timer_update(self, time):
         if time == 3:
+            # that gives 3 seconds to read the chosen selection
             self.eject_ball()
             self.award()
         elif time > 10:

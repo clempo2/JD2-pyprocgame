@@ -56,7 +56,7 @@ class JDInitialEntryMode(Mode):
         if type(left_text) != list:
             left_text = [left_text]
 
-        # 'SuperGame High Score 1' is too long, it overlaps the left text
+        # Truncate 'SuperGame High Score 1' because it is too long, it overlaps the left text
         # The long high score category name fits nicely in attract mode though
         right_text = [text[10:] if text.startswith('SuperGame ') else text for text in right_text]
         seconds_per_text = 1.5
@@ -103,7 +103,7 @@ class JDInitialEntryMode(Mode):
         self.delay(name='blink_cursor', event_type=None, delay=0.25, handler=self.blink_cursor)
 
     def mode_stopped(self):
-        # we must explicitly cancel this delayed handler since it is removed within pyprocgame
+        # we must explicitly cancel this delayed handler since the mode is removed within pyprocgame
         self.cancel_delayed('blink cursor')
 
     def animate_to_index(self, new_index, inc=0):

@@ -46,7 +46,7 @@ class SwitchMonitor(Mode):
 
         if self.game.attract in self.game.modes:
             if self.game.trough.is_full():
-                # Start_game takes care of adding the first player and starting a ball
+                # start_game() takes care of adding the first player and starting a ball
                 self.game.start_game(supergame)
             else:
                 self.game.attract.ball_search()

@@ -7,6 +7,8 @@ class Deadworld(Mode):
 
     def __init__(self, game, priority):
         super(Deadworld, self).__init__(game, priority)
+        # a ball locked in this class means physically held by the planet,
+        # this may or may not be a lock owned by the current player
         self.num_balls_locked = 0
         self.num_balls_to_eject = 0
         self.stowing_away = True
@@ -22,24 +24,26 @@ class Deadworld(Mode):
 
     def mode_stopped(self):
         # remove the switch rule
-        self.install_rule(auto_disable=False)
+        self.install_spinning_rule(auto_disable=False)
         self.stop_spinning()
         self.game.coils.crane.disable()
 
     def start_spinning(self, auto_stop=False):
-        self.install_rule(auto_stop)
+        self.install_spinning_rule(auto_stop)
         self.game.coils.globeMotor.pulse(0)
 
     def stop_spinning(self):
         self.game.coils.globeMotor.disable()
 
-    def install_rule(self, auto_disable):
+    def install_spinning_rule(self, auto_disable):
         # when auto_disable is True, the globe will stop spinning when it reaches its start position (globePosition2)
         # when auto_disable is False, the globe will keep spinning
+        # globePosition2 is when any planet slot is aligned with the crane grab position.
         switch_num = self.game.switches.globePosition2.number
         self.game.install_switch_rule_coil_disable(switch_num, 'closed_debounced', 'globeMotor', True, auto_disable)
 
     def sw_leftRampToLock_active(self, sw):
+        # planet holds one more ball, it does not necessarily mean the player locked the ball
         self.num_balls_locked += 1
         self.game.trough.num_balls_locked += 1
 
@@ -124,7 +128,7 @@ class Deadworld(Mode):
         self.crane_release_sensitive = True
 
     def crane_done(self):
-        # this is called 1 second after the crane dropped the ball to release it
+        # this is called 1/4 second after the crane dropped the ball to release it
         # determine what the crane and globe should do next
         if self.searching_balls:
             if self.game.trough.is_full():

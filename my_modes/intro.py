@@ -9,7 +9,7 @@ class Introduction(Mode):
         self.exit_callback = None
 
     def setup(self, intro_layer):
-        # expecting a ScriptedLayer because of the on_complete callback
+        # expecting a ScriptedLayer because of the on_complete callback we install
         intro_layer.on_complete = self.finish
         self.intro_layer = intro_layer
 
