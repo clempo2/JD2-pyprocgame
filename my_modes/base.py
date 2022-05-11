@@ -16,6 +16,10 @@ class BasePlay(Mode):
     def __init__(self, game):
         super(BasePlay, self).__init__(game, 2)
 
+        self.max_extra_balls_per_game = self.game.user_settings['Gameplay']['Max extra balls per game']
+        self.max_extra_balls_lit = self.game.user_settings['Gameplay']['Max extra balls lit']
+        self.replay_award = self.game.user_settings['Replay']['Replay Award']
+
         self.tilt = TiltMonitorMode(self.game, 1000, 'tilt', 'slamTilt')
         self.tilt.num_tilt_warnings = self.game.user_settings['Gameplay']['Number of tilt warnings']
 
@@ -202,9 +206,9 @@ class BasePlay(Mode):
 
     def light_extra_ball(self):
         extra_balls_lit = self.game.getPlayerState('extra_balls_lit', 0)
-        if extra_balls_lit + self.total_extra_balls == self.game.user_settings['Gameplay']['Max extra balls per game']:
+        if extra_balls_lit + self.total_extra_balls == self.max_extra_balls_per_game:
             self.game.set_status('No more extras this game.')
-        elif extra_balls_lit == self.game.user_settings['Gameplay']['Max extra balls lit']:
+        elif extra_balls_lit == self.max_extra_balls_lit:
             self.game.set_status('Extra balls lit maxed.')
         else:
             self.game.setPlayerState('extra_balls_lit', extra_balls_lit + 1)
@@ -237,13 +241,12 @@ class BasePlay(Mode):
     #
 
     def replay_callback(self):
-        award = self.game.user_settings['Replay']['Replay Award']
         self.game.coils.knocker.pulse(50)
         self.display('Replay')
-        if award == 'Extra Ball':
-            if self.total_extra_balls < self.game.user_settings['Gameplay']['Max extra balls per game']:
+        if self.replay_award == 'Extra Ball':
+            if self.total_extra_balls < self.max_extra_balls_per_game:
                 extra_balls_lit = self.game.getPlayerState('extra_balls_lit', 0)
-                if extra_balls_lit + self.total_extra_balls == self.game.user_settings['Gameplay']['Max extra balls per game']:
+                if extra_balls_lit + self.total_extra_balls == self.max_extra_balls_per_game:
                     # already maximum allocated, convert a lit extra ball to an extra ball instead
                     self.game.setPlayerState('extra_balls_lit', extra_balls_lit - 1)
                 self.extra_ball()

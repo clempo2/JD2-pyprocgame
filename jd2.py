@@ -142,12 +142,11 @@ class JD2Game(BasicGame):
 
         self.shooting_again = False
 
-        # Instantiate basic game features
+        # Basic game features
         self.attract = Attract(self)
         self.base_play = BasePlay(self)
         self.deadworld = Deadworld(self, 20)
 
-        # Add the basic modes to the mode queue
         self.add_modes([self.switch_monitor, self.ball_search, self.deadworld, self.ball_save, self.trough, self.attract])
         self.attract.display()
 
