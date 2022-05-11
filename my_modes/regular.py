@@ -1,8 +1,6 @@
-from procgame.dmd import ScriptedLayer, TextLayer
 from procgame.game import Mode
 from chain import Chain
 from blocks import CityBlocks
-from intro import Introduction
 from multiball import Multiball
 from missile import MissileAwardMode
 
@@ -13,12 +11,6 @@ class RegularPlay(Mode):
         super(RegularPlay, self).__init__(game, priority)
         self.ball_save_time = self.game.user_settings['Gameplay']['New ball ballsave time']
         self.repeating_ballsave = self.game.user_settings['Gameplay']['New ball repeating ballsave']
-
-        big_font = self.game.fonts['jazz18']
-        shoot_again_layer = TextLayer(128/2, 7, big_font, 'center').set_text('Shoot Again', 99999999)
-        script = [{'seconds':99999999.0, 'layer':shoot_again_layer}]
-        self.shoot_again_intro = Introduction(self.game, priority + 1, delay=1.0)
-        self.shoot_again_intro.setup(ScriptedLayer(width=128, height=32, script=script))
 
         self.chain = Chain(self.game, priority)
 
@@ -53,7 +45,6 @@ class RegularPlay(Mode):
     #### DEBUG: push the buy in button to go straight to ultimate challenge from regular mode
     ####        press multiple times in a row to skip Dark Judge modes
     def sw_buyIn_active(self, sw):
-        # self.game.base_play.sw_shooterL_active_for_500ms(None)
         self.game.remove_modes([self.chain, self.city_blocks])
         if self.is_ultimate_challenge_ready() and self.game.getPlayerState('challenge_mode', 0) < 3:
             self.game.addPlayerState('challenge_mode', 1)
@@ -71,35 +62,42 @@ class RegularPlay(Mode):
             if not self.welcomed:
                 self.welcomed = True
                 self.welcome()
-                self.high_score_mention()
 
     #
     # Message
     #
 
     def welcome(self):
-        if self.game.ball == 1:
-            self.game.sound.play_voice('welcome')
-        elif self.game.shooting_again:
+        if self.game.shooting_again:
             self.game.sound.play_voice('shoot again ' + str(self.game.current_player_index + 1))
-            self.game.modes.add(self.shoot_again_intro)
+            self.game.base_play.display('Shoot Again')
+        elif self.game.ball == 1:
+            self.game.sound.play_voice('welcome')
+
+        # high score mention
+        if self.game.ball == self.game.balls_per_game:
+            if self.game.shooting_again:
+                # display the score to beat after the Shoot Again message
+                self.delay('high_score_mention', event_type=None, delay=3, handler=self.high_score_mention)
+            else:
+                self.high_score_mention()
 
     def high_score_mention(self):
-        if self.game.ball == self.game.balls_per_game:
-            if self.game.base_play.replay.replay_achieved[0]:
-                text = 'High Score'
-                game_data_key = 'SuperGameHighScoreData' if self.game.supergame else 'ClassicHighScoreData'
-                high_score_data = self.game.game_data[game_data_key][0]
-                score = str(high_score_data['inits']) + '  ' + self.game.format_points(high_score_data['score'])
-            else:
-                text = 'Replay'
-                score = self.game.format_points(self.game.base_play.replay.replay_scores[0])
-            #this needs a redesign, it hides too much and/or looks ugly
-            #self.game.base_play.display(text, score)
+        if self.game.base_play.replay.replay_achieved[0]:
+            text = 'High Score'
+            game_data_key = 'SuperGameHighScoreData' if self.game.supergame else 'ClassicHighScoreData'
+            score = self.game.game_data[game_data_key][0]['score']
+        else:
+            text = 'Replay'
+            score = self.game.base_play.replay.replay_scores[0]
+        self.game.base_play.display(text, score)
 
     def evt_ball_started(self):
+        # remove welcome message early if the player was very quick to plunge
+        self.game.base_play.display('')
+        self.cancel_delayed('high_score_mention')
+
         self.game.ball_save_start(time=self.ball_save_time, now=True, allow_multiple_saves=self.repeating_ballsave)
-        self.game.remove_modes([self.shoot_again_intro])
         self.game.update_lamps()
 
     #

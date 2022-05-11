@@ -286,10 +286,10 @@ class JD2Game(BasicGame):
             self.modes.add(mode)
 
     def remove_modes(self, mode_list):
-        for m in mode_list:
-            self.modes.remove(m)
+        for mode in mode_list:
+            self.modes.remove(mode)
             # cancel all delayed handlers
-            m._Mode__delayed = []
+            mode._Mode__delayed = []
 
     def remove_all_modes(self):
         self.remove_modes(self.modes[:])
@@ -333,8 +333,8 @@ class JD2Game(BasicGame):
     def load_game_settings(self):
         self.load_settings(settings_template_path, settings_path)
 
-        # Work-around because the framework cannot handle settings with a floating point increment
-        # GameController.load_settings() discarded the options and the increments already
+        # Work-around because the framework cannot handle settings with a floating point increment.
+        # By the time we get here, GameController.load_settings() already discarded the options and the increments.
         # Let's keep the work-around simple and hardcode the value we expect in the yaml file
         self.volume_scale = 20.0
         self.volume_increments = 1
