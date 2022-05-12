@@ -196,6 +196,7 @@ class DarkJudge(ChallengeBase):
         self.layer = self.finish_layer
         if success:
             self.game.score(100000)
+            self.game.addPlayerState('num_dark_judges', 1)
         self.exit_callback(success)
 
 

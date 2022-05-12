@@ -12,7 +12,8 @@ class Bonus(Mode):
         # do not show bonus items worth zero
         self.bonus_items = (self.create_item('num_chain_features', 'Chain Feature', 4000) +
             self.create_item('num_hurry_ups', 'Hurry Up', 12000) +
-            self.create_item('num_blocks', 'Block', 2000))
+            self.create_item('num_blocks', 'Block', 2000) +
+            self.create_item('num_dark_judges', 'Dark Judge', 15000))
 
         bonus = sum(item['points'] for item in self.bonus_items)
         bonus_x = self.game.getPlayerState('bonus_x', 1)

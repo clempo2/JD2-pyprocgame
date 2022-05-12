@@ -33,10 +33,13 @@ class RegularPlay(Mode):
 
     def mode_started(self):
         self.mystery_lit = self.game.getPlayerState('mystery_lit', False)
-        self.welcomed = False
         self.state = 'init'
         self.game.add_modes([self.chain, self.city_blocks, self.multiball, self.missile_award_mode])
         self.setup_next_mode()
+
+        # welcome player at start of ball but not when continuing after ultimate challenge
+        if self.game.base_play.ball_starting:
+            self.welcome()
 
     def mode_stopped(self):
         self.game.remove_modes([self.chain, self.city_blocks, self.multiball, self.missile_award_mode])
@@ -56,12 +59,6 @@ class RegularPlay(Mode):
         self.game.add_modes([self.chain, self.city_blocks])
         self.game.update_lamps()
         self.setup_next_mode()
-
-    def sw_shooterR_active(self, sw):
-        if self.game.base_play.ball_starting:
-            if not self.welcomed:
-                self.welcomed = True
-                self.welcome()
 
     #
     # Message

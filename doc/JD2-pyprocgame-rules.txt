@@ -229,6 +229,8 @@ completed by the player. In other words, previously completed levels
 do not need to be completed again.
 
 Successfully completing a dark judge mode awards 100,000 points.
+Each successful dark judge mode contributes 15000 points to the bonus.
+This bonus contribution is not reset between balls.
 
 === Level 1: Fear ===
 Judge Fear is reigning terror on the city. This level uses timed shots to

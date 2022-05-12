@@ -6,6 +6,7 @@ class SwitchMonitor(Mode):
 
     def __init__(self, game):
         super(SwitchMonitor, self).__init__(game=game, priority=32767)
+        self.allow_restart = self.game.user_settings['Gameplay']['Allow restarts']
 
     # Enter service mode when the enter button is pushed.
     def sw_enter_active(self, sw):
@@ -13,25 +14,27 @@ class SwitchMonitor(Mode):
         if not self.game.service_mode in self.game.modes:
             self.game.start_service_mode()
             return SwitchStop
-        return SwitchContinue
 
     def sw_down_active(self, sw):
         if not self.game.service_mode in self.game.modes:
             self.game.volume_down()
             return SwitchStop
-        return SwitchContinue
 
     def sw_up_active(self, sw):
         if not self.game.service_mode in self.game.modes:
             self.game.volume_up()
             return SwitchStop
-        return SwitchContinue
 
-    def sw_startButton_active_for_2s(self, sw):
-        if self.game.ball > 1 and self.game.user_settings['Gameplay']['Allow restarts']:
+    def sw_startButton_active_for_3s(self, sw):
+        if self.game.ball > 1 and self.allow_restart:
             self.game.reset()
             return SwitchStop
-        return SwitchContinue
+
+    def sw_startButton_active_for_5s(self, sw):
+        # you must press longer to restart on ball 1
+        if self.allow_restart:
+            self.game.reset()
+            return SwitchStop
 
     def sw_startButton_active(self, sw):
         self.start_button_activated(False, 'Start button')
