@@ -236,8 +236,8 @@ class JD2Game(BasicGame):
 
     # Override to create a flag signaling extra ball.
     def shoot_again(self):
-        super(JD2Game, self).shoot_again()
         self.shooting_again = True
+        super(JD2Game, self).shoot_again()
 
     def end_ball(self):
         self.shooting_again = False

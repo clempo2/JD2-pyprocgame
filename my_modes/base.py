@@ -226,7 +226,6 @@ class BasePlay(Mode):
         extra_balls_lit = self.game.getPlayerState('extra_balls_lit', 0)
         if extra_balls_lit:
             self.game.setPlayerState('extra_balls_lit', extra_balls_lit - 1)
-            self.game.update_lamps()
             self.display('Extra Ball')
             self.extra_ball()
 
@@ -235,6 +234,7 @@ class BasePlay(Mode):
         player.extra_balls += 1
         self.total_extra_balls += 1
         self.play_animation('extra ball')
+        self.game.update_lamps()
 
     #
     # Replay
