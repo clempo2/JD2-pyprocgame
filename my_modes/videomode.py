@@ -139,10 +139,10 @@ class ShootingGallery(Mode):
             self.target_layers[position].transition.start()
 
     def make_available(self, position):
-        self.targets[position] = 'empty'
         available_targets = self.available_friends if self.targets[position] == 'friend' else self.available_enemies
         available_targets.append(self.target_layers[position].original_frame)
         shuffle(available_targets)
+        self.targets[position] = 'empty'
 
     def sw_flipperLwL_active(self, sw):
         self.flipper_active(-1)
