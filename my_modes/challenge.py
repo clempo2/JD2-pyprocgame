@@ -460,7 +460,7 @@ class Fire(DarkJudge, CrimeSceneShots):
         self.game.sound.play('mystery')
         if self.mystery_lit:
             self.mystery_lit = False
-            self.game.set_status('Add 2 balls')
+            self.game.set_status('ADD 2 BALLS')
             self.game.launch_balls(2)
             self.game.update_lamps()
 

@@ -207,9 +207,9 @@ class BasePlay(Mode):
     def light_extra_ball(self):
         extra_balls_lit = self.game.getPlayerState('extra_balls_lit', 0)
         if extra_balls_lit + self.total_extra_balls == self.max_extra_balls_per_game:
-            self.game.set_status('No more extras this game.')
+            self.game.set_status('EXTRA BALLS MAXED')
         elif extra_balls_lit == self.max_extra_balls_lit:
-            self.game.set_status('Extra balls lit maxed.')
+            self.game.set_status('EXTRA BALLS LIT MAXED')
         else:
             self.game.setPlayerState('extra_balls_lit', extra_balls_lit + 1)
             self.game.update_lamps()
@@ -251,7 +251,7 @@ class BasePlay(Mode):
                     self.game.setPlayerState('extra_balls_lit', extra_balls_lit - 1)
                 self.extra_ball()
             else:
-                self.game.set_status('100,000 points')
+                self.game.set_status('100,000 POINTS')
                 self.game.score(100000)
         #else add a credit in your head
 

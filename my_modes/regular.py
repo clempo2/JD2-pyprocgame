@@ -209,18 +209,18 @@ class RegularPlay(Mode):
             self.game.update_lamps()
             if self.game.getPlayerState('multiball_active', 0):
                 if self.game.ball_save.timer > 0:
-                    self.game.set_status('+10 second ball saver')
+                    self.game.set_status('+10SEC BALL SAVER')
                     self.game.ball_save.add(10)
                 else:
-                    self.game.set_status('save ' + self.game.num_balls_requested() + ' balls')
+                    self.game.set_status('SAVE ' + self.game.num_balls_requested() + ' BALLS')
                     self.game.ball_save_start(time=10, now=True, allow_multiple_saves=True)
 
             elif self.game.getPlayerState('chain_active', 0):
                 self.chain.mode.add_time(10)
-                self.game.set_status('Adding 10 seconds')
+                self.game.set_status('+10SEC TIMER')
             else:
                 self.game.ball_save_start(time=10, now=True, allow_multiple_saves=True)
-                self.game.set_status('10 second ball saver')
+                self.game.set_status('10SEC BALL SAVER')
                 self.missile_award_mode.light_missile_award()
 
     #

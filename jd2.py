@@ -4,7 +4,7 @@ import os
 import pygame.locals
 import pinproc
 from procgame.config import value_for_key_path
-from procgame.dmd import Frame, FrameLayer, MarkupFrameGenerator, ScriptedLayer
+from procgame.dmd import FrameLayer, MarkupFrameGenerator, ScriptedLayer
 from procgame.game import BasicGame, Mode, Player
 from procgame.highscore import HighScoreCategory
 from procgame.lamps import LampController
@@ -12,6 +12,7 @@ from procgame.modes import BallSave, BallSearch, Trough
 from procgame.service import ServiceMode
 from procgame.sound import SoundController
 from asset_loader import AssetLoader
+from layers import FixedSizeTextLayer
 from my_modes.attract import Attract
 from my_modes.base import BasePlay
 from my_modes.deadworld import Deadworld, DeadworldTest
@@ -53,6 +54,10 @@ class JD2Game(BasicGame):
 
     def __init__(self):
         super(JD2Game, self).__init__(pinproc.MachineTypeWPC)
+
+        # move status message to bottom of screen, same size as status line of score display
+        self.dmd.message_layer = FixedSizeTextLayer(128/2, 32-6, self.dmd.message_layer.font, "center", opaque=True, width=128, height=7)
+
         self.sound = SoundController(self)
         self.lampctrl = LampController(self)
         self.logging_enabled = False
@@ -168,7 +173,7 @@ class JD2Game(BasicGame):
         """ attempt to add an additional player, but honor the max number of players """
         if len(self.players) < 4:
             player = self.add_player()
-            self.set_status(player.name + ' added!')
+            self.set_status(player.name.upper() + ' ADDED')
         else:
             self.logger.info('Cannot add more than 4 players.')
 
@@ -262,15 +267,7 @@ class JD2Game(BasicGame):
         self.modes.add(seq_manager)
 
     def set_status(self, text):
-        self.dmd.set_message(text, 3)
-        # add a thin black margin around the text to cover player 3 and 4 scores if applicable
-        frame = self.dmd.message_layer.frame
-        if frame:
-            margin_frame = Frame(frame.width + 2, frame.height + 2)
-            Frame.copy_rect(margin_frame, 1, 1, frame, 0, 0, frame.width, frame.height)
-            self.dmd.message_layer.frame = margin_frame
-            self.dmd.message_layer.target_x_offset -= 1
-            self.dmd.message_layer.target_y_offset -= 1
+        self.dmd.message_layer.set_text(text, 3, 3)
 
     def disable_ball_search(self):
         # workaround for a bug in pyprocgame's BallSearch.disable
@@ -309,7 +306,7 @@ class JD2Game(BasicGame):
 
     def tilt_warning(self, times_warned):
         self.sound.play('tilt warning')
-        self.set_status('Warning')
+        self.set_status('WARNING')
 
     def slam_tilted(self):
         self.sound.fadeout_music()
@@ -480,13 +477,13 @@ class JD2Game(BasicGame):
         volume = round(self.sound.volume * self.volume_scale)
         volume = max(0, volume - self.volume_increments)
         self.sound.set_volume(volume / self.volume_scale)
-        self.set_status('Volume Down : ' + str(int(volume)))
+        self.set_status('VOLUME DOWN: ' + str(int(volume)))
 
     def volume_up(self):
         volume = round(self.sound.volume * self.volume_scale)
         volume = min(self.volume_scale, volume + self.volume_increments)
         self.sound.set_volume(volume / self.volume_scale)
-        self.set_status('Volume Up : ' + str(int(volume)))
+        self.set_status('VOLUME UP: ' + str(int(volume)))
 
     #
     # lamps

@@ -177,7 +177,7 @@ class Multiball(Mode):
         # A ball trickled into the ramp to lock when the physical lock is disabled
         # Award a lock light and eject the sneaky ball
         # This method can only be called when self.state is 'load'
-        self.game.set_status('Sneaky Lock')
+        self.game.set_status('SNEAKY LOCK')
         self.light_lock(sneaky_ball_adjust=1)
         self.game.deadworld.eject_balls(1, self.configure_lock)
 

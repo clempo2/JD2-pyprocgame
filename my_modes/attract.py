@@ -2,12 +2,7 @@ from random import shuffle
 from procgame.dmd import FrameLayer, GroupedLayer, MarkupFrameGenerator, PanningLayer, PushTransition, ScriptedLayer, TextLayer
 from procgame.game import Mode
 from procgame.highscore import generate_highscore_frames
-
-class FastPanningLayer(PanningLayer):
-    """Pans faster than the regular PanningLayer"""
-    def next_frame(self):
-        self.tick += 2
-        return super(FastPanningLayer, self).next_frame()
+from layers import FastPanningLayer
 
 
 class Attract(Mode):
@@ -128,8 +123,8 @@ Collect a multiball jackpot
     def ball_search(self):
         if not self.game.trough.is_full():
             self.game.ball_search.perform_search(5)
+            self.game.set_status('BALL MISSING')
             self.game.deadworld.perform_ball_search()
-            #self.game.set_status('Ball Missing')
 
     def display(self):
         self.game.score_display.update_layer()
