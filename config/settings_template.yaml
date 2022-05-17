@@ -18,8 +18,8 @@ Machine:
     default: 0
 Display:
   'Left side score justify':
-    # This example has no default.  The first option (right) will be used as the default.
-    options: [right, left]
+    options: [left, right]
+    default: 'left'
 Replay:
   'Replay Type':
     options: ['none','auto','fixed','incremental']

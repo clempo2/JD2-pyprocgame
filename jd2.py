@@ -12,7 +12,7 @@ from procgame.modes import BallSave, BallSearch, Trough
 from procgame.service import ServiceMode
 from procgame.sound import SoundController
 from asset_loader import AssetLoader
-from layers import FixedSizeTextLayer
+from layers import FixedSizeTextLayer, WindowPushTransition, DontMoveTransition
 from my_modes.attract import Attract
 from my_modes.base import BasePlay
 from my_modes.deadworld import Deadworld, DeadworldTest
@@ -55,8 +55,16 @@ class JD2Game(BasicGame):
     def __init__(self):
         super(JD2Game, self).__init__(pinproc.MachineTypeWPC)
 
-        # move status message to bottom of screen, same size as status line of score display
-        self.dmd.message_layer = FixedSizeTextLayer(128/2, 32-6, self.dmd.message_layer.font, "center", opaque=True, width=128, height=7)
+        # a text layer for status messages, same size and location as the status line at the bottom of the score display
+        # Use the dont_move_message transition completion handler as a poor man's delay handler
+        self.dmd.message_layer = FixedSizeTextLayer(128/2, 32-6, self.dmd.message_layer.font, "center", opaque=True, width=128, height=6)
+        self.push_in_message = WindowPushTransition(self.dmd.message_layer, direction='west')
+        self.push_in_message.completed_handler = self.push_in_message_completed
+        self.dont_move_message = DontMoveTransition()
+        self.dont_move_message.progress_per_frame = 1.0 / 120.0
+        self.dont_move_message.completed_handler = self.dont_move_message_completed
+        self.push_out_message = WindowPushTransition(self.dmd.message_layer, direction='east')
+        self.push_out_message.in_out = 'out'
 
         self.sound = SoundController(self)
         self.lampctrl = LampController(self)
@@ -163,6 +171,31 @@ class JD2Game(BasicGame):
         pass
 
     #
+    # Layers
+    #
+
+    def set_status(self, text):
+        # A line of text the same size as the bottom line of the score display.
+        # Start with a push west, stop moving, then move west until out of sight
+        self.dmd.message_layer.set_text(text)
+        self.dmd.message_layer.transition = self.push_in_message
+        self.dmd.message_layer.transition.start()
+
+    def push_in_message_completed(self):
+        self.dmd.message_layer.transition = self.dont_move_message
+        self.dmd.message_layer.transition.start()
+
+    def dont_move_message_completed(self):
+        self.dmd.message_layer.transition = self.push_out_message
+        self.dmd.message_layer.transition.start()
+
+    def reset_script_layer(self, script):
+        for script_item in script:
+            script_item['layer'].reset()
+            if script_item['layer'].transition:
+                script_item['layer'].transition.start()
+
+    #
     # Players
     #
 
@@ -265,9 +298,6 @@ class JD2Game(BasicGame):
         seq_manager.finished_handler = self.highscore_entry_finished
         seq_manager.ready_handler = self.highscore_entry_ready_to_prompt
         self.modes.add(seq_manager)
-
-    def set_status(self, text):
-        self.dmd.message_layer.set_text(text, 3, 3)
 
     def disable_ball_search(self):
         # workaround for a bug in pyprocgame's BallSearch.disable

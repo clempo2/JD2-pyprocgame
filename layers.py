@@ -1,8 +1,8 @@
 import time
-from procgame.dmd import Frame, PanningLayer, TextLayer
+from procgame.dmd import Frame, LayerTransitionBase, PanningLayer, TextLayer
 
 class FixedSizeTextLayer(TextLayer):
-    """A TextLayer where the text and blank blinking frames are opaque over the whole width x height"""
+    """A TextLayer where the text and blank blinking frames are opaque over the whole fixed width x height"""
 
     def __init__(self, x, y, font, justify="left", opaque=False, width=128, height=32, fill_color=None):
         super(FixedSizeTextLayer, self).__init__(x, y, font, justify, opaque, width, height, fill_color)
@@ -59,3 +59,44 @@ class FastPanningLayer(PanningLayer):
     def next_frame(self):
         self.tick += 2
         return super(FastPanningLayer, self).next_frame()
+
+
+class WindowPushTransition(LayerTransitionBase):
+    """A PushTransition that pushes the content within the rectangle occupied by the layer instead of the rectangle located at 0,0"""
+
+    def __init__(self, layer, direction='north'):
+        super(WindowPushTransition, self).__init__()
+        self.to_layer = layer
+        self.direction = direction
+        self.progress_per_frame = 1.0/20.0
+
+    def next_frame(self, from_frame, to_frame):
+        """Applies the transition and increments the progress if the transition is running.  Returns the resulting frame."""
+        self.progress = max(0.0, min(1.0, self.progress + self.progress_mult * self.progress_per_frame))
+        if self.progress >= 1.0:
+            if self.completed_handler != None:
+                self.completed_handler()
+        # always compute the transition frame to extract the correct rectangle from from_frame if applicable
+        return self.transition_frame(from_frame=from_frame, to_frame=to_frame)
+
+    def transition_frame(self, from_frame, to_frame):
+        frame = Frame(width=to_frame.width, height=to_frame.height)
+        prog = self.progress if self.in_out != 'in' else 1.0 - self.progress
+        prog1 = 1.0 - prog
+        dst_x, dst_y, dst_x1, dst_y1 = {
+         'north': (0,  prog*frame.height,  0, -prog1*frame.height),
+         'south': (0, -prog*frame.height,  0,  prog1*frame.height),
+         'east':  (-prog*frame.width, 0,    prog1*frame.width, 0),
+         'west':  ( prog*frame.width, 0,   -prog1*frame.width, 0),
+        }[self.direction]
+        src_x1 = self.to_layer.target_x + self.to_layer.target_x_offset
+        src_y1 = self.to_layer.target_y + self.to_layer.target_y_offset
+        Frame.copy_rect(dst=frame, dst_x=dst_x, dst_y=dst_y, src=to_frame, src_x=0, src_y=0, width=frame.width, height=frame.height, op='copy')
+        Frame.copy_rect(dst=frame, dst_x=dst_x1, dst_y=dst_y1, src=from_frame, src_x=src_x1, src_y=src_y1, width=frame.width, height=frame.height, op='copy')
+        return frame
+
+
+class DontMoveTransition(LayerTransitionBase):
+    """A transition that does not move, this is a poor man's delay handler for use in non-mode classes"""
+    def transition_frame(self, from_frame, to_frame):
+        return to_frame

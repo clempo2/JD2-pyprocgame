@@ -146,9 +146,9 @@ Collect a multiball jackpot
         ]
 
         self.append_high_score_layers(script)
-        self.reset_script(script)
+        self.game.reset_script_layer(script)
         self.layer = ScriptedLayer(width=128, height=32, script=script)
-        self.layer.on_complete = lambda: self.reset_script(script)
+        self.layer.on_complete = lambda: self.game.reset_script_layer(script)
 
     def game_over_display(self):
         self.game.score_display.update_layer()
@@ -160,13 +160,13 @@ Collect a multiball jackpot
         ]
 
         self.append_high_score_layers(script)
-        self.reset_script(script)
+        self.game.reset_script_layer(script)
         self.layer = ScriptedLayer(width=128, height=32, script=script)
         self.layer.on_complete = self.display
 
     def instruction_display(self):
         script = [{'seconds':20.1, 'layer':self.instruct_layer}]
-        self.reset_script(script)
+        self.game.reset_script_layer(script)
         self.layer = ScriptedLayer(width=128, height=32, script=script)
         self.layer.on_complete = self.display
 
@@ -184,10 +184,6 @@ Collect a multiball jackpot
         for frame in generate_highscore_frames(self.game.all_highscore_categories):
             new_layer = FrameLayer(frame=frame)
             script.append({'seconds':1.25, 'layer':new_layer})
-
-    def reset_script(self, script):
-        for script_item in script:
-            script_item['layer'].reset()
 
     def change_lampshow(self):
         shuffle(self.lampshow_keys)
