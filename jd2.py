@@ -18,6 +18,7 @@ from my_modes.base import BasePlay
 from my_modes.deadworld import Deadworld, DeadworldTest
 from my_modes.initials import JDEntrySequenceManager
 from my_modes.switchmonitor import SwitchMonitor
+from my_modes.tilt import SlamTilted
 
 logging.basicConfig(level=logging.ERROR, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 
@@ -116,9 +117,7 @@ class JD2Game(BasicGame):
     def reset(self):
         # work-around for poor implementation of reset by the framework
         # this is important when the game is aborted with a long press to the startButton
-        self.remove_all_modes()
-        self.stop_all_sounds()
-        self.sound.stop_music()
+        self.stop()
 
         # Reset the entire game framework
         super(JD2Game, self).reset()
@@ -165,6 +164,12 @@ class JD2Game(BasicGame):
 
         # Make sure flippers are off, especially for user initiated resets.
         self.enable_flippers(enable=False)
+
+    def stop(self):
+        self.stop_all_sounds()
+        self.sound.stop_music()
+        self.remove_all_modes()
+        self.set_status(None)
 
     # Empty callback
     def no_op_callback(self):
@@ -339,15 +344,12 @@ class JD2Game(BasicGame):
         self.set_status('WARNING')
 
     def slam_tilted(self):
-        self.sound.fadeout_music()
-        self.sound.play('slam_tilt')
-        self.set_status('SLAM TILT')
-        self.remove_all_modes()
-        self.reset()
-        self.update_lamps()
+        self.stop()
+        self.modes.add(SlamTilted(self))
 
     def tilted(self):
-        self.sound.fadeout_music()
+        self.stop_all_sounds()
+        self.sound.stop_music()
         self.sound.play('tilt')
         self.set_status('TILT')
         # stop all mode timers
@@ -478,13 +480,12 @@ class JD2Game(BasicGame):
             then add the service mode.
         """
 
-        self.remove_all_modes()
+        self.stop()
 
         self.lampctrl.stop_show()
         for lamp in self.lamps:
             lamp.disable()
 
-        self.sound.stop_music()
         self.enable_flippers(False)
         self.modes.add(self.service_mode)
 

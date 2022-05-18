@@ -87,6 +87,7 @@ PRSwitches:
         number: S18
     slamTilt:
         number: S21
+        tags: tilt_visible
     coinDoor:
         number: S22
     ticketDispenser:

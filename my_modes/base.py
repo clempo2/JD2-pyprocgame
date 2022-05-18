@@ -213,7 +213,7 @@ class BasePlay(Mode):
         else:
             self.game.setPlayerState('extra_balls_lit', extra_balls_lit + 1)
             self.game.update_lamps()
-            self.display('Extra Ball Lit')
+            self.game.set_status('EXTRA BALL LIT')
 
     def sw_leftScorePost_active(self, sw):
         self.extra_ball_switch_hit()
@@ -242,18 +242,20 @@ class BasePlay(Mode):
 
     def replay_callback(self):
         self.game.coils.knocker.pulse(50)
-        self.display('Replay')
         if self.replay_award == 'Extra Ball':
             if self.total_extra_balls < self.max_extra_balls_per_game:
+                self.display('Replay')
                 extra_balls_lit = self.game.getPlayerState('extra_balls_lit', 0)
                 if extra_balls_lit + self.total_extra_balls == self.max_extra_balls_per_game:
                     # already maximum allocated, convert a lit extra ball to an extra ball instead
                     self.game.setPlayerState('extra_balls_lit', extra_balls_lit - 1)
                 self.extra_ball()
             else:
-                self.game.set_status('100,000 POINTS')
+                self.display('Replay Award', 100000)
                 self.game.score(100000)
-        #else add a credit in your head
+        else:
+            self.display('Replay')
+            # add a credit in your head
 
     #
     # Ultimate Challenge
@@ -432,11 +434,11 @@ class BasePlay(Mode):
         player = self.game.current_player()
         bonus_x = player.getState('bonus_x') + 1
         player.setState('bonus_x', bonus_x)
-        self.display('Bonus at ' + str(bonus_x) + 'X')
+        self.game.set_status('BONUS AT ' + str(bonus_x) + 'X')
 
     def hold_bonus_x(self):
         self.game.setPlayerState('hold_bonus_x', True)
-        self.display('Hold Bonus X')
+        self.game.set_status('HOLD BONUS X')
 
 
 class ModesDisplay(Mode):

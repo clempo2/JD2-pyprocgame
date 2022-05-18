@@ -2,7 +2,24 @@
 # Copyright (c) 2014-2015 Michael Ocean and Josh Kugler
 
 import time
+from procgame.dmd import TextLayer
 from procgame.game import Mode, SwitchStop
+
+
+class SlamTilted(Mode):
+    """display Slam Tilt and wait a little while before resetting the game"""
+
+    def __init__(self, game):
+        super(SlamTilted, self).__init__(game, priority=99999)
+        self.layer = TextLayer(128/2, 7, self.game.fonts['jazz18'], 'center').set_text('Slam Tilt')
+
+    def mode_started(self):
+        self.delay('reset_game', event_type=None, delay=5, handler=self.reset_game)
+
+    def reset_game(self):
+        self.game.reset()
+        self.update_lamps()
+
 
 class Tilted(Mode):
     """ Consumes all switch events to block scoring """
@@ -45,9 +62,9 @@ class TiltMonitorMode(Mode):
         self.tilted_mode = Tilted(game)
 
         if tilt_sw:
-            self.add_switch_handler(name=tilt_sw, event_type='active', delay=None, handler=self.tilt_handler)
+            self.add_switch_handler(name=tilt_sw, event_type='active', delay=None, handler=self.tilt_active)
         if slam_tilt_sw:
-            self.add_switch_handler(name=slam_tilt_sw, event_type='active', delay=None, handler=self.slam_tilt_handler)
+            self.add_switch_handler(name=slam_tilt_sw, event_type='active', delay=None, handler=self.slam_tilt_active)
 
         self.num_tilt_warnings = 2 # BasePlay overwrites this with the value of a settings
         self.tilt_bob_settle_time = 2.0
@@ -64,7 +81,7 @@ class TiltMonitorMode(Mode):
     def mode_stopped(self):
         self.game.remove_modes([self.tilted_mode])
 
-    def tilt_handler(self, sw):
+    def tilt_active(self, sw):
         now = time.time()
         if (self.previous_warning_time is not None) and ((now - self.previous_warning_time) < self.tilt_bob_settle_time):
             # tilt bob still swinging from previous warning
@@ -74,13 +91,18 @@ class TiltMonitorMode(Mode):
 
         if self.times_warned == self.num_tilt_warnings:
             if not self.tilted:
-                self.call_tilt_callback(self.game.tilted)
+                self.tilted = True
+                self.disable_game()
+                self.game.modes.add(self.tilted_mode)
+                self.game.tilted()
         else:
             self.times_warned += 1
             self.game.tilt_warning(self.times_warned)
 
-    def slam_tilt_handler(self, sw):
-        self.call_tilt_callback(self.game.slam_tilted)
+    def slam_tilt_active(self, sw):
+        self.disable_game()
+        self.game.base_play.display('Slam Tilt')
+        self.game.slam_tilted()
         return True
 
     def tilt_delay(self, fn, secs_since_bob_tilt=2.0):
@@ -93,7 +115,7 @@ class TiltMonitorMode(Mode):
         else:
             return fn()
 
-    def call_tilt_callback(self, callback):
+    def disable_game(self):
         # Disable flippers so the ball will drain.
         self.game.enable_flippers(enable=False)
 
@@ -103,12 +125,3 @@ class TiltMonitorMode(Mode):
         # Ensure all lamps are off.
         for lamp in self.game.lamps:
             lamp.disable()
-
-        # Kick balls out of places it could be stuck.
-        # TODO: ball search!!
-        self.tilted = True
-
-        self.game.modes.add(self.tilted_mode)
-        #play sound
-        #play video
-        callback()
