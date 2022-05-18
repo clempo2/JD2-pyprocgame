@@ -101,7 +101,6 @@ class TiltMonitorMode(Mode):
 
     def slam_tilt_active(self, sw):
         self.disable_game()
-        self.game.base_play.display('Slam Tilt')
         self.game.slam_tilted()
         return True
 
@@ -109,7 +108,6 @@ class TiltMonitorMode(Mode):
         """ calls the specified `fn` if it has been at least `secs_since_bob_tilt`
             (make sure the tilt isn't still swaying)
         """
-
         if self.game.switches[self.tilt_sw].time_since_change() < secs_since_bob_tilt:
             self.delay(name='tilt_bob_settle', event_type=None, delay=secs_since_bob_tilt, handler=self.tilt_delay, param=fn)
         else:
@@ -123,5 +121,4 @@ class TiltMonitorMode(Mode):
         self.game.ball_save.disable()
 
         # Ensure all lamps are off.
-        for lamp in self.game.lamps:
-            lamp.disable()
+        self.game.disable_all_lights()

@@ -166,6 +166,7 @@ class JD2Game(BasicGame):
         self.enable_flippers(enable=False)
 
     def stop(self):
+        self.disable_all_lights()
         self.stop_all_sounds()
         self.sound.stop_music()
         self.remove_all_modes()
@@ -179,12 +180,15 @@ class JD2Game(BasicGame):
     # Layers
     #
 
-    def set_status(self, text):
+    def set_status(self, text, seconds=None):
         # A line of text the same size as the bottom line of the score display.
-        # Start with a push west, stop moving, then move west until out of sight
-        self.dmd.message_layer.set_text(text)
-        self.dmd.message_layer.transition = self.push_in_message
-        self.dmd.message_layer.transition.start()
+        # display for a fixed number of seconds, or else scroll in, pause and scroll out
+        self.dmd.message_layer.set_text(text, seconds)
+        if seconds:
+            self.dmd.message_layer.transition = None
+        else:
+            self.dmd.message_layer.transition = self.push_in_message
+            self.dmd.message_layer.transition.start()
 
     def push_in_message_completed(self):
         self.dmd.message_layer.transition = self.dont_move_message
@@ -351,7 +355,7 @@ class JD2Game(BasicGame):
         self.stop_all_sounds()
         self.sound.stop_music()
         self.sound.play('tilt')
-        self.set_status('TILT')
+        self.base_play.display('Tilt')
         # stop all mode timers
         self.send_event('pause')
 
@@ -508,13 +512,13 @@ class JD2Game(BasicGame):
         volume = round(self.sound.volume * self.volume_scale)
         volume = max(0, volume - self.volume_increments)
         self.sound.set_volume(volume / self.volume_scale)
-        self.set_status('VOLUME DOWN: ' + str(int(volume)))
+        self.set_status('VOLUME DOWN: ' + str(int(volume)), 3)
 
     def volume_up(self):
         volume = round(self.sound.volume * self.volume_scale)
         volume = min(self.volume_scale, volume + self.volume_increments)
         self.sound.set_volume(volume / self.volume_scale)
-        self.set_status('VOLUME UP: ' + str(int(volume)))
+        self.set_status('VOLUME UP: ' + str(int(volume)), 3)
 
     #
     # lamps
@@ -529,13 +533,23 @@ class JD2Game(BasicGame):
             lamp_name = perp_name + color
             self.drive_lamp(lamp_name, style)
 
+    def enable_gi(self, on):
+        for gi in ['gi01', 'gi02', 'gi03', 'gi04', 'gi05']:
+            self.drive_lamp(gi, 'on' if on else 'off')
+
     def disable_drop_lamps(self):
         for lamp in ['dropTargetJ', 'dropTargetU', 'dropTargetD', 'dropTargetG', 'dropTargetE']:
             self.lamps[lamp].disable()
 
-    def enable_gi(self, on):
-        for gi in ['gi01', 'gi02', 'gi03', 'gi04', 'gi05']:
-            self.drive_lamp(gi, 'on' if on else 'off')
+    def disable_all_lights(self):
+        for lamp in self.lamps:
+            lamp.disable()
+
+        # Disable all flashers
+        for coil in self.game.coils:
+            if coil.name.startswith('flasher'):
+                coil.disable()
+
 
 def main():
     game = None

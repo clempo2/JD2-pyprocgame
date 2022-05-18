@@ -5,9 +5,11 @@ class Boring(Mode):
 
     def __init__(self, game, priority):
         super(Boring, self).__init__(game, priority)
-        for switch in ['subwayEnter2', 'rightRampExit', 'leftRampExit', 'leftRollover', 'outlaneR', 'outlaneL',
+        for switch in ['subwayEnter2', 'rightRampExit', 'centerRampExit', 'leftRampExit',
+                       'leftRollover', 'topCenterRollover', 'outlaneR', 'outlaneL',
                        'craneRelease', 'leftRampToLock', 'trough1', 'trough6',
-                       'dropTargetJ', 'dropTargetU', 'dropTargetD', 'dropTargetG', 'dropTargetE']:
+                       'dropTargetJ', 'dropTargetU', 'dropTargetD', 'dropTargetG', 'dropTargetE',
+                       'threeBankTargets', 'leftScorePost', 'rightTopPost', 'captiveBall1', 'mystery']:
             self.add_switch_handler(name=switch, event_type='active', delay=None, handler=self.reset)
 
     def mode_started(self):

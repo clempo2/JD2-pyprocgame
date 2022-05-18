@@ -83,15 +83,8 @@ class BasePlay(Mode):
         self.game.setPlayerState('total_extra_balls', self.total_extra_balls)
 
     def update_lamps(self):
-        # Disable all flashers
-        for coil in self.game.coils:
-            if coil.name.startswith('flasher'):
-                coil.disable()
-
         # Disable all lamps except GI
-        for lamp in self.game.lamps:
-            lamp.disable()
-
+        self.game.disable_all_lights()
         self.game.enable_gi(True)
 
         style = 'on' if self.game.current_player().extra_balls else 'off'
