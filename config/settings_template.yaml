@@ -72,15 +72,15 @@ Gameplay:
     options: [0,1,2,3,4,5,99]
     default: 99
   'New ball ballsave time':
-    options: [6,8,10,12,15]
+    options: [5,6,7,8,9,10,11,12,13,14,15,20,25,30]
     default: 10
   'New ball repeating ballsave':
     options: [false, true]
   'Multiball ballsave time':
-    options: [5,10,15,20,25,30,35]
+    options: [5,6,7,8,9,10,11,12,13,14,15,20,25,30]
     default: 20
   'Block War ballsave time':
-    options: [5,10,15,20,25,30]
+    options: [5,6,7,8,9,10,11,12,13,14,15,20,25,30]
     default: 15
   'Time per chain feature':
     options: [25,30,35,40,45]
@@ -94,28 +94,34 @@ Gameplay:
   'Blocks for Ultimate Challenge':
     options: [8,12,16]
     default: 16
+  'Mystery ballsave time':
+    options: [5,6,7,8,9,10,11,12,13,14,15,20,25,30]
+    default: 10
+  'Mystery feature add time':
+    options: [5,6,7,8,9,10,11,12,13,14,15,20,25,30]
+    default: 10
   'Video mode':
     options: ['enemies', 'cows', 'off']
   'Time for Fear shot':
     options: [10,15,20,25,30,35,40,45]
     default: 25
   'Fear ballsave time':
-    options: [5,6,7,8,9,10,15,20,25,30]
+    options: [5,6,7,8,9,10,11,12,13,14,15,20,25,30]
     default: 10
   'Mortis ballsave time':
-    options: [5,6,7,8,9,10,15,20,25,30]
+    options: [5,6,7,8,9,10,11,12,13,14,15,20,25,30]
     default: 10
   'Time for Death':
     options: [150,160,170,180,190,200]
     default: 180
   'Death ballsave time':
-    options: [5,6,7,8,9,10,15,20,25,30]
+    options: [5,6,7,8,9,10,11,12,13,14,15,20,25,30]
     default: 20
   'Time for Death shot':
     options: [5,6,7,8,9,10,15,20,25,30]
     default: 10
   'Celebration ballsave time':
-    options: [5,6,7,8,9,10,15,20,25,30]
+    options: [5,6,7,8,9,10,11,12,13,14,15,20,25,30]
     default: 20
     
  

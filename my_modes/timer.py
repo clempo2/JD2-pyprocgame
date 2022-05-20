@@ -103,6 +103,15 @@ class TimedMode(Timer):
         self.game.sound.stop_music()
         self.game.sound.play_music('mode', loops=-1)
 
+    def incr_num_shots(self):
+        self.num_shots += 1
+        self.update_status()
+
+    def decr_num_shots(self):
+        if self.num_shots > 0:
+            self.num_shots -= 1
+            self.update_status()
+
     def update_status(self):
         if self.num_shots > self.num_shots_required:
             # only Impersonator can get extra hits

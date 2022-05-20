@@ -546,7 +546,7 @@ class JD2Game(BasicGame):
             lamp.disable()
 
         # Disable all flashers
-        for coil in self.game.coils:
+        for coil in self.coils:
             if coil.name.startswith('flasher'):
                 coil.disable()
 

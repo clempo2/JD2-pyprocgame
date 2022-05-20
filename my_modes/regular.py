@@ -10,7 +10,9 @@ class RegularPlay(Mode):
     def __init__(self, game, priority):
         super(RegularPlay, self).__init__(game, priority)
         self.ball_save_time = self.game.user_settings['Gameplay']['New ball ballsave time']
-        self.repeating_ballsave = self.game.user_settings['Gameplay']['New ball repeating ballsave']
+        self.repeating_ball_save = self.game.user_settings['Gameplay']['New ball repeating ballsave']
+        self.mystery_ball_save_time = self.game.user_settings['Gameplay']['Mystery ballsave time']
+        self.mystery_feature_add_time = self.game.user_settings['Gameplay']['Mystery feature add time']
 
         self.chain = Chain(self.game, priority)
 
@@ -94,7 +96,7 @@ class RegularPlay(Mode):
         self.game.base_play.display('')
         self.cancel_delayed('high_score_mention')
 
-        self.game.ball_save_start(time=self.ball_save_time, now=True, allow_multiple_saves=self.repeating_ballsave)
+        self.game.ball_save_start(time=self.ball_save_time, now=True, allow_multiple_saves=self.repeating_ball_save)
         self.game.update_lamps()
 
     #
@@ -209,18 +211,18 @@ class RegularPlay(Mode):
             self.game.update_lamps()
             if self.game.getPlayerState('multiball_active', 0):
                 if self.game.ball_save.timer > 0:
-                    self.game.set_status('+10SEC BALL SAVER')
-                    self.game.ball_save.add(10)
+                    self.game.set_status('+' + str(self.mystery_ball_save_time) + 'SEC BALL SAVER')
+                    self.game.ball_save.add(self.mystery_ball_save_time)
                 else:
-                    self.game.set_status('SAVE ' + self.game.num_balls_requested() + ' BALLS')
-                    self.game.ball_save_start(time=10, now=True, allow_multiple_saves=True)
+                    self.game.set_status(str(self.mystery_ball_save_time) + 'SEC BALL SAVER')
+                    self.game.ball_save_start(time=self.mystery_ball_save_time, now=True, allow_multiple_saves=True)
 
             elif self.game.getPlayerState('chain_active', 0):
+                self.game.set_status('+' + str(self.mystery_feature_add_time) + 'SEC TIMER')
                 self.chain.mode.add_time(10)
-                self.game.set_status('+10SEC TIMER')
             else:
-                self.game.ball_save_start(time=10, now=True, allow_multiple_saves=True)
-                self.game.set_status('10SEC BALL SAVER')
+                self.game.set_status(str(self.mystery_ball_save_time) + 'SEC BALL SAVER')
+                self.game.ball_save_start(time=self.mystery_ball_save_time, now=True, allow_multiple_saves=True)
                 self.missile_award_mode.light_missile_award()
 
     #

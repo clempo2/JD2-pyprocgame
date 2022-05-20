@@ -184,7 +184,6 @@ class DarkJudge(ChallengeBase):
         self.delay(name='taunt', event_type=None, delay=20, handler=self.taunt)
 
     def check_for_completion(self):
-        self.update_status()
         if self.num_shots == self.num_shots_required:
             self.finish(True)
 
@@ -259,8 +258,7 @@ class Fear(DarkJudge):
     def ramp_shot_hit(self):
         if self.num_shots < self.num_shots_required - 1:
             self.game.score(10000)
-            self.num_shots += 1
-            self.update_status()
+            self.incr_num_shots()
             self.game.lampctrl.play_show('shot_hit', False, self.game.update_lamps)
             if self.num_shots == self.num_shots_required - 1:
                 self.state = 'subway'
@@ -294,8 +292,7 @@ class Fear(DarkJudge):
 
     def subway_hit(self):
         if self.state == 'subway':
-            self.num_shots += 1
-            self.update_status()
+            self.incr_num_shots()
             self.game.lampctrl.play_show('shot_hit', False, self.game.update_lamps)
             self.game.score(10000)
             self.finish(success=True)
@@ -356,7 +353,7 @@ class Mortis(DarkJudge):
     def switch_hit(self, index):
         if self.targets[index]:
             self.targets[index] = 0
-            self.num_shots += 1
+            self.incr_num_shots()
             self.game.lampctrl.play_show('shot_hit', False, self.game.update_lamps)
             self.game.score(10000)
             self.check_for_completion()
@@ -395,7 +392,7 @@ class Death(DarkJudge, CrimeSceneShots):
     def switch_hit(self, index):
         if self.active_shots[index]:
             self.active_shots[index] = 0
-            self.num_shots += 1
+            self.incr_num_shots()
             self.game.lampctrl.play_show('shot_hit', False, self.game.update_lamps)
             self.game.score(10000)
             self.shot_timer = self.time_for_shot
@@ -413,7 +410,7 @@ class Death(DarkJudge, CrimeSceneShots):
         for shot in self.shot_order:
             if not self.active_shots[shot]:
                 self.active_shots[shot] = 1
-                self.num_shots -= 1
+                self.decr_num_shots()
                 break
         self.game.update_lamps()
 
@@ -467,7 +464,7 @@ class Fire(DarkJudge, CrimeSceneShots):
     def switch_hit(self, index):
         if self.shots_required[index] > 0:
             self.shots_required[index] -= 1
-            self.num_shots += 1
+            self.incr_num_shots()
             self.game.lampctrl.play_show('shot_hit', False, self.game.update_lamps)
             self.game.score(10000)
             self.check_for_completion()
@@ -570,8 +567,7 @@ class Celebration(ChallengeBase, CrimeSceneShots):
 
     def switch_hit(self, index):
         self.game.score(10000)
-        self.num_shots += 1
-        self.update_status()
+        self.incr_num_shots()
 
     def update_status(self):
         self.status_layer.set_text('Shots made: ' + str(self.num_shots))
