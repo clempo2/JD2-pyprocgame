@@ -18,7 +18,7 @@ class SlamTilted(Mode):
 
     def reset_game(self):
         self.game.reset()
-        self.update_lamps()
+        self.game.update_lamps()
 
 
 class Tilted(Mode):

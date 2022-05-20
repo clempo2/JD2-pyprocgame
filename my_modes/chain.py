@@ -354,8 +354,8 @@ class BattleTank(ChainFeature):
         self.lamp_names = ['tankLeft', 'tankCenter', 'tankRight']
 
     def mode_started(self):
-        self.shots = [1, 1, 1]
         super(BattleTank, self).mode_started()
+        self.shots = [1, 1, 1]
         self.game.sound.play_voice('tank intro')
 
     def update_lamps(self):
@@ -409,6 +409,7 @@ class Impersonator(ChainFeature):
         self.delay(name='shutup_restart', event_type=None, delay=time+3, handler=self.shutup_restart)
 
     def mode_stopped(self):
+        super(Impersonator, self).mode_stopped()
         self.stop_using_drops()
         self.game.sound.stop('bad impersonator song')
         self.game.sound.stop('bad impersonator boo')
@@ -550,6 +551,7 @@ class Safecracker(ChainFeature):
         self.delay(name='bad guys', event_type=None, delay=randint(10, 20), handler=self.bad_guys)
 
     def mode_stopped(self):
+        super(Safecracker, self).mode_stopped()
         self.stop_using_drops()
 
     def update_lamps(self):

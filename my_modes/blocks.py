@@ -1,7 +1,7 @@
 from random import shuffle
-from procgame.dmd import GroupedLayer, TextLayer
 from procgame.game import Mode
 from crimescenes import CrimeSceneShots
+from timer import TimedMode
 
 class CityBlocks(Mode):
     """Controls the progress through the city block modes"""
@@ -10,14 +10,13 @@ class CityBlocks(Mode):
         super(CityBlocks, self).__init__(game, priority)
         self.city_block = CityBlock(self, priority + 1)
         self.block_war = BlockWar(self, priority + 5)
-        self.block_war_bonus = BlockWarBonus(self, priority + 5)
         self.ball_save_time = self.game.user_settings['Gameplay']['Block War ballsave time']
 
     def mode_started(self):
         self.start_city_block()
 
     def mode_stopped(self):
-        self.game.remove_modes([self.city_block, self.block_war, self.block_war_bonus])
+        self.game.remove_modes([self.city_block, self.block_war])
 
     def reset(self):
         self.city_block.reset()
@@ -34,7 +33,6 @@ class CityBlocks(Mode):
 
     def start_block_war(self):
         self.game.remove_modes([self.city_block])
-        self.block_war.reset()
         self.start_multiball_callback()
         # launch another ball for a 2 ball multiball, or up to 4 balls when stacked with Deadworld multiball
         self.game.launch_balls(1)
@@ -42,28 +40,11 @@ class CityBlocks(Mode):
         self.game.modes.add(self.block_war)
         self.game.update_lamps()
 
-    def start_block_war_bonus(self):
+    def end_block_war(self):
         self.game.remove_modes([self.block_war])
-        self.game.modes.add(self.block_war_bonus)
-        self.game.update_lamps()
-
-    def end_block_war_bonus(self, bonus_collected):
-        self.game.remove_modes([self.block_war_bonus])
-        self.block_war.next_round(bonus_collected)
-        self.game.modes.add(self.block_war)
-        self.game.update_lamps()
-
-    def end_multiball(self):
-        self.game.remove_modes([self.block_war, self.block_war_bonus])
+        self.end_multiball_callback()
         self.city_block.next_block()
         self.start_city_block()
-        self.end_multiball_callback()
-        # lamps were updated by end_multiball_callback()
-
-    def evt_ball_drained(self):
-        # End multiball if there is now only one ball in play
-        if self.game.getPlayerState('multiball_active', 0) & 0x6:
-            self.end_multiball()
 
     def update_lamps(self):
         # Count the number of block wars applicable to starting the next Ultimate Challenge
@@ -233,84 +214,57 @@ class CityBlock(CrimeSceneShots):
                 self.game.drive_lamp(lamp_name, style)
 
 
-class BlockWar(CrimeSceneShots):
-    """Multiball activated by securing city blocks"""
+class BlockWar(TimedMode, CrimeSceneShots):
+    """Multiball activated by securing city blocks
+       For round N: shoot every shot N times,
+       After each round, shoot the rotating target for a block war bonus jackpot
+    """
 
     def __init__(self, parent, priority):
-        super(BlockWar, self).__init__(parent.game, priority)
+        super(BlockWar, self).__init__(parent.game, priority, 0, 'Block War', 'Shoot all lit shots', 5, parent.game.animations['blockwars'])
         self.parent = parent
-
-        self.score_reason_layer = TextLayer(128/2, 7, self.game.fonts['07x5'], 'center')
-        self.score_value_layer = TextLayer(128/2, 17, self.game.fonts['07x5'], 'center')
-        self.anim_layer = self.game.animations['blockwars']
-        self.layer = GroupedLayer(128, 32, [self.anim_layer, self.score_reason_layer, self.score_value_layer])
+        # hide the mode name in the top left corner
+        self.name_layer.set_text(None)
 
     def mode_started(self):
+        super(BlockWar, self).mode_started()
         self.game.addPlayerState('multiball_active', 0x2)
-        self.game.base_play.display('Block War')
         self.game.sound.play_voice('block war')
+        self.num_shots_required_per_target = 1
+        self.next_round(inc_num_shots=False)
 
     def mode_stopped(self):
+        super(BlockWar, self).mode_stopped()
         self.game.addPlayerState('multiball_active', -0x2)
 
-    def reset(self):
-        # go back to the first round
-        self.num_shots_required_per_target = 1
-        self.shots_required = [1, 1, 1, 1, 1]
-
     def next_round(self, inc_num_shots):
+        self.state = 'shots'
+        self.num_shots = 0
         if inc_num_shots:
             if self.num_shots_required_per_target < 4:
                 self.num_shots_required_per_target += 1
+        self.num_shots_required = self.num_shots_required_per_target * 5
         self.shots_required = [self.num_shots_required_per_target] * 5
-
-    def switch_hit(self, shot):
-        if self.shots_required[shot] > 0:
-            self.shots_required[shot] -= 1
-            multiplier = self.game.getPlayerState('num_hurry_ups', 0) + 1
-            points = 5000 * multiplier
-            self.score_value_layer.set_text(self.game.format_points(points), 2)
-            self.game.score(points)
-            self.game.sound.play('block_war_target')
-            if self.shots_required[shot] == 0:
-                self.score_reason_layer.set_text('Block ' + str(shot + 1) + ' Secured', 2)
-            self.game.update_lamps()
-
-            if not any(self.shots_required):
-                # all shots hit already
-                self.round_complete()
-        else:
-            self.game.sound.play_voice('good shot')
+        self.update_status()
+        self.game.update_lamps()
 
     def round_complete(self):
+        # all shots are completed, start the bonus round
         self.game.score(10000)
         self.game.lampctrl.play_show('advance_level', False, self.game.update_lamps)
-        self.parent.start_block_war_bonus()
-
-    def update_lamps(self):
-        self.game.drive_lamp('advanceCrimeLevel', 'off')
-        for shot in range(0, 5):
-            for color in range(0, 4):
-                lamp_name = 'perp' + str(shot + 1) + self.lamp_colors[color]
-                style = 'medium' if color < self.shots_required[shot] else 'off'
-                self.game.drive_lamp(lamp_name, style)
-
-
-class BlockWarBonus(CrimeSceneShots):
-    """Bonus round after a successful block war round, shoot the rotating target"""
-
-    def __init__(self, parent, priority):
-        super(BlockWarBonus, self).__init__(parent.game, priority)
-        self.parent = parent
-
-    def mode_started(self):
-        self.game.addPlayerState('multiball_active', 0x4)
+        self.state = 'bonus'
         self.bonus_shot = 0
         self.delay(name='rotate_bonus_target', event_type=None, delay=3, handler=self.rotate_bonus_target, param=1)
         self.game.sound.play_voice('jackpot is lit')
+        self.update_status()
+        self.game.update_lamps()
 
-    def mode_stopped(self):
-        self.game.addPlayerState('multiball_active', -0x4)
+    def bonus_round_collected(self):
+        self.game.score(100000)
+        self.game.base_play.display('Jackpot')
+        self.game.sound.play_voice('jackpot')
+        self.game.lampctrl.play_show('advance_level', False, self.game.update_lamps)
+        self.next_round(inc_num_shots=True)
 
     # rotate all the way to the end and back only once
     def rotate_bonus_target(self, bonus_step):
@@ -318,25 +272,57 @@ class BlockWarBonus(CrimeSceneShots):
             bonus_step = -1
         self.bonus_shot += bonus_step
         if self.bonus_shot == -1:
-            self.parent.end_block_war_bonus(False)
+            self.next_round(inc_num_shots=False)
         else:
             self.delay(name='rotate_bonus_target', event_type=None, delay=3, handler=self.rotate_bonus_target, param=bonus_step)
         self.game.update_lamps()
 
     def switch_hit(self, shot):
-        if shot == self.bonus_shot:
-            self.cancel_delayed('rotate_bonus_target')
-            self.bonus_round_collected()
+        if self.state == 'shots':
+            if self.shots_required[shot] > 0:
+                self.shots_required[shot] -= 1
+                self.incr_num_shots()
+                self.game.update_lamps()
 
-    def bonus_round_collected(self):
-        self.game.score(100000)
-        self.game.base_play.display('Jackpot')
-        self.game.sound.play_voice('jackpot')
-        self.game.lampctrl.play_show('advance_level', False, self.game.update_lamps)
-        self.parent.end_block_war_bonus(True)
+                multiplier = self.game.getPlayerState('num_hurry_ups', 0) + 1
+                points = 5000 * multiplier
+                self.game.score(points)
+
+                if self.shots_required[shot]:
+                    self.game.sound.play_voice('good shot')
+                else:
+                    self.game.sound.play('Block ' + str(shot + 1) + ' Secured')
+
+                if self.num_shots == self.num_shots_required:
+                    self.round_complete()
+            else:
+                self.game.sound.play('block_war_target')
+        elif self.state == 'bonus':
+            if shot == self.bonus_shot:
+                self.cancel_delayed('rotate_bonus_target')
+                self.bonus_round_collected()
 
     def update_lamps(self):
         self.game.drive_lamp('advanceCrimeLevel', 'off')
-        for shot in range(0, 5):
-            style = 'medium' if self.bonus_shot == shot else 'off'
-            self.game.drive_perp_lamp('perp' + str(shot + 1), style)
+        if self.state == 'shots':
+            for shot in range(0, 5):
+                for color in range(0, 4):
+                    lamp_name = 'perp' + str(shot + 1) + self.lamp_colors[color]
+                    style = 'medium' if color < self.shots_required[shot] else 'off'
+                    self.game.drive_lamp(lamp_name, style)
+        elif self.state == 'bonus':
+            for shot in range(0, 5):
+                style = 'medium' if self.bonus_shot == shot else 'off'
+                self.game.drive_perp_lamp('perp' + str(shot + 1), style)
+            
+    def update_status(self):
+        if self.state == 'bonus':
+            self.status_layer.set_text('Shoot rotating shot')
+        else:
+            super(BlockWar, self).update_status()
+
+    def evt_ball_drained(self):
+        # End multiball if there is now only one ball in play
+        if self.game.getPlayerState('multiball_active', 0) & 0x2:
+            self.parent.end_block_war()
+

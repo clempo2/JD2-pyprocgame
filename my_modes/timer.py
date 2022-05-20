@@ -57,7 +57,7 @@ class TimedMode(Timer):
     """Base class for timed modes, start with an intro showing instructions,
     then display the number of shots with a countdown timer"""
 
-    def __init__(self, game, priority, mode_time, name, instructions, num_shots_required):
+    def __init__(self, game, priority, mode_time, name, instructions, num_shots_required, animationLayer=None):
         super(TimedMode, self).__init__(game, priority)
         self.mode_time = mode_time
         self.name = name
@@ -81,7 +81,9 @@ class TimedMode(Timer):
         self.name_layer = TextLayer(1, 1, font_small, 'left').set_text(name)
         self.score_layer = TextLayer(128/2, 10, font_num, 'center')
         self.status_layer = TextLayer(128/2, 26, font_small, 'center')
-        self.mode_layer = GroupedLayer(128, 32, [self.countdown_layer, self.name_layer, self.score_layer, self.status_layer])
+        layers = [animationLayer] if animationLayer else []
+        layers += [self.countdown_layer, self.name_layer, self.score_layer, self.status_layer]
+        self.mode_layer = GroupedLayer(128, 32, layers)
 
     def mode_started(self):
         self.game.modes.add(self.intro)
