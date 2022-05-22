@@ -12,7 +12,7 @@ from procgame.modes import BallSave, BallSearch, Trough
 from procgame.service import ServiceMode
 from procgame.sound import SoundController
 from asset_loader import AssetLoader
-from layers import FixedSizeTextLayer, WindowPushTransition, DontMoveTransition
+from layers import DontMoveTransition, FixedSizeTextLayer, LayerCoordPushTransition, SlideTransition
 from my_modes.attract import Attract
 from my_modes.base import BasePlay
 from my_modes.deadworld import Deadworld, DeadworldTest
@@ -57,15 +57,19 @@ class JD2Game(BasicGame):
         super(JD2Game, self).__init__(pinproc.MachineTypeWPC)
 
         # a text layer for status messages, same size and location as the status line at the bottom of the score display
-        # Use the dont_move_message transition completion handler as a poor man's delay handler
+        # I would not need the dont_move_transition if this class was a mode with the ability to declare delayed handlers
         self.dmd.message_layer = FixedSizeTextLayer(128/2, 32-6, self.dmd.message_layer.font, "center", opaque=True, width=128, height=6)
-        self.push_in_message = WindowPushTransition(self.dmd.message_layer, direction='west')
-        self.push_in_message.completed_handler = self.push_in_message_completed
-        self.dont_move_message = DontMoveTransition()
-        self.dont_move_message.progress_per_frame = 1.0 / 120.0
-        self.dont_move_message.completed_handler = self.dont_move_message_completed
-        self.push_out_message = WindowPushTransition(self.dmd.message_layer, direction='east')
-        self.push_out_message.in_out = 'out'
+        #self.slide_in_transition = SlideTransition(direction='west')
+        #self.slide_in_transition.completed_handler = self.transition_in_completed
+        #self.slide_out_transition = SlideTransition(direction='east')
+        #self.slide_out_transition.in_out = 'out'
+        self.push_in_transition = LayerCoordPushTransition(self.dmd.message_layer, direction='west')
+        self.push_in_transition.completed_handler = self.transition_in_completed
+        self.dont_move_transition = DontMoveTransition()
+        self.dont_move_transition.progress_per_frame = 1.0 / 120.0
+        self.dont_move_transition.completed_handler = self.dont_move_transition_completed
+        self.push_out_transition = LayerCoordPushTransition(self.dmd.message_layer, direction='east')
+        self.push_out_transition.in_out = 'out'
 
         self.sound = SoundController(self)
         self.lampctrl = LampController(self)
@@ -184,18 +188,20 @@ class JD2Game(BasicGame):
         # A line of text the same size as the bottom line of the score display.
         # display for a fixed number of seconds, or else scroll in, pause and scroll out
         self.dmd.message_layer.set_text(text, seconds)
-        if seconds:
+        if text is None or seconds:
             self.dmd.message_layer.transition = None
         else:
-            self.dmd.message_layer.transition = self.push_in_message
+            #self.dmd.message_layer.transition = self.slide_in_transition
+            self.dmd.message_layer.transition = self.push_in_transition
             self.dmd.message_layer.transition.start()
 
-    def push_in_message_completed(self):
-        self.dmd.message_layer.transition = self.dont_move_message
+    def transition_in_completed(self):
+        self.dmd.message_layer.transition = self.dont_move_transition
         self.dmd.message_layer.transition.start()
 
-    def dont_move_message_completed(self):
-        self.dmd.message_layer.transition = self.push_out_message
+    def dont_move_transition_completed(self):
+        self.dmd.message_layer.transition = self.push_out_transition
+        #self.dmd.message_layer.transition = self.slide_out_transition
         self.dmd.message_layer.transition.start()
 
     def reset_script_layer(self, script):

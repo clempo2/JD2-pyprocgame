@@ -1,5 +1,5 @@
 import time
-from procgame.dmd import Frame, LayerTransitionBase, PanningLayer, TextLayer
+from procgame.dmd import Frame, LayerTransitionBase, PanningLayer, PushTransition, TextLayer
 
 class FixedSizeTextLayer(TextLayer):
     """A TextLayer where the text and blank blinking frames are opaque over the whole fixed width x height"""
@@ -61,11 +61,26 @@ class FastPanningLayer(PanningLayer):
         return super(FastPanningLayer, self).next_frame()
 
 
-class WindowPushTransition(LayerTransitionBase):
-    """A PushTransition that pushes the content within the rectangle occupied by the layer instead of the rectangle located at 0,0"""
+class LayerCoordPushTransition(PushTransition):
+    """A PushTransition that respects the x,y coordinates of the layer within the from frame"""
 
     def __init__(self, layer, direction='north'):
-        super(WindowPushTransition, self).__init__()
+        super(LayerCoordPushTransition, self).__init__(direction)
+        self.to_layer = layer
+        #self.progress_per_frame = 1.0/20.0
+
+    def next_frame(self, from_frame, to_frame):
+        src_x = self.to_layer.target_x + self.to_layer.target_x_offset
+        src_y = self.to_layer.target_y + self.to_layer.target_y_offset
+        frame = Frame(to_frame.width, to_frame.height)
+        Frame.copy_rect(dst=frame, dst_x=0, dst_y=0, src=from_frame, src_x=src_x, src_y=src_y, width=frame.width, height=frame.height, op='copy')
+        return super(LayerCoordPushTransition, self).next_frame(frame, to_frame)
+
+class LayerCoordPushTransitionORG(LayerTransitionBase):
+    """A PushTransition that respects the x,y coordinates of the layer within the from frame"""
+
+    def __init__(self, layer, direction='north'):
+        super(LayerCoordPushTransitionORG, self).__init__()
         self.to_layer = layer
         self.direction = direction
         self.progress_per_frame = 1.0/20.0
@@ -87,12 +102,57 @@ class WindowPushTransition(LayerTransitionBase):
          'north': (0,  prog*frame.height,  0, -prog1*frame.height),
          'south': (0, -prog*frame.height,  0,  prog1*frame.height),
          'east':  (-prog*frame.width, 0,    prog1*frame.width, 0),
-         'west':  ( prog*frame.width, 0,   -prog1*frame.width, 0),
+         'west':  ( prog*frame.width, 0,   -prog1*frame.width, 0)
         }[self.direction]
         src_x1 = self.to_layer.target_x + self.to_layer.target_x_offset
         src_y1 = self.to_layer.target_y + self.to_layer.target_y_offset
         Frame.copy_rect(dst=frame, dst_x=dst_x, dst_y=dst_y, src=to_frame, src_x=0, src_y=0, width=frame.width, height=frame.height, op='copy')
         Frame.copy_rect(dst=frame, dst_x=dst_x1, dst_y=dst_y1, src=from_frame, src_x=src_x1, src_y=src_y1, width=frame.width, height=frame.height, op='copy')
+        return frame
+
+class SlideTransition(LayerTransitionBase):
+    """A transition that scrolls the to_frame over a blank frame"""
+
+    def __init__(self, direction='north'):
+        super(SlideTransition, self).__init__()
+        self.direction = direction
+        self.progress_per_frame = 1.0/20.0
+
+    def next_frame(self, from_frame, to_frame):
+        blank_frame = Frame(to_frame.width, to_frame.height)
+        return super(SlideTransition, self).next_frame(blank_frame, to_frame)
+
+    def transition_frame(self, from_frame, to_frame):
+        frame = Frame(width=to_frame.width, height=to_frame.height)
+        prog = self.progress if self.in_out != 'in' else 1.0 - self.progress
+        dst_x, dst_y = {
+         'north': (0,  prog*frame.height),
+         'south': (0, -prog*frame.height),
+         'east':  (-prog*frame.width, 0),
+         'west':  ( prog*frame.width, 0)
+        }[self.direction]
+        Frame.copy_rect(dst=frame, dst_x=dst_x, dst_y=dst_y, src=to_frame, src_x=0, src_y=0, width=frame.width, height=frame.height, op='copy')
+        return frame
+
+
+class SlideTransitionORG(LayerTransitionBase):
+    """A transition that scrolls the to frame over a blank frame"""
+
+    def __init__(self, direction='north'):
+        super(SlideTransitionORG, self).__init__()
+        self.direction = direction
+        self.progress_per_frame = 1.0/20.0
+
+    def transition_frame(self, from_frame, to_frame):
+        frame = Frame(width=to_frame.width, height=to_frame.height)
+        prog = self.progress if self.in_out != 'in' else 1.0 - self.progress
+        dst_x, dst_y = {
+         'north': (0,  prog*frame.height),
+         'south': (0, -prog*frame.height),
+         'east':  (-prog*frame.width, 0),
+         'west':  ( prog*frame.width, 0)
+        }[self.direction]
+        Frame.copy_rect(dst=frame, dst_x=dst_x, dst_y=dst_y, src=to_frame, src_x=0, src_y=0, width=frame.width, height=frame.height, op='copy')
         return frame
 
 
