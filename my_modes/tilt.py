@@ -115,10 +115,8 @@ class TiltMonitorMode(Mode):
 
     def disable_game(self):
         # Disable flippers so the ball will drain.
-        self.game.enable_flippers(enable=False)
-
         # Make sure ball won't be saved when it drains.
+        self.game.enable_flippers(enable=False)
         self.game.ball_save.disable()
-
-        # Ensure all lamps are off.
         self.game.disable_all_lights()
+        self.game.set_status(None)

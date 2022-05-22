@@ -7,6 +7,7 @@ class Bonus(Mode):
         self.game.stop_all_sounds()
         self.game.sound.play_voice('drain')
         self.game.base_play.display('Bonus')
+        self.game.set_status(None)
 
         # compute everything before we start so we can easily skip to the end
         # do not show bonus items worth zero
