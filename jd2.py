@@ -12,7 +12,7 @@ from procgame.modes import BallSave, BallSearch, Trough
 from procgame.service import ServiceMode
 from procgame.sound import SoundController
 from asset_loader import AssetLoader
-from layers import DontMoveTransition, FixedSizeTextLayer, SlideTransition
+from layers import DontMoveTransition, FixedSizeTextLayer, GroupedTransition, SlideTransition
 from my_modes.attract import Attract
 from my_modes.base import BasePlay
 from my_modes.deadworld import Deadworld, DeadworldTest
@@ -175,36 +175,31 @@ class JD2Game(BasicGame):
     def create_message_layer(self):
         """return a text layer at the bottom of the screen where the last line of the score display normally goes"""
         layer = FixedSizeTextLayer(128/2, 32-6, self.dmd.message_layer.font, "center", opaque=False, width=128, height=6)
-        layer.slide_in_transition = SlideTransition(direction='west')
-        layer.slide_in_transition.completed_handler = self.slide_in_completed
-        layer.dont_move_transition = DontMoveTransition()
-        layer.dont_move_transition.completed_handler = self.dont_move_completed
-        layer.slide_out_transition = SlideTransition(direction='east')
-        layer.slide_out_transition.in_out = 'out'
-        layer.slide_out_transition.completed_handler = self.slide_out_completed
+
+        # slide in for 0.5s, stay still for 2s, slide out for 0.5s
+        slide_in_transition = SlideTransition(direction='west')
+        dont_move_transition = DontMoveTransition()
+        dont_move_transition.progress_per_frame = 1.0 / 120.0
+        slide_out_transition = SlideTransition(direction='west')
+        slide_out_transition.in_out = 'out'
+
+        layer.grouped_transition = GroupedTransition([slide_in_transition, dont_move_transition, slide_out_transition])
+        layer.grouped_transition.completed_handler = self.message_transition_completed
         return layer
 
-    def set_status(self, text=None, seconds=3, scroll=True):
+    def set_status(self, text=None, scroll=True):
         # when text is None, that effectively turns off the layer and transitions are not called
         if scroll:
             # text slides in, stays for a while and then slides out
             self.dmd.message_layer.set_text(text)
-            self.dmd.message_layer.transition = self.dmd.message_layer.slide_in_transition
+            self.dmd.message_layer.transition = self.dmd.message_layer.grouped_transition
             self.dmd.message_layer.transition.start()
         else:
             # text does not move
-            self.dmd.message_layer.set_text(text, seconds)
+            self.dmd.message_layer.set_text(text, seconds=3)
             self.dmd.message_layer.transition = None
 
-    def slide_in_completed(self):
-        self.dmd.message_layer.transition = self.dmd.message_layer.dont_move_transition
-        self.dmd.message_layer.transition.start()
-
-    def dont_move_completed(self):
-        self.dmd.message_layer.transition = self.dmd.message_layer.slide_out_transition
-        self.dmd.message_layer.transition.start()
-
-    def slide_out_completed(self):
+    def message_transition_completed(self):
         self.dmd.message_layer.set_text(None)
 
     def reset_script_layer(self, script):

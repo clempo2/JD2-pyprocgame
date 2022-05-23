@@ -75,7 +75,7 @@ class SlideTransition(LayerTransitionBase):
 
     def transition_frame(self, from_frame, to_frame):
         frame = Frame(width=to_frame.width, height=to_frame.height)
-        prog = self.progress if self.in_out != 'in' else 1.0 - self.progress
+        prog = -self.progress if self.in_out == 'out' else 1.0 - self.progress
         dst_x, dst_y = {
          'north': (0,  prog*frame.height),
          'south': (0, -prog*frame.height),
@@ -91,3 +91,40 @@ class DontMoveTransition(LayerTransitionBase):
     def transition_frame(self, from_frame, to_frame):
         return to_frame
 
+class GroupedTransition(LayerTransitionBase):
+    """A transition that runs multiple transitions one after the other"""
+
+    def __init__(self, transitions):
+        super(GroupedTransition, self).__init__()
+        if transitions is None or not transitions:
+            raise Exception("List of transitions cannot be empty")
+        self.transitions = transitions
+        self.current = 0
+
+    def start(self):
+        self.reset()
+        self.transitions[self.current].start()
+
+    def reset(self):
+        self.current = 0
+        self.transitions[self.current].reset()
+
+    def pause(self):
+        self.transitions[self.current].pause()
+
+    def next_frame(self, from_frame, to_frame):
+        transition = self.transitions[self.current]
+        if transition.progress_mult:
+            prog = max(0.0, min(1.0, transition.progress + transition.progress_mult * transition.progress_per_frame))
+            if prog >= 1.0:
+                # run the next transition
+                if self.current < len(self.transitions) - 1:
+                    self.current += 1
+                    transition = self.transitions[self.current]
+                    transition.start()
+                elif self.completed_handler != None:
+                    self.completed_handler()
+        return transition.next_frame(from_frame, to_frame)
+
+    def transition_frame(self, from_frame, to_frame):
+        return self.transitions[self.current].transition_frame(from_frame, to_frame)
