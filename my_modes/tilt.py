@@ -2,12 +2,12 @@
 # Copyright (c) 2014-2015 Michael Ocean and Josh Kugler
 
 import time
-from procgame.dmd import TextLayer
+from procgame.dmd import GroupedLayer, TextLayer
 from procgame.game import Mode, SwitchStop
 
 
 class SlamTilted(Mode):
-    """display Slam Tilt and wait a little while before resetting the game"""
+    """Display 'Slam Tilt' and wait a little while before resetting the game"""
 
     def __init__(self, game):
         super(SlamTilted, self).__init__(game, priority=99999)
@@ -22,14 +22,19 @@ class SlamTilted(Mode):
 
 
 class Tilted(Mode):
-    """ Consumes all switch events to block scoring """
+    """Display 'Tilt' and consume all switch events to block scoring"""
 
     def __init__(self, game):
         super(Tilted, self).__init__(game, priority=99999)
+        text_layer = TextLayer(128/2, 7, self.game.fonts['jazz18'], 'center').set_text('Tilt')
+        self.layer = GroupedLayer(128, 32, [text_layer])
         always_seen_switches = self.game.switches.items_tagged('tilt_visible')
         always_seen_switches.append(self.game.switches.items_tagged('trough'))
         for sw in [x for x in self.game.switches if x.name not in self.game.trough.position_switchnames and x.name not in always_seen_switches]:
             self.add_switch_handler(name=sw.name, event_type='active', delay=None, handler=self.ignore_switch)
+
+    def mode_started(self):
+        self.game.sound.play('tilt')
 
     def ignore_switch(self, sw):
         return SwitchStop
@@ -59,7 +64,6 @@ class TiltMonitorMode(Mode):
         super(TiltMonitorMode, self).__init__(game, priority)
         self.tilt_sw = tilt_sw
         self.slam_tilt_sw = slam_tilt_sw
-        self.tilted_mode = Tilted(game)
 
         if tilt_sw:
             self.add_switch_handler(name=tilt_sw, event_type='active', delay=None, handler=self.tilt_active)
@@ -78,9 +82,6 @@ class TiltMonitorMode(Mode):
     def mode_started(self):
         self.tilt_reset()
 
-    def mode_stopped(self):
-        self.game.remove_modes([self.tilted_mode])
-
     def tilt_active(self, sw):
         now = time.time()
         if (self.previous_warning_time is not None) and ((now - self.previous_warning_time) < self.tilt_bob_settle_time):
@@ -92,15 +93,12 @@ class TiltMonitorMode(Mode):
         if self.times_warned == self.num_tilt_warnings:
             if not self.tilted:
                 self.tilted = True
-                self.disable_game()
-                self.game.modes.add(self.tilted_mode)
                 self.game.tilted()
         else:
             self.times_warned += 1
             self.game.tilt_warning(self.times_warned)
 
     def slam_tilt_active(self, sw):
-        self.disable_game()
         self.game.slam_tilted()
         return True
 
@@ -112,11 +110,3 @@ class TiltMonitorMode(Mode):
             self.delay(name='tilt_bob_settle', event_type=None, delay=secs_since_bob_tilt, handler=self.tilt_delay, param=fn)
         else:
             return fn()
-
-    def disable_game(self):
-        # Disable flippers so the ball will drain.
-        # Make sure ball won't be saved when it drains.
-        self.game.enable_flippers(enable=False)
-        self.game.ball_save.disable()
-        self.game.disable_all_lights()
-        self.game.set_status(None)

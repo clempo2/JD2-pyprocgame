@@ -120,17 +120,20 @@ class Multiball(Mode):
         # The planet counts a sneaky lock as a real lock.
         #   If we know there is a sneaky lock ball currently being ejected,
         #   we need to remove it from the count to get the real number of locked balls in the planet.
-        dw_num_balls_locked = self.game.deadworld.num_balls_locked - sneaky_ball_adjust
-        if (self.deadworld_mod_installed and self.num_locks_lit > 0 and
-                    dw_num_balls_locked > self.num_balls_locked):
-            self.virtual_locks_needed = dw_num_balls_locked - self.num_balls_locked
-        else:
-            self.virtual_locks_needed = 0
 
-        if self.num_balls_locked < self.num_locks_lit:
-            self.enable_lock()
-        else:
-            self.disable_lock()
+        # make sure multiball did not start in the meantime, this can happen if BlockWar is running
+        if self.state == 'load':
+            dw_num_balls_locked = self.game.deadworld.num_balls_locked - sneaky_ball_adjust
+            if (self.deadworld_mod_installed and self.num_locks_lit > 0 and
+                        dw_num_balls_locked > self.num_balls_locked):
+                self.virtual_locks_needed = dw_num_balls_locked - self.num_balls_locked
+            else:
+                self.virtual_locks_needed = 0
+    
+            if self.num_balls_locked < self.num_locks_lit:
+                self.enable_lock()
+            else:
+                self.disable_lock()
 
     def enable_lock(self):
         self.install_diverter_rule(enable=self.virtual_locks_needed == 0)
@@ -150,7 +153,7 @@ class Multiball(Mode):
 
     def ball_locked(self, launch_ball=True):
         # a ball was locked through a physical or a virtual lock
-        # This method can only be called when self.state is 'load'
+        # BEWARE: This method can only be called when self.state is 'load'
         self.game.coils.flasherGlobe.schedule(schedule=0xAAAAAAAA, cycle_seconds=2, now=True)
 
         self.num_balls_locked += 1
@@ -176,7 +179,7 @@ class Multiball(Mode):
     def sneaky_lock(self):
         # A ball trickled into the ramp to lock when the physical lock is disabled
         # Award a lock light and eject the sneaky ball
-        # This method can only be called when self.state is 'load'
+        # BEWARE: This method can only be called when self.state is 'load'
         self.game.set_status('SNEAKY LOCK')
         self.light_lock(sneaky_ball_adjust=1)
         self.game.deadworld.eject_balls(1, self.configure_lock)

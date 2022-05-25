@@ -100,12 +100,12 @@ class ChallengeBase(TimedMode):
             # display initial time without starting countdown
             self.timer_update(self.initial_time)
         if self.num_balls > 1:
-            self.game.addPlayerState('multiball_active', 0x8)
+            self.game.addPlayerState('multiball_active', 0x4)
 
     def mode_stopped(self):
         super(ChallengeBase, self).mode_stopped()
         if self.num_balls > 1:
-            self.game.addPlayerState('multiball_active', -0x8)
+            self.game.addPlayerState('multiball_active', -0x4)
 
     def ready(self):
         if self.game.switches.popperR.is_active():

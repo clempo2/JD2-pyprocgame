@@ -18,7 +18,7 @@ from my_modes.base import BasePlay
 from my_modes.deadworld import Deadworld, DeadworldTest
 from my_modes.initials import JDEntrySequenceManager
 from my_modes.switchmonitor import SwitchMonitor
-from my_modes.tilt import SlamTilted
+from my_modes.tilt import SlamTilted, Tilted
 
 logging.basicConfig(level=logging.ERROR, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 
@@ -150,6 +150,7 @@ class JD2Game(BasicGame):
         self.attract = Attract(self)
         self.base_play = BasePlay(self)
         self.deadworld = Deadworld(self, 20)
+        self.tilted_mode = Tilted(self)
 
         self.add_modes([self.switch_monitor, self.ball_search, self.deadworld, self.ball_save, self.trough, self.attract])
         self.attract.display()
@@ -158,11 +159,8 @@ class JD2Game(BasicGame):
         self.enable_flippers(enable=False)
 
     def stop(self):
-        self.disable_all_lights()
-        self.stop_all_sounds()
-        self.sound.stop_music()
+        self.disable_game()
         self.remove_all_modes()
-        self.set_status(None)
 
     # Empty callback
     def no_op_callback(self):
@@ -283,6 +281,7 @@ class JD2Game(BasicGame):
             # warning: must pass a real callback since passing None preserves the previous callback
             self.trough.launch_balls(balls_to_launch, self.no_op_callback)
         if deadworld_balls_to_launch:
+            # if we need that many balls, it must be multiball, no need to configure_lock afterwards
             self.deadworld.eject_balls(deadworld_balls_to_launch)
 
     # Override to create a flag signaling extra ball.
@@ -298,7 +297,7 @@ class JD2Game(BasicGame):
         self.game_data['Audits']['Balls Played'] += 1
 
     def ball_ended(self):
-        self.remove_modes([self.base_play])
+        self.remove_modes([self.base_play, self.tilted_mode])
         self.trough.drain_callback = self.no_op_callback
 
     def game_ended(self):
@@ -356,12 +355,20 @@ class JD2Game(BasicGame):
         self.modes.add(SlamTilted(self))
 
     def tilted(self):
-        self.stop_all_sounds()
-        self.sound.stop_music()
-        self.sound.play('tilt')
-        self.base_play.display('Tilt')
+        self.disable_game()
         # stop all mode timers
         self.send_event('pause')
+        self.modes.add(self.tilted_mode)
+
+    def disable_game(self):
+        # Make sure balls will drain and won't be saved
+        self.enable_flippers(enable=False)
+        if hasattr(self, 'ball_save'):
+            self.ball_save.disable()
+        self.disable_all_lights()
+        self.stop_all_sounds()
+        self.sound.stop_music()
+        self.set_status(None)
 
     #
     # Settings
