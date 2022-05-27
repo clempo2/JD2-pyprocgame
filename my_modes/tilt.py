@@ -29,8 +29,8 @@ class Tilted(Mode):
         text_layer = TextLayer(128/2, 7, self.game.fonts['jazz18'], 'center').set_text('Tilt')
         self.layer = GroupedLayer(128, 32, [text_layer])
         always_seen_switches = self.game.switches.items_tagged('tilt_visible')
-        always_seen_switches.append(self.game.switches.items_tagged('trough'))
-        for sw in [x for x in self.game.switches if x.name not in self.game.trough.position_switchnames and x.name not in always_seen_switches]:
+        always_seen_switches.extend(self.game.switches.items_tagged('trough'))
+        for sw in [x for x in self.game.switches if x.name not in self.game.trough.position_switchnames and x not in always_seen_switches]:
             self.add_switch_handler(name=sw.name, event_type='active', delay=None, handler=self.ignore_switch)
 
     def mode_started(self):
@@ -40,21 +40,28 @@ class Tilted(Mode):
         return SwitchStop
 
     def mode_stopped(self):
-        self.game.game_tilted = False
         self.game.base_play.tilt.tilt_reset()
 
     # Eject any balls that get stuck before returning to the trough.
-    def sw_popperL_active_for_500ms(self, sw):
-        self.game.coils.popperL.pulse(40)
+    def sw_popperL_active(self, sw):
+        return self.coil_switch_active(sw)
 
-    def sw_popperR_active_for_500ms(self, sw):
-        self.game.coils.popperR.pulse(40)
+    def sw_popperR_active(self, sw):
+        return self.coil_switch_active(sw)
 
-    def sw_shooterL_active_for_500ms(self, sw):
-        self.game.coils.shooterL.pulse(40)
+    def sw_shooterL_active(self, sw):
+        return self.coil_switch_active(sw)
 
-    def sw_shooterR_active_for_500ms(self, sw):
-        self.game.coils.shooterR.pulse(40)
+    def sw_shooterR_active(self, sw):
+        return self.coil_switch_active(sw)
+
+    def coil_switch_active(self, sw):
+        self.delay('pulse_coil', event_type=None, delay=0.3, handler=self.pulse_coil, param=sw)
+        return SwitchStop
+
+    def pulse_coil(self, sw):
+        if sw.is_active():
+            self.game.coils[sw.name].pulse(40)
 
 
 class TiltMonitorMode(Mode):

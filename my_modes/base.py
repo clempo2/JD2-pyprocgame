@@ -37,8 +37,8 @@ class BasePlay(Mode):
         self.replay = Replay(self.game, 18)
         self.replay.replay_callback = self.replay_callback
 
-        self.display_mode = ModesDisplay(self.game, 1000)
-        self.animation_mode = ModesAnimation(self.game, 1200)
+        self.display_mode = ModesDisplay(self.game, 800)
+        self.animation_mode = ModesAnimation(self.game, 801)
 
     def mode_started(self):
         # init player state
