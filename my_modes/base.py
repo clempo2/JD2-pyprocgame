@@ -2,43 +2,39 @@ from random import randint
 from procgame.dmd import AnimatedLayer, GroupedLayer, TextLayer
 from procgame.game import Mode
 from procgame.modes import Replay
-from bonus import Bonus
 from boring import Boring
+from bonus import Bonus
 from challenge import UltimateChallenge
 from combos import Combos
 from regular import RegularPlay
 from status import StatusReport
-from tilt import TiltMonitorMode
 
 class BasePlay(Mode):
     """Base rules for all the time the ball is in play"""
 
-    def __init__(self, game):
-        super(BasePlay, self).__init__(game, 2)
+    def __init__(self, game, priority):
+        super(BasePlay, self).__init__(game, priority)
 
         self.max_extra_balls_per_game = self.game.user_settings['Gameplay']['Max extra balls per game']
         self.max_extra_balls_lit = self.game.user_settings['Gameplay']['Max extra balls lit']
         self.replay_award = self.game.user_settings['Replay']['Replay Award']
 
-        self.tilt = TiltMonitorMode(self.game, 1000, 'tilt', 'slamTilt')
-        self.tilt.num_tilt_warnings = self.game.user_settings['Gameplay']['Number of tilt warnings']
+        self.boring = Boring(self.game, priority + 6)
+        self.combos = Combos(self.game, priority + 25)
+        self.status_report = StatusReport(self.game, priority + 26)
+        self.regular_play = RegularPlay(self.game, priority + 5)
 
-        self.boring = Boring(self.game, 9)
-        self.combos = Combos(self.game, 28)
-        self.status_report = StatusReport(self.game, 28)
-        self.regular_play = RegularPlay(self.game, 8)
-
-        self.bonus = Bonus(self.game, 8)
-        self.bonus.exit_callback = self.end_ball
-
-        self.ultimate_challenge = UltimateChallenge(game, 8)
+        self.ultimate_challenge = UltimateChallenge(game, priority + 5)
         self.ultimate_challenge.exit_callback = self.ultimate_challenge_ended
 
-        self.replay = Replay(self.game, 18)
+        self.replay = Replay(self.game, priority + 15)
         self.replay.replay_callback = self.replay_callback
 
-        self.display_mode = ModesDisplay(self.game, 800)
-        self.animation_mode = ModesAnimation(self.game, 801)
+        self.bonus = Bonus(self.game, priority + 6)
+        self.bonus.exit_callback = self.bonus_ended
+
+        self.display_mode = ModesDisplay(self.game, priority + 700)
+        self.animation_mode = ModesAnimation(self.game, priority + 701)
 
     def mode_started(self):
         # init player state
@@ -54,19 +50,15 @@ class BasePlay(Mode):
         self.game.coils.flasherPursuitR.schedule(0x00000101, cycle_seconds=1, now=False)
 
         self.game.launch_balls(1)
-        self.game.trough.drain_callback = self.drain_callback
         self.game.ball_save.callback = self.ball_save_callback
         self.ball_starting = True
-
-        # Enable ball search in case a ball gets stuck during gameplay.
-        self.game.ball_search.enable()
 
         # Force player to hit the right Fire button for the start of ball
         self.auto_plunge = False
 
         # Start modes
         self.game.enable_flippers(True)
-        self.game.add_modes([self.tilt, self.combos, self.replay, self.display_mode, self.animation_mode])
+        self.game.add_modes([self.combos, self.replay, self.display_mode, self.animation_mode])
 
         if player.getState('supergame', self.game.supergame):
             self.start_ultimate_challenge()
@@ -74,10 +66,8 @@ class BasePlay(Mode):
             self.game.modes.add(self.regular_play)
 
     def mode_stopped(self):
-        self.game.remove_modes([self.display_mode, self.animation_mode])
+        self.game.remove_modes([self.combos, self.replay, self.display_mode, self.animation_mode, self.boring, self.regular_play, self.ultimate_challenge])
         self.game.enable_flippers(False)
-        self.game.disable_ball_search()
-        self.game.trough.drain_callback = self.game.no_op_callback
         self.game.ball_save.callback = None
 
         self.game.setPlayerState('total_extra_balls', self.total_extra_balls)
@@ -368,7 +358,7 @@ class BasePlay(Mode):
         self.game.coils[coil_pulse[0]].pulse(coil_pulse[1])
 
     #
-    # End of Ball
+    # Ball Save
     #
 
     def ball_save_callback(self):
@@ -376,48 +366,6 @@ class BasePlay(Mode):
         if not self.game.getPlayerState('multiball_active', 0):
             self.game.sound.play_voice('ball saved')
             self.display('Ball Saved')
-
-    def drain_callback(self):
-        if not self.tilt.tilted:
-            if self.game.send_event('evt_ball_drained'):
-                # drain was intentional, ignore it
-                return
-
-        if self.game.num_balls_requested() == 0:
-            # End the ball
-            if self.tilt.tilted:
-                self.tilt.tilt_delay(self.finish_ball)
-            else:
-                self.finish_ball()
-
-    def finish_ball(self):
-        self.game.sound.fadeout_music()
-        self.game.disable_ball_search()
-
-        # Make sure the motor isn't spinning between balls.
-        self.game.coils.globeMotor.disable()
-        self.game.remove_modes([self.boring, self.combos, self.tilt, self.regular_play, self.ultimate_challenge])
-        self.game.enable_flippers(False)
-
-        if self.tilt.tilted:
-            # ball tilted, skip bonus
-            self.end_ball()
-        else:
-            self.game.modes.add(self.bonus)
-
-        self.game.update_lamps()
-
-    # Final processing for the ball
-    # If bonus was awarded (no tilt), it is finished by now.
-    def end_ball(self):
-        self.game.remove_modes([self.bonus, self.replay])
-        self.game.update_lamps()
-
-        self.game.enable_flippers(True)
-
-        # Tell the game object it can process the end of ball
-        # (to end player's turn or shoot again)
-        self.game.end_ball()
 
     #
     # Bonus
@@ -432,6 +380,16 @@ class BasePlay(Mode):
     def hold_bonus_x(self):
         self.game.setPlayerState('hold_bonus_x', True)
         self.game.set_status('HOLD BONUS X')
+
+    def evt_ball_ended(self):
+        self.game.remove_modes([self.boring, self.combos, self.regular_play, self.ultimate_challenge])
+        self.game.add_modes([self.bonus])
+        # cancel the event because the ball is not truly ended until bonus mode has ended
+        return True
+
+    def bonus_ended(self):
+        self.game.remove_modes([self.bonus, self.replay])
+        self.game.end_ball()
 
 
 class ModesDisplay(Mode):

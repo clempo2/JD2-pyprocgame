@@ -3,14 +3,53 @@
 
 import time
 from procgame.dmd import GroupedLayer, TextLayer
-from procgame.game import Mode, SwitchStop
+from procgame.game import Mode
+
+class CoilEjectMode(Mode):
+    # Eject any balls that get stuck before returning to the trough.
+    def sw_popperL_active_for_300ms(self, sw):
+        self.game.coils.popperL.pulse(40)
+
+    def sw_popperR_active_for_300ms(self, sw):
+        self.game.coils.popperR.pulse(40)
+
+    def sw_shooterL_active_for_300ms(self, sw):
+        self.game.coils.shooterL.pulse(40)
+
+    def sw_shooterR_active_for_300ms(self, sw):
+        self.game.coils.shooterR.pulse(40)
+
+
+class Tilted(CoilEjectMode):
+    """Display 'Tilt' while waiting for active balls to drain, eject balls stuck outside the planet"""
+
+    def __init__(self, game, priority):
+        super(Tilted, self).__init__(game, priority)
+        text_layer = TextLayer(128/2, 7, self.game.fonts['jazz18'], 'center').set_text('Tilt')
+        self.layer = GroupedLayer(128, 32, [text_layer])
+
+    def mode_started(self):
+        self.game.sound.play('tilt')
+        self.eject_balls(['shooterL', 'popperL', 'popperR', 'shooterR'])
+
+    def mode_stopped(self):
+        self.game.drain_mode.tilt.tilt_reset()
+
+    def eject_balls(self, switch_names):
+        if switch_names:
+            sw = self.game.switches[switch_names[0]]
+            delay = 0
+            if sw.is_active():
+                self.game.coils[switch_names[0]].pulse(40)
+                delay = 0.2
+            self.delay(name='eject_balls', event_type=None, delay=delay, handler=self.eject_balls, param=switch_names[1:])
 
 
 class SlamTilted(Mode):
     """Display 'Slam Tilt' and wait a little while before resetting the game"""
 
-    def __init__(self, game):
-        super(SlamTilted, self).__init__(game, priority=99999)
+    def __init__(self, game, priority):
+        super(SlamTilted, self).__init__(game, priority)
         self.layer = TextLayer(128/2, 7, self.game.fonts['jazz18'], 'center').set_text('Slam Tilt')
 
     def mode_started(self):
@@ -19,49 +58,6 @@ class SlamTilted(Mode):
     def reset_game(self):
         self.game.reset()
         self.game.update_lamps()
-
-
-class Tilted(Mode):
-    """Display 'Tilt' and consume all switch events to block scoring"""
-
-    def __init__(self, game):
-        super(Tilted, self).__init__(game, priority=99999)
-        text_layer = TextLayer(128/2, 7, self.game.fonts['jazz18'], 'center').set_text('Tilt')
-        self.layer = GroupedLayer(128, 32, [text_layer])
-        always_seen_switches = self.game.switches.items_tagged('tilt_visible')
-        always_seen_switches.extend(self.game.switches.items_tagged('trough'))
-        for sw in [x for x in self.game.switches if x.name not in self.game.trough.position_switchnames and x not in always_seen_switches]:
-            self.add_switch_handler(name=sw.name, event_type='active', delay=None, handler=self.ignore_switch)
-
-    def mode_started(self):
-        self.game.sound.play('tilt')
-
-    def ignore_switch(self, sw):
-        return SwitchStop
-
-    def mode_stopped(self):
-        self.game.base_play.tilt.tilt_reset()
-
-    # Eject any balls that get stuck before returning to the trough.
-    def sw_popperL_active(self, sw):
-        return self.coil_switch_active(sw)
-
-    def sw_popperR_active(self, sw):
-        return self.coil_switch_active(sw)
-
-    def sw_shooterL_active(self, sw):
-        return self.coil_switch_active(sw)
-
-    def sw_shooterR_active(self, sw):
-        return self.coil_switch_active(sw)
-
-    def coil_switch_active(self, sw):
-        self.delay('pulse_coil', event_type=None, delay=0.3, handler=self.pulse_coil, param=sw)
-        return SwitchStop
-
-    def pulse_coil(self, sw):
-        if sw.is_active():
-            self.game.coils[sw.name].pulse(40)
 
 
 class TiltMonitorMode(Mode):

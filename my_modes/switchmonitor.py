@@ -4,8 +4,8 @@ from procgame.highscore import EntrySequenceManager
 class SwitchMonitor(Mode):
     """A mode that monitors for specific switches and helps advance state as appropriate"""
 
-    def __init__(self, game):
-        super(SwitchMonitor, self).__init__(game=game, priority=32767)
+    def __init__(self, game, priority):
+        super(SwitchMonitor, self).__init__(game, priority)
         self.allow_restart = self.game.user_settings['Gameplay']['Allow restarts']
 
     # Enter service mode when the enter button is pushed.

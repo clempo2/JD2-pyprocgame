@@ -16,6 +16,7 @@ from layers import DontMoveTransition, FixedSizeTextLayer, GroupedTransition, Sl
 from my_modes.attract import Attract
 from my_modes.base import BasePlay
 from my_modes.deadworld import Deadworld, DeadworldTest
+from my_modes.drain import DrainMode
 from my_modes.initials import JDEntrySequenceManager
 from my_modes.switchmonitor import SwitchMonitor
 from my_modes.tilt import SlamTilted, Tilted
@@ -119,7 +120,7 @@ class JD2Game(BasicGame):
         self.load_game_stats()
 
         # Service mode
-        self.switch_monitor = SwitchMonitor(game=self)
+        self.switch_monitor = SwitchMonitor(self, 32767)
         deadworld_test = DeadworldTest(self, 200, self.fonts['tiny7'])
         self.service_mode = JDServiceMode(self, 100, self.fonts['tiny7'], [deadworld_test])
 
@@ -147,10 +148,11 @@ class JD2Game(BasicGame):
         self.shooting_again = False
 
         # Basic game features
-        self.attract = Attract(self)
-        self.base_play = BasePlay(self)
+        self.attract = Attract(self, 1)
+        self.drain_mode = DrainMode(self, 2)
+        self.base_play = BasePlay(self, 3)
         self.deadworld = Deadworld(self, 20)
-        self.tilted_mode = Tilted(self)
+        self.tilted_mode = Tilted(self, 33000)
 
         self.add_modes([self.switch_monitor, self.ball_search, self.deadworld, self.ball_save, self.trough, self.attract])
         self.attract.display()
@@ -249,7 +251,7 @@ class JD2Game(BasicGame):
 
     def ball_starting(self):
         super(JD2Game, self).ball_starting()
-        self.modes.add(self.base_play)
+        self.add_modes([self.drain_mode, self.base_play])
         self.update_lamps()
 
     def ball_save_start(self, time, now, allow_multiple_saves):
@@ -297,8 +299,7 @@ class JD2Game(BasicGame):
         self.game_data['Audits']['Balls Played'] += 1
 
     def ball_ended(self):
-        self.remove_modes([self.base_play, self.tilted_mode])
-        self.trough.drain_callback = self.no_op_callback
+        self.remove_modes([self.drain_mode, self.base_play, self.tilted_mode])
 
     def game_ended(self):
         super(JD2Game, self).game_ended()
@@ -352,12 +353,12 @@ class JD2Game(BasicGame):
 
     def slam_tilted(self):
         self.stop()
-        self.modes.add(SlamTilted(self))
+        self.modes.add(SlamTilted(self, 33000))
 
     def tilted(self):
         self.disable_game()
-        # stop all mode timers
-        self.send_event('pause')
+        # remove all game play, drain_mode will continue to monitor ball drains
+        self.remove_modes([self.base_play])
         self.modes.add(self.tilted_mode)
 
     def disable_game(self):

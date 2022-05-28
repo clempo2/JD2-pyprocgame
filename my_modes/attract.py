@@ -1,15 +1,14 @@
 from random import shuffle
 from procgame.dmd import FrameLayer, GroupedLayer, MarkupFrameGenerator, PanningLayer, PushTransition, ScriptedLayer, TextLayer
-from procgame.game import Mode
 from procgame.highscore import generate_highscore_frames
 from layers import FastPanningLayer
+from tilt import CoilEjectMode
 
-
-class Attract(Mode):
+class Attract(CoilEjectMode):
     """Attract mode and start buttons"""
 
-    def __init__(self, game):
-        super(Attract, self).__init__(game, 1)
+    def __init__(self, game, priority):
+        super(Attract, self).__init__(game, priority)
         self.lampshow_keys = ['attract0', 'attract1']
 
         font_jazz18 = self.game.fonts['jazz18']
@@ -203,16 +202,3 @@ Collect a multiball jackpot
 
     def sw_flipperLwR_active(self, sw):
         self.instruction_display()
-
-    # Eject any balls that get stuck before returning to the trough.
-    def sw_popperL_active_for_500ms(self, sw):
-        self.game.coils.popperL.pulse(40)
-
-    def sw_popperR_active_for_500ms(self, sw):
-        self.game.coils.popperR.pulse(40)
-
-    def sw_shooterL_active_for_500ms(self, sw):
-        self.game.coils.shooterL.pulse(40)
-
-    def sw_shooterR_active_for_500ms(self, sw):
-        self.game.coils.shooterR.pulse(40)
