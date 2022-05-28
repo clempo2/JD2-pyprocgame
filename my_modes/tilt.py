@@ -32,9 +32,6 @@ class Tilted(CoilEjectMode):
         self.game.sound.play('tilt')
         self.eject_balls(['shooterL', 'popperL', 'popperR', 'shooterR'])
 
-    def mode_stopped(self):
-        self.game.drain_mode.tilt.tilt_reset()
-
     def eject_balls(self, switch_names):
         if switch_names:
             sw = self.game.switches[switch_names[0]]
@@ -63,27 +60,23 @@ class SlamTilted(Mode):
 class TiltMonitorMode(Mode):
     """Monitor tilt warnings and slam tilt"""
 
-    def __init__(self, game, priority, tilt_sw=None, slam_tilt_sw=None):
+    def __init__(self, game, priority, tilt_sw=None, slam_tilt_sw=None, num_tilt_warnings=2):
         super(TiltMonitorMode, self).__init__(game, priority)
         self.tilt_sw = tilt_sw
         self.slam_tilt_sw = slam_tilt_sw
+        self.num_tilt_warnings = num_tilt_warnings
 
         if tilt_sw:
             self.add_switch_handler(name=tilt_sw, event_type='active', delay=None, handler=self.tilt_active)
         if slam_tilt_sw:
             self.add_switch_handler(name=slam_tilt_sw, event_type='active', delay=None, handler=self.slam_tilt_active)
 
-        self.num_tilt_warnings = 2 # BasePlay overwrites this with the value of a settings
         self.tilt_bob_settle_time = 2.0
         self.tilted = False
 
-    def tilt_reset(self):
-        self.times_warned = 0
+    def mode_started(self):
         self.tilted = False
         self.previous_warning_time = None
-
-    def mode_started(self):
-        self.tilt_reset()
 
     def tilt_active(self, sw):
         now = time.time()
@@ -93,13 +86,16 @@ class TiltMonitorMode(Mode):
         else:
             self.previous_warning_time = now
 
-        if self.times_warned == self.num_tilt_warnings:
-            if not self.tilted:
+        if not self.tilted:
+            times_warned = self.game.getPlayerState('times_warned', 0)
+            if times_warned == self.num_tilt_warnings:
+                self.game.setPlayerState('times_warned', 0)
                 self.tilted = True
                 self.game.tilted()
-        else:
-            self.times_warned += 1
-            self.game.tilt_warning(self.times_warned)
+            else:
+                times_warned += 1
+                self.game.setPlayerState('times_warned', times_warned)
+                self.game.tilt_warning(times_warned)
 
     def slam_tilt_active(self, sw):
         self.game.slam_tilted()
@@ -109,7 +105,8 @@ class TiltMonitorMode(Mode):
         """ calls the specified `fn` if it has been at least `secs_since_bob_tilt`
             (make sure the tilt isn't still swaying)
         """
-        if self.game.switches[self.tilt_sw].time_since_change() < secs_since_bob_tilt:
-            self.delay(name='tilt_bob_settle', event_type=None, delay=secs_since_bob_tilt, handler=self.tilt_delay, param=fn)
+        time_since_change = self.game.switches[self.tilt_sw].time_since_change()
+        if time_since_change < secs_since_bob_tilt:
+            self.delay(name='tilt_bob_settle', event_type=None, delay=secs_since_bob_tilt - time_since_change + 0.1, handler=self.tilt_delay, param=fn)
         else:
             return fn()

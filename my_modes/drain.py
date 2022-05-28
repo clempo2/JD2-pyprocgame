@@ -9,8 +9,8 @@ class DrainMode(Mode):
 
     def __init__(self, game, priority):
         super(DrainMode, self).__init__(game, priority)
-        self.tilt = TiltMonitorMode(self.game, 1000, 'tilt', 'slamTilt')
-        self.tilt.num_tilt_warnings = self.game.user_settings['Gameplay']['Number of tilt warnings']
+        num_tilt_warnings = self.game.user_settings['Gameplay']['Number of tilt warnings']
+        self.tilt = TiltMonitorMode(self.game, 1000, 'tilt', 'slamTilt', num_tilt_warnings)
 
     def mode_started(self):
         self.game.trough.drain_callback = self.drain_callback
