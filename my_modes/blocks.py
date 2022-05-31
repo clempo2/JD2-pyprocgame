@@ -326,5 +326,6 @@ class BlockWar(TimedMode, CrimeSceneShots):
     def evt_ball_drained(self):
         # End multiball if there is now only one ball in play
         if self.game.getPlayerState('multiball_active', 0) & 0x2:
-            self.parent.end_block_war()
+            if self.game.num_balls_requested() == 1:
+                self.parent.end_block_war()
 
