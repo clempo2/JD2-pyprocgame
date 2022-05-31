@@ -8,12 +8,13 @@ from procgame.dmd import FrameLayer, MarkupFrameGenerator, ScriptedLayer
 from procgame.game import BasicGame, Mode, Player
 from procgame.highscore import HighScoreCategory
 from procgame.lamps import LampController
-from procgame.modes import BallSave, BallSearch, Trough
+from procgame.modes import BallSave, Trough
 from procgame.service import ServiceMode
 from procgame.sound import SoundController
 from asset_loader import AssetLoader
 from layers import DontMoveTransition, FixedSizeTextLayer, GroupedTransition, SlideTransition
 from my_modes.attract import Attract
+from my_modes.ballsearch import JDBallSearch
 from my_modes.base import BasePlay
 from my_modes.deadworld import Deadworld, DeadworldTest
 from my_modes.drain import DrainMode
@@ -34,6 +35,7 @@ class JDServiceMode(ServiceMode):
     def mode_stopped(self):
         super(JDServiceMode, self).mode_stopped()
         self.game.service_mode_ended()
+
 
 
 class JDPlayer(Player):
@@ -130,7 +132,7 @@ class JD2Game(BasicGame):
         # to eject balls that enter the deadworld when lock isn't lit; so it
         # shouldn't be necessary to search the deadworld.  (unless a ball jumps
         # onto the ring rather than entering through the feeder.)
-        self.ball_search = BallSearch(self, priority=100, countdown_time=10,
+        self.ball_search = JDBallSearch(self, priority=100, countdown_time=15,
                      coils=self.ballsearch_coils, reset_switches=self.ballsearch_resetSwitches,
                      stop_switches=self.ballsearch_stopSwitches, special_handler_modes=[])
         self.disable_ball_search()

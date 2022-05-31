@@ -435,8 +435,10 @@ PRLamps:
         number: G05
 
 PRBallSave:
-    pulseCoils: [popperL, popperR, resetDropTarget, 
-                 shooterR, shooterL, slingL, slingR]
+    # Special code handles resetDropTarget in ball search round 3
+    pulseCoils: [popperL, popperR, shooterR, shooterL, slingL, slingR]
+
+    # popperL and popperR have special handlers in code to debounce the switch
     resetSwitches:
         shooterL: open
         outlaneL: open
@@ -473,11 +475,10 @@ PRBallSave:
         topRightOpto: closed 
         topRampExit: closed
         rightRampExit: closed
+
     stopSwitches:
         shooterR: closed
         shooterL: closed
-        popperL: active
-        popperR: active
         # don't ball search if a flipper button is pressed
         flipperLwL: closed
         flipperLwR: closed

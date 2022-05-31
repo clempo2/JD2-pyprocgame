@@ -39,6 +39,7 @@ class Multiball(Mode):
     def mode_stopped(self):
         # remove switch rule
         self.disable_lock()
+        self.state = 'stopped'
 
         # save player state
         player = self.game.current_player()

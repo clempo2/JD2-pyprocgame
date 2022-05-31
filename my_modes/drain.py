@@ -4,7 +4,7 @@ from tilt import TiltMonitorMode
 class DrainMode(Mode):
     """Monitor drains to determine when the ball has ended.
        This mode waits for balls to drain when the player has tilted,
-       therefore it must not affect the score or lamps when the tilt mode is running.
+       therefore it must not affect the score or lamps.
     """
 
     def __init__(self, game, priority):
