@@ -168,7 +168,7 @@ class CityBlock(CrimeSceneShots):
             current_block = self.game.getPlayerState('current_block', -1)
             shuffle(self.block_outcome)
             block_n_outcome = 'Block ' + str(current_block + 1) + ' ' + self.block_outcome[0]
-            self.game.base_play.display(block_n_outcome, 10000)
+            self.game.set_status(block_n_outcome)
             self.game.sound.play_voice(block_n_outcome)
             self.next_block()
 
