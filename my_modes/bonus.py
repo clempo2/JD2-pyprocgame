@@ -8,6 +8,7 @@ class Bonus(Mode):
         self.game.sound.play_voice('drain')
         self.game.base_play.display('Bonus')
         self.game.set_status(None)
+        self.index = -1
 
         # compute everything before we start so we can easily skip to the end
         # do not show bonus items worth zero
@@ -34,6 +35,7 @@ class Bonus(Mode):
         return str(value) + ' ' + title + ('s' if value > 1 else '')
 
     def show_bonus(self, index):
+        self.index = index
         if index == len(self.bonus_items):
             self.game.base_play.display('')
             self.exit_callback()
@@ -50,6 +52,8 @@ class Bonus(Mode):
         self.flipper_active()
 
     def flipper_active(self):
-        # skip to total
-        self.cancel_delayed('show_bonus')
-        self.show_bonus(len(self.bonus_items) - 1)
+        # skip to total but only once
+        len_minus_1 = len(self.bonus_items) - 1
+        if self.index < len_minus_1:
+            self.cancel_delayed('show_bonus')
+            self.show_bonus(len_minus_1)
