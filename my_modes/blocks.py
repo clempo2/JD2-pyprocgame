@@ -147,12 +147,12 @@ class CityBlock(CrimeSceneShots):
 
             if not any(self.targets):
                 # all targets hit already
-                self.block_complete()
+                self.block_complete(shot)
             else:
                 self.game.sound.play_voice('crime')
             self.game.update_lamps()
 
-    def block_complete(self):
+    def block_complete(self, shot=None):
         self.game.score(10000)
         self.game.lampctrl.play_show('advance_level', False, self.game.update_lamps)
         self.game.addPlayerState('num_blocks', 1)
@@ -168,7 +168,9 @@ class CityBlock(CrimeSceneShots):
             current_block = self.game.getPlayerState('current_block', -1)
             shuffle(self.block_outcome)
             block_n_outcome = 'Block ' + str(current_block + 1) + ' ' + self.block_outcome[0]
-            self.game.set_status(block_n_outcome)
+            # don't hide the mode instructions if a mode is about to start
+            if shot != 2 or self.game.base_play.regular_play.state != 'chain_ready':
+                self.game.set_status(block_n_outcome)
             self.game.sound.play_voice(block_n_outcome)
             self.next_block()
 
