@@ -185,7 +185,7 @@ class ShootingGallery(Mode):
         elif self.targets[self.scope_pos] == 'empty':
             self.delay(name='remove_empty_shot', event_type=None, delay=0.5, handler=self.remove_empty_shot, param=self.scope_pos)
         elif self.targets[self.scope_pos] == 'friend':
-            self.shoot_friend(self.scope_pos)
+            self.shoot_friend()
 
     def shoot_enemy(self, position):
         self.num_enemies_shot += 1
