@@ -62,7 +62,8 @@ class MissileAwardMode(Timer):
     def sw_fireL_active(self, sw):
         if self.timer > 3:
             self.reset_timer(3, self.timer_delay)
-        elif self.timer == 0:
+        elif self.timer == 0 and self.game.switches.shooterL.is_active():
+            # the ball would be ejected by BasePlay anyway, but this removes the small sub-second delay
             self.eject_ball()
 
     def start_missile_award(self):

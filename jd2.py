@@ -278,9 +278,12 @@ class JD2Game(BasicGame):
 
     def launch_balls(self, balls_to_launch):
         # launch balls from the trough if it has sufficient balls, else eject additional balls from Deadworld
+        # Warning: self.trough.num_balls() is not reliable when balls are moving in the trough,
+        # so don't assume Deadworld contains all the additional balls we need
+        # especially if we gave a pitty ball after a failed ball search
         trough_balls = self.trough.num_balls()
-        trough_balls_to_launch = balls_to_launch if balls_to_launch <= trough_balls else trough_balls
-        deadworld_balls_to_launch = balls_to_launch - trough_balls_to_launch
+        deadworld_balls_to_launch = min(self.deadworld.num_balls_locked, max(0, balls_to_launch - trough_balls))
+        trough_balls_to_launch = balls_to_launch - deadworld_balls_to_launch
         if trough_balls_to_launch:
             # warning: must pass a real callback since passing None preserves the previous callback
             self.trough.launch_balls(balls_to_launch, self.no_op_callback)

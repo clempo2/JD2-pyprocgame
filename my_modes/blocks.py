@@ -1,4 +1,5 @@
 from random import shuffle
+from time import time
 from procgame.game import Mode
 from crimescenes import CrimeSceneShots
 from timer import TimedMode
@@ -24,6 +25,7 @@ class CityBlocks(Mode):
     def start_city_block(self):
         if self.game.getPlayerState('current_block', 0) < self.game.blocks_required:
             self.game.modes.add(self.city_block)
+            self.game.update_lamps()
 
     def city_blocks_completed(self):
         self.game.remove_modes([self.city_block])
@@ -147,12 +149,13 @@ class CityBlock(CrimeSceneShots):
 
             if not any(self.targets):
                 # all targets hit already
-                self.block_complete(shot)
+                self.block_complete()
             else:
-                self.game.sound.play_voice('crime')
+                duration = self.game.sound.play_voice('crime')
+                self.block_busy(duration + 0.1)
             self.game.update_lamps()
 
-    def block_complete(self, shot=None):
+    def block_complete(self):
         self.game.score(10000)
         self.game.lampctrl.play_show('advance_level', False, self.game.update_lamps)
         self.game.addPlayerState('num_blocks', 1)
@@ -168,11 +171,11 @@ class CityBlock(CrimeSceneShots):
             current_block = self.game.getPlayerState('current_block', -1)
             shuffle(self.block_outcome)
             block_n_outcome = 'Block ' + str(current_block + 1) + ' ' + self.block_outcome[0]
-            # don't hide the mode instructions if a mode is about to start
-            if shot != 2 or self.game.base_play.regular_play.state != 'chain_ready':
-                self.game.set_status(block_n_outcome)
             self.game.sound.play_voice(block_n_outcome)
+            self.game.set_status(block_n_outcome)
+            self.block_busy(2.65)
             self.next_block()
+            self.game.update_lamps()
 
     def next_block(self):
         current_block = self.game.getPlayerState('current_block', -1)
@@ -196,8 +199,11 @@ class CityBlock(CrimeSceneShots):
                 for i in range(0, num_to_pick):
                     self.targets[pick_from[i]] = 1
                 self.game.setPlayerState('block_targets', self.targets)
-        self.game.update_lamps()
 
+    def block_busy(self, duration):
+        # warn other modes the sound and/or display are busy until that time
+        # SkeletonGame's SoundController queues voice callouts which is a better solution than this
+        self.game.setPlayerState('block_busy_until', time() + duration)
     #
     # Lamps
     #

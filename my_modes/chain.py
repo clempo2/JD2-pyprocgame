@@ -1,4 +1,5 @@
 from random import randint
+from time import time
 from procgame.game import Mode
 from timer import TimedMode
 
@@ -80,6 +81,13 @@ class Chain(Mode):
 
     # start a chain mode by showing the instructions
     def start_chain_mode(self):
+        # if applicable, wait for block mode to finish talking and/or displaying on the screen
+        # this is a work-around for the pyprocgame SoundController that does not queue voice callouts
+        block_busy_until = self.game.getPlayerState('block_busy_until', 0)
+        now = time()
+        if block_busy_until > now:
+            self.delay('delay_start_chain_mode', None, block_busy_until - now + 0.05, self.start_chain_mode)
+            return
         self.mode = self.modes_remaining[self.modes_remaining_ptr]
         self.game.setPlayerState('chain_active', 1)
         self.modes_remaining.remove(self.mode)
@@ -411,29 +419,34 @@ class Impersonator(ChainFeature):
     def mode_stopped(self):
         super(Impersonator, self).mode_stopped()
         self.stop_using_drops()
-        self.game.sound.stop('bad impersonator song')
-        self.game.sound.stop('bad impersonator boo')
+        for key in ['bad impersonator song', 'bad impersonator boo', 'bad impersonator shutup']:
+            self.game.sound.stop(key)
 
     def play_music(self):
         # this mode talks all the time, we don't want any music
         pass
 
+    def play_sound(self, key):
+        # this mode talks all the time, keep quiet if stacked with multiball
+        if not self.game.getPlayerState('multiball_active', 0):
+            self.game.sound.play(key)
+
+    def end_sound(self):
+        self.sound_active = False
+
     def song_restart(self):
-        self.game.sound.play('bad impersonator song')
+        self.play_sound('bad impersonator song')
         self.delay(name='song_restart', event_type=None, delay=6, handler=self.song_restart)
 
     def boo_restart(self):
         time = randint(2, 7)
-        self.game.sound.play('bad impersonator boo')
+        self.play_sound('bad impersonator boo')
         self.delay(name='boo_restart', event_type=None, delay=time, handler=self.boo_restart)
 
     def shutup_restart(self):
         time = randint(2, 7)
-        self.game.sound.play('bad impersonator shutup')
+        self.play_sound('bad impersonator shutup')
         self.delay(name='shutup_restart', event_type=None, delay=time, handler=self.shutup_restart)
-
-    def end_sound(self):
-        self.sound_active = False
 
     def update_lamps(self):
         self.game.lamps.awardBadImpersonator.schedule(schedule=0x00FF00FF, cycle_seconds=0, now=True)
@@ -475,7 +488,7 @@ class Impersonator(ChainFeature):
         self.game.sound.stop('bad impersonator song')
         if not self.sound_active:
             self.sound_active = True
-            self.game.sound.play('bad impersonator ouch')
+            self.play_sound('bad impersonator ouch')
             self.delay(name='end_sound', event_type=None, delay=1, handler=self.end_sound)
         self.game.coils.resetDropTarget.pulse(30)
         self.check_for_completion()
@@ -640,7 +653,9 @@ class Stakeout(ChainFeature):
         self.game.coils.flasherPursuitR.schedule(schedule=0x000F000F, cycle_seconds=0, now=True)
 
     def boring_expired(self):
-        self.game.sound.play_voice('stakeout boring')
+        # keep quiet if stacked with multiball
+        if not self.game.getPlayerState('multiball_active', 0):
+            self.game.sound.play_voice('stakeout boring')
         self.delay(name='boring', event_type=None, delay=5, handler=self.boring_expired)
 
     def sw_rightRampExit_active(self, sw):
