@@ -21,14 +21,9 @@ class MissileAwardMode(Timer):
         self.current_award_ptr = 0
 
         font = self.game.fonts['tiny7']
-        self.title_layer = TextLayer(128/2, 7, font, 'center')
-        self.title_layer.set_text('Missile Award')
-
-        self.element_layer = TextLayer(128/2, 15, font, 'center')
-        self.element_layer.set_text('Left Fire btn collects:')
-
-        self.value_layer = TextLayer(128/2, 22, font, 'center')
-        self.selection_layer = GroupedLayer(128, 32, [self.title_layer, self.element_layer, self.value_layer])
+        self.title_layer = TextLayer(128/2, 7, font, 'center').set_text('Missile Award')
+        self.value_layer = TextLayer(128/2, 15, font, 'center')
+        self.selection_layer = GroupedLayer(128, 32, [self.title_layer, self.value_layer])
 
     def mode_started(self):
         player = self.game.current_player()
@@ -39,6 +34,7 @@ class MissileAwardMode(Timer):
         player = self.game.current_player()
         player.setState('missile_award_lit', self.missile_award_lit)
         player.setState('available_awards', self.available_awards)
+        self.layer = None # in case the ball is lost before timer expires
 
     # must be called when the missile award mode is stopped
     def reset(self):
@@ -62,8 +58,8 @@ class MissileAwardMode(Timer):
             return False
 
     def sw_fireL_active(self, sw):
-        if self.timer > 3:
-            self.reset_timer(3, self.timer_delay)
+        if self.timer > 15:
+            self.reset_timer(15, self.timer_delay)
         elif self.timer == 0 and self.game.switches.shooterL.is_active():
             # the ball would be ejected by BasePlay anyway, but this removes the small sub-second delay
             self.eject_ball()
@@ -101,12 +97,12 @@ class MissileAwardMode(Timer):
         self.start_timer(70, self.timer_delay)
 
     def timer_update(self, time):
-        if time == 3:
-            # that gives 3 seconds to read the chosen selection
-            self.eject_ball()
-            self.award()
-        elif time > 10:
+        if time > 15:
             self.rotate_awards()
+        elif time == 15:
+            # that gives 3 seconds to read the chosen selection
+            self.give_award()
+            self.eject_ball()
 
     def expired(self):
         self.layer = None
@@ -115,9 +111,8 @@ class MissileAwardMode(Timer):
         self.current_award_ptr = (self.current_award_ptr + randint(1, 4)) % len(self.available_awards)
         self.value_layer.set_text(self.available_awards[self.current_award_ptr])
 
-    def award(self):
+    def give_award(self):
         award = self.available_awards[self.current_award_ptr]
-        self.game.base_play.display(award, '')
 
         if award.endswith('Points'):
             award_words = award.rsplit(' ')
