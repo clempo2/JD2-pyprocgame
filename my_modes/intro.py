@@ -3,9 +3,8 @@ from procgame.game import Mode
 class Introduction(Mode):
     """Display instructions for a mode"""
 
-    def __init__(self, game, priority, delay=0):
+    def __init__(self, game, priority):
         super(Introduction, self).__init__(game, priority)
-        self.start_delay = delay
         self.exit_callback = None
 
     def setup(self, intro_layer):
@@ -14,10 +13,6 @@ class Introduction(Mode):
         self.intro_layer = intro_layer
 
     def mode_started(self):
-        self.layer = None
-        self.delay(name='start', event_type=None, delay=self.start_delay, handler=self.start)
-
-    def start(self):
         self.intro_layer.reset()
         self.layer = self.intro_layer
 

@@ -407,7 +407,7 @@ class ModesDisplay(Mode):
             text_layer = self.small_text_layer if points is not None else self.big_text_layer
             text_layer.set_text(text, 3)
             layers.append(text_layer)
-        if points is not None:
+        if type(points) == int:
             self.points_layer.set_text(self.game.format_points(points), 3)
             layers.append(self.points_layer)
         self.layer = GroupedLayer(128, 32, layers)

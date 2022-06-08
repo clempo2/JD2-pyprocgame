@@ -49,13 +49,15 @@ class MissileAwardMode(Timer):
         self.game.update_lamps()
 
     def evt_shooterL_active_500ms(self):
-        if self.missile_award_lit:
-            self.missile_award_lit = False
+        starting = self.missile_award_lit
+        self.missile_award_lit = not self.missile_award_lit
+        self.game.update_lamps()
+
+        if starting:
             self.start_missile_award()
             # abort the event to capture the ball
             return True
         else:
-            self.missile_award_lit = True
             # base handler will kick back the ball
             return False
 
@@ -115,7 +117,7 @@ class MissileAwardMode(Timer):
 
     def award(self):
         award = self.available_awards[self.current_award_ptr]
-        self.game.base_play.display(award)
+        self.game.base_play.display(award, '')
 
         if award.endswith('Points'):
             award_words = award.rsplit(' ')
