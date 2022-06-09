@@ -119,7 +119,7 @@ class JDInitialEntryMode(Mode):
             frame = Frame(width=128, height=10)
             for offset in range(-7, 8):
                 index = new_index - offset
-                #print "Index %d  len=%d" % (index, len(self.letters))
+                #print 'Index %d  len=%d' % (index, len(self.letters))
                 if index < 0:
                     index = len(self.letters) + index
                 elif index >= len(self.letters):

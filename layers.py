@@ -4,7 +4,7 @@ from procgame.dmd import Frame, LayerTransitionBase, PanningLayer, TextLayer
 class FixedSizeTextLayer(TextLayer):
     """A TextLayer where the text and blank blinking frames are opaque over the whole fixed width x height"""
 
-    def __init__(self, x, y, font, justify="left", opaque=False, width=128, height=32, fill_color=None):
+    def __init__(self, x, y, font, justify='left', opaque=False, width=128, height=32, fill_color=None):
         super(FixedSizeTextLayer, self).__init__(x, y, font, justify, opaque, width, height, fill_color)
         self.blank_frame = Frame(width, height)
 
@@ -97,7 +97,7 @@ class GroupedTransition(LayerTransitionBase):
     def __init__(self, transitions):
         super(GroupedTransition, self).__init__()
         if transitions is None or not transitions:
-            raise Exception("List of transitions cannot be empty")
+            raise Exception('List of transitions cannot be empty')
         self.transitions = transitions
         self.current = 0
 

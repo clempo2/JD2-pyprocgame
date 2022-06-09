@@ -176,7 +176,7 @@ class JD2Game(BasicGame):
     
     def create_message_layer(self):
         """return a text layer at the bottom of the screen where the last line of the score display normally goes"""
-        layer = FixedSizeTextLayer(128/2, 32-6, self.dmd.message_layer.font, "center", opaque=False, width=128, height=6)
+        layer = FixedSizeTextLayer(128/2, 32-6, self.dmd.message_layer.font, 'center', opaque=False, width=128, height=6)
 
         # slide in for 0.5s, stay still for 2s, slide out for 0.5s
         slide_in_transition = SlideTransition(direction='west')
