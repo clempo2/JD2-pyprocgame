@@ -149,7 +149,8 @@ class ChainHurryUp(TimedMode):
     """Hurry up to subway after a chain mode is successfully completed"""
 
     def __init__(self, game, priority):
-        super(ChainHurryUp, self).__init__(game, priority, mode_time=10, name='Hurry Up',
+        hurry_up_time = game.user_settings['Gameplay']['Time for Hurry Up']
+        super(ChainHurryUp, self).__init__(game, priority, mode_time=hurry_up_time, name='Hurry Up',
                     instructions='Shoot subway', num_shots_required=1)
 
     def mode_started(self):

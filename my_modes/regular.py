@@ -39,10 +39,6 @@ class RegularPlay(Mode):
         self.game.add_modes([self.chain, self.city_blocks, self.multiball, self.missile_award_mode])
         self.setup_next_mode()
 
-        # welcome player at start of ball but not when continuing after ultimate challenge
-        if self.game.base_play.ball_starting:
-            self.welcome()
-
     def mode_stopped(self):
         self.game.remove_modes([self.chain, self.city_blocks, self.multiball, self.missile_award_mode])
         self.game.setPlayerState('mystery_lit', self.mystery_lit)
@@ -62,40 +58,7 @@ class RegularPlay(Mode):
         self.game.update_lamps()
         self.setup_next_mode()
 
-    #
-    # Message
-    #
-
-    def welcome(self):
-        if self.game.shooting_again:
-            self.game.sound.play_voice('shoot again ' + str(self.game.current_player_index + 1))
-            self.game.base_play.display('Shoot Again')
-        elif self.game.ball == 1:
-            self.game.sound.play_voice('welcome')
-
-        # high score mention
-        if self.game.ball == self.game.balls_per_game:
-            if self.game.shooting_again:
-                # display the score to beat after the Shoot Again message
-                self.delay('high_score_mention', event_type=None, delay=3, handler=self.high_score_mention)
-            else:
-                self.high_score_mention()
-
-    def high_score_mention(self):
-        if self.game.base_play.replay.replay_achieved[0]:
-            text = 'High Score'
-            game_data_key = 'SuperGameHighScoreData' if self.game.supergame else 'ClassicHighScoreData'
-            score = self.game.game_data[game_data_key][0]['score']
-        else:
-            text = 'Replay'
-            score = self.game.base_play.replay.replay_scores[0]
-        self.game.base_play.display(text, score)
-
     def evt_ball_started(self):
-        # remove welcome message early if the player was very quick to plunge
-        self.game.base_play.display('')
-        self.cancel_delayed('high_score_mention')
-
         self.game.ball_save_start(time=self.ball_save_time, now=True, allow_multiple_saves=self.repeating_ball_save)
         self.game.update_lamps()
 

@@ -52,6 +52,7 @@ class BasePlay(Mode):
         self.game.launch_balls(1)
         self.game.ball_save.callback = self.ball_save_callback
         self.ball_starting = True
+        self.welcome()
 
         # Force player to hit the right Fire button for the start of ball
         self.auto_plunge = False
@@ -82,6 +83,39 @@ class BasePlay(Mode):
 
         style = 'slow' if self.game.getPlayerState('extra_balls_lit', 0) else 'off'
         self.game.drive_lamp('extraBall2', style)
+
+    #
+    # Welcome
+    #
+
+    def welcome(self):
+        if self.game.shooting_again:
+            self.game.sound.play_voice('shoot again ' + str(self.game.current_player_index + 1))
+            self.display('Shoot Again')
+        elif self.game.ball == 1:
+            self.game.sound.play_voice('welcome')
+
+        # high score mention
+        if self.game.ball == self.game.balls_per_game:
+            if self.game.shooting_again:
+                # display the score to beat after the Shoot Again message
+                self.delay('high_score_mention', event_type=None, delay=3, handler=self.high_score_mention)
+            else:
+                self.high_score_mention()
+
+    def high_score_mention(self):
+        if self.replay.replay_achieved[0]:
+            text = 'High Score'
+            game_data_key = 'SuperGameHighScoreData' if self.game.supergame else 'ClassicHighScoreData'
+            score = self.game.game_data[game_data_key][0]['score']
+        else:
+            text = 'Replay'
+            score = self.replay.replay_scores[0]
+        self.display(text, score)
+
+    def remove_welcome(self):
+        self.game.base_play.display('')
+        self.cancel_delayed('high_score_mention')
 
     #
     # Display text or animation
@@ -159,6 +193,9 @@ class BasePlay(Mode):
 
     # event called when the ball is initially plunged by the player
     def evt_ball_started(self):
+        # remove welcome message early if the player was very quick to plunge
+        self.remove_welcome()
+
         # normally a skillshot would be a mode added here
         # but for us the skillshot is the same as another mode with different scoring
         self.combos.skill_shot_begin()

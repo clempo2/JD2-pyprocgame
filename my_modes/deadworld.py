@@ -157,9 +157,7 @@ class DeadworldTest(ServiceModeSkeleton):
         super(DeadworldTest, self).__init__(game, priority, font)
         self.name = 'DeadWorld Test'
 
-        self.title_layer = TextLayer(1, 1, font, 'left')
-        self.title_layer.set_text(self.name)
-
+        self.title_layer = TextLayer(1, 1, font, 'left').set_text(self.name)
         self.globe_layer = TextLayer(1, 9, font, 'left')
         self.arm_layer = TextLayer(1, 17, font, 'left')
         self.magnet_layer = TextLayer(1, 25, font, 'left')

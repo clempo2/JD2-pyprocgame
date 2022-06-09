@@ -66,10 +66,10 @@ Gameplay:
     increments: 1
     default: 3
   'Max extra balls per game':
-    options: [0,1,2,3,4,5,99]
+    options: [0,1,2,3,4,5,6,7,8,9,99]
     default: 99
   'Max extra balls lit':
-    options: [0,1,2,3,4,5,99]
+    options: [0,1,2,3,4,5,6,7,8,9,99]
     default: 99
   'New ball ballsave time':
     options: [5,6,7,8,9,10,11,12,13,14,15,20,25,30]
@@ -88,6 +88,9 @@ Gameplay:
   'Chain feature difficulty':
     options: ['easy', 'medium', 'hard']
     default: 'medium'
+  'Time for Hurry Up':
+    options: [5,6,7,8,9,10,11,12,13,14,15,20,25,30]
+    default: 10
   'Block difficulty':
     options: ['easy', 'medium', 'hard']
     default: 'medium'
