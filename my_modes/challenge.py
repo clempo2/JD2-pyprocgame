@@ -66,7 +66,9 @@ class UltimateChallenge(Mode):
     def next_level(self):
         # all balls have intentionally drained, move to the next mode
         self.game.remove_modes([self.mode_list[self.active_mode]])
-        self.active_mode += 1 # next mode
+        self.active_mode += 1
+        # keep count of challenge modes current for status mode
+        self.game.setPlayerState('challenge_mode', self.active_mode)
         self.start_level()
 
     def end_challenge(self):

@@ -23,6 +23,7 @@ class StatusReport(Mode):
 
         self.status_items += [
             {'text': 'Blocks Remaining', 'value': self.game.blocks_required - player.getState('current_block', 0)},
+            {'text': 'Dark Judges', 'value': player.getState('challenge_mode', 0)},
             {'text': 'Inner Loop Combos', 'value': player.getState('best_inner_loops', 0)},
             {'text': 'Outer Loop Combos', 'value': player.getState('best_outer_loops', 0)}]
 
