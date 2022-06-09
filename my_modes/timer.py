@@ -68,7 +68,7 @@ class TimedMode(Timer):
         font_num = self.game.fonts['num_14x10']
 
         intro_name_layer = TextLayer(128/2, 7, font_big, 'center').set_text(name)
-        intro_instruct_layer = TextLayer(128/2, 24, font_small, 'center').set_text(instructions)
+        intro_instruct_layer = TextLayer(128/2, 26, font_small, 'center').set_text(instructions)
         intro_page_layer = GroupedLayer(128, 32, [intro_name_layer, intro_instruct_layer])
         script = [{'seconds':1, 'layer':intro_name_layer}, {'seconds':3, 'layer':intro_page_layer}]
         intro_layer = ScriptedLayer(width=128, height=32, script=script)
