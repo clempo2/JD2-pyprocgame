@@ -62,6 +62,10 @@ class RegularPlay(Mode):
         self.game.ball_save_start(time=self.ball_save_time, now=True, allow_multiple_saves=self.repeating_ball_save)
         self.game.update_lamps()
 
+    def sw_shooterR_inactive_for_300ms(self, sw):
+        self.game.sound.play('ball_launch')
+        self.play_animation('bikeacrosscity', frame_time=5)
+
     #
     # submodes
     #

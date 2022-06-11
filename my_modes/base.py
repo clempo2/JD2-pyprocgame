@@ -89,11 +89,9 @@ class BasePlay(Mode):
     #
 
     def welcome(self):
-        self.welcome_display_time = 0
         if self.game.shooting_again:
             self.game.sound.play_voice('shoot again ' + str(self.game.current_player_index + 1))
             self.display('Shoot Again')
-            self.welcome_display_time = 3
         elif self.game.ball == 1:
             self.game.sound.play_voice('welcome')
 
@@ -102,7 +100,6 @@ class BasePlay(Mode):
             if self.game.shooting_again:
                 # display the score to beat after the Shoot Again message
                 self.delay('high_score_mention', event_type=None, delay=3, handler=self.high_score_mention)
-                self.welcome_display_time = 6
             else:
                 self.high_score_mention()
 
@@ -181,11 +178,7 @@ class BasePlay(Mode):
     # Shooter Lanes
     #
 
-    def sw_shooterR_inactive_for_300ms(self, sw):
-        self.game.sound.play('ball_launch')
-        self.play_animation('bikeacrosscity', frame_time=5)
-
-    def sw_shooterR_inactive_for_1s(self, sw):
+    def sw_shooterR_inactive_for_900ms(self, sw):
         # Enable auto-plunge soon after the new ball is launched (by the player).
         self.auto_plunge = True
 

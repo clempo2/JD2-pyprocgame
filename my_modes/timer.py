@@ -67,11 +67,14 @@ class TimedMode(Timer):
         font_small = self.game.fonts['tiny7']
         font_num = self.game.fonts['num_14x10']
 
-        self.intro_name_layer = TextLayer(128/2, 7, font_big, 'center').set_text(name)
-        self.intro_instruct_layer = TextLayer(128/2, 26, font_small, 'center').set_text(instructions)
-        self.intro_page_layer = GroupedLayer(128, 32, [self.intro_name_layer, self.intro_instruct_layer])
+        intro_name_layer = TextLayer(128/2, 7, font_big, 'center').set_text(name)
+        intro_instruct_layer = TextLayer(128/2, 26, font_small, 'center').set_text(instructions)
+        intro_page_layer = GroupedLayer(128, 32, [intro_name_layer, intro_instruct_layer])
+        script = [{'seconds':1, 'layer':intro_name_layer}, {'seconds':3, 'layer':intro_page_layer}]
+        intro_layer = ScriptedLayer(width=128, height=32, script=script)
 
         self.intro = Introduction(game, priority + 1)
+        self.intro.setup(intro_layer)
         self.intro.exit_callback = self.intro_ended
 
         self.countdown_layer = TextLayer(127, 1, font_small, 'right')
@@ -83,10 +86,6 @@ class TimedMode(Timer):
         self.mode_layer = GroupedLayer(128, 32, layers)
 
     def mode_started(self):
-        welcome_delay = self.game.base_play.welcome_display_time if self.game.base_play.ball_starting else 0
-        script = [{'seconds': (welcome_delay + 1), 'layer':self.intro_name_layer}, {'seconds':3, 'layer':self.intro_page_layer}]
-        intro_layer = ScriptedLayer(width=128, height=32, script=script)
-        self.intro.setup(intro_layer)
         self.game.modes.add(self.intro)
         self.num_shots = 0
         self.play_music()

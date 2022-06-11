@@ -25,23 +25,27 @@ class UltimateChallenge(Mode):
         self.active_mode = self.game.getPlayerState('challenge_mode', 0)
         self.game.coils.resetDropTarget.pulse(30)
         self.continue_after_drain = False
-        self.start_level()
+        if not self.game.base_play.ball_starting:
+            self.start_level()
 
     def mode_stopped(self):
         # when Celebration was awarded, the next challenge starts from the beginning
         self.game.setPlayerState('challenge_mode', self.active_mode if self.active_mode < 4 else 0)
         self.game.remove_modes([self.mode_list[self.active_mode]])
 
+    def evt_ball_started(self):
+        # supergame starting ball with an ultimate challenge mode
+        self.start_level()
+
     def start_level(self):
         self.game.enable_flippers(True)
-        if self.game.num_balls_requested() == 0:
-            # serve one ball in the shooter lane and wait for player to plunge
-            self.game.base_play.auto_plunge = False
-            self.game.launch_balls(1)
         self.game.modes.add(self.mode_list[self.active_mode])
         self.game.update_lamps()
         self.game.sound.play_music('mode', loops=-1)
-        self.mode_list[self.active_mode].ready()
+        if self.game.switches.popperR.is_active():
+            # we were started from regular mode
+            # put the ball back in play
+            self.game.base_play.flash_then_pop('flashersRtRamp', 'popperR', 20)
 
     def judge_level_ended(self, success=True):
         self.game.ball_save.disable()
@@ -90,39 +94,16 @@ class ChallengeBase(TimedMode):
 
     def __init__(self, game, priority, initial_time, instructions, num_shots_required, num_balls, ball_save_time):
         name = self.__class__.__name__
-        super(ChallengeBase, self).__init__(game, priority, 0, name, instructions, num_shots_required)
-        self.initial_time = initial_time
+        super(ChallengeBase, self).__init__(game, priority, initial_time, name, instructions, num_shots_required)
         self.num_balls = num_balls
         self.ball_save_time = ball_save_time
 
     def mode_started(self):
         super(ChallengeBase, self).mode_started()
-        self.started = False
-        if self.initial_time > 0:
-            # display initial time without starting countdown
-            self.timer_update(self.initial_time)
         if self.num_balls > 1:
             self.game.addPlayerState('multiball_active', 0x4)
-
-    def mode_stopped(self):
-        super(ChallengeBase, self).mode_stopped()
-        if self.num_balls > 1:
-            self.game.addPlayerState('multiball_active', -0x4)
-
-    def ready(self):
-        if self.game.switches.popperR.is_active():
-            # we were started from regular mode
-            # put the ball back in play and start the timer if applicable
-            self.game.base_play.flash_then_pop('flashersRtRamp', 'popperR', 20)
-            self.start()
-        else:
-            # wait for the player to plunge the ball
-            self.game.sound.play_music('ball_launch', loops=-1)
-
-    def start(self):
         # the first ball is now in play (popped from popperR or plunged by player)
         # launch remaining balls for the mode (if applicable)
-        self.game.base_play.auto_plunge = True
         balls_to_launch = self.num_balls - self.game.num_balls_requested()
         if balls_to_launch > 0:
             self.game.launch_balls(balls_to_launch)
@@ -130,13 +111,10 @@ class ChallengeBase(TimedMode):
         if self.ball_save_time > 0:
             self.game.ball_save_start(time=self.ball_save_time, now=True, allow_multiple_saves=True)
 
-        if self.initial_time > 0:
-            self.start_timer(self.initial_time)
-        self.started = True
-
-    def sw_shooterR_inactive_for_900ms(self, sw):
-        if not self.started:
-            self.start()
+    def mode_stopped(self):
+        super(ChallengeBase, self).mode_stopped()
+        if self.num_balls > 1:
+            self.game.addPlayerState('multiball_active', -0x4)
 
     def sw_leftRampToLock_active(self, sw):
         self.game.deadworld.eject_balls(1)
@@ -518,7 +496,7 @@ class Celebration(ChallengeBase, CrimeSceneShots):
         # It calls the end multiball callback when launching the first ball
         # thinking we got down to 1 ball when in fact we are going up to 6 balls.
         # The work-around is to implement the end multiball callback ourselves
-        if (self.started and self.game.num_balls_requested() == 1):
+        if self.game.num_balls_requested() == 1:
             # down to just one ball, revert to regular play
             self.exit_callback()
         # else celebration continues until we are really down to the last ball
