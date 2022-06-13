@@ -203,9 +203,17 @@ class BasePlay(Mode):
         if self.ball_starting:
             self.game.sound.play_music('ball_launch', loops=-1)
  
-    def sw_shooterR_closed_for_700ms(self, sw):
+    def sw_shooterR_active_for_700ms(self, sw):
         if self.auto_plunge:
             self.game.coils.shooterR.pulse(50)
+ 
+    def sw_shooterR_active_for_10s(self, sw):
+        self.suggest_press_fire()
+
+    def suggest_press_fire(self):
+        if self.game.switches.shooterR.is_active() and self.game.switches.shooterR.time_since_change() >= 10:
+            self.game.set_status('PRESS RIGHT FIRE BUTTON')
+            self.delay('suggest_press_fire', None, 10, self.suggest_press_fire)
 
     def sw_shooterL_active_for_500ms(self, sw):
         self.game.send_event('evt_shooterL_active_500ms')

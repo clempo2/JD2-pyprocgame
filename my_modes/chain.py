@@ -79,15 +79,16 @@ class Chain(Mode):
         if self.mode:
             self.mode.resume()
 
-    # start a chain mode by showing the instructions
+    # start a new chain mode after the display becomes available
     def start_chain_mode(self):
-        # if applicable, wait for block mode to finish talking and/or displaying on the screen
-        # this is a work-around for the pyprocgame SoundController that does not queue voice callouts
         block_busy_until = self.game.getPlayerState('block_busy_until', 0)
         now = time()
         if block_busy_until > now:
-            self.delay('delay_start_chain_mode', None, block_busy_until - now + 0.05, self.start_chain_mode)
+            # wait for block mode to finish talking and/or displaying on the screen
+            # this is a work-around for the pyprocgame SoundController that does not queue voice callouts
+            self.delay('start_chain_mode', None, block_busy_until - now, self.start_chain_mode)
             return
+
         self.mode = self.modes_remaining[self.modes_remaining_ptr]
         self.game.setPlayerState('chain_active', 1)
         self.modes_remaining.remove(self.mode)

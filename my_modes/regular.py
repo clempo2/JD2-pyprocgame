@@ -50,6 +50,7 @@ class RegularPlay(Mode):
         if self.is_ultimate_challenge_ready() and self.game.getPlayerState('challenge_mode', 0) < 3:
             self.game.addPlayerState('challenge_mode', 1)
         self.game.setPlayerState('multiball_jackpot_collected', True)
+        self.game.setPlayerState('current_block', self.game.blocks_required)
         self.game.setPlayerState('blocks_complete', True)
         self.game.setPlayerState('chain_complete', True)
         self.game.setPlayerState('modes_remaining', [])
@@ -64,7 +65,7 @@ class RegularPlay(Mode):
 
     def sw_shooterR_inactive_for_300ms(self, sw):
         self.game.sound.play('ball_launch')
-        self.play_animation('bikeacrosscity', frame_time=5)
+        self.game.base_play.play_animation('bikeacrosscity', frame_time=5)
 
     #
     # submodes
