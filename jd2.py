@@ -270,26 +270,25 @@ class JD2Game(BasicGame):
 
     def num_balls_requested(self):
         # Return what the game considers is the number of balls in play.
-        # This includes the balls that are already in play plus those pending to be launched.
+        # This includes the balls that are already in play plus those pending to be launched
+        # less the ones to be launched that replace balls already on the playfield (now locked or in outlane)
         # It does not count locked balls but it does count balls pending to be ejected from the planet.
         # That's because the planet immediately adds the balls to be ejected to the count of balls in play
         # without waiting for the crane to release them.
-        return self.trough.num_balls_in_play + self.trough.num_balls_to_launch
+        return self.trough.num_balls_in_play + self.trough.num_balls_to_launch - self.trough.num_balls_to_stealth_launch
 
     def launch_balls(self, balls_to_launch):
         # launch balls from the trough if it has sufficient balls, else eject additional balls from Deadworld
-        # Warning: self.trough.num_balls() is not reliable when balls are moving in the trough,
-        # so don't assume Deadworld contains all the additional balls we need
-        # especially if we gave a pitty ball after a failed ball search
-        trough_balls = self.trough.num_balls()
-        deadworld_balls_to_launch = min(self.deadworld.num_balls_locked, max(0, balls_to_launch - trough_balls))
-        trough_balls_to_launch = balls_to_launch - deadworld_balls_to_launch
-        if trough_balls_to_launch:
+        # NOTE: self.trough.num_balls() is not reliable when balls are moving in the trough, don't use it here.
+        new_num_requested = self.num_balls_requested() + balls_to_launch
+        num_unlocked = self.num_balls_total - self.deadworld.num_balls_locked
+        if new_num_requested > num_unlocked:
+            num_to_eject = new_num_requested - num_unlocked
+            self.deadworld.eject_balls(num_to_eject)
+            balls_to_launch -= num_to_eject
+        if balls_to_launch:
             # warning: must pass a real callback since passing None preserves the previous callback
             self.trough.launch_balls(balls_to_launch, self.no_op_callback)
-        if deadworld_balls_to_launch:
-            # if we need that many balls, it must be multiball, no need to configure_lock afterwards
-            self.deadworld.eject_balls(deadworld_balls_to_launch)
 
     # Override to create a flag signaling extra ball.
     def shoot_again(self):

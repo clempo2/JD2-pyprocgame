@@ -219,7 +219,7 @@ the screen.
 
 Each time a level is successfully completed, the machine goes dead,
 allowing all of the balls to drain. Then the next level starts with a ball
-served in the shooter lane waiting for the player to launch with the fire button.
+auto-launched from the shooter lane.
 
 If all balls drain before the player completes a level, the player's
 ball ends and Ultimate Challenge is aborted. Re-lighting Ultimate Challenge
