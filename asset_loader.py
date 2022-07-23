@@ -296,11 +296,10 @@ class AssetLoader(object):
         ]
 
         fonts_files = [
-            {'key': 'tiny7', 'file': '04B-03-7px.dmd'},
-            {'key': '07x5', 'file': 'Font07x5.dmd'},
-            #{'key': '09Bx7', 'file': 'Font09Bx7.dmd'},
-            {'key': 'num_14x10', 'file': 'Font14x10.dmd'},
-            {'key': 'jazz18', 'file': 'Jazz18-18px.dmd'},
+            {'key': 'tiny', 'file': '04B-03-7px.dmd'},
+            {'key': 'medium', 'file': 'Font07x5.dmd'},
+            {'key': 'large_num', 'file': 'Font14x10.dmd'},
+            {'key': 'large', 'file': 'Jazz18-18px.dmd'},
         ]
 
         assets_path = curr_file_path + '/assets'

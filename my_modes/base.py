@@ -438,14 +438,14 @@ class ModesDisplay(Mode):
 
     def __init__(self, game, priority):
         super(ModesDisplay, self).__init__(game, priority)
-        self.big_text_layer = TextLayer(128/2, 7, self.game.fonts['jazz18'], 'center')
-        self.small_text_layer = TextLayer(128/2, 7, self.game.fonts['07x5'], 'center')
-        self.points_layer = TextLayer(128/2, 17, self.game.fonts['num_14x10'], 'center')
+        self.large_text_layer = TextLayer(128/2, 7, self.game.fonts['large'], 'center')
+        self.small_text_layer = TextLayer(128/2, 7, self.game.fonts['medium'], 'center')
+        self.points_layer = TextLayer(128/2, 17, self.game.fonts['large_num'], 'center')
 
     def display(self, text=None, points=None):
         layers = []
         if text:
-            text_layer = self.small_text_layer if points is not None else self.big_text_layer
+            text_layer = self.small_text_layer if points is not None else self.large_text_layer
             text_layer.set_text(text, 3)
             layers.append(text_layer)
         if points is not None:

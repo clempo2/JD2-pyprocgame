@@ -45,16 +45,19 @@ class ShootingGallery(Mode):
 
     def intro(self):
         self.game.enable_flippers(False)
-        self.status_layer = TextLayer(128/2, 7, self.game.fonts['jazz18'], 'center', opaque=False).set_text('Video Mode')
+        font_large = self.game.fonts['large']
+        font_medium = self.game.fonts['medium']
+
+        self.status_layer = TextLayer(128/2, 7, font_large, 'center', opaque=False).set_text('Video Mode')
 
         self.intro_layer_0 = GroupedLayer(128, 32, [self.status_layer])
 
-        self.intro_layer_11 = TextLayer(128/2, 7, self.game.fonts['07x5'], 'center').set_text(self.enemy_text)
-        self.intro_layer_12 = TextLayer(128/2, 17, self.game.fonts['07x5'], 'center').set_text(self.friend_text)
+        self.intro_layer_11 = TextLayer(128/2, 7, font_medium, 'center').set_text(self.enemy_text)
+        self.intro_layer_12 = TextLayer(128/2, 17, font_medium, 'center').set_text(self.friend_text)
         self.intro_layer_1 = GroupedLayer(128, 32, [self.intro_layer_11, self.intro_layer_12])
 
-        self.intro_layer_21 = TextLayer(128/2, 7, self.game.fonts['07x5'], 'center').set_text('Flipper buttons aim')
-        self.intro_layer_22 = TextLayer(128/2, 17, self.game.fonts['07x5'], 'center').set_text('Fire buttons shoot')
+        self.intro_layer_21 = TextLayer(128/2, 7, font_medium, 'center').set_text('Flipper buttons aim')
+        self.intro_layer_22 = TextLayer(128/2, 17, font_medium, 'center').set_text('Fire buttons shoot')
         self.intro_layer_2 = GroupedLayer(128, 32, [self.intro_layer_21, self.intro_layer_22])
 
         self.layer = ScriptedLayer(128, 32, [
@@ -71,7 +74,7 @@ class ShootingGallery(Mode):
         self.target_layers = [self.new_frame_layer(True) for unused in range(0, 4)]
         self.scope_layer = self.new_frame_layer()
         self.bullet_layers = [self.new_frame_layer() for unused in range(0, 4)]
-        self.result_layer = TextLayer(128/2, 20, self.game.fonts['07x5'], 'center', opaque=False)
+        self.result_layer = TextLayer(128/2, 20, font_medium, 'center', opaque=False)
 
         all_layers = self.target_layers + [self.scope_layer] + self.bullet_layers + [self.status_layer, self.result_layer]
         self.layer = GroupedLayer(128, 32, all_layers)

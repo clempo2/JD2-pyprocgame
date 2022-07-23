@@ -20,7 +20,7 @@ class MissileAwardMode(Timer):
         self.repeatable_award = [True, False, True, True, False]
         self.current_award_ptr = 0
 
-        font = self.game.fonts['tiny7']
+        font = self.game.fonts['tiny']
         self.title_layer = TextLayer(128/2, 7, font, 'center').set_text('Missile Award')
         self.value_layer = TextLayer(128/2, 15, font, 'center')
         self.selection_layer = GroupedLayer(128, 32, [self.title_layer, self.value_layer])

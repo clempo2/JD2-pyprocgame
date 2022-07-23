@@ -123,8 +123,8 @@ class JD2Game(BasicGame):
 
         # Service mode
         self.switch_monitor = SwitchMonitor(self, 32767)
-        deadworld_test = DeadworldTest(self, 200, self.fonts['tiny7'])
-        self.service_mode = JDServiceMode(self, 100, self.fonts['tiny7'], [deadworld_test])
+        deadworld_test = DeadworldTest(self, 200, self.fonts['tiny'])
+        self.service_mode = JDServiceMode(self, 100, self.fonts['tiny'], [deadworld_test])
 
         # Currently there are no special ball search handlers.  The deadworld
         # could be one, but running it while balls are locked would screw up

@@ -25,7 +25,7 @@ class Tilted(CoilEjectMode):
 
     def __init__(self, game, priority):
         super(Tilted, self).__init__(game, priority)
-        text_layer = TextLayer(128/2, 7, self.game.fonts['jazz18'], 'center').set_text('Tilt')
+        text_layer = TextLayer(128/2, 7, self.game.fonts['large'], 'center').set_text('Tilt')
         self.layer = GroupedLayer(128, 32, [text_layer])
 
     def mode_started(self):
@@ -47,7 +47,7 @@ class SlamTilted(Mode):
 
     def __init__(self, game, priority):
         super(SlamTilted, self).__init__(game, priority)
-        self.layer = TextLayer(128/2, 7, self.game.fonts['jazz18'], 'center').set_text('Slam Tilt')
+        self.layer = TextLayer(128/2, 7, self.game.fonts['large'], 'center').set_text('Slam Tilt')
 
     def mode_started(self):
         self.delay('reset_game', event_type=None, delay=5, handler=self.reset_game)

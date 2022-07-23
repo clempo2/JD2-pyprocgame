@@ -11,11 +11,11 @@ class Attract(CoilEjectMode):
         super(Attract, self).__init__(game, priority)
         self.lampshow_keys = ['attract0', 'attract1']
 
-        font_jazz18 = self.game.fonts['jazz18']
+        font_large = self.game.fonts['large']
 
         self.gun_layer = self.game.animations['gun_powerup']
 
-        self.jd_layer = TextLayer(128/2, 7, font_jazz18, 'center', opaque=True).set_text('Judge Dredd')
+        self.jd_layer = TextLayer(128/2, 7, font_large, 'center', opaque=True).set_text('Judge Dredd')
         self.jd_layer.transition = PushTransition(direction='south')
 
         self.cityscape_layer = self.game.animations['cityscape']
@@ -28,9 +28,9 @@ class Attract(CoilEjectMode):
         self.press_green_layer = self.button_layer('Press Green Button', 'for SuperGame', direction='west')
         self.press_green_layer2 = self.button_layer('Press Green Button', 'for SuperGame', blink_frame=5)
 
-        self.high_scores_title_layer = TextLayer(128/2, 7, font_jazz18, 'center', opaque=True).set_text('High Scores')
+        self.high_scores_title_layer = TextLayer(128/2, 7, font_large, 'center', opaque=True).set_text('High Scores')
         self.high_scores_title_layer.transition = PushTransition(direction='north')
-        self.game_over_layer = TextLayer(128/2, 7, font_jazz18, 'center', opaque=True).set_text('Game Over')
+        self.game_over_layer = TextLayer(128/2, 7, font_large, 'center', opaque=True).set_text('Game Over')
 
         gen = MarkupFrameGenerator()
         credits_frame = gen.frame_for_markup("""
@@ -170,9 +170,9 @@ Collect a multiball jackpot
         self.layer.on_complete = self.display
 
     def button_layer(self, button_text, play_text, blink_frame=None, direction=None):
-        font_07x5 = self.game.fonts['07x5']
-        press_layer = TextLayer(128/2, 8, font_07x5, 'center', opaque=True).set_text(button_text, seconds=None, blink_frames=blink_frame)
-        play_layer = TextLayer(128/2, 17, font_07x5, 'center', opaque=False).set_text(play_text, seconds=None, blink_frames=blink_frame)
+        font_medium = self.game.fonts['medium']
+        press_layer = TextLayer(128/2, 8, font_medium, 'center', opaque=True).set_text(button_text, seconds=None, blink_frames=blink_frame)
+        play_layer = TextLayer(128/2, 17, font_medium, 'center', opaque=False).set_text(play_text, seconds=None, blink_frames=blink_frame)
         start_layer = GroupedLayer(128, 32, [press_layer, play_layer])
         if direction:
             start_layer.transition = PushTransition(direction=direction)

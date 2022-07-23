@@ -148,8 +148,8 @@ class DarkJudge(ChallengeBase):
         super(DarkJudge, self).__init__(game, priority, initial_time, instructions, num_shots_required, num_balls, ball_save_time)
         self.taunt_sound = self.name.lower() + ' - taunt'
 
-        self.text_layer = TextLayer(128/2, 7, self.game.fonts['tiny7'], 'center', opaque=True)
-        wait_layer = TextLayer(128/2, 20, self.game.fonts['tiny7'], 'center', opaque=False).set_text('Wait, balls draining...')
+        self.text_layer = TextLayer(128/2, 7, self.game.fonts['tiny'], 'center', opaque=True)
+        wait_layer = TextLayer(128/2, 20, self.game.fonts['tiny'], 'center', opaque=False).set_text('Wait, balls draining...')
         self.finish_layer = GroupedLayer(128, 32, [self.text_layer, wait_layer])
 
     def mode_stopped(self):
