@@ -336,6 +336,7 @@ class Mortis(DarkJudge):
             self.incr_num_shots()
             self.game.lampctrl.play_show('shot_hit', False, self.game.update_lamps)
             self.game.score(10000)
+            self.game.update_lamps()
             self.check_for_completion()
 
 
@@ -376,6 +377,7 @@ class Death(DarkJudge, CrimeSceneShots):
             self.game.lampctrl.play_show('shot_hit', False, self.game.update_lamps)
             self.game.score(10000)
             self.shot_timer = self.time_for_shot
+            self.game.update_lamps()
             self.check_for_completion()
 
     def decrement_timer(self):
@@ -447,6 +449,7 @@ class Fire(DarkJudge, CrimeSceneShots):
             self.incr_num_shots()
             self.game.lampctrl.play_show('shot_hit', False, self.game.update_lamps)
             self.game.score(10000)
+            self.game.update_lamps()
             self.check_for_completion()
 
     def finish(self, success):
