@@ -172,7 +172,7 @@ class CityBlock(CrimeSceneShots):
             shuffle(self.block_outcome)
             block_n_outcome = 'Block ' + str(current_block + 1) + ' ' + self.block_outcome[0]
             self.game.sound.play_voice(block_n_outcome)
-            self.game.set_status(block_n_outcome)
+            self.game.set_status(block_n_outcome.upper())
             self.block_busy(2.65)
             self.next_block()
             self.game.update_lamps()
