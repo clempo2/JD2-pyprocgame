@@ -23,6 +23,7 @@ JD2-pyprocgame is new software for the [Judge Dredd](https://www.ipdb.org/machin
     cd C:\P-ROC\JD2-pyprocgame    
     python jd2.py
     ```
+- If you have the Deadworld mod installed and would like to physically lock 2 balls, use the service buttons to go in the settings and change "Deadworld mod installed" to true. You only need to do this once.
 
 JD2-pyprocgame should also run on Linux but this has not been tested.
 
