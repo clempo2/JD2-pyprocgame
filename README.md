@@ -19,9 +19,8 @@ JD2-pyprocgame is new software for the [Judge Dredd](https://www.ipdb.org/machin
     ```
 - Run these commands:
     ```
-    set PYTHONPATH=C:\P-ROC\JD-pyprocgame;C:\P-ROC\pyprocgame-dev;C:\P-ROC\pypinproc-dev;C:\Python27\DLLs;C:\Python27\lib;C:\Python27\lib\lib-tk;C:\Python27;C:\Python27\lib\site-packages;C:\Python27\lib\site-packages\win32;C:\Python27\lib\site-packages\win32\lib;C:\Python27\lib\site-packages\Pythonwin;C:\Python27\lib\site-packages\wx-3.0-msw  
     cd C:\P-ROC\JD2-pyprocgame    
-    python jd2.py
+    jd2.bat
     ```
 - If you have the Deadworld mod installed and would like to physically lock 2 balls, use the service buttons to go in the settings and change "Deadworld mod installed" to true. You only need to do this once.
 
