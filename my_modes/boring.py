@@ -1,6 +1,6 @@
-from procgame.game import Mode
+from procgame.game import AdvancedMode
 
-class Boring(Mode):
+class Boring(AdvancedMode):
     """Taunt player if nothing happens for a while"""
 
     def __init__(self, game, priority):

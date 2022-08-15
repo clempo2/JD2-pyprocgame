@@ -25,6 +25,11 @@ class MissileAwardMode(Timer):
         self.value_layer = TextLayer(128/2, 15, font, 'center')
         self.selection_layer = GroupedLayer(128, 32, [self.title_layer, self.value_layer])
 
+    def evt_player_added(self, player):
+        player.setState('missile_award_lit', False)
+        player.setState('available_awards', self.initial_awards[:])
+        player.setState('video_mode_lit', self.video_mode_enabled)
+
     def mode_started(self):
         player = self.game.current_player()
         self.missile_award_lit = player.getState('missile_award_lit', False)
@@ -44,7 +49,7 @@ class MissileAwardMode(Timer):
         self.missile_award_lit = True
         self.game.update_lamps()
 
-    def evt_shooterL_active_500ms(self):
+    def event_shooterL_active_500ms(self):
         starting = self.missile_award_lit
         self.missile_award_lit = not self.missile_award_lit
         self.game.update_lamps()

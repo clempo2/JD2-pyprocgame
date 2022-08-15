@@ -1,10 +1,10 @@
 from random import shuffle
 from time import time
-from procgame.game import Mode
+from procgame.game import AdvancedMode
 from crimescenes import CrimeSceneShots
 from timer import TimedMode
 
-class CityBlocks(Mode):
+class CityBlocks(AdvancedMode):
     """Controls the progress through the city block modes"""
 
     def __init__(self, game, priority):
@@ -12,6 +12,14 @@ class CityBlocks(Mode):
         self.city_block = CityBlock(self, priority + 1)
         self.block_war = BlockWar(self, priority + 5)
         self.ball_save_time = self.game.user_settings['Gameplay']['Block War ballsave time']
+
+    def evt_player_added(self, player):
+        player.setState('current_block', -1)
+        player.setState('num_blocks', 0)
+        player.setState('blocks_complete', False)
+        player.setState('block_targets', None)
+        player.setState('block_busy_until', 0)
+        player.setState('num_hurry_ups', 0)
 
     def mode_started(self):
         self.start_city_block()
@@ -158,7 +166,7 @@ class CityBlock(CrimeSceneShots):
     def block_complete(self):
         self.game.score(10000)
         self.game.lampctrl.play_show('advance_level', False, self.game.update_lamps)
-        self.game.addPlayerState('num_blocks', 1)
+        self.game.adjPlayerState('num_blocks', 1)
         num_blocks = self.game.getPlayerState('num_blocks', 0)
 
         if num_blocks == self.extra_ball_block:
@@ -236,14 +244,14 @@ class BlockWar(TimedMode, CrimeSceneShots):
 
     def mode_started(self):
         super(BlockWar, self).mode_started()
-        self.game.addPlayerState('multiball_active', 0x2)
+        self.game.adjPlayerState('multiball_active', 0x2)
         self.game.sound.play_voice('block war')
         self.num_shots_required_per_target = 1
         self.next_round(inc_num_shots=False)
 
     def mode_stopped(self):
         super(BlockWar, self).mode_stopped()
-        self.game.addPlayerState('multiball_active', -0x2)
+        self.game.adjPlayerState('multiball_active', -0x2)
 
     def next_round(self, inc_num_shots):
         self.state = 'shots'
@@ -329,7 +337,7 @@ class BlockWar(TimedMode, CrimeSceneShots):
         else:
             super(BlockWar, self).update_status()
 
-    def evt_ball_drained(self):
+    def event_ball_drained(self):
         # End multiball if there is now only one ball in play
         if self.game.getPlayerState('multiball_active', 0) & 0x2:
             if self.game.num_balls_requested() == 1:

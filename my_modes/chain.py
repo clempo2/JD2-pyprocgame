@@ -1,9 +1,9 @@
 from random import randint
 from time import time
-from procgame.game import Mode
+from procgame.game import AdvancedMode
 from timer import TimedMode
 
-class Chain(Mode):
+class Chain(AdvancedMode):
     """Controls the progress through the chain modes"""
 
     def __init__(self, game, priority):
@@ -26,7 +26,15 @@ class Chain(Mode):
         self.hurry_up = ChainHurryUp(game, priority + 1)
         self.hurry_up.exit_callback = self.hurry_up_ended
 
+    def evt_player_added(self, player):
+        player.setState('modes_remaining', self.all_chain_modes[:])
+        player.setState('modes_remaining_ptr', 0)
+        player.setState('chain_active', 0)
+        player.setState('chain_complete', False)
+        player.setState('num_chain_features', 0)
+
     def mode_started(self):
+        # TODO implement evt_player_added to set the default values of the player state
         # restore player state
         player = self.game.current_player()
         self.modes_remaining = player.getState('modes_remaining', self.all_chain_modes[:])
@@ -95,7 +103,7 @@ class Chain(Mode):
         if len(self.modes_remaining) == 0:
             self.game.setPlayerState('chain_complete', True)
         self.rotate_modes(0)
-        self.game.addPlayerState('num_chain_features', 1)
+        self.game.adjPlayerState('num_chain_features', 1)
 
         self.game.base_play.regular_play.state = 'mode'
         self.game.modes.add(self.mode)
@@ -110,7 +118,7 @@ class Chain(Mode):
 
         if success:
             # mode was completed successfully, start hurry up award
-            self.game.addPlayerState('num_hurry_ups', 1)
+            self.game.adjPlayerState('num_hurry_ups', 1)
             self.game.modes.add(self.hurry_up)
             self.game.update_lamps()
         else:

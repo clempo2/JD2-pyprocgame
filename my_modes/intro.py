@@ -1,6 +1,6 @@
-from procgame.game import Mode
+from procgame.game import AdvancedMode
 
-class Introduction(Mode):
+class Introduction(AdvancedMode):
     """Display instructions for a mode"""
 
     def __init__(self, game, priority):

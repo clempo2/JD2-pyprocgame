@@ -4,7 +4,7 @@ from procgame.dmd import Frame, LayerTransitionBase, PanningLayer, TextLayer
 class FixedSizeTextLayer(TextLayer):
     """A TextLayer where the text and blank blinking frames are opaque over the whole fixed width x height"""
 
-    def __init__(self, x, y, font, justify='left', opaque=False, width=128, height=32, fill_color=None):
+    def __init__(self, x, y, font, justify='left', opaque=False, width=128, height=32, fill_color=(0,0,0,255)):
         super(FixedSizeTextLayer, self).__init__(x, y, font, justify, opaque, width, height, fill_color)
         self.blank_frame = Frame(width, height)
 

@@ -1,15 +1,17 @@
 from random import randint
 from procgame.dmd import AnimatedLayer, GroupedLayer, TextLayer
-from procgame.game import Mode
+from procgame.game import AdvancedMode
 from procgame.modes import Replay
 from boring import Boring
 from bonus import Bonus
 from challenge import UltimateChallenge
 from combos import Combos
+from intro import Introduction
 from regular import RegularPlay
 from status import StatusReport
 
-class BasePlay(Mode):
+
+class BasePlay(AdvancedMode):
     """Base rules for all the time the ball is in play"""
 
     def __init__(self, game, priority):
@@ -22,6 +24,7 @@ class BasePlay(Mode):
         self.boring = Boring(self.game, priority + 6)
         self.combos = Combos(self.game, priority + 25)
         self.status_report = StatusReport(self.game, priority + 26)
+        self.intro = Introduction(self.game, priority + 1)
         self.regular_play = RegularPlay(self.game, priority + 5)
 
         self.ultimate_challenge = UltimateChallenge(game, priority + 5)
@@ -35,6 +38,14 @@ class BasePlay(Mode):
 
         self.display_mode = ModesDisplay(self.game, priority + 700)
         self.animation_mode = ModesAnimation(self.game, priority + 701)
+
+    def evt_player_added(self, player):
+        player.setState('supergame', self.game.supergame)
+        player.setState('total_extra_balls', 0)
+        player.setState('extra_balls_lit', 0)
+        player.setState('multiball_active', 0)
+        player.setState('bonus_x', 1)
+        player.setState('hold_bonus_x', False)
 
     def mode_started(self):
         # init player state
@@ -183,12 +194,12 @@ class BasePlay(Mode):
         self.auto_plunge = True
 
         if self.ball_starting:
-            self.game.send_event('evt_ball_started')
+            self.game.send_event('event_ball_started')
             # send the event only once per ball
             self.ball_starting = False
 
     # event called when the ball is initially plunged by the player
-    def evt_ball_started(self):
+    def event_ball_started(self):
         # remove welcome message early if the player was very quick to plunge
         self.remove_welcome()
 
@@ -216,9 +227,9 @@ class BasePlay(Mode):
             self.delay('suggest_press_fire', None, 10, self.suggest_press_fire)
 
     def sw_shooterL_active_for_500ms(self, sw):
-        self.game.send_event('evt_shooterL_active_500ms')
+        self.game.send_event('event_shooterL_active_500ms')
 
-    def evt_shooterL_active_500ms(self):
+    def event_shooterL_active_500ms(self):
         self.game.coils.shooterL.pulse(randint(15, 30))
 
     def sw_shooterL_inactive_for_200ms(self, sw):
@@ -422,7 +433,7 @@ class BasePlay(Mode):
         self.game.setPlayerState('hold_bonus_x', True)
         self.game.set_status('HOLD BONUS X')
 
-    def evt_ball_ended(self):
+    def event_ball_ended(self):
         self.game.remove_modes([self.boring, self.combos, self.regular_play, self.ultimate_challenge])
         self.game.add_modes([self.bonus])
         # cancel the event because the ball is not truly ended until bonus mode has ended
@@ -433,7 +444,7 @@ class BasePlay(Mode):
         self.game.end_ball()
 
 
-class ModesDisplay(Mode):
+class ModesDisplay(AdvancedMode):
     """Display some text when the ball is active"""
 
     def __init__(self, game, priority):
@@ -454,7 +465,7 @@ class ModesDisplay(Mode):
         self.layer = GroupedLayer(128, 32, layers)
 
 
-class ModesAnimation(Mode):
+class ModesAnimation(AdvancedMode):
     """Play an animation when the ball is active"""
 
     def play(self, anim, repeat=False, hold=False, frame_time=1):

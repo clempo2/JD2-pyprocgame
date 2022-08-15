@@ -1,6 +1,6 @@
-from procgame.game import Mode
+from procgame.game import AdvancedMode
 
-class StatusReport(Mode):
+class StatusReport(AdvancedMode):
     """Display status report"""
 
     def mode_started(self):

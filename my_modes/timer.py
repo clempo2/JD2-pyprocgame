@@ -1,8 +1,7 @@
 from procgame.dmd import GroupedLayer, ScriptedLayer, TextLayer
-from procgame.game import Mode
-from intro import Introduction
+from procgame.game import AdvancedMode
 
-class Timer(Mode):
+class Timer(AdvancedMode):
     """timer for a timed mode"""
 
     def __init__(self, game, priority):
@@ -71,11 +70,7 @@ class TimedMode(Timer):
         intro_instruct_layer = TextLayer(128/2, 25, font_small, 'center').set_text(instructions)
         intro_page_layer = GroupedLayer(128, 32, [intro_name_layer, intro_instruct_layer])
         script = [{'seconds':1, 'layer':intro_name_layer}, {'seconds':3, 'layer':intro_page_layer}]
-        intro_layer = ScriptedLayer(width=128, height=32, script=script)
-
-        self.intro = Introduction(game, priority + 1)
-        self.intro.setup(intro_layer)
-        self.intro.exit_callback = self.intro_ended
+        self.intro_layer = ScriptedLayer(width=128, height=32, script=script, opaque=True)
 
         self.countdown_layer = TextLayer(127, 1, font_small, 'right')
         self.name_layer = TextLayer(1, 1, font_small, 'left').set_text(name)
@@ -83,19 +78,24 @@ class TimedMode(Timer):
         self.status_layer = TextLayer(128/2, 26, font_small, 'center')
         layers = [animationLayer] if animationLayer else []
         layers += [self.countdown_layer, self.name_layer, self.score_layer, self.status_layer]
-        self.mode_layer = GroupedLayer(128, 32, layers)
+        self.mode_layer = GroupedLayer(128, 32, layers, opaque=True)
 
     def mode_started(self):
-        self.game.modes.add(self.intro)
+        intro = self.game.base_play.intro 
+        intro.priority = self.priority + 1
+        intro.setup(self.intro_layer)
+        intro.exit_callback = self.intro_ended
+
+        self.game.modes.add(intro)
         self.num_shots = 0
         self.play_music()
 
     def mode_stopped(self):
-        self.game.remove_modes([self.intro])
+        self.game.remove_modes([self.game.base_play.intro])
         self.stop_timer()
 
     def intro_ended(self):
-        self.game.remove_modes([self.intro])
+        self.game.remove_modes([self.game.base_play.intro])
         self.layer = self.mode_layer
         if self.mode_time > 0:
             self.start_timer(self.mode_time)

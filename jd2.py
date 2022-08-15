@@ -4,13 +4,10 @@ import os
 import pygame.locals
 import pinproc
 from procgame.config import value_for_key_path
-from procgame.dmd import FrameLayer, MarkupFrameGenerator, ScriptedLayer
-from procgame.game import BasicGame, Mode, Player
+from procgame.dmd import FrameLayer, MarkupFrameGenerator, ScriptedLayer, font_named
+from procgame.game import BasicGame, Mode, SkeletonGame
 from procgame.highscore import HighScoreCategory
-from procgame.lamps import LampController
-from procgame.modes import BallSave, Trough
 from procgame.service import ServiceMode
-from procgame.sound import SoundController
 from asset_loader import AssetLoader
 from layers import DontMoveTransition, FixedSizeTextLayer, GroupedTransition, SlideTransition
 from my_modes.attract import Attract
@@ -19,16 +16,12 @@ from my_modes.base import BasePlay
 from my_modes.deadworld import Deadworld, DeadworldTest
 from my_modes.drain import DrainMode
 from my_modes.initials import JDEntrySequenceManager
-from my_modes.switchmonitor import SwitchMonitor
+from my_modes.switchmonitor import JDSwitchMonitor
 from my_modes.tilt import SlamTilted, Tilted
 
 logging.basicConfig(level=logging.ERROR, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 
 curr_file_path = os.path.dirname(os.path.abspath(__file__))
-settings_path = curr_file_path + '/config/settings.yaml'
-game_data_path = curr_file_path + '/config/game_data.yaml'
-game_data_template_path = curr_file_path + '/config/game_data_template.yaml'
-settings_template_path = curr_file_path + '/config/settings_template.yaml'
 
 class JDServiceMode(ServiceMode):
 
@@ -37,33 +30,15 @@ class JDServiceMode(ServiceMode):
         self.game.service_mode_ended()
 
 
-
-class JDPlayer(Player):
-    """Keeps the progress of one player to allow the player
-       to resume where he left off in a multi-player game"""
-
-    def __init__(self, name):
-        super(JDPlayer, self).__init__(name)
-        self.state_tracking = {}
-
-    def setState(self, key, val):
-        self.state_tracking[key] = val
-
-    def getState(self, key, default=None):
-        return self.state_tracking.get(key, default)
-
-
-class JD2Game(BasicGame):
+class JD2Game(SkeletonGame):
     """Judge Dredd pinball game"""
 
     def __init__(self):
-        super(JD2Game, self).__init__(pinproc.MachineTypeWPC)
+        super(JD2Game, self).__init__('config/JD.yaml', curr_file_path)
 
         # a text layer for status messages, same size and location as the status line at the bottom of the score display
         self.dmd.message_layer = self.create_message_layer()
 
-        self.sound = SoundController(self)
-        self.lampctrl = LampController(self)
         self.logging_enabled = False
 
         # don't use the locale, always insert commas in groups of 3 digits
@@ -77,7 +52,7 @@ class JD2Game(BasicGame):
         asset_loader = AssetLoader(self)
         asset_loader.load_assets(curr_file_path)
         self.animations = asset_loader.animations
-        self.fonts = asset_loader.fonts
+        #self.fonts = asset_loader.fonts
 
         self.reset()
 
@@ -121,46 +96,52 @@ class JD2Game(BasicGame):
         self.load_game_settings()
         self.load_game_stats()
 
-        # Service mode
-        self.switch_monitor = SwitchMonitor(self, 32767)
         deadworld_test = DeadworldTest(self, 200, self.fonts['tiny'])
         self.service_mode = JDServiceMode(self, 100, self.fonts['tiny'], [deadworld_test])
 
+        # Trough
+        #TODO
+        #trough_switchnames = ['trough1', 'trough2', 'trough3', 'trough4', 'trough5', 'trough6']
+        #early_save_switchnames = ['outlaneL', 'outlaneR']
+        #self.ball_save = BallSave(self, self.lamps.drainShield, 'shooterR')
+        #self.ball_save.disable()
+        #self.trough = Trough(self, trough_switchnames, 'trough6', 'trough', early_save_switchnames, 'shooterR', self.no_op_callback)
+        #self.trough.ball_save_callback = self.ball_save.launch_callback
+        #self.trough.num_balls_to_save = self.ball_save.get_num_balls_to_save
+        #elf.ball_save.trough_enable_ball_save = self.trough.enable_ball_save
+
+        self.shooting_again = False
+
+        # Basic game features
+        self.attract_mode = Attract(self, 1)
+        self.drain_mode = DrainMode(self, 2)
+        self.base_play = BasePlay(self, 3)
+        self.deadworld = Deadworld(self, 20)
+        self.tilted_mode = Tilted(self, 33000)
+
+        #TODO self.add_modes([self.switch_monitor, self.ball_search, self.deadworld, self.ball_save, self.trough, self.attract_mode])
+        self.modes.add(self.deadworld)
+
+        # Make sure flippers are off, especially for user initiated resets.
+        self.enable_flippers(enable=False)
+        self.start_attract_mode()
+
+    def create_switch_monitor(self):
+        return JDSwitchMonitor(self)
+
+    def create_ball_search(self):
         # Currently there are no special ball search handlers.  The deadworld
         # could be one, but running it while balls are locked would screw up
         # the multiball logic.  There is already logic in the multiball
         # to eject balls that enter the deadworld when lock isn't lit; so it
         # shouldn't be necessary to search the deadworld.  (unless a ball jumps
         # onto the ring rather than entering through the feeder.)
-        self.ball_search = JDBallSearch(self, priority=100, countdown_time=15,
-                     coils=self.ballsearch_coils, reset_switches=self.ballsearch_resetSwitches,
-                     stop_switches=self.ballsearch_stopSwitches, special_handler_modes=[])
-        self.disable_ball_search()
 
-        # Trough
-        trough_switchnames = ['trough1', 'trough2', 'trough3', 'trough4', 'trough5', 'trough6']
-        early_save_switchnames = ['outlaneL', 'outlaneR']
-        self.ball_save = BallSave(self, self.lamps.drainShield, 'shooterR')
-        self.ball_save.disable()
-        self.trough = Trough(self, trough_switchnames, 'trough6', 'trough', early_save_switchnames, 'shooterR', self.no_op_callback)
-        self.trough.ball_save_callback = self.ball_save.launch_callback
-        self.trough.num_balls_to_save = self.ball_save.get_num_balls_to_save
-        self.ball_save.trough_enable_ball_save = self.trough.enable_ball_save
-
-        self.shooting_again = False
-
-        # Basic game features
-        self.attract = Attract(self, 1)
-        self.drain_mode = DrainMode(self, 2)
-        self.base_play = BasePlay(self, 3)
-        self.deadworld = Deadworld(self, 20)
-        self.tilted_mode = Tilted(self, 33000)
-
-        self.add_modes([self.switch_monitor, self.ball_search, self.deadworld, self.ball_save, self.trough, self.attract])
-        self.attract.display()
-
-        # Make sure flippers are off, especially for user initiated resets.
-        self.enable_flippers(enable=False)
+        return JDBallSearch(self, priority=100, \
+                         countdown_time=self.ballsearch_time, coils=self.ballsearch_coils, \
+                         reset_switches=self.ballsearch_resetSwitches, \
+                         stop_switches=self.ballsearch_stopSwitches, \
+                         special_handler_modes=[])
 
     def stop(self):
         self.disable_game()
@@ -176,7 +157,7 @@ class JD2Game(BasicGame):
     
     def create_message_layer(self):
         """return a text layer at the bottom of the screen where the last line of the score display normally goes"""
-        layer = FixedSizeTextLayer(128/2, 32-6, self.dmd.message_layer.font, 'center', opaque=False, width=128, height=6)
+        layer = FixedSizeTextLayer(128/2, 32-6, font_named('Font07x5.dmd'), 'center', opaque=False, width=128, height=6)
 
         # slide in for 0.5s, stay still for 2s, slide out for 0.5s
         slide_in_transition = SlideTransition(direction='west')
@@ -214,9 +195,6 @@ class JD2Game(BasicGame):
     # Players
     #
 
-    def create_player(self, name):
-        return JDPlayer(name)
-
     def request_additional_player(self):
         """ attempt to add an additional player, but honor the max number of players """
         if len(self.players) < 4:
@@ -225,25 +203,15 @@ class JD2Game(BasicGame):
         else:
             self.logger.info('Cannot add more than 4 players.')
 
-    def getPlayerState(self, key, default=None):
-        return self.current_player().getState(key, default)
-
-    def setPlayerState(self, key, val):
-        self.current_player().setState(key, val)
-
-    def addPlayerState(self, key, delta):
-        value = self.current_player().getState(key, 0)
-        self.current_player().setState(key, value + delta)
-
     #
     # Game
     #
 
-    def start_game(self, supergame):
+    def start_game(self, supergame=False):
+        self.supergame = supergame
         super(JD2Game, self).start_game()
         self.game_data['Audits']['Games Started'] += 1
-        self.supergame = supergame
-        self.remove_modes([self.attract])
+        self.remove_modes([self.attract_mode])
         self.update_lamps()
 
         # Add the first player
@@ -327,7 +295,11 @@ class JD2Game(BasicGame):
 
     def add_modes(self, mode_list):
         for mode in mode_list:
-            self.modes.add(mode)
+            # TODO REMOVE THIS AND FIX ADDING MODES
+            if mode.is_started():
+                print 'Mode ' + str(mode) + ' is already active'
+            else:
+                self.modes.add(mode)
 
     def remove_modes(self, mode_list):
         for mode in mode_list:
@@ -380,7 +352,7 @@ class JD2Game(BasicGame):
     #
 
     def load_game_settings(self):
-        self.load_settings(settings_template_path, settings_path)
+        self.load_settings('game_default_settings.yaml', 'game_user_settings.yaml')
 
         # Work-around because the framework cannot handle settings with a floating point increment.
         # By the time we get here, GameController.load_settings() already discarded the options and the increments.
@@ -389,7 +361,8 @@ class JD2Game(BasicGame):
         self.volume_increments = 1
 
         self.sound.music_volume_offset = self.user_settings['Machine']['Music volume offset'] / self.volume_scale
-        self.sound.set_volume(self.user_settings['Machine']['Initial volume'] / self.volume_scale)
+        # TODO
+        #self.sound.set_volume(self.user_settings['Machine']['Initial volume'] / self.volume_scale)
 
         # read other game settings
         self.balls_per_game = self.user_settings['Gameplay']['Balls per game']
@@ -398,16 +371,12 @@ class JD2Game(BasicGame):
         num_blocks_setting = int(self.user_settings['Gameplay']['Blocks for Ultimate Challenge'])
         self.blocks_required = min(16, 4 * ceil(num_blocks_setting / 4)) # a multiple of 4 less than or equal to 16
 
-    # workaround for procgame.service.SettingsEditor calling this method with only one argument
-    def save_settings(self, filename=None):
-        super(JD2Game, self).save_settings(filename if filename else settings_path)
-
     #
     # Stats
     #
 
     def load_game_stats(self):
-        self.load_game_data(game_data_template_path, game_data_path)
+        self.load_game_data('game_default_data.yaml', 'game_user_data.yaml')
         for category in self.all_highscore_categories:
             category.load_from_game(self)
 
@@ -473,8 +442,8 @@ class JD2Game(BasicGame):
 
     def highscore_entry_finished(self, mode):
         self.remove_modes([mode])
-        self.modes.add(self.attract)
-        self.attract.game_over_display()
+        self.modes.add(self.attract_mode)
+        self.attract_mode.game_over_display()
         self.update_lamps()
 
         # Handle game stats.
@@ -484,7 +453,7 @@ class JD2Game(BasicGame):
             self.game_data['Audits']['Avg Score'] = self.calc_number_average(self.game_data['Audits']['Games Played'], self.game_data['Audits']['Avg Score'], self.players[i].score)
             self.game_data['Audits']['Games Played'] += 1
 
-        self.save_game_data(game_data_path)
+        self.save_game_data('game_data.yaml')
 
     def format_points(self, points):
         # disregard the locale, always insert commas between groups of 3 digits
@@ -519,8 +488,8 @@ class JD2Game(BasicGame):
 
     def stop_all_sounds(self):
         # workaround for pyprocgame's SoundController lack of functionality
-        for key in self.sound.sounds:
-            self.sound.sounds[key][0].stop()
+        #for key in self.sound.sounds:
+        #    self.sound.sounds[key][0].stop()
         self.sound.voice_end_time = 0
 
     def volume_down(self):

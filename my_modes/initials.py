@@ -1,7 +1,7 @@
 # Originally copied from pyprocgame
 # Copyright (c) 2009-2011 Adam Preble and Gerry Stellenberg
 
-from procgame.game import Mode, SwitchStop
+from procgame.game import AdvancedMode, SwitchStop
 from procgame.dmd import Frame, FrameLayer, FrameQueueLayer, GroupedLayer, ScriptedLayer, font_named
 from procgame.highscore import CategoryLogic, EntrySequenceManager
 
@@ -15,7 +15,7 @@ class JDEntrySequenceManager(EntrySequenceManager):
         return JDInitialEntryMode(game=self.game, priority=self.priority+1, left_text=left_text, right_text=right_text, entered_handler=entered_handler)
 
 
-class JDInitialEntryMode(Mode):
+class JDInitialEntryMode(AdvancedMode):
     """Mode that prompts the player for their initials.
 
     *left_text* and *right_text* are strings or arrays to be displayed at the

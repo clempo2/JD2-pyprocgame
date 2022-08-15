@@ -1,10 +1,10 @@
-from procgame.game import Mode
+from procgame.game import AdvancedMode
 from chain import Chain
 from blocks import CityBlocks
 from multiball import Multiball
 from missile import MissileAwardMode
 
-class RegularPlay(Mode):
+class RegularPlay(AdvancedMode):
     """Controls all play except ultimate challenge"""
 
     def __init__(self, game, priority):
@@ -25,6 +25,9 @@ class RegularPlay(Mode):
         self.multiball.end_callback = self.multiball_ended
 
         self.missile_award_mode = MissileAwardMode(game, priority + 10)
+
+    def evt_player_added(self, player):
+        player.setState('mystery_lit', False)
 
     def reset(self):
         for mode in [self.chain, self.city_blocks, self.multiball, self.missile_award_mode]:
@@ -48,7 +51,7 @@ class RegularPlay(Mode):
     def sw_buyIn_active(self, sw):
         self.game.remove_modes([self.chain, self.city_blocks])
         if self.is_ultimate_challenge_ready() and self.game.getPlayerState('challenge_mode', 0) < 3:
-            self.game.addPlayerState('challenge_mode', 1)
+            self.game.adjPlayerState('challenge_mode', 1)
         self.game.setPlayerState('multiball_jackpot_collected', True)
         self.game.setPlayerState('current_block', self.game.blocks_required)
         self.game.setPlayerState('blocks_complete', True)
@@ -59,7 +62,7 @@ class RegularPlay(Mode):
         self.game.update_lamps()
         self.setup_next_mode()
 
-    def evt_ball_started(self):
+    def event_ball_started(self):
         self.game.ball_save_start(time=self.ball_save_time, now=True, allow_multiple_saves=self.repeating_ball_save)
         self.game.update_lamps()
 

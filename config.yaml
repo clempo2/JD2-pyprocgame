@@ -1,9 +1,42 @@
 font_path:
     - ./assets/fonts/
+config_path:
+    - ./config
+dmd_path: ./assets/dmd/
+sound_path: ./assets/sound/
+voice_dir: voice/ # i.e., this is assets/sound/voice/
+sfx_dir: sfx/
+music_dir: music/
+hdfont_path: ./assets/fonts/
+
+default_modes:  # these are the default provided modes by SkeletonGame; turn them off here.
+    attract: False
+    score_display: True
+    bonus_tally: False
+    osc_input: False
+    service_mode: False
+    tilt_mode: False
+    ball_search: True
+    ball_search_delay: 15
 
 pinproc_class: procgame.fakepinproc.FakePinPROC # comment out this line when using a real P-ROC. 
 
+# all of this is for the DMD
+proc_dmd: True                     # whether the physical monochrome DMD driven by the P-ROC is enabled
+dmd_grid_path: ./assets/dmd/        # where to find the dmdgrid32x32.png file
+dmd_dots_w: 128                     # the display width in virtual dots
+dmd_dots_h: 32                     # the display height in virtual donts
+dmd_dot_filter: True                # enable to virtual dot effect; false disables dot separation
+dmd_fullscreen: False               # Full-screen mode scales the contents to fit the full display; may not look right
 desktop_dmd_scale: 5                # the dmd scale is the multiplier per dot.  At 5 each dot is 5x5 pixels
+dmd_framerate: 30
+screen_position_x: 123              # an offset for where the window should be located on launch -- 1366x768 is me, so
+screen_position_y: 104              # 224*5x112*5 = 1120x560; the difference is 246x208 hence the offsets 123x104
+dmd_window_border: True             # show a window border?  In the machine, go without it, and with black wallpaper
+
+PYSDL2_DLL_PATH: c:\P-ROC\DLLs\ # where to find the sdl2.dll
+
+vp_game_map_file: /P-ROC/shared/vp_game_map.yaml  # relevant for Visual Pinball (only)
 
 keyboard_switch_map:                                # this is the mapping of keyboard keys to switch matrix keys, for K_* constants, see https://www.pygame.org/docs/ref/key.html#module-pygame.key
     1: S81 # trough1

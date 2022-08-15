@@ -6,7 +6,7 @@ class AssetLoader(object):
     def __init__(self, game):
         self.game = game
         self.animations = {}
-        self.fonts = {}
+        #self.fonts = {}
 
     def load_assets(self, curr_file_path):
 
@@ -21,7 +21,7 @@ class AssetLoader(object):
             {'key': 'jdpeople', 'file': 'jdpeople.dmd', 'frame_time':1},
             {'key': 'cows', 'file': 'cows.dmd', 'frame_time':1},
             {'key': 'scopeandshot', 'file': 'scopeandshot.dmd', 'frame_time':1},
-            {'key': 'gun_powerup', 'file': 'gun_powerup.dmd', 'holdLastFrame':True, 'composite_op':'blacksrc', 'frame_time':7},
+            {'key': 'gun_powerup', 'file': 'gun_powerup.dmd', 'holdLastFrame':True, 'composite_op':'blacksrc', 'frame_time':4},
             {'key': 'bike_across_screen', 'file': 'bike_across_screen.dmd', 'frame_time':3},
             {'key': 'bikeacrosscity', 'file': 'bikeacrosscity.dmd', 'frame_time':5},
             {'key': 'extra ball', 'file': 'extra_ball.dmd', 'frame_time':1}
@@ -295,13 +295,15 @@ class AssetLoader(object):
             {'key': 'high score', 'file': 'high score/congratulations.wav'}
         ]
 
+        """
         fonts_files = [
             {'key': 'tiny', 'file': '04B-03-7px.dmd'},
             {'key': 'medium', 'file': 'Font07x5.dmd'},
             {'key': 'large_num', 'file': 'Font14x10.dmd'},
             {'key': 'large', 'file': 'Jazz18-18px.dmd'},
+            {'key': 'bold', 'file': 'Font09Bx7.dmd'},
         ]
-
+        """
         assets_path = curr_file_path + '/assets'
 
         animations_prefix = assets_path + '/dmd/'
@@ -332,5 +334,5 @@ class AssetLoader(object):
         for asset in voice_files:
             self.game.sound.register_sound(asset['key'], voice_prefix + asset['file'])
 
-        for asset in fonts_files:
-            self.fonts[asset['key']] = font_named(asset['file'])
+        #for asset in fonts_files:
+        #    self.fonts[asset['key']] = font_named(asset['file'])

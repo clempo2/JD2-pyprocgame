@@ -1,8 +1,8 @@
 from random import randint, shuffle
 from procgame.dmd import ExpandTransition, Frame, FrameLayer, GroupedLayer, ScriptedLayer, TextLayer
-from procgame.game import Mode, SwitchStop
+from procgame.game import AdvancedMode, SwitchStop
 
-class ShootingGallery(Mode):
+class ShootingGallery(AdvancedMode):
     def __init__(self, game, priority, video_mode_setting):
         super(ShootingGallery, self).__init__(game, priority)
         self.on_complete = None

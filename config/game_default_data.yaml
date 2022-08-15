@@ -1,9 +1,3 @@
-# This file is a template for all of the statistical data to be kept for the game.
-# The game code will load this file along with a game_data.yaml file.  
-# Any items not present in the game_data.yaml file will default to the 
-# value specified here.  When game ends or when defaults are restored, 
-# game_data will be written and will then contain every item here.
-
 Audits:
   Avg Ball Time: 0:00
   Avg Extra Balls: 0

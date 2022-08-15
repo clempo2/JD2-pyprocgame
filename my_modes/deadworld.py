@@ -1,8 +1,8 @@
 from procgame.dmd import GroupedLayer, TextLayer
-from procgame.game import Mode, SwitchStop
+from procgame.game import AdvancedMode, SwitchStop
 from procgame.service import ServiceModeSkeleton
 
-class Deadworld(Mode):
+class Deadworld(AdvancedMode):
     """Controls the Deadworld planet"""
 
     def __init__(self, game, priority):

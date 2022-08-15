@@ -1,10 +1,10 @@
 from random import shuffle
 from procgame.dmd import GroupedLayer, TextLayer
-from procgame.game import Mode
+from procgame.game import AdvancedMode
 from crimescenes import CrimeSceneShots
 from timer import TimedMode
 
-class UltimateChallenge(Mode):
+class UltimateChallenge(AdvancedMode):
     """Wizard mode or start of supergame"""
 
     def __init__(self, game, priority):
@@ -21,6 +21,10 @@ class UltimateChallenge(Mode):
             mode.exit_callback = self.judge_level_ended
         self.celebration.exit_callback = self.end_challenge
 
+    def evt_player_added(self, player):
+        player.setState('challenge_mode', 0)
+        player.setState('num_dark_judges', 0)
+
     def mode_started(self):
         self.active_mode = self.game.getPlayerState('challenge_mode', 0)
         self.game.coils.resetDropTarget.pulse(30)
@@ -33,7 +37,7 @@ class UltimateChallenge(Mode):
         self.game.setPlayerState('challenge_mode', self.active_mode if self.active_mode < 4 else 0)
         self.game.remove_modes([self.mode_list[self.active_mode]])
 
-    def evt_ball_started(self):
+    def event_ball_started(self):
         # supergame starting ball with an ultimate challenge mode
         self.start_level()
 
@@ -59,7 +63,7 @@ class UltimateChallenge(Mode):
         # success will start next level, failure will end player's turn
         self.continue_after_drain = success
 
-    def evt_ball_drained(self):
+    def event_ball_drained(self):
         if self.continue_after_drain:
             if self.game.num_balls_requested() == 0:
                 self.continue_after_drain = False
@@ -101,7 +105,7 @@ class ChallengeBase(TimedMode):
     def mode_started(self):
         super(ChallengeBase, self).mode_started()
         if self.num_balls > 1:
-            self.game.addPlayerState('multiball_active', 0x4)
+            self.game.adjPlayerState('multiball_active', 0x4)
         # the first ball is now in play (popped from popperR or plunged by player)
         # launch remaining balls for the mode (if applicable)
         balls_to_launch = self.num_balls - self.game.num_balls_requested()
@@ -114,7 +118,7 @@ class ChallengeBase(TimedMode):
     def mode_stopped(self):
         super(ChallengeBase, self).mode_stopped()
         if self.num_balls > 1:
-            self.game.addPlayerState('multiball_active', -0x4)
+            self.game.adjPlayerState('multiball_active', -0x4)
 
     def sw_leftRampToLock_active(self, sw):
         self.game.deadworld.eject_balls(1)
@@ -175,7 +179,7 @@ class DarkJudge(ChallengeBase):
         self.layer = self.finish_layer
         if success:
             self.game.score(100000)
-            self.game.addPlayerState('num_dark_judges', 1)
+            self.game.adjPlayerState('num_dark_judges', 1)
         self.exit_callback(success)
 
 
@@ -486,15 +490,15 @@ class Celebration(ChallengeBase, CrimeSceneShots):
                 lamp.schedule(schedule=lamp_schedules[i%32], cycle_seconds=0, now=False)
                 i += 1
 
-    # By default, Ultimate Challenge modes ignore evt_ball_drained,
+    # By default, Ultimate Challenge modes ignore event_ball_drained,
     # so BasePlay.drain_callback() will end the mode when the number of balls reaches 0
     # That's how multiball Challenge modes continue to run on a single ball.
-    # (RegularPlay.evt_ball_drained() ends multiball modes on the last ball
+    # (RegularPlay.event_ball_drained() ends multiball modes on the last ball
     # but remember RegularPlay does not run when UltimateChallenge is running.)
     # Celebration is the only multiball Challenge mode that ends on the last ball in play
-    # therefore it has to trap evt_ball_drained and implement that behavior itself.
+    # therefore it has to trap event_ball_drained and implement that behavior itself.
 
-    def evt_ball_drained(self):
+    def event_ball_drained(self):
         # The trough does not expect a multiball to start from 0 balls and gets confused,
         # It calls the end multiball callback when launching the first ball
         # thinking we got down to 1 ball when in fact we are going up to 6 balls.
@@ -506,7 +510,7 @@ class Celebration(ChallengeBase, CrimeSceneShots):
 
     # shots 0 to 4 are crime scene shots
 
-    def evt_shooterL_active_500ms(self):
+    def event_shooterL_active_500ms(self):
         self.switch_hit(5)
 
     def sw_mystery_active(self, sw):

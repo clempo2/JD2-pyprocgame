@@ -1,6 +1,6 @@
-from procgame.game import Mode
+from procgame.game import AdvancedMode
 
-class Bonus(Mode):
+class Bonus(AdvancedMode):
     """Display end of ball bonus"""
 
     def mode_started(self):

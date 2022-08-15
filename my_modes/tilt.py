@@ -3,9 +3,9 @@
 
 import time
 from procgame.dmd import GroupedLayer, TextLayer
-from procgame.game import Mode
+from procgame.game import AdvancedMode
 
-class CoilEjectMode(Mode):
+class CoilEjectMode(AdvancedMode):
     # Eject any balls that get stuck before returning to the trough.
     def sw_popperL_active_for_300ms(self, sw):
         self.game.coils.popperL.pulse(40)
@@ -42,7 +42,7 @@ class Tilted(CoilEjectMode):
             self.delay(name='eject_balls', event_type=None, delay=delay, handler=self.eject_balls, param=switch_names[1:])
 
 
-class SlamTilted(Mode):
+class SlamTilted(AdvancedMode):
     """Display 'Slam Tilt' and wait a little while before resetting the game"""
 
     def __init__(self, game, priority):
@@ -57,7 +57,7 @@ class SlamTilted(Mode):
         self.game.update_lamps()
 
 
-class TiltMonitorMode(Mode):
+class TiltMonitorMode(AdvancedMode):
     """Monitor tilt warnings and slam tilt"""
 
     def __init__(self, game, priority, tilt_sw=None, slam_tilt_sw=None, num_tilt_warnings=2):
@@ -73,6 +73,9 @@ class TiltMonitorMode(Mode):
 
         self.tilt_bob_settle_time = 2.0
         self.tilted = False
+
+    def evt_player_added(self, player):
+        player.setState('times_warned', 0)
 
     def mode_started(self):
         self.tilted = False

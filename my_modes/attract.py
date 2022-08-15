@@ -15,7 +15,8 @@ class Attract(CoilEjectMode):
 
         self.gun_layer = self.game.animations['gun_powerup']
 
-        self.jd_layer = TextLayer(128/2, 7, font_large, 'center', opaque=True).set_text('Judge Dredd')
+        jd_text = TextLayer(128/2, 7, font_large, 'center').set_text('Judge Dredd')
+        self.jd_layer = GroupedLayer(width=128, height=32, layers=[jd_text], fill_color=(0,0,0,255), opaque=True)
         self.jd_layer.transition = PushTransition(direction='south')
 
         self.cityscape_layer = self.game.animations['cityscape']
@@ -28,11 +29,16 @@ class Attract(CoilEjectMode):
         self.press_green_layer = self.button_layer('Press Green Button', 'for SuperGame', direction='west')
         self.press_green_layer2 = self.button_layer('Press Green Button', 'for SuperGame', blink_frame=5)
 
-        self.high_scores_title_layer = TextLayer(128/2, 7, font_large, 'center', opaque=True).set_text('High Scores')
+        high_score_text = TextLayer(128/2, 7, font_large, 'center').set_text('High Scores')
+        self.high_scores_title_layer = GroupedLayer(width=128, height=32, layers=[high_score_text], fill_color=(0,0,0,255), opaque=True)
         self.high_scores_title_layer.transition = PushTransition(direction='north')
+
         self.game_over_layer = TextLayer(128/2, 7, font_large, 'center', opaque=True).set_text('Game Over')
 
-        gen = MarkupFrameGenerator()
+        self.font_plain = game.fonts['medium']
+        self.font_bold = game.fonts['bold']
+        gen = MarkupFrameGenerator(game, self.font_plain, self.font_bold)
+ 
         credits_frame = gen.frame_for_markup("""
 
 
@@ -64,7 +70,7 @@ class Attract(CoilEjectMode):
         self.judges_layer = self.game.animations['darkjudges']
         self.longwalk_layer = self.game.animations['longwalk']
 
-        instruct_frame = MarkupFrameGenerator().frame_for_markup("""
+        instruct_frame = MarkupFrameGenerator(game, self.font_plain, self.font_bold).frame_for_markup("""
 
 
 #INSTRUCTIONS#
@@ -146,7 +152,7 @@ Collect a multiball jackpot
 
         self.append_high_score_layers(script)
         self.game.reset_script_layer(script)
-        self.layer = ScriptedLayer(width=128, height=32, script=script)
+        self.layer = ScriptedLayer(width=128, height=32, script=script, opaque=True)
         self.layer.on_complete = lambda: self.game.reset_script_layer(script)
 
     def game_over_display(self):
@@ -171,16 +177,16 @@ Collect a multiball jackpot
 
     def button_layer(self, button_text, play_text, blink_frame=None, direction=None):
         font_medium = self.game.fonts['medium']
-        press_layer = TextLayer(128/2, 8, font_medium, 'center', opaque=True).set_text(button_text, seconds=None, blink_frames=blink_frame)
-        play_layer = TextLayer(128/2, 17, font_medium, 'center', opaque=False).set_text(play_text, seconds=None, blink_frames=blink_frame)
-        start_layer = GroupedLayer(128, 32, [press_layer, play_layer])
+        press_layer = TextLayer(128/2, 8, font_medium, 'center').set_text(button_text, seconds=None, blink_frames=blink_frame)
+        play_layer = TextLayer(128/2, 17, font_medium, 'center').set_text(play_text, seconds=None, blink_frames=blink_frame)
+        start_layer = GroupedLayer(128, 32, [press_layer, play_layer], fill_color=(0,0,0,255), opaque=True)
         if direction:
             start_layer.transition = PushTransition(direction=direction)
         return start_layer
 
     def append_high_score_layers(self, script):
         script.append({'seconds':2.0, 'layer':self.high_scores_title_layer})
-        for frame in generate_highscore_frames(self.game.all_highscore_categories):
+        for frame in generate_highscore_frames(self.game.all_highscore_categories, self.game, self.font_plain, self.font_bold, self.game.dmd_width, self.game.dmd_height):
             new_layer = FrameLayer(frame=frame)
             script.append({'seconds':1.25, 'layer':new_layer})
 

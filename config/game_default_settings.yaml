@@ -1,8 +1,43 @@
-# This file is a template for all of the settings used in the game.  The game code will
-# load this file along with a user_settings.yaml file.  Any settings not present in
-# the user_settings.yaml file will default to the default value specified here.  When
-# any setting is saved (via the in-game service menu), the user_settings.yaml file
-# will be updated with ALL of the entries here without overwriting existing settings.
+Machine (Standard):
+  'Balls Per Game':
+    options: [1,10]
+    increments: 1
+    default: 3
+  'Quick Bonus Mode':
+    options: [False,True]
+    default: True
+  'Attract Mode Sounds':
+    options: ['On','Off']
+    default: 'Off'
+  'Attract Mode Music':
+    options: ['On','Off']
+    default: 'Off'
+Machine (Coils):
+  'Auto Plunger':
+    options: [24,63]
+    increments: 1
+    default: 32
+Sound:
+  'Initial volume':
+    options: [0,10]
+    increments: 1
+    default: 5
+  'Music volume offset':
+    options: [-0.4,-0.3,-0.2,-0.1,0,0.1,0.2,0.3,0.4]
+    default: 0
+Gameplay (Feature):
+  'Skillshot Autoplunge Timer':
+    options: [0,30]
+    increments: 1
+    default: 15
+  'Ball Save Timer':
+    options: [0,20]
+    increments: 1
+    default: 10
+
+
+
+
 
 Machine:
   'Deadworld mod installed':
@@ -126,5 +161,3 @@ Gameplay:
   'Celebration ballsave time':
     options: [5,6,7,8,9,10,11,12,13,14,15,20,25,30]
     default: 20
-    
- 

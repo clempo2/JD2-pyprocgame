@@ -1,7 +1,7 @@
-from procgame.game import Mode
+from procgame.game import AdvancedMode
 from procgame.modes import BasicDropTargetBank
 
-class Multiball(Mode):
+class Multiball(AdvancedMode):
     """3-ball Multiball activated by locking balls in the Deadworld planet"""
 
     def __init__(self, game, priority):
@@ -14,6 +14,12 @@ class Multiball(Mode):
         self.drops.on_advance = self.on_drops_advance
         self.drops.on_completed = self.on_drops_completed
         self.drops.auto_reset = False
+
+    def evt_player_added(self, player):
+        player.setState('num_balls_locked', 0)
+        player.setState('num_locks_lit', 0)
+        player.setState('multiball_played', False)
+        player.setState('multiball_jackpot_collected', False)
 
     def mode_started(self):
         # restore player state
@@ -80,7 +86,7 @@ class Multiball(Mode):
 
         self.game.ball_save_start(time=self.ball_save_time, now=True, allow_multiple_saves=True)
         self.start_callback()
-        self.game.addPlayerState('multiball_active', 0x1)
+        self.game.adjPlayerState('multiball_active', 0x1)
         self.game.update_lamps()
 
     def end_multiball(self):
@@ -89,12 +95,12 @@ class Multiball(Mode):
         self.game.coils.flasherGlobe.disable()
         self.jackpot_lit = False
         self.game.setPlayerState('multiball_played', True)
-        self.game.addPlayerState('multiball_active', -0x1)
+        self.game.adjPlayerState('multiball_active', -0x1)
         self.end_callback()
         self.drops.reset_drop_target_bank()
         self.game.update_lamps()
 
-    def evt_ball_drained(self):
+    def event_ball_drained(self):
         # End multiball if there is now only one ball in play
         if self.state == 'multiball':
             if self.game.num_balls_requested() == 1:

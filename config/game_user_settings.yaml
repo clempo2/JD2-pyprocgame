@@ -1,0 +1,17 @@
+Display: {Left side score justify: left}
+Gameplay: {Allow restarts: true, Balls per game: 3, Block War ballsave time: 15, Block difficulty: medium,
+  Blocks for Ultimate Challenge: 16, Celebration ballsave time: 20, Chain feature difficulty: medium,
+  Death ballsave time: 20, Fear ballsave time: 10, Max extra balls lit: 99, Max extra balls per game: 99,
+  Mortis ballsave time: 10, Multiball ballsave time: 20, Mystery ballsave time: 10,
+  Mystery feature add time: 10, New ball ballsave time: 10, New ball repeating ballsave: false,
+  Number of tilt warnings: 2, Time for Death: 180, Time for Death shot: 10, Time for Fear shot: 20,
+  Time for Hurry Up: 10, Time per chain feature: 30, Video mode: enemies}
+Gameplay (Feature): {Ball Save Timer: 10, Skillshot Autoplunge Timer: 15}
+Machine: {Deadworld mod installed: false, Initial volume: 10, Music volume offset: 0}
+Machine (Coils): {Auto Plunger: 32}
+Machine (Standard): {Attract Mode Music: 'Off', Attract Mode Sounds: 'Off', Balls Per Game: 3,
+  Quick Bonus Mode: true}
+Replay: {Replay Award: Credit, Replay Boost: 200000, Replay Level 1: 450000, Replay Level 2: 1000000,
+  Replay Level 3: 1500000, Replay Level 4: 2000000, Replay Levels: 1, Replay Percentage: 10,
+  Replay Type: auto}
+Sound: {Initial volume: 5, Music volume offset: 0}

@@ -1,7 +1,7 @@
-from procgame.game import Mode
+from procgame.game import AdvancedMode
 from tilt import TiltMonitorMode
 
-class DrainMode(Mode):
+class DrainMode(AdvancedMode):
     """Monitor drains to determine when the ball has ended.
        This mode waits for balls to drain when the player has tilted,
        therefore it must not affect the score or lamps.
@@ -29,7 +29,7 @@ class DrainMode(Mode):
 
     def drain_callback(self):
         if not self.tilt.tilted:
-            if self.game.send_event('evt_ball_drained'):
+            if self.game.send_event('event_ball_drained'):
                 # drain was intentional, ignore it
                 return
 
@@ -47,7 +47,7 @@ class DrainMode(Mode):
         self.game.remove_modes([self.tilt])
         self.game.enable_flippers(False)
 
-        if self.game.send_event('evt_ball_ended'):
+        if self.game.send_event('event_ball_ended'):
             # bonus mode will take care of it for us
             return
         

@@ -80,6 +80,7 @@ PRSwitches:
         number: S15
     outlaneL:
         number: S16
+        tags: early_save
     inlaneL:
         number: S17
     threeBankTargets:
@@ -119,8 +120,10 @@ PRSwitches:
         number: S38
     shooterR:
         number: S41
+        tags: shooter
     outlaneR:
         number: S42
+        tags: early_save
     inlaneFarR:
         number: S43
     superGame:
@@ -203,21 +206,27 @@ PRSwitches:
     trough1:
         number: S81
         type: 'NC'
+        tags: trough
     trough2:
         number: S82
         type: 'NC'
+        tags: trough
     trough3:
         number: S83
         type: 'NC'
+        tags: trough
     trough4:
         number: S84
         type: 'NC'
+        tags: trough
     trough5:
         number: S85
         type: 'NC'
+        tags: trough
     trough6:
         number: S86
         type: 'NC'
+        tags: trough
     troughTop:
         number: S87
         type: 'NC'
@@ -258,6 +267,9 @@ PRCoils:
         number: C07
     shooterR:
         number: C08
+        # the label here corresponds to putting the entry in the config/game_default_settings.yaml
+        # together, this coil's strength will be able to be set by the user in the Service Mode->Coils Settings screen
+        label: Auto Plunger
     shooterL:
         number: C09
     tripDropTarget:
@@ -413,6 +425,7 @@ PRLamps:
         number: L82
     drainShield:
         number: L83
+        tags: shoot_again
     judgeAgain:
         number: L84
     advanceCrimeLevel:
@@ -479,6 +492,8 @@ PRBallSave:
     stopSwitches:
         shooterR: closed
         shooterL: closed
+        popperL: active
+        popperR: active
         # don't ball search if a flipper button is pressed
         flipperLwL: closed
         flipperLwR: closed

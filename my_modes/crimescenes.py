@@ -1,6 +1,6 @@
-from procgame.game import Mode
+from procgame.game import AdvancedMode
 
-class CrimeSceneShots(Mode):
+class CrimeSceneShots(AdvancedMode):
     """Base class for modes using the crime scene shots"""
 
     def __init__(self, game, priority, *args, **kwargs):
