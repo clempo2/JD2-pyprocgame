@@ -22,7 +22,7 @@ class Combos(Mode):
             self.outer_loop_active = True
             self.outer_loop_combos += 1
             if self.outer_loop_combos > self.game.getPlayerState('best_outer_loops', 0):
-                self.game.getPlayerState('best_outer_loops', self.outer_loop_combos)
+                self.game.setPlayerState('best_outer_loops', self.outer_loop_combos)
 
             if self.skill_shot_active:
                 sound = 'good shot'

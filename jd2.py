@@ -157,7 +157,6 @@ class JD2Game(BasicGame):
         self.tilted_mode = Tilted(self, 33000)
 
         self.add_modes([self.switch_monitor, self.ball_search, self.deadworld, self.ball_save, self.trough, self.attract])
-        self.attract.display()
 
         # Make sure flippers are off, especially for user initiated resets.
         self.enable_flippers(enable=False)
