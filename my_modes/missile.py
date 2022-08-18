@@ -32,8 +32,8 @@ class MissileAwardMode(Timer):
 
     def mode_started(self):
         player = self.game.current_player()
-        self.missile_award_lit = player.getState('missile_award_lit', False)
-        self.available_awards = player.getState('available_awards', self.initial_awards[:])
+        self.missile_award_lit = player.getState('missile_award_lit')
+        self.available_awards = player.getState('available_awards')
 
     def mode_stopped(self):
         player = self.game.current_player()
@@ -76,8 +76,7 @@ class MissileAwardMode(Timer):
         # but keep video mode for later if another mode is running
         # this way we don't pause the running mode for too long
         # and the player won't forget what he was doing
-        video_mode_lit = self.game.getPlayerState('video_mode_lit', self.video_mode_enabled)
-        if video_mode_lit and not self.game.getPlayerState('chain_active', 0):
+        if self.game.getPlayerState('video_mode_lit') and not self.game.getPlayerState('chain_active'):
             self.game.setPlayerState('video_mode_lit', False)
             self.game.modes.add(self.video_mode)
         else:
@@ -95,7 +94,7 @@ class MissileAwardMode(Timer):
         self.end_missile_award()
 
     def start_selection(self):
-        blocks_complete = self.game.getPlayerState('blocks_complete', False)
+        blocks_complete = self.game.getPlayerState('blocks_complete')
         self.available_awards[0] = '50,000 Points' if blocks_complete else 'Secure One Block'
         self.rotate_awards()
         self.layer = self.selection_layer

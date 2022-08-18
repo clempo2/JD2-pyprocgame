@@ -37,8 +37,8 @@ class Chain(AdvancedMode):
         # TODO implement evt_player_added to set the default values of the player state
         # restore player state
         player = self.game.current_player()
-        self.modes_remaining = player.getState('modes_remaining', self.all_chain_modes[:])
-        self.modes_remaining_ptr = player.getState('modes_remaining_ptr', 0)
+        self.modes_remaining = player.getState('modes_remaining')
+        self.modes_remaining_ptr = player.getState('modes_remaining_ptr')
 
         self.mode = None
 
@@ -89,7 +89,7 @@ class Chain(AdvancedMode):
 
     # start a new chain mode after the display becomes available
     def start_chain_mode(self):
-        block_busy_until = self.game.getPlayerState('block_busy_until', 0)
+        block_busy_until = self.game.getPlayerState('block_busy_until')
         now = time()
         if block_busy_until > now:
             # wait for block mode to finish talking and/or displaying on the screen
@@ -129,12 +129,12 @@ class Chain(AdvancedMode):
     def hurry_up_ended(self, success):
         if success:
             # award a block and/or some points
-            if self.game.getPlayerState('blocks_complete', False):
+            if self.game.getPlayerState('blocks_complete'):
                 self.game.score(10000)
             else:
                 self.game.base_play.regular_play.city_blocks.city_block.block_complete()
 
-            if self.game.getPlayerState('multiball_active', 0):
+            if self.game.getPlayerState('multiball_active'):
                 self.game.score(100000)
 
         self.mode = None
@@ -438,7 +438,7 @@ class Impersonator(ChainFeature):
 
     def play_sound(self, key):
         # this mode talks all the time, keep quiet if stacked with multiball
-        if not self.game.getPlayerState('multiball_active', 0):
+        if not self.game.getPlayerState('multiball_active'):
             self.game.sound.play(key)
 
     def end_sound(self):
@@ -664,7 +664,7 @@ class Stakeout(ChainFeature):
 
     def boring_expired(self):
         # keep quiet if stacked with multiball
-        if not self.game.getPlayerState('multiball_active', 0):
+        if not self.game.getPlayerState('multiball_active'):
             self.game.sound.play_voice('stakeout boring')
         self.delay(name='boring', event_type=None, delay=5, handler=self.boring_expired)
 

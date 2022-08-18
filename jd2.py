@@ -8,7 +8,6 @@ from procgame.dmd import FrameLayer, MarkupFrameGenerator, ScriptedLayer, font_n
 from procgame.game import BasicGame, Mode, SkeletonGame
 from procgame.highscore import HighScoreCategory
 from procgame.service import ServiceMode
-from asset_loader import AssetLoader
 from layers import DontMoveTransition, FixedSizeTextLayer, GroupedTransition, SlideTransition
 from my_modes.attract import Attract
 from my_modes.ballsearch import JDBallSearch
@@ -41,18 +40,9 @@ class JD2Game(SkeletonGame):
 
         self.logging_enabled = False
 
-        # don't use the locale, always insert commas in groups of 3 digits
-        self.score_display.format_score = self.format_points
-
         self.load_config('config/JD.yaml')
         self.lamp_schedules = {'slow':0x00ff00ff, 'medium':0x0f0f0f0f, 'fast':0x55555555, 'on':0xffffffff, 'off':0x00000000}
         self.create_high_score_categories()
-
-        # Assets
-        asset_loader = AssetLoader(self)
-        asset_loader.load_assets(curr_file_path)
-        self.animations = asset_loader.animations
-        #self.fonts = asset_loader.fonts
 
         self.reset()
 

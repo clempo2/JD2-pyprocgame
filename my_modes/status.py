@@ -7,25 +7,25 @@ class StatusReport(AdvancedMode):
         self.game.base_play.display('Status')
 
         player = self.game.current_player()
-        num_blocks = player.getState('num_blocks', 0)
+        num_blocks = player.getState('num_blocks')
 
         self.status_items = [
             {'text': 'Extra Balls', 'value': player.extra_balls},
-            {'text': 'Extra Balls Lit', 'value': player.getState('extra_balls_lit', 0)},
-            {'text': 'Chain Features', 'value': player.getState('num_chain_features', 0)},
-            {'text': 'Hurry Ups', 'value': player.getState('num_hurry_ups', 0)},
+            {'text': 'Extra Balls Lit', 'value': player.getState('extra_balls_lit')},
+            {'text': 'Chain Features', 'value': player.getState('num_chain_features')},
+            {'text': 'Hurry Ups', 'value': player.getState('num_hurry_ups')},
             {'text': 'Blocks', 'value': num_blocks}]
 
         if num_blocks >= self.game.blocks_required:
             # UltimateChallenge was played at least once,
             # Show how many blocks count towards the next UltimateChallenge
-            self.status_items += [{'text': 'Current Block', 'value': 1 + player.getState('current_block', 0)}]
+            self.status_items += [{'text': 'Current Block', 'value': 1 + player.getState('current_block')}]
 
         self.status_items += [
-            {'text': 'Blocks Remaining', 'value': self.game.blocks_required - player.getState('current_block', 0)},
-            {'text': 'Dark Judges', 'value': player.getState('challenge_mode', 0)},
-            {'text': 'Inner Loop Combos', 'value': player.getState('best_inner_loops', 0)},
-            {'text': 'Outer Loop Combos', 'value': player.getState('best_outer_loops', 0)}]
+            {'text': 'Blocks Remaining', 'value': self.game.blocks_required - player.getState('current_block')},
+            {'text': 'Dark Judges', 'value': player.getState('challenge_mode')},
+            {'text': 'Inner Loop Combos', 'value': player.getState('best_inner_loops')},
+            {'text': 'Outer Loop Combos', 'value': player.getState('best_outer_loops')}]
 
         self.num_items = len(self.status_items)
         self.index = 0

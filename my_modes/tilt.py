@@ -90,7 +90,7 @@ class TiltMonitorMode(AdvancedMode):
             self.previous_warning_time = now
 
         if not self.tilted:
-            times_warned = self.game.getPlayerState('times_warned', 0)
+            times_warned = self.game.getPlayerState('times_warned')
             if times_warned == self.num_tilt_warnings:
                 self.game.setPlayerState('times_warned', 0)
                 self.tilted = True

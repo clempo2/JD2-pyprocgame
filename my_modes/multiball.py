@@ -24,8 +24,8 @@ class Multiball(AdvancedMode):
     def mode_started(self):
         # restore player state
         player = self.game.current_player()
-        self.num_balls_locked = player.getState('num_balls_locked', 0)
-        self.num_locks_lit = player.getState('num_locks_lit', 0)
+        self.num_balls_locked = player.getState('num_balls_locked')
+        self.num_locks_lit = player.getState('num_locks_lit')
         # multiball_played, multiball_jackpot_collected and multiball_active are accessed directly in the player state
 
         if self.deadworld_mod_installed and self.game.deadworld.num_balls_locked < self.num_balls_locked:
@@ -49,7 +49,7 @@ class Multiball(AdvancedMode):
 
         # save player state
         player = self.game.current_player()
-        player.setState('multiball_active', player.getState('multiball_active', 0) & ~0x1) # in case of tilt
+        player.setState('multiball_active', player.getState('multiball_active') & ~0x1) # in case of tilt
         player.setState('num_balls_locked', self.num_balls_locked)
         player.setState('num_locks_lit', self.num_locks_lit)
 
@@ -152,7 +152,7 @@ class Multiball(AdvancedMode):
 
     def light_lock(self, sneaky_ball_adjust=0):
         if self.state == 'load' and self.num_locks_lit < 3:
-            self.num_locks_lit = (self.num_locks_lit + 1) if self.game.getPlayerState('multiball_played', False) else 3
+            self.num_locks_lit = (self.num_locks_lit + 1) if self.game.getPlayerState('multiball_played') else 3
             self.configure_lock(sneaky_ball_adjust)
             self.game.base_play.display('Lock is Lit')
             self.game.sound.play_voice('locks lit')

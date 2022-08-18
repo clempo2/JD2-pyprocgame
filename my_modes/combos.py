@@ -25,8 +25,8 @@ class Combos(AdvancedMode):
         if self.game.switches.topRightOpto.time_since_change() < 1:
             self.outer_loop_active = True
             self.outer_loop_combos += 1
-            if self.outer_loop_combos > self.game.getPlayerState('best_outer_loops', 0):
-                self.game.getPlayerState('best_outer_loops', self.outer_loop_combos)
+            if self.outer_loop_combos > self.game.getPlayerState('best_outer_loops'):
+                self.game.setPlayerState('best_outer_loops', self.outer_loop_combos)
 
             if self.skill_shot_active:
                 sound = 'good shot'
@@ -53,7 +53,7 @@ class Combos(AdvancedMode):
             self.inner_loop_active = True
             self.game.sound.play('inner_loop')
             self.inner_loop_combos += 1
-            if self.inner_loop_combos > self.game.getPlayerState('best_inner_loops', 0):
+            if self.inner_loop_combos > self.game.getPlayerState('best_inner_loops'):
                 self.game.setPlayerState('best_inner_loops', self.inner_loop_combos)
             points = 5000 * self.inner_loop_combos
             self.game.score(points)

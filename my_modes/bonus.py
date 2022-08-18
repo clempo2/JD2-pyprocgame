@@ -18,7 +18,7 @@ class Bonus(AdvancedMode):
             self.create_item('num_dark_judges', 'Dark Judge', 15000))
 
         bonus = sum(item['points'] for item in self.bonus_items)
-        bonus_x = self.game.getPlayerState('bonus_x', 1)
+        bonus_x = self.game.getPlayerState('bonus_x')
         if bonus > 0 and bonus_x > 1:
             self.bonus_items += [{'text': str(bonus_x) + 'X', 'points': None}]
             bonus *= bonus_x
@@ -28,7 +28,7 @@ class Bonus(AdvancedMode):
         self.delay(name='show_bonus', event_type=None, delay=1.5, handler=self.show_bonus, param=0)
 
     def create_item(self, state, title, value):
-        num = self.game.getPlayerState(state, 0)
+        num = self.game.getPlayerState(state)
         return [] if num == 0 else [{'text': self.format_text(num, title), 'points': num * value}]
 
     def format_text(self, value, title):

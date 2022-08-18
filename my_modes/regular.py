@@ -37,7 +37,7 @@ class RegularPlay(AdvancedMode):
         self.mystery_lit = False
 
     def mode_started(self):
-        self.mystery_lit = self.game.getPlayerState('mystery_lit', False)
+        self.mystery_lit = self.game.getPlayerState('mystery_lit')
         self.state = 'init'
         self.game.add_modes([self.chain, self.city_blocks, self.multiball, self.missile_award_mode])
         self.setup_next_mode()
@@ -50,7 +50,7 @@ class RegularPlay(AdvancedMode):
     ####        press multiple times in a row to skip Dark Judge modes
     def sw_buyIn_active(self, sw):
         self.game.remove_modes([self.chain, self.city_blocks])
-        if self.is_ultimate_challenge_ready() and self.game.getPlayerState('challenge_mode', 0) < 3:
+        if self.is_ultimate_challenge_ready() and self.game.getPlayerState('challenge_mode') < 3:
             self.game.adjPlayerState('challenge_mode', 1)
         self.game.setPlayerState('multiball_jackpot_collected', True)
         self.game.setPlayerState('current_block', self.game.blocks_required)
@@ -78,7 +78,7 @@ class RegularPlay(AdvancedMode):
     # the rule is: multiball can be stacked with a running mode, you cannot start a new mode during multiball
     def setup_next_mode(self):
         # a mode could still be running if modes were stacked, in that case do nothing and stay 'busy'
-        if not (self.game.getPlayerState('multiball_active', 0) or self.game.getPlayerState('chain_active', 0)):
+        if not (self.game.getPlayerState('multiball_active') or self.game.getPlayerState('chain_active')):
             self.game.sound.fadeout_music()
             self.game.base_play.play_background_music()
 
@@ -87,7 +87,7 @@ class RegularPlay(AdvancedMode):
                 self.state = 'challenge_ready'
                 self.game.remove_modes([self.multiball])
                 self.mystery_lit = False
-            elif self.game.getPlayerState('chain_complete', False):
+            elif self.game.getPlayerState('chain_complete'):
                 self.state = 'chain_complete'
             else:
                 # player needs to shoot the right popper to start the next chain mode
@@ -124,7 +124,7 @@ class RegularPlay(AdvancedMode):
     def multiball_starting(self):
         # Make sure no other multiball was already active before preparing for multiball.
         # The caller must update multiball_active in the player state AFTER calling this callback.
-        if not self.game.getPlayerState('multiball_active', 0):
+        if not self.game.getPlayerState('multiball_active'):
             self.state = 'busy'
             self.game.sound.fadeout_music()
             self.game.sound.play_music('multiball', loops=-1)
@@ -135,7 +135,7 @@ class RegularPlay(AdvancedMode):
 
     def multiball_ended(self):
         # The caller must update multiball_active in the player state BEFORE calling this callback.
-        if not self.game.getPlayerState('multiball_active', 0):
+        if not self.game.getPlayerState('multiball_active'):
             self.game.modes.add(self.missile_award_mode)
         self.setup_next_mode()
 
@@ -145,9 +145,9 @@ class RegularPlay(AdvancedMode):
 
     def is_ultimate_challenge_ready(self):
         # 3 Criteria for finale
-        return (self.game.getPlayerState('multiball_jackpot_collected', False) and
-                self.game.getPlayerState('blocks_complete', False) and
-                self.game.getPlayerState('chain_complete', False))
+        return (self.game.getPlayerState('multiball_jackpot_collected') and
+                self.game.getPlayerState('blocks_complete') and
+                self.game.getPlayerState('chain_complete'))
 
     def start_ultimate_challenge(self):
         self.game.remove_modes([self.chain, self.city_blocks, self.multiball, self])
@@ -180,7 +180,7 @@ class RegularPlay(AdvancedMode):
         if self.mystery_lit:
             self.mystery_lit = False
             self.game.update_lamps()
-            if self.game.getPlayerState('multiball_active', 0):
+            if self.game.getPlayerState('multiball_active'):
                 if self.game.ball_save.timer > 0:
                     self.game.set_status('+' + str(self.mystery_ball_save_time) + 'SEC BALL SAVER')
                     self.game.ball_save.add(self.mystery_ball_save_time)
@@ -188,7 +188,7 @@ class RegularPlay(AdvancedMode):
                     self.game.set_status(str(self.mystery_ball_save_time) + 'SEC BALL SAVER')
                     self.game.ball_save_start(time=self.mystery_ball_save_time, now=True, allow_multiple_saves=True)
 
-            elif self.game.getPlayerState('chain_active', 0):
+            elif self.game.getPlayerState('chain_active'):
                 self.game.set_status('+' + str(self.mystery_feature_add_time) + 'SEC TIMER')
                 self.chain.mode.add_time(10)
             else:

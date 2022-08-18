@@ -31,7 +31,7 @@ class CityBlocks(AdvancedMode):
         self.city_block.reset()
 
     def start_city_block(self):
-        if self.game.getPlayerState('current_block', 0) < self.game.blocks_required:
+        if self.game.getPlayerState('current_block') < self.game.blocks_required:
             self.game.modes.add(self.city_block)
             self.game.update_lamps()
 
@@ -59,10 +59,10 @@ class CityBlocks(AdvancedMode):
     def update_lamps(self):
         # Count the number of block wars applicable to starting the next Ultimate Challenge
         # Block wars applicable to an already played Ultimate Challenge don't count for the lamps
-        if self.game.getPlayerState('blocks_complete', False):
+        if self.game.getPlayerState('blocks_complete'):
             num_block_wars = 4 # this avoids the confusion when modulo blocks_required returns 0
         else:
-            num_blocks = self.game.getPlayerState('num_blocks', 0)
+            num_blocks = self.game.getPlayerState('num_blocks')
             played_block_wars = int((num_blocks % self.game.blocks_required) / 4)
             free_block_wars = int((16 - self.game.blocks_required) / 4)
             num_block_wars = free_block_wars + played_block_wars
@@ -118,10 +118,10 @@ class CityBlock(CrimeSceneShots):
         self.game.setPlayerState('blocks_complete', False)
 
     def mode_started(self):
-        self.targets = self.game.getPlayerState('block_targets', None)
+        self.targets = self.game.getPlayerState('block_targets')
 
         self.num_advance_hits = 0
-        if self.game.getPlayerState('current_block', -1) == -1:
+        if self.game.getPlayerState('current_block') == -1:
             self.next_block()
 
     def mode_stopped(self):
@@ -167,7 +167,7 @@ class CityBlock(CrimeSceneShots):
         self.game.score(10000)
         self.game.lampctrl.play_show('advance_level', False, self.game.update_lamps)
         self.game.adjPlayerState('num_blocks', 1)
-        num_blocks = self.game.getPlayerState('num_blocks', 0)
+        num_blocks = self.game.getPlayerState('num_blocks')
 
         if num_blocks == self.extra_ball_block:
             self.game.base_play.light_extra_ball()
@@ -176,7 +176,7 @@ class CityBlock(CrimeSceneShots):
             self.parent.start_block_war()
         else:
             # internally blocks start at 0, on the display blocks start at 1
-            current_block = self.game.getPlayerState('current_block', -1)
+            current_block = self.game.getPlayerState('current_block')
             shuffle(self.block_outcome)
             block_n_outcome = 'Block ' + str(current_block + 1) + ' ' + self.block_outcome[0]
             self.game.sound.play_voice(block_n_outcome)
@@ -186,7 +186,7 @@ class CityBlock(CrimeSceneShots):
             self.game.update_lamps()
 
     def next_block(self):
-        current_block = self.game.getPlayerState('current_block', -1)
+        current_block = self.game.getPlayerState('current_block')
         if current_block < self.game.blocks_required:
             current_block += 1
             self.game.setPlayerState('current_block', current_block)
@@ -221,7 +221,7 @@ class CityBlock(CrimeSceneShots):
         style = styles[self.num_advance_hits]
         self.game.drive_lamp('advanceCrimeLevel', style)
 
-        current_block = self.game.getPlayerState('current_block', -1)
+        current_block = self.game.getPlayerState('current_block')
         lamp_color = current_block % 4
         for shot in range(0, 5):
             for color in range(0, 4):
@@ -300,7 +300,7 @@ class BlockWar(TimedMode, CrimeSceneShots):
                 self.incr_num_shots()
                 self.game.update_lamps()
 
-                multiplier = self.game.getPlayerState('num_hurry_ups', 0) + 1
+                multiplier = self.game.getPlayerState('num_hurry_ups') + 1
                 points = 5000 * multiplier
                 self.game.score(points)
 
@@ -339,7 +339,7 @@ class BlockWar(TimedMode, CrimeSceneShots):
 
     def event_ball_drained(self):
         # End multiball if there is now only one ball in play
-        if self.game.getPlayerState('multiball_active', 0) & 0x2:
+        if self.game.getPlayerState('multiball_active') & 0x2:
             if self.game.num_balls_requested() == 1:
                 self.parent.end_block_war()
 

@@ -26,7 +26,7 @@ class UltimateChallenge(AdvancedMode):
         player.setState('num_dark_judges', 0)
 
     def mode_started(self):
-        self.active_mode = self.game.getPlayerState('challenge_mode', 0)
+        self.active_mode = self.game.getPlayerState('challenge_mode')
         self.game.coils.resetDropTarget.pulse(30)
         self.continue_after_drain = False
         if not self.game.base_play.ball_starting:
