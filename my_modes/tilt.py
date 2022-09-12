@@ -8,16 +8,16 @@ from procgame.game import AdvancedMode
 class CoilEjectMode(AdvancedMode):
     # Eject any balls that get stuck before returning to the trough.
     def sw_popperL_active_for_300ms(self, sw):
-        self.game.coils.popperL.pulse(25)
+        self.game.coils.popperL.pulse()
 
     def sw_popperR_active_for_300ms(self, sw):
-        self.game.coils.popperR.pulse(40)
+        self.game.coils.popperR.pulse()
 
     def sw_shooterL_active_for_300ms(self, sw):
-        self.game.coils.shooterL.pulse(40)
+        self.game.coils.shooterL.pulse()
 
     def sw_shooterR_active_for_300ms(self, sw):
-        self.game.coils.shooterR.pulse(40)
+        self.game.coils.shooterR.pulse()
 
 
 class Tilted(CoilEjectMode):
@@ -37,7 +37,7 @@ class Tilted(CoilEjectMode):
             sw = self.game.switches[switch_names[0]]
             delay = 0
             if sw.is_active():
-                self.game.coils[switch_names[0]].pulse(40)
+                self.game.coils[switch_names[0]].pulse()
                 delay = 0.2
             self.delay(name='eject_balls', event_type=None, delay=delay, handler=self.eject_balls, param=switch_names[1:])
 

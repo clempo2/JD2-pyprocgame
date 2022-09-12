@@ -19,11 +19,67 @@ Machine:
   'Deadworld Mod Installed':
     options: [true, false]
     default: false
-Coils:
+Coil Strength:
+    flipperLwRMain: 
+        options: [15,60]
+        increments: 1
+        default: 45
+    flipperLwLMain: 
+        options: [15,60]
+        increments: 1
+        default: 45
+    flipperUpRMain: 
+        options: [15,60]
+        increments: 1
+        default: 30
+    flipperUpLMain: 
+        options: [15,60]
+        increments: 1
+        default: 30
     popperL:
         options: [15,60]
         increments: 1
         default: 25
+    popperR:
+        options: [15,60]
+        increments: 1
+        default: 30
+    resetDropTarget:
+        options: [15,60]
+        increments: 1
+        default: 30
+    knocker:
+        options: [15,60]
+        increments: 1
+        default: 50
+    shooterR:
+        options: [15,60]
+        increments: 1
+        default: 50
+    shooterL Min:
+        options: [15,60]
+        increments: 1
+        default: 15
+    shooterL Max:
+        options: [15,60]
+        increments: 1
+        default: 30
+    tripDropTarget:
+        options: [15,60]
+        increments: 1
+        default: 40
+    trough:
+        options: [15,60]
+        increments: 1
+        default: 30
+    slingL: 
+        options: [15,60]
+        increments: 1
+        default: 30
+    slingR: 
+        options: [15,60]
+        increments: 1
+        default: 30
 Sound:
   'Initial volume':
     options: [0,10]

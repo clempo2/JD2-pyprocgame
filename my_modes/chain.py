@@ -110,7 +110,7 @@ class Chain(AdvancedMode):
         self.game.update_lamps()
 
         # Put the ball back into play
-        self.game.base_play.flash_then_pop('flashersRtRamp', 'popperR', 20)
+        self.game.base_play.flash_then_pop('flashersRtRamp', 'popperR')
 
     # called when the mode has completed or expired but before the hurry up
     def chain_mode_ended(self, success):
@@ -164,7 +164,7 @@ class ChainHurryUp(TimedMode):
     def mode_started(self):
         self.mode_time = self.game.user_settings['Gameplay']['Time for Hurry Up']
         super(ChainHurryUp, self).mode_started()
-        self.game.coils.tripDropTarget.pulse(40)
+        self.game.coils.tripDropTarget.pulse()
         self.trip_check()
         self.already_collected = False
 
@@ -184,7 +184,7 @@ class ChainHurryUp(TimedMode):
 
     def trip_drop_target(self):
         # drop letter D and run a delayed handler to verify it stayed down
-        self.game.coils.tripDropTarget.pulse(40)
+        self.game.coils.tripDropTarget.pulse()
         self.delay(name='trip_check', event_type=None, delay=.400, handler=self.trip_check)
 
     def trip_check(self):
@@ -505,7 +505,7 @@ class Impersonator(ChainFeature):
             self.sound_active = True
             self.play_sound('bad impersonator ouch')
             self.delay(name='end_sound', event_type=None, delay=1, handler=self.end_sound)
-        self.game.coils.resetDropTarget.pulse(30)
+        self.game.coils.resetDropTarget.pulse()
         self.check_for_completion()
 
     def timer_update(self, time):
@@ -594,7 +594,7 @@ class Safecracker(ChainFeature):
 
     def trip_drop_target(self):
         # drop letter D and run a delayed handler to verify it stayed down
-        self.game.coils.tripDropTarget.pulse(40)
+        self.game.coils.tripDropTarget.pulse()
         self.delay(name='trip_check', event_type=None, delay=.400, handler=self.trip_check)
 
     def trip_check(self):

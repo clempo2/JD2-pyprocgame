@@ -31,7 +31,7 @@ class JD2Game(SkeletonGame):
     # rename the settings sections used by the framework back to simpler section names
     settings_sections = {
         'Machine': 'Machine',
-        'Coils': 'Coils',
+        'Coils': 'Coil Strength',
         'Sound': 'Sound',
         'Gameplay': 'Gameplay',
         'Replay': 'Replay'
@@ -280,12 +280,12 @@ class JD2Game(SkeletonGame):
     #
 
     def create_high_score_categories(self):
-        blocks_category = self.create_high_score_category('BlocksHighScoreData', 'Block Champ', 'num_blocks', ' block')
-        inner_loops_category = self.create_high_score_category('InnerLoopsHighScoreData', 'Inner Loop Champ', 'best_inner_loops', ' loop')
-        outer_loops_category = self.create_high_score_category('OuterLoopsHighScoreData', 'Outer Loop Champ', 'best_outer_loops', ' loop')
+        blocks_category = self.create_high_score_category('BlocksHighScores', 'Block Champ', 'num_blocks', ' block')
+        inner_loops_category = self.create_high_score_category('InnerLoopsHighScores', 'Inner Loop Champ', 'best_inner_loops', ' loop')
+        outer_loops_category = self.create_high_score_category('OuterLoopsHighScores', 'Outer Loop Champ', 'best_outer_loops', ' loop')
 
         supergame_category = HighScoreCategory()
-        supergame_category.game_data_key = 'SuperGameHighScoreData'
+        supergame_category.game_data_key = 'SuperGameHighScores'
         supergame_category.titles = ['SuperGame Champion', 'SuperGame High Score #1', 'SuperGame High Score #2', 'SuperGame High Score #3', 'SuperGame High Score #4']
 
         classic_category = self.highscore_categories[0]

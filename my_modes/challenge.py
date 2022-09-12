@@ -27,7 +27,7 @@ class UltimateChallenge(AdvancedMode):
 
     def mode_started(self):
         self.active_mode = self.game.getPlayerState('challenge_mode')
-        self.game.coils.resetDropTarget.pulse(30)
+        self.game.coils.resetDropTarget.pulse()
         self.continue_after_drain = False
         if not self.game.base_play.ball_starting:
             self.start_level()
@@ -49,7 +49,7 @@ class UltimateChallenge(AdvancedMode):
         if self.game.switches.popperR.is_active():
             # we were started from regular mode
             # put the ball back in play
-            self.game.base_play.flash_then_pop('flashersRtRamp', 'popperR', 20)
+            self.game.base_play.flash_then_pop('flashersRtRamp', 'popperR')
 
     def judge_level_ended(self, success=True):
         self.game.ball_save.disable()
@@ -90,7 +90,7 @@ class UltimateChallenge(AdvancedMode):
         self.game.disable_drop_lamps()
 
     def sw_popperR_active_for_300ms(self, sw):
-        self.game.base_play.flash_then_pop('flashersRtRamp', 'popperR', 20)
+        self.game.base_play.flash_then_pop('flashersRtRamp', 'popperR')
 
 
 class ChallengeBase(TimedMode):
@@ -143,7 +143,7 @@ class ChallengeBase(TimedMode):
         self.reset_drops()
 
     def reset_drops(self):
-        self.game.coils.resetDropTarget.pulse(30)
+        self.game.coils.resetDropTarget.pulse()
 
 
 class DarkJudge(ChallengeBase):
@@ -255,7 +255,7 @@ class Fear(DarkJudge):
 
     def sw_dropTargetD_inactive_for_400ms(self, sw):
         if self.state == 'subway':
-            self.game.coils.tripDropTarget.pulse(60)
+            self.game.coils.tripDropTarget.pulse()
 
     def sw_dropTargetD_active_for_250ms(self, sw):
         if self.state == 'ramps':

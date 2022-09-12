@@ -1,4 +1,6 @@
-Coils: {popperL: 25}
+Coil Strength: {flipperLwRMain: 45, flipperLwLMain: 45, flipperUpRMain: 30, flipperUpLMain: 30, popperL: 25,
+  popperR: 30, resetDropTarget: 30, knocker: 50, shooterR: 50, shooterL Min: 15, shooterL Max: 30,
+  tripDropTarget: 40, trough: 30, slingL: 30, slingR: 30}
 Gameplay: {Block War ballsave time: 16, Block difficulty: medium, Blocks for Ultimate Challenge: 16,
   Celebration ballsave time: 20, Chain feature difficulty: medium, Death ballsave time: 20,
   Fear ballsave time: 10, Mortis ballsave time: 10, Multiball ballsave time: 20, Mystery ballsave time: 10,

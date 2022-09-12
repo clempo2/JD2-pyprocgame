@@ -277,12 +277,10 @@ PRSwitches:
 PRCoils:
     flipperLwRMain: 
         number: FLRM
-        pulseTime: 45
     flipperLwRHold: 
         number: FLRH
     flipperLwLMain: 
         number: FLLM
-        pulseTime: 45
     flipperLwLHold: 
         number: FLLH
     flipperUpRMain: 

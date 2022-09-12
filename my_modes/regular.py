@@ -9,7 +9,7 @@ class RegularPlay(AdvancedMode):
 
     def __init__(self, game, priority):
         super(RegularPlay, self).__init__(game, priority)
-        
+
         self.chain = Chain(self.game, priority)
 
         self.city_blocks = CityBlocks(game, priority + 1)
@@ -27,7 +27,7 @@ class RegularPlay(AdvancedMode):
 
     def evt_player_added(self, player):
         player.setState('mystery_lit', False)
-        
+
     def reset_progress(self):
         # Erase all progress to start over when ultimate challenge ends
         for mode in [self.chain, self.city_blocks, self.multiball]:
@@ -110,7 +110,7 @@ class RegularPlay(AdvancedMode):
             self.state = 'busy'
             self.start_ultimate_challenge()
         else: # state 'busy' or 'chain_complete'
-            self.game.base_play.flash_then_pop('flashersRtRamp', 'popperR', 20)
+            self.game.base_play.flash_then_pop('flashersRtRamp', 'popperR')
 
         self.game.update_lamps()
 

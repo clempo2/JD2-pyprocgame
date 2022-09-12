@@ -194,7 +194,7 @@ class Multiball(AdvancedMode):
 
     def trip_drop_target(self):
         # drop letter D and run a delayed handler to verify it stayed down
-        self.game.coils.tripDropTarget.pulse(40)
+        self.game.coils.tripDropTarget.pulse()
         self.delay(name='trip_check', event_type=None, delay=.400, handler=self.trip_check)
 
     def trip_check(self):

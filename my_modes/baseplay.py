@@ -114,7 +114,7 @@ class BasePlay(AdvancedMode):
     def high_score_mention(self):
         if self.replay.replay_achieved[0]:
             text = 'High Score'
-            game_data_key = 'SuperGameHighScoreData' if self.game.supergame else 'ClassicHighScoreData'
+            game_data_key = 'SuperGameHighScores' if self.game.supergame else 'ClassicHighScores'
             score = self.game.game_data[game_data_key][0]['score']
         else:
             text = 'Replay'
@@ -176,7 +176,7 @@ class BasePlay(AdvancedMode):
 
     def sw_fireR_active(self, sw):
         if self.game.switches.shooterR.is_active():
-            self.game.coils.shooterR.pulse(50)
+            self.game.coils.shooterR.pulse()
             if self.ball_starting:
                 self.game.sound.stop_music()
                 self.play_background_music()
@@ -214,7 +214,7 @@ class BasePlay(AdvancedMode):
  
     def sw_shooterR_active_for_700ms(self, sw):
         if self.auto_plunge:
-            self.game.coils.shooterR.pulse(50)
+            self.game.coils.shooterR.pulse()
  
     def sw_shooterR_active_for_10s(self, sw):
         self.suggest_press_fire()
@@ -228,7 +228,9 @@ class BasePlay(AdvancedMode):
         self.game.send_event('event_shooterL_active_500ms')
 
     def event_shooterL_active_500ms(self):
-        self.game.coils.shooterL.pulse(randint(15, 30))
+        pulse_min = self.game.user_settings['Coil Strength']['ShooterL Min']
+        pulse_max = self.game.user_settings['Coil Strength']['ShooterL Max']
+        self.game.coils.shooterL.pulse(randint(pulse_min, pulse_max))
 
     def sw_shooterL_inactive_for_200ms(self, sw):
         self.game.sound.play('shooterL_launch')
@@ -277,7 +279,7 @@ class BasePlay(AdvancedMode):
     #
 
     def replay_callback(self):
-        self.game.coils.knocker.pulse(50)
+        self.game.coils.knocker.pulse()
         replay_award = self.game.user_settings['Replay']['Replay Award']
 
         if replay_award == 'Extra Ball':
@@ -404,14 +406,14 @@ class BasePlay(AdvancedMode):
     #
 
     def sw_popperL_active_for_200ms(self, sw):
-        self.flash_then_pop('flashersLowerLeft', 'popperL', 25)
+        self.flash_then_pop('flashersLowerLeft', 'popperL')
 
-    def flash_then_pop(self, flasher, coil, pulse):
+    def flash_then_pop(self, flasher, coil):
         self.game.coils[flasher].schedule(0x00555555, cycle_seconds=1, now=True)
-        self.delay(name='delayed_pop', event_type=None, delay=0.8, handler=self.delayed_pop, param=[coil, pulse])
+        self.delay(name='delayed_pop', event_type=None, delay=0.8, handler=self.delayed_pop, param=coil)
 
-    def delayed_pop(self, coil_pulse):
-        self.game.coils[coil_pulse[0]].pulse(coil_pulse[1])
+    def delayed_pop(self, coil):
+        self.game.coils[coil].pulse()
 
     #
     # Ball Save
