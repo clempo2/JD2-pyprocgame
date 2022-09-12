@@ -19,7 +19,7 @@ class JDBallSearch(BallSearch):
         self.cancel_delayed(name='ball_search_countdown');
         self.cancel_delayed('ball_search_coil1')
 
-    def perform_search(self, completion_wait_time, completion_handler=None):
+    def perform_search(self, completion_wait_time, completion_handler=None, silent=None):
         self.round += 1
         if self.round >= 3:
             if self.round % 2:
@@ -45,9 +45,11 @@ class JDBallSearch(BallSearch):
             # not supposed to get here, the game is confused
             # give another pitty ball as a last resort
             self.game.launch_balls(1)
-        super(JDBallSearch, self).perform_search(completion_wait_time, completion_handler=completion_handler)
 
-    # When the popper coil fires, the ball cup raises, activating the opto.
+        # for JD2, we never want to be silent
+        super(JDBallSearch, self).perform_search(completion_wait_time, completion_handler=completion_handler, silent=False)
+
+    # When the popper coil fires, the ball cup rises, activating the opto.
     # If the popper switch was a regular reset switch, we would reset
     # everytime we fire the coil and we would always be stuck at round 1.
     # Only consider events lasting ~200ms which are too long to be the ball cup.

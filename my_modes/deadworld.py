@@ -1,14 +1,15 @@
 from procgame.dmd import GroupedLayer, TextLayer
 from procgame.game import AdvancedMode, SwitchStop
-from procgame.service import ServiceModeSkeleton
+from procgame.modes.service import ServiceModeSkeleton
 
 class Deadworld(AdvancedMode):
     """Controls the Deadworld planet"""
 
     def __init__(self, game, priority):
-        super(Deadworld, self).__init__(game, priority)
+        super(Deadworld, self).__init__(game, priority, AdvancedMode.System)
         # a ball locked in this class means physically held by the planet,
         # this may or may not be a lock owned by the current player
+        self.power_up = True
         self.num_balls_locked = 0
         self.num_balls_to_eject = 0
         self.stowing_away = True
@@ -19,10 +20,13 @@ class Deadworld(AdvancedMode):
         self.crane_release_sensitive = True
 
     def mode_started(self):
-        # when powering up the machine, position the crane in rest position (farthest from the ring)
-        self.delay(name='start_crane', event_type=None, delay=0.2, handler=self.start_crane)
+        if self.power_up:
+            self.power_up = False
+            # when powering up the machine, position the crane in rest position (farthest from the ring)
+            self.delay(name='start_crane', event_type=None, delay=0.2, handler=self.start_crane)
 
-    def mode_stopped(self):
+    def evt_game_ended(self):
+        # Notice mode_stopped() is never called on a System mode like Deadworld
         # remove the switch rule
         self.install_spinning_rule(auto_disable=False)
         self.stop_spinning()
@@ -161,7 +165,7 @@ class DeadworldTest(ServiceModeSkeleton):
         self.globe_layer = TextLayer(1, 9, font, 'left')
         self.arm_layer = TextLayer(1, 17, font, 'left')
         self.magnet_layer = TextLayer(1, 25, font, 'left')
-        self.layer = GroupedLayer(128, 32, [self.title_layer, self.globe_layer, self.arm_layer, self.magnet_layer])
+        self.layer = GroupedLayer(128, 32, [self.title_layer, self.globe_layer, self.arm_layer, self.magnet_layer], opaque=True, fill_color=(0,0,0,255))
 
     def reset(self, lamp_style):
         self.globe_state = False

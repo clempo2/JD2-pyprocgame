@@ -10,11 +10,8 @@ class MissileAwardMode(Timer):
         super(MissileAwardMode, self).__init__(game, priority)
         self.timer_delay = 0.2
 
-        self.video_mode_setting = self.game.user_settings['Gameplay']['Video mode']
-        self.video_mode_enabled = self.video_mode_setting != 'off'
-        if self.video_mode_enabled:
-            self.video_mode = ShootingGallery(self.game, priority + 11, self.video_mode_setting)
-            self.video_mode.on_complete = self.video_mode_complete
+        self.video_mode = ShootingGallery(self.game, priority + 11)
+        self.video_mode.on_complete = self.video_mode_complete
 
         self.initial_awards = ['Secure One Block', 'Light Extra Ball', '30,000 Points', 'Bonus +1X', 'Hold Bonus X']
         self.repeatable_award = [True, False, True, True, False]
@@ -23,12 +20,14 @@ class MissileAwardMode(Timer):
         font = self.game.fonts['tiny']
         self.title_layer = TextLayer(128/2, 7, font, 'center').set_text('Missile Award')
         self.value_layer = TextLayer(128/2, 15, font, 'center')
-        self.selection_layer = GroupedLayer(128, 32, [self.title_layer, self.value_layer])
+        self.selection_layer = GroupedLayer(128, 32, [self.title_layer, self.value_layer], opaque=True, fill_color=(0,0,0,255))
 
     def evt_player_added(self, player):
         player.setState('missile_award_lit', False)
         player.setState('available_awards', self.initial_awards[:])
-        player.setState('video_mode_lit', self.video_mode_enabled)
+
+        video_mode_setting = self.game.user_settings['Gameplay']['Video mode']
+        player.setState('video_mode_lit', video_mode_setting != 'off')
 
     def mode_started(self):
         player = self.game.current_player()
@@ -40,10 +39,6 @@ class MissileAwardMode(Timer):
         player.setState('missile_award_lit', self.missile_award_lit)
         player.setState('available_awards', self.available_awards)
         self.layer = None # in case the ball is lost before timer expires
-
-    # must be called when the missile award mode is stopped
-    def reset(self):
-        self.game.setPlayerState('missile_award_lit', False)
 
     def light_missile_award(self):
         self.missile_award_lit = True

@@ -3,6 +3,9 @@ from procgame.game import AdvancedMode
 class Combos(AdvancedMode):
     """Award combos for repeated loop shots, the skill shot is an outer loop combo"""
 
+    def __init__(self, game, priority):
+        super(Combos, self).__init__(game, priority, AdvancedMode.Ball)
+
     def evt_player_added(self, player):
         player.setState('best_outer_loops', 0)
         player.setState('best_inner_loops', 0)

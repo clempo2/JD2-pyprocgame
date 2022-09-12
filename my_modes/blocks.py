@@ -11,7 +11,33 @@ class CityBlocks(AdvancedMode):
         super(CityBlocks, self).__init__(game, priority)
         self.city_block = CityBlock(self, priority + 1)
         self.block_war = BlockWar(self, priority + 5)
-        self.ball_save_time = self.game.user_settings['Gameplay']['Block War ballsave time']
+
+    def reset(self):
+        difficulty = self.game.user_settings['Gameplay']['Block difficulty']
+        if difficulty == 'easy':
+            self.level_pick_from = [
+                [2,4], [2,4], [2,4], [2,4],
+                [0,2,4], [0,2,4], [0,2,4], [0,2,4],
+                [0,2,4], [0,2,4], [0,2,3,4], [0,2,3,4],
+                [0,2,3,4], [0,2,3,4], [0,1,2,3,4], [0,1,2,3,4]
+            ]
+            self.level_num_shots = [1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 5]
+        elif difficulty == 'medium':
+            self.level_pick_from = [
+                [2,4], [2,4], [2,4], [2,4],
+                [0,2,4], [0,2,4], [0,2,4], [0,2,4],
+                [0,2,3,4], [0,2,3,4], [0,2,3,4], [0,2,3,4],
+                [0,1,2,3,4], [0,1,2,3,4], [0,1,2,3,4], [0,1,2,3,4]
+            ]
+            self.level_num_shots = [1, 1, 2, 2, 2, 3, 3, 3, 3, 3, 4, 4, 4, 4, 5, 5]
+        else:
+            self.level_pick_from = [
+                [0,2,4], [0,2,4], [0,2,4], [0,2,4],
+                [0,1,2,3,4], [0,1,2,3,4], [0,1,2,3,4], [0,1,2,3,4],
+                [0,1,2,3,4], [0,1,2,3,4], [0,1,2,3,4], [0,1,2,3,4],
+                [0,1,2,3,4], [0,1,2,3,4], [0,1,2,3,4], [0,1,2,3,4]
+            ]
+            self.level_num_shots = [1, 1, 2, 2, 2, 3, 3, 3, 3, 3, 4, 4, 4, 4, 5, 5]
 
     def evt_player_added(self, player):
         player.setState('current_block', -1)
@@ -21,14 +47,17 @@ class CityBlocks(AdvancedMode):
         player.setState('block_busy_until', 0)
         player.setState('num_hurry_ups', 0)
 
+    def reset_progress(self):
+        # Erase all progress to start over when ultimate challenge ends,
+        # except num_blocks continue to accrue
+        self.game.setPlayerState('current_block', -1)
+        self.game.setPlayerState('blocks_complete', False)
+
     def mode_started(self):
         self.start_city_block()
 
     def mode_stopped(self):
         self.game.remove_modes([self.city_block, self.block_war])
-
-    def reset(self):
-        self.city_block.reset()
 
     def start_city_block(self):
         if self.game.getPlayerState('current_block') < self.game.blocks_required:
@@ -46,7 +75,9 @@ class CityBlocks(AdvancedMode):
         self.start_multiball_callback()
         # launch another ball for a 2 ball multiball, or up to 4 balls when stacked with Deadworld multiball
         self.game.launch_balls(1)
-        self.game.ball_save_start(time=self.ball_save_time, now=True, allow_multiple_saves=True)
+        
+        ball_save_time = self.game.user_settings['Gameplay']['Block War ballsave time']
+        self.game.ball_save_start(time=ball_save_time, now=True, allow_multiple_saves=True)
         self.game.modes.add(self.block_war)
         self.game.update_lamps()
 
@@ -83,39 +114,7 @@ class CityBlock(CrimeSceneShots):
         self.target_award_order = [1, 3, 0, 2, 4]
         self.extra_ball_block = 6 # securing 6 blocks lights extra ball
 
-        difficulty = self.game.user_settings['Gameplay']['Block difficulty']
-        if difficulty == 'easy':
-            self.level_pick_from = [
-                [2,4], [2,4], [2,4], [2,4],
-                [0,2,4], [0,2,4], [0,2,4], [0,2,4],
-                [0,2,4], [0,2,4], [0,2,3,4], [0,2,3,4],
-                [0,2,3,4], [0,2,3,4], [0,1,2,3,4], [0,1,2,3,4]
-            ]
-            self.level_num_shots = [1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 5]
-        elif difficulty == 'medium':
-            self.level_pick_from = [
-                [2,4], [2,4], [2,4], [2,4],
-                [0,2,4], [0,2,4], [0,2,4], [0,2,4],
-                [0,2,3,4], [0,2,3,4], [0,2,3,4], [0,2,3,4],
-                [0,1,2,3,4], [0,1,2,3,4], [0,1,2,3,4], [0,1,2,3,4]
-            ]
-            self.level_num_shots = [1, 1, 2, 2, 2, 3, 3, 3, 3, 3, 4, 4, 4, 4, 5, 5]
-        else:
-            self.level_pick_from = [
-                [0,2,4], [0,2,4], [0,2,4], [0,2,4],
-                [0,1,2,3,4], [0,1,2,3,4], [0,1,2,3,4], [0,1,2,3,4],
-                [0,1,2,3,4], [0,1,2,3,4], [0,1,2,3,4], [0,1,2,3,4],
-                [0,1,2,3,4], [0,1,2,3,4], [0,1,2,3,4], [0,1,2,3,4]
-            ]
-            self.level_num_shots = [1, 1, 2, 2, 2, 3, 3, 3, 3, 3, 4, 4, 4, 4, 5, 5]
-
         self.block_outcome = ['Neutralized', 'Pacified', 'Secured']
-
-    def reset(self):
-        # force the mode to initialize at block 0 the next time it starts
-        # num_blocks continue to accrue
-        self.game.setPlayerState('current_block', -1)
-        self.game.setPlayerState('blocks_complete', False)
 
     def mode_started(self):
         self.targets = self.game.getPlayerState('block_targets')
@@ -195,10 +194,10 @@ class CityBlock(CrimeSceneShots):
             else:
                 # the block consists of num_to_pick many targets chosen among the targets listed in pick_from
                 # every selected target needs to be hit once
-                pick_from = self.level_pick_from[current_block]
+                pick_from = self.parent.level_pick_from[current_block]
                 shuffle(pick_from)
 
-                num_to_pick = self.level_num_shots[current_block]
+                num_to_pick = self.parent.level_num_shots[current_block]
                 if num_to_pick > len(pick_from):
                     raise ValueError('Number of targets necessary for block ' + current_block + ' exceeds the list of targets in the template')
 
@@ -337,9 +336,6 @@ class BlockWar(TimedMode, CrimeSceneShots):
         else:
             super(BlockWar, self).update_status()
 
-    def event_ball_drained(self):
-        # End multiball if there is now only one ball in play
-        if self.game.getPlayerState('multiball_active') & 0x2:
-            if self.game.num_balls_requested() == 1:
-                self.parent.end_block_war()
+    def evt_single_ball_play(self):
+        self.parent.end_block_war()
 

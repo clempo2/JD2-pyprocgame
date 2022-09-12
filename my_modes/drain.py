@@ -8,35 +8,34 @@ class DrainMode(AdvancedMode):
     """
 
     def __init__(self, game, priority):
-        super(DrainMode, self).__init__(game, priority)
-        num_tilt_warnings = self.game.user_settings['Gameplay']['Number of tilt warnings']
-        self.tilt = TiltMonitorMode(self.game, 1000, 'tilt', 'slamTilt', num_tilt_warnings)
+        super(DrainMode, self).__init__(game, priority, AdvancedMode.Ball)
+        self.tilt_monitor = TiltMonitorMode(game, 1000, 'tilt', 'slamTilt')
 
     def mode_started(self):
-        self.game.trough.drain_callback = self.drain_callback
+        #TODO self.game.trough.drain_callback = self.drain_callback
         self.game.ball_search.enable()
-        self.game.add_modes([self.tilt])
+        self.game.add_modes([self.tilt_monitor])
 
     def mode_stopped(self):
-        self.game.trough.drain_callback = self.game.no_op_callback
+        #TODO self.game.trough.drain_callback = self.game.no_op_callback
         self.game.disable_ball_search()
-        self.game.remove_modes([self.tilt])
+        self.game.remove_modes([self.tilt_monitor])
         self.game.enable_flippers(False)
 
     def update_lamps(self):
         self.game.disable_all_lights()
         self.game.enable_gi(True)
 
-    def drain_callback(self):
-        if not self.tilt.tilted:
+    def TODO_drain_callback(self):
+        if not self.tilt_monitor.tilted:
             if self.game.send_event('event_ball_drained'):
                 # drain was intentional, ignore it
                 return
 
         if self.game.num_balls_requested() == 0:
-            if self.tilt.tilted:
+            if self.tilt_monitor.tilted:
                 # wait for the tilt bob to stabilize, then finish the ball
-                self.tilt.tilt_delay(self.finish_ball)
+                self.tilt_monitor.tilt_delay(self.finish_ball)
             else:
                 self.finish_ball()
 
@@ -44,7 +43,7 @@ class DrainMode(AdvancedMode):
         self.game.sound.fadeout_music()
         self.game.disable_ball_search()
         self.game.coils.globeMotor.disable()
-        self.game.remove_modes([self.tilt])
+        self.game.remove_modes([self.tilt_monitor])
         self.game.enable_flippers(False)
 
         if self.game.send_event('event_ball_ended'):

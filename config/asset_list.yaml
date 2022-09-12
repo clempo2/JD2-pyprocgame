@@ -45,7 +45,7 @@ Animations:
   frame_time: 7
 - key: 'blackout'
   file: 'blackout.dmd'
-  frame_time: 3
+  frame_time: 5
 - key: 'dredd_shoot_at_sniper'
   file: 'dredd_shoot_at_sniper.dmd'
   frame_time: 5

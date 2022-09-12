@@ -1,8 +1,8 @@
 # Originally copied from pyprocgame
 # Copyright (c) 2009-2011 Adam Preble and Gerry Stellenberg
 
-from procgame.game import AdvancedMode, SwitchStop
-from procgame.dmd import Frame, FrameLayer, FrameQueueLayer, GroupedLayer, ScriptedLayer, font_named
+from procgame.game import AdvancedMode, Mode, SwitchStop
+from procgame.dmd import Frame, FrameLayer, FrameQueueLayer, GroupedLayer, MarkupFrameGenerator, ScriptedLayer, font_named
 from procgame.highscore import CategoryLogic, EntrySequenceManager
 
 class JDEntrySequenceManager(EntrySequenceManager):
@@ -13,6 +13,22 @@ class JDEntrySequenceManager(EntrySequenceManager):
 
     def create_highscore_entry_mode(self, left_text, right_text, entered_handler):
         return JDInitialEntryMode(game=self.game, priority=self.priority+1, left_text=left_text, right_text=right_text, entered_handler=entered_handler)
+
+    def evt_initial_entry(self, prompt):
+        self.game.sound.play_voice('high score')
+        self.banner_mode = Mode(game=self, priority=8)
+        markup = MarkupFrameGenerator()
+        text = '\n#GREAT JOB#\n[%s]' % (prompt.left.upper()) # we know that the left is the player name
+        frame = markup.frame_for_markup(markup=text, y_offset=0)
+        self.banner_mode.layer = ScriptedLayer(width=128, height=32, script=[{'seconds':3.0, 'layer':FrameLayer(frame=frame)}])
+        self.banner_mode.layer.on_complete = self.banner_complete
+        self.game.modes.add(self.banner_mode)
+        return -1 # delay event until banner is complete
+
+    def banner_complete(self):
+        self.game.sound.play_music('ball_launch', loops=-1)
+        self.game.remove_modes([self.banner_mode])
+        self.force_event_next()
 
 
 class JDInitialEntryMode(AdvancedMode):
@@ -116,7 +132,9 @@ class JDInitialEntryMode(AdvancedMode):
         else:
             rng = [0]
         for x in rng:
-            frame = Frame(width=128, height=10)
+            frame = Frame(width=128, height=9)
+            frame.fill_rect(61,0,8,9,(255,255,255,255))
+            frame.fill_rect(62,1,6,7,(0,0,0,255))
             for offset in range(-7, 8):
                 index = new_index - offset
                 #print 'Index %d  len=%d' % (index, len(self.letters))
@@ -126,9 +144,9 @@ class JDInitialEntryMode(AdvancedMode):
                     index = index - len(self.letters)
                 self.letters_font.draw(frame, self.letters[index], 128/2 - offset * letter_spread - letter_width/2 + x, 1)
             # inverse the colors of the current index letter
-            for x2 in range(61, 69):
-                for y2 in range(0, 10):
-                    frame.set_dot(x2, y2, 15 - frame.get_dot(x2, y2))
+            #for x2 in range(61, 69):
+            #    for y2 in range(0, 8):
+            #        frame.set_dot(x2, y2, 15 - frame.get_dot(x2, y2))
             self.lowerhalf_layer.frames += [frame]
         self.current_letter_index = new_index
 
@@ -147,7 +165,7 @@ class JDInitialEntryMode(AdvancedMode):
             # recenter since we do not display the blinking cursor
             x_offset += init_spread / 2
         elif self.cursor_visible:
-            self.inits_frame.fill_rect(len(self.initials) * init_spread + x_offset, 9, 8, 1, 15)
+            self.inits_frame.fill_rect(len(self.initials) * init_spread + x_offset, 9, 8, 1, (255,255,255,255))
         for x in range(len(self.initials)):
             self.init_font.draw(self.inits_frame, self.initials[x], x * init_spread + x_offset, 0)
 

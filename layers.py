@@ -1,10 +1,10 @@
 import time
-from procgame.dmd import Frame, LayerTransitionBase, PanningLayer, TextLayer
+from procgame.dmd import Frame, LayerTransitionBase, TextLayer
 
 class FixedSizeTextLayer(TextLayer):
     """A TextLayer where the text and blank blinking frames are opaque over the whole fixed width x height"""
 
-    def __init__(self, x, y, font, justify='left', opaque=False, width=128, height=32, fill_color=(0,0,0,255)):
+    def __init__(self, x, y, font, justify='left', opaque=False, width=128, height=32, fill_color=None):
         super(FixedSizeTextLayer, self).__init__(x, y, font, justify, opaque, width, height, fill_color)
         self.blank_frame = Frame(width, height)
 
@@ -54,12 +54,6 @@ class FixedSizeTextLayer(TextLayer):
                 self.blink_frames_counter -= 1
         return self.frame
 
-
-class FastPanningLayer(PanningLayer):
-    """Pans faster than the regular PanningLayer"""
-    def next_frame(self):
-        self.tick += 2
-        return super(FastPanningLayer, self).next_frame()
 
 class SlideTransition(LayerTransitionBase):
     """A transition that scrolls the to_frame over a blank frame"""

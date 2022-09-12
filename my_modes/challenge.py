@@ -33,7 +33,7 @@ class UltimateChallenge(AdvancedMode):
             self.start_level()
 
     def mode_stopped(self):
-        # when Celebration was awarded, the next challenge starts from the beginning
+        # when Celebration was awarded, the next challenge starts with the first dark judge
         self.game.setPlayerState('challenge_mode', self.active_mode if self.active_mode < 4 else 0)
         self.game.remove_modes([self.mode_list[self.active_mode]])
 
@@ -63,13 +63,13 @@ class UltimateChallenge(AdvancedMode):
         # success will start next level, failure will end player's turn
         self.continue_after_drain = success
 
-    def event_ball_drained(self):
+    def evt_ball_ending(self, unused):
         if self.continue_after_drain:
-            if self.game.num_balls_requested() == 0:
-                self.continue_after_drain = False
-                self.next_level()
-                # abort the event to ignore this drain
-                return True
+            self.continue_after_drain = False
+            self.next_level()
+            # cancel the event, including its completion function
+            self.event_complete_fn = None
+            return (0, True)
 
     def next_level(self):
         # all balls have intentionally drained, move to the next mode
@@ -96,11 +96,10 @@ class UltimateChallenge(AdvancedMode):
 class ChallengeBase(TimedMode):
     """Base class for all wizard modes"""
 
-    def __init__(self, game, priority, initial_time, instructions, num_shots_required, num_balls, ball_save_time):
+    def __init__(self, game, priority, instructions, num_shots_required, num_balls):
         name = self.__class__.__name__
-        super(ChallengeBase, self).__init__(game, priority, initial_time, name, instructions, num_shots_required)
+        super(ChallengeBase, self).__init__(game, priority, 0, name, instructions, num_shots_required)
         self.num_balls = num_balls
-        self.ball_save_time = ball_save_time
 
     def mode_started(self):
         super(ChallengeBase, self).mode_started()
@@ -112,8 +111,10 @@ class ChallengeBase(TimedMode):
         if balls_to_launch > 0:
             self.game.launch_balls(balls_to_launch)
 
-        if self.ball_save_time > 0:
-            self.game.ball_save_start(time=self.ball_save_time, now=True, allow_multiple_saves=True)
+        ball_save_time_settings = self.name + ' ballsave time'
+        ball_save_time = self.game.user_settings['Gameplay'].get(ball_save_time_settings, None)
+        if ball_save_time:
+                self.game.ball_save_start(time=ball_save_time, now=True, allow_multiple_saves=True)
 
     def mode_stopped(self):
         super(ChallengeBase, self).mode_stopped()
@@ -148,13 +149,13 @@ class ChallengeBase(TimedMode):
 class DarkJudge(ChallengeBase):
     """Base class for dark judge wizard modes"""
 
-    def __init__(self, game, priority, initial_time, instructions, num_shots_required, num_balls, ball_save_time):
-        super(DarkJudge, self).__init__(game, priority, initial_time, instructions, num_shots_required, num_balls, ball_save_time)
+    def __init__(self, game, priority, instructions, num_shots_required, num_balls):
+        super(DarkJudge, self).__init__(game, priority, instructions, num_shots_required, num_balls)
         self.taunt_sound = self.name.lower() + ' - taunt'
 
         self.text_layer = TextLayer(128/2, 7, self.game.fonts['tiny'], 'center', opaque=True)
         wait_layer = TextLayer(128/2, 20, self.game.fonts['tiny'], 'center', opaque=False).set_text('Wait, balls draining...')
-        self.finish_layer = GroupedLayer(128, 32, [self.text_layer, wait_layer])
+        self.finish_layer = GroupedLayer(128, 32, [self.text_layer, wait_layer], opaque=True, fill_color=(0,0,0,255))
 
     def mode_stopped(self):
         super(DarkJudge, self).mode_stopped()
@@ -192,12 +193,12 @@ class Fear(DarkJudge):
     """
 
     def __init__(self, game, priority):
-        self.time_for_shot = game.user_settings['Gameplay']['Time for Fear shot']
-        ball_save_time = game.user_settings['Gameplay']['Fear ballsave time']
-        super(Fear, self).__init__(game, priority, initial_time=self.time_for_shot, instructions='Shoot lit ramps then subway',
-                    num_shots_required=5, num_balls=1, ball_save_time=ball_save_time)
+        super(Fear, self).__init__(game, priority, instructions='Shoot lit ramps then subway',
+                    num_shots_required=5, num_balls=1)
 
     def mode_started(self):
+        self.time_for_shot = self.game.user_settings['Gameplay']['Time for Fear shot']
+        self.mode_time = self.time_for_shot # initial time
         super(Fear, self).mode_started()
         self.mystery_lit = True
         self.state = 'ramps'
@@ -295,9 +296,8 @@ class Mortis(DarkJudge):
     """
 
     def __init__(self, game, priority):
-        ball_save_time = game.user_settings['Gameplay']['Mortis ballsave time']
-        super(Mortis, self).__init__(game, priority, initial_time=0, instructions='Shoot lit shots',
-                         num_shots_required=5, num_balls=2, ball_save_time=ball_save_time)
+        super(Mortis, self).__init__(game, priority, instructions='Shoot lit shots',
+                         num_shots_required=5, num_balls=2)
         self.lamp_names = ['mystery', 'perp1G', 'perp3G', 'perp5G', 'stopMeltdown']
 
     def mode_started(self):
@@ -353,14 +353,13 @@ class Death(DarkJudge, CrimeSceneShots):
     """
 
     def __init__(self, game, priority):
-        initial_time = game.user_settings['Gameplay']['Time for Death']
-        ball_save_time = game.user_settings['Gameplay']['Death ballsave time']
-        self.time_for_shot = game.user_settings['Gameplay']['Time for Death shot']
-        super(Death, self).__init__(game, priority, initial_time=initial_time, instructions='Shoot lit shots quickly',
-                    num_shots_required=5, num_balls=1, ball_save_time=ball_save_time)
+        super(Death, self).__init__(game, priority, instructions='Shoot lit shots quickly',
+                    num_shots_required=5, num_balls=1)
         self.shot_order = [4, 2, 0, 3, 1] # from easiest to hardest
 
     def mode_started(self):
+        self.time_for_shot = self.game.user_settings['Gameplay']['Time for Death shot']
+        self.mode_time = self.game.user_settings['Gameplay']['Time for Death'] # initial time
         super(Death, self).mode_started()
         self.shot_timer = self.time_for_shot
         self.active_shots = [1, 1, 1, 1, 1]
@@ -415,8 +414,8 @@ class Fire(DarkJudge, CrimeSceneShots):
     """
 
     def __init__(self, game, priority):
-        super(Fire, self).__init__(game, priority, initial_time=0, instructions='Shoot lit shots twice',
-                    num_shots_required=10, num_balls=4, ball_save_time=0)
+        super(Fire, self).__init__(game, priority, instructions='Shoot lit shots twice',
+                    num_shots_required=10, num_balls=4)
         self.lamp_styles = ['off', 'medium', 'fast']
 
     def mode_started(self):
@@ -469,9 +468,8 @@ class Celebration(ChallengeBase, CrimeSceneShots):
     """
 
     def __init__(self, game, priority):
-        ball_save_time = game.user_settings['Gameplay']['Celebration ballsave time']
-        super(Celebration, self).__init__(game, priority, initial_time=0, instructions='All shots score',
-                     num_shots_required=0, num_balls=6, ball_save_time=ball_save_time)
+        super(Celebration, self).__init__(game, priority, instructions='All shots score',
+                     num_shots_required=0, num_balls=6)
 
     def mode_started(self):
         super(Celebration, self).mode_started()
@@ -490,23 +488,10 @@ class Celebration(ChallengeBase, CrimeSceneShots):
                 lamp.schedule(schedule=lamp_schedules[i%32], cycle_seconds=0, now=False)
                 i += 1
 
-    # By default, Ultimate Challenge modes ignore event_ball_drained,
-    # so BasePlay.drain_callback() will end the mode when the number of balls reaches 0
-    # That's how multiball Challenge modes continue to run on a single ball.
-    # (RegularPlay.event_ball_drained() ends multiball modes on the last ball
-    # but remember RegularPlay does not run when UltimateChallenge is running.)
-    # Celebration is the only multiball Challenge mode that ends on the last ball in play
-    # therefore it has to trap event_ball_drained and implement that behavior itself.
-
-    def event_ball_drained(self):
-        # The trough does not expect a multiball to start from 0 balls and gets confused,
-        # It calls the end multiball callback when launching the first ball
-        # thinking we got down to 1 ball when in fact we are going up to 6 balls.
-        # The work-around is to implement the end multiball callback ourselves
-        if self.game.num_balls_requested() == 1:
-            # down to just one ball, revert to regular play
+    def evt_single_ball_play(self):
+        # Note that SkeletonGame does not call this event when there are pending balls to launch
+        # so draining when initially launching balls will not end the mode
             self.exit_callback()
-        # else celebration continues until we are really down to the last ball
 
     # shots 0 to 4 are crime scene shots
 

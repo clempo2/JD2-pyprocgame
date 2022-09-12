@@ -1,60 +1,106 @@
-Machine (Standard):
+Machine:
   'Balls Per Game':
     options: [1,10]
     increments: 1
     default: 3
-  'Quick Bonus Mode':
-    options: [False,True]
-    default: True
-  'Attract Mode Sounds':
-    options: ['On','Off']
-    default: 'Off'
-  'Attract Mode Music':
-    options: ['On','Off']
-    default: 'Off'
-Machine (Coils):
-  'Auto Plunger':
-    options: [24,63]
+  'Max extra balls per game':
+    options: [0,1,2,3,4,5,6,7,8,9,99]
+    default: 99
+  'Max extra balls lit':
+    options: [0,1,2,3,4,5,6,7,8,9,99]
+    default: 99
+  'Number of tilt warnings':
+    options: [0,10]
     increments: 1
-    default: 32
+    default: 2
+  'Allow restarts':
+    options: [true, false]
+    default: true
+  'Deadworld Mod Installed':
+    options: [true, false]
+    default: false
+Coils:
+    popperL:
+        options: [15,60]
+        increments: 1
+        default: 25
 Sound:
   'Initial volume':
     options: [0,10]
     increments: 1
     default: 5
-  'Music volume offset':
-    options: [-0.4,-0.3,-0.2,-0.1,0,0.1,0.2,0.3,0.4]
-    default: 0
-Gameplay (Feature):
-  'Skillshot Autoplunge Timer':
-    options: [0,30]
-    increments: 1
-    default: 15
-  'Ball Save Timer':
+Gameplay:
+  'New ball ballsave time':
     options: [0,20]
     increments: 1
     default: 10
-
-
-
-
-
-Machine:
-  'Deadworld mod installed':
-    options: [true, false]
+  'New ball repeating ballsave':
+    options: [false, true]
     default: false
-  'Initial volume':
-    options: [1,20]
+  'Multiball ballsave time':
+    options: [0,30]
+    increments: 1
+    default: 20
+  'Block War ballsave time':
+    options: [0,30]
+    increments: 1
+    default: 15
+  'Time per chain feature':
+    options: [20,50]
+    increments: 5
+    default: 30
+  'Chain feature difficulty':
+    options: ['easy', 'medium', 'hard']
+    default: 'medium'
+  'Time for Hurry Up':
+    options: [5,25]
     increments: 1
     default: 10
-  'Music volume offset':
-    options: [-9,9]
+  'Block difficulty':
+    options: ['easy', 'medium', 'hard']
+    default: 'medium'
+  'Blocks for Ultimate Challenge':
+    options: [8,12,16]
+    default: 16
+  'Mystery ballsave time':
+    options: [5,30]
     increments: 1
-    default: 0
-Display:
-  'Left side score justify':
-    options: [left, right]
-    default: 'left'
+    default: 10
+  'Mystery feature add time':
+    options: [5,30]
+    increments: 1
+    default: 10
+  'Video mode':
+    options: ['enemies', 'cows', 'off']
+    default: 'enemies'
+  'Time for Fear shot':
+    options: [10,45]
+    increments: 5
+    default: 25
+  'Fear ballsave time':
+    options: [0,30]
+    increments: 1
+    default: 10
+  'Mortis ballsave time':
+    options: [0,30]
+    increments: 1
+    default: 10
+  'Time for Death':
+    options: [120,240]
+    increments: 10
+    default: 180
+  'Death ballsave time':
+    options: [0,30]
+    increments: 1
+    default: 20
+  'Time for Death shot':
+    options: [0,30]
+    increments: 1
+    default: 10
+  'Celebration ballsave time':
+    options: [0,30]
+    increments: 1
+    default: 20
 Replay:
   'Replay Type':
     options: ['none','auto','fixed','incremental']
@@ -89,75 +135,3 @@ Replay:
     options: [50000,10000000]
     increments: 50000
     default: 200000
-Gameplay:
-  'Number of tilt warnings':
-    options: [0,10]
-    increments: 1
-    default: 2
-  'Allow restarts':
-    options: [true, false]
-  'Balls per game':
-    options: [1,10]
-    increments: 1
-    default: 3
-  'Max extra balls per game':
-    options: [0,1,2,3,4,5,6,7,8,9,99]
-    default: 99
-  'Max extra balls lit':
-    options: [0,1,2,3,4,5,6,7,8,9,99]
-    default: 99
-  'New ball ballsave time':
-    options: [5,6,7,8,9,10,11,12,13,14,15,20,25,30]
-    default: 10
-  'New ball repeating ballsave':
-    options: [false, true]
-  'Multiball ballsave time':
-    options: [5,6,7,8,9,10,11,12,13,14,15,20,25,30]
-    default: 20
-  'Block War ballsave time':
-    options: [5,6,7,8,9,10,11,12,13,14,15,20,25,30]
-    default: 15
-  'Time per chain feature':
-    options: [25,30,35,40,45]
-    default: 30
-  'Chain feature difficulty':
-    options: ['easy', 'medium', 'hard']
-    default: 'medium'
-  'Time for Hurry Up':
-    options: [5,6,7,8,9,10,11,12,13,14,15,20,25,30]
-    default: 10
-  'Block difficulty':
-    options: ['easy', 'medium', 'hard']
-    default: 'medium'
-  'Blocks for Ultimate Challenge':
-    options: [8,12,16]
-    default: 16
-  'Mystery ballsave time':
-    options: [5,6,7,8,9,10,11,12,13,14,15,20,25,30]
-    default: 10
-  'Mystery feature add time':
-    options: [5,6,7,8,9,10,11,12,13,14,15,20,25,30]
-    default: 10
-  'Video mode':
-    options: ['enemies', 'cows', 'off']
-  'Time for Fear shot':
-    options: [10,15,20,25,30,35,40,45]
-    default: 25
-  'Fear ballsave time':
-    options: [5,6,7,8,9,10,11,12,13,14,15,20,25,30]
-    default: 10
-  'Mortis ballsave time':
-    options: [5,6,7,8,9,10,11,12,13,14,15,20,25,30]
-    default: 10
-  'Time for Death':
-    options: [150,160,170,180,190,200]
-    default: 180
-  'Death ballsave time':
-    options: [5,6,7,8,9,10,11,12,13,14,15,20,25,30]
-    default: 20
-  'Time for Death shot':
-    options: [5,6,7,8,9,10,15,20,25,30]
-    default: 10
-  'Celebration ballsave time':
-    options: [5,6,7,8,9,10,11,12,13,14,15,20,25,30]
-    default: 20

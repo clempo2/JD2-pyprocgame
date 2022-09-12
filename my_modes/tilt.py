@@ -8,7 +8,7 @@ from procgame.game import AdvancedMode
 class CoilEjectMode(AdvancedMode):
     # Eject any balls that get stuck before returning to the trough.
     def sw_popperL_active_for_300ms(self, sw):
-        self.game.coils.popperL.pulse(40)
+        self.game.coils.popperL.pulse(25)
 
     def sw_popperR_active_for_300ms(self, sw):
         self.game.coils.popperR.pulse(40)
@@ -26,7 +26,7 @@ class Tilted(CoilEjectMode):
     def __init__(self, game, priority):
         super(Tilted, self).__init__(game, priority)
         text_layer = TextLayer(128/2, 7, self.game.fonts['large'], 'center').set_text('Tilt')
-        self.layer = GroupedLayer(128, 32, [text_layer])
+        self.layer = GroupedLayer(128, 32, [text_layer], opaque=True, fill_color=(0,0,0,255))
 
     def mode_started(self):
         self.game.sound.play('tilt')
@@ -47,7 +47,7 @@ class SlamTilted(AdvancedMode):
 
     def __init__(self, game, priority):
         super(SlamTilted, self).__init__(game, priority)
-        self.layer = TextLayer(128/2, 7, self.game.fonts['large'], 'center').set_text('Slam Tilt')
+        self.layer = TextLayer(128/2, 7, self.game.fonts['large'], 'center', opaque=True, fill_color=(0,0,0,255)).set_text('Slam Tilt')
 
     def mode_started(self):
         self.delay('reset_game', event_type=None, delay=5, handler=self.reset_game)
@@ -60,11 +60,10 @@ class SlamTilted(AdvancedMode):
 class TiltMonitorMode(AdvancedMode):
     """Monitor tilt warnings and slam tilt"""
 
-    def __init__(self, game, priority, tilt_sw=None, slam_tilt_sw=None, num_tilt_warnings=2):
+    def __init__(self, game, priority, tilt_sw=None, slam_tilt_sw=None):
         super(TiltMonitorMode, self).__init__(game, priority)
         self.tilt_sw = tilt_sw
         self.slam_tilt_sw = slam_tilt_sw
-        self.num_tilt_warnings = num_tilt_warnings
 
         if tilt_sw:
             self.add_switch_handler(name=tilt_sw, event_type='active', delay=None, handler=self.tilt_active)
@@ -78,8 +77,9 @@ class TiltMonitorMode(AdvancedMode):
         player.setState('times_warned', 0)
 
     def mode_started(self):
-        self.tilted = False
+        self.num_tilt_warnings = self.game.user_settings['Machine']['Number of tilt warnings']
         self.previous_warning_time = None
+        self.tilted = False
 
     def tilt_active(self, sw):
         now = time.time()

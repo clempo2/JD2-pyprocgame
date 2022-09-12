@@ -3,10 +3,20 @@ from procgame.dmd import ExpandTransition, Frame, FrameLayer, GroupedLayer, Scri
 from procgame.game import AdvancedMode, SwitchStop
 
 class ShootingGallery(AdvancedMode):
-    def __init__(self, game, priority, video_mode_setting):
+    def __init__(self, game, priority):
         super(ShootingGallery, self).__init__(game, priority)
         self.on_complete = None
 
+    def mode_started(self):
+        self.success = False
+        self.state = 'intro'
+        self.scope_pos = 0
+        self.num_enemies = 0
+        self.num_enemies_shot = 0
+        self.speed_factor = 1
+        self.targets = ['empty'] * 4
+
+        video_mode_setting = self.game.user_settings['Gameplay']['Video mode']
         if video_mode_setting == 'cow':
             # family friendly option
             self.enemy_text = 'Shoot mean cows'
@@ -26,21 +36,14 @@ class ShootingGallery(AdvancedMode):
             self.all_enemies = image_frames[0:6]
             self.all_friends = image_frames[6:12]
 
-        self.scope_frames = self.game.animations['scopeandshot'].frames[0:4]
-        self.shot_frames = self.game.animations['scopeandshot'].frames[4:8]
-
-    def mode_started(self):
-        self.success = False
-        self.state = 'intro'
-        self.scope_pos = 0
-        self.num_enemies = 0
-        self.num_enemies_shot = 0
-        self.speed_factor = 1
-        self.targets = ['empty'] * 4
         self.available_friends = self.all_friends[:]
         self.available_enemies = self.all_enemies[:]
         shuffle(self.available_friends)
         shuffle(self.all_enemies)
+
+        self.scope_frames = self.game.animations['scopeandshot'].frames[0:4]
+        self.shot_frames = self.game.animations['scopeandshot'].frames[4:8]
+
         self.intro()
 
     def intro(self):
@@ -48,7 +51,7 @@ class ShootingGallery(AdvancedMode):
         font_large = self.game.fonts['large']
         font_medium = self.game.fonts['medium']
 
-        self.status_layer = TextLayer(128/2, 7, font_large, 'center', opaque=False).set_text('Video Mode')
+        self.status_layer = TextLayer(128/2, 7, font_large, 'center').set_text('Video Mode')
 
         self.intro_layer_0 = GroupedLayer(128, 32, [self.status_layer])
 
@@ -63,7 +66,8 @@ class ShootingGallery(AdvancedMode):
         self.layer = ScriptedLayer(128, 32, [
             {'seconds':3.0, 'layer':self.intro_layer_0},
             {'seconds':3.0, 'layer':self.intro_layer_1},
-            {'seconds':3.0, 'layer':self.intro_layer_2}])
+            {'seconds':3.0, 'layer':self.intro_layer_2}],
+            opaque=True)
 
         self.layer.on_complete = self.start
 
@@ -74,10 +78,10 @@ class ShootingGallery(AdvancedMode):
         self.target_layers = [self.new_frame_layer(True) for unused in range(0, 4)]
         self.scope_layer = self.new_frame_layer()
         self.bullet_layers = [self.new_frame_layer() for unused in range(0, 4)]
-        self.result_layer = TextLayer(128/2, 20, font_medium, 'center', opaque=False)
+        self.result_layer = TextLayer(128/2, 20, self.game.fonts['medium'], 'center')
 
         all_layers = self.target_layers + [self.scope_layer] + self.bullet_layers + [self.status_layer, self.result_layer]
-        self.layer = GroupedLayer(128, 32, all_layers)
+        self.layer = GroupedLayer(128, 32, all_layers, opaque=True)
 
         # Add the first target after 1 second.
         self.delay(name='add_target', event_type=None, delay=1, handler=self.add_target)

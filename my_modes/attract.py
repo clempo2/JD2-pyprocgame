@@ -1,7 +1,8 @@
+from copy import copy
 from random import shuffle
 from procgame.dmd import FrameLayer, GroupedLayer, MarkupFrameGenerator, PanningLayer, PushTransition, ScriptedLayer, TextLayer
 from procgame.highscore import generate_highscore_frames
-from layers import FastPanningLayer
+from procgame.sound import PLAY_NOTBUSY
 from tilt import CoilEjectMode
 
 class Attract(CoilEjectMode):
@@ -14,6 +15,8 @@ class Attract(CoilEjectMode):
         font_large = self.game.fonts['large']
 
         self.gun_layer = self.game.animations['gun_powerup']
+
+        self.update_score_layer()        
 
         jd_text = TextLayer(128/2, 7, font_large, 'center').set_text('Judge Dredd')
         self.jd_layer = GroupedLayer(width=128, height=32, layers=[jd_text], fill_color=(0,0,0,255), opaque=True)
@@ -33,8 +36,6 @@ class Attract(CoilEjectMode):
         self.high_scores_title_layer = GroupedLayer(width=128, height=32, layers=[high_score_text], fill_color=(0,0,0,255), opaque=True)
         self.high_scores_title_layer.transition = PushTransition(direction='north')
 
-        self.game_over_layer = TextLayer(128/2, 7, font_large, 'center', opaque=True).set_text('Game Over')
-
         self.font_plain = game.fonts['medium']
         self.font_bold = game.fonts['bold']
         gen = MarkupFrameGenerator(game, self.font_plain, self.font_bold)
@@ -44,31 +45,29 @@ class Attract(CoilEjectMode):
 
 #CREDITS#
 
-[Rules:]
+[Rules]
 [Gerry Stellenberg]
 
-[Software:]
+[Software]
 [Adam Preble]
+[Michael Ocean]
+[Josh Kugler]
 [Clement Pellerin]
 
-[Sound and Music:]
+[Sound and Music]
 [Rob Keller]
 [Jonathan Coultan]
 
-[Dots:]
+[Dots]
 [Travis Highrise]
 
-[Special Thanks to:]
+[Special Thanks to]
 [Steven Duchac]
 [Rob Anthony]
-
-[www.multimorphic.com]
-[pyprocgame.pindev.org]
 """)
 
-        self.credits_layer = FastPanningLayer(width=128, height=32, frame=credits_frame, origin=(0, 0), translate=(0, 1), bounce=False)
+        self.credits_layer = PanningLayer(width=128, height=32, frame=credits_frame, origin=(0, 0), translate=(0, 1), bounce=False, numFramesDrawnBetweenMovementUpdate=2, fill_color=(0,0,0,255))
         self.judges_layer = self.game.animations['darkjudges']
-        self.longwalk_layer = self.game.animations['longwalk']
 
         instruct_frame = MarkupFrameGenerator(game, self.font_plain, self.font_bold).frame_for_markup("""
 
@@ -97,13 +96,15 @@ To light Ultimate Challenge:
 Start all chain features
 Secure all blocks
 Collect a multiball jackpot
+
+
+
+
 """)
 
-        self.instruct_layer = PanningLayer(width=128, height=32, frame=instruct_frame, origin=(0,0), translate=(0,1), bounce=False)
+        self.instruct_layer = PanningLayer(width=128, height=32, frame=instruct_frame, origin=(0,0), translate=(0,1), bounce=False, numFramesDrawnBetweenMovementUpdate=7, fill_color=(0,0,0,255))
 
     def mode_started(self):
-        self.delay(name='ball_search', event_type=None, delay=1, handler=self.ball_search)
-
         # Blink the start buttons in alternation to notify player about starting a game.
         self.game.lamps.startButton.schedule(schedule=0x00ff00ff, cycle_seconds=0, now=False)
         self.game.lamps.superGame.schedule(schedule=0xff00ff00, cycle_seconds=0, now=False)
@@ -119,60 +120,45 @@ Collect a multiball jackpot
         # Stop deadworld ball search (if active) before we eject the first ball
         # otherwise deadworld might not see the trough was momentarily full
         # I wish there was a trough full event for this.
+        # TODO I think there is an event like this in SkeletonGame
         self.game.deadworld.stop_ball_search()
 
         self.game.lamps.startButton.enable()
         self.game.lamps.superGame.enable()
         self.game.lampctrl.stop_show()
 
-    def ball_search(self):
-        if not self.game.trough.is_full():
-            self.game.ball_search.perform_search(5)
-            self.game.set_status('BALL MISSING')
-            self.game.deadworld.perform_ball_search()
+    def update_score_layer(self):
+        self.game.score_display.update_layer()
+        layers = [copy(x) for x in self.game.score_display.layer.layers]
+        self.score_layer = GroupedLayer(self.game.dmd.width, self.game.dmd.height, layers, opaque=True)
 
     def display(self):
-        self.game.score_display.update_layer()
+        hs_frames = generate_highscore_frames(self.game.all_highscore_categories, self.game, self.font_plain, self.font_bold, self.game.dmd_width, self.game.dmd_height)
+        hs_script = [{'seconds':1.25, 'layer':FrameLayer(frame=f)} for f in hs_frames]
 
-        script = [
+        script = \
+            [{'seconds':3.0, 'layer':self.jd_layer},
             {'seconds':3.0, 'layer':self.gun_layer},
-            {'seconds':3.0, 'layer':self.jd_layer},
-            {'seconds':2.5, 'layer':self.game.score_display.layer},
-            {'seconds':4.0, 'layer':self.cityscape_layer},
+            {'seconds':2.5, 'layer':self.score_layer},
+            {'seconds':2.0, 'layer':self.high_scores_title_layer}] \
+            + hs_script + \
+            [{'seconds':4.0, 'layer':self.cityscape_layer},
             {'seconds':0.75, 'layer':self.press_yellow_layer},
             {'seconds':2.0, 'layer':self.press_yellow_layer2},
             {'seconds':0.75, 'layer':self.press_green_layer},
             {'seconds':2.0, 'layer':self.press_green_layer2},
-            {'seconds':2.5, 'layer':self.game.score_display.layer},
+            {'seconds':2.5, 'layer':self.score_layer},
             {'seconds':3.0, 'layer':self.proc_splash_layer},
-            {'seconds':7.0, 'layer':self.credits_layer},
-            {'seconds':2.5, 'layer':self.game.score_display.layer},
-            {'seconds':3.0, 'layer':self.judges_layer},
-        ]
+            {'seconds':10.0, 'layer':self.credits_layer},
+            {'seconds':3.0, 'layer':self.judges_layer}]
 
-        self.append_high_score_layers(script)
-        self.game.reset_script_layer(script)
         self.layer = ScriptedLayer(width=128, height=32, script=script, opaque=True)
-        self.layer.on_complete = lambda: self.game.reset_script_layer(script)
-
-    def game_over_display(self):
-        self.game.score_display.update_layer()
-
-        script = [
-            {'seconds':3.4, 'layer':self.longwalk_layer}, # stop this anim early, Game Over font does not fit rest of the game
-            {'seconds':3.0, 'layer':self.game_over_layer},
-            {'seconds':4.0, 'layer':self.game.score_display.layer},
-        ]
-
-        self.append_high_score_layers(script)
-        self.game.reset_script_layer(script)
-        self.layer = ScriptedLayer(width=128, height=32, script=script)
-        self.layer.on_complete = self.display
+        #TODO self.layer.reset()
 
     def instruction_display(self):
-        script = [{'seconds':20.1, 'layer':self.instruct_layer}]
-        self.game.reset_script_layer(script)
-        self.layer = ScriptedLayer(width=128, height=32, script=script)
+        script = [{'seconds':22.5, 'layer':self.instruct_layer}]
+        self.layer = ScriptedLayer(width=128, height=32, script=script, hold=True, opaque=True)
+        #TODO self.layer.reset()
         self.layer.on_complete = self.display
 
     def button_layer(self, button_text, play_text, blink_frame=None, direction=None):
@@ -184,23 +170,17 @@ Collect a multiball jackpot
             start_layer.transition = PushTransition(direction=direction)
         return start_layer
 
-    def append_high_score_layers(self, script):
-        script.append({'seconds':2.0, 'layer':self.high_scores_title_layer})
-        for frame in generate_highscore_frames(self.game.all_highscore_categories, self.game, self.font_plain, self.font_bold, self.game.dmd_width, self.game.dmd_height):
-            new_layer = FrameLayer(frame=frame)
-            script.append({'seconds':1.25, 'layer':new_layer})
-
     def change_lampshow(self):
         shuffle(self.lampshow_keys)
         self.game.lampctrl.play_show(self.lampshow_keys[0], repeat=True)
         self.delay(name='lampshow', event_type=None, delay=10, handler=self.change_lampshow)
 
     def sw_fireL_active(self, sw):
-        self.game.sound.play_voice('attract')
+        self.game.sound.play_voice('attract', action=PLAY_NOTBUSY)
         self.layer.force_next(forward=False)
 
     def sw_fireR_active(self, sw):
-        self.game.sound.play_voice('attract')
+        self.game.sound.play_voice('attract', action=PLAY_NOTBUSY)
         self.layer.force_next(forward=True)
 
     def sw_flipperLwL_active(self, sw):

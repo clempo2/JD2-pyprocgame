@@ -7,13 +7,14 @@ class Multiball(AdvancedMode):
     def __init__(self, game, priority):
         super(Multiball, self).__init__(game, priority)
 
-        self.deadworld_mod_installed = self.game.user_settings['Machine']['Deadworld mod installed']
-        self.ball_save_time = self.game.user_settings['Gameplay']['Multiball ballsave time']
-
         self.drops = BasicDropTargetBank(self.game, priority=priority + 1, prefix='dropTarget', letters='JUDGE')
         self.drops.on_advance = self.on_drops_advance
         self.drops.on_completed = self.on_drops_completed
         self.drops.auto_reset = False
+
+    def reset_progress(self):
+        # Erase all progress to start over when ultimate challenge ends
+        self.game.setPlayerState('multiball_jackpot_collected', False)
 
     def evt_player_added(self, player):
         player.setState('num_balls_locked', 0)
@@ -28,7 +29,7 @@ class Multiball(AdvancedMode):
         self.num_locks_lit = player.getState('num_locks_lit')
         # multiball_played, multiball_jackpot_collected and multiball_active are accessed directly in the player state
 
-        if self.deadworld_mod_installed and self.game.deadworld.num_balls_locked < self.num_balls_locked:
+        if self.game.deadworld_mod_installed and self.game.deadworld.num_balls_locked < self.num_balls_locked:
             # The planet holds fewer balls than the player has locked balls.
             # The player must unfortunately re-lock the balls he lost to another player
             self.num_balls_locked = self.game.deadworld.num_balls_locked
@@ -55,10 +56,6 @@ class Multiball(AdvancedMode):
 
         self.game.remove_modes([self.drops])
 
-    def reset(self):
-        # multiball_jackpot_collected is sticky until it is reset at the end of Ultimate Challenge
-        self.game.setPlayerState('multiball_jackpot_collected', False)
-
     def start_multiball(self):
         # start a 3-ball multiball or up to 4 balls when stacked with BlockWar
         self.state = 'multiball'
@@ -73,7 +70,7 @@ class Multiball(AdvancedMode):
         self.disable_lock()
 
         # launch the balls for a 3 ball multiball and up to 4 balls when stacked with BlockWar
-        if self.deadworld_mod_installed:
+        if self.game.deadworld_mod_installed:
             # all balls coming from deadworld planet
             self.game.deadworld.eject_balls(3)
             # Need to convert previously locked balls to balls in play.
@@ -84,7 +81,8 @@ class Multiball(AdvancedMode):
             self.game.deadworld.eject_balls(1)
             self.game.launch_balls(2)
 
-        self.game.ball_save_start(time=self.ball_save_time, now=True, allow_multiple_saves=True)
+        ball_save_time = self.game.user_settings['Gameplay']['Multiball ballsave time']
+        self.game.ball_save_start(time=ball_save_time, now=True, allow_multiple_saves=True)
         self.start_callback()
         self.game.adjPlayerState('multiball_active', 0x1)
         self.game.update_lamps()
@@ -100,11 +98,9 @@ class Multiball(AdvancedMode):
         self.drops.reset_drop_target_bank()
         self.game.update_lamps()
 
-    def event_ball_drained(self):
-        # End multiball if there is now only one ball in play
+    def evt_single_ball_play(self):
         if self.state == 'multiball':
-            if self.game.num_balls_requested() == 1:
-                self.end_multiball()
+            self.end_multiball()
 
     def multiball_instructions(self):
         voice = 'shoot the subway' if self.jackpot_lit else 'shoot the left ramp'
@@ -131,7 +127,7 @@ class Multiball(AdvancedMode):
         # make sure multiball did not start in the meantime, this can happen if BlockWar is running
         if self.state == 'load':
             dw_num_balls_locked = self.game.deadworld.num_balls_locked - sneaky_ball_adjust
-            if (self.deadworld_mod_installed and self.num_locks_lit > 0 and
+            if (self.game.deadworld_mod_installed and self.num_locks_lit > 0 and
                         dw_num_balls_locked > self.num_balls_locked):
                 self.virtual_locks_needed = dw_num_balls_locked - self.num_balls_locked
             else:
@@ -173,7 +169,7 @@ class Multiball(AdvancedMode):
 
             if launch_ball:
                 # Not yet multiball, put one ball back in play
-                if self.deadworld_mod_installed:
+                if self.game.deadworld_mod_installed:
                     # launch a new ball each time a ball is physically locked.
                     # Use stealth launch so another ball isn't counted in play.
                     self.game.trough.launch_balls(1, self.game.no_op_callback, stealth=True)

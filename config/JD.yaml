@@ -54,8 +54,10 @@ PRSwitches:
     #                  'NC' (normally closed.  Common for optos)
     flipperLwR:
         number: SF2
+        ballsearch: stop
     flipperLwL: 
         number: SF4
+        ballsearch: stop
     flipperUpR: 
         number: SF6
     flipperUpL: 
@@ -78,13 +80,17 @@ PRSwitches:
         number: S14
     shooterL:
         number: S15
+        ballsearch: reset,stop
     outlaneL:
         number: S16
         tags: early_save
+        ballsearch: reset
     inlaneL:
         number: S17
+        ballsearch: reset
     threeBankTargets:
         number: S18
+        ballsearch: reset
     slamTilt:
         number: S21
     coinDoor:
@@ -95,10 +101,13 @@ PRSwitches:
         number: S24
     rightTopPost:
         number: S25
+        ballsearch: reset
     captiveBall1:
         number: S26
+        ballsearch: reset
     mystery:
         number: S27
+        ballsearch: reset
     ballOnMagnet:
         number: S28
     buyIn:
@@ -106,26 +115,36 @@ PRSwitches:
     leftRampEnter:
         number: S32
         type: 'NC'
+        ballsearch: reset
     leftRollover:
         number: S33
+        ballsearch: reset
     inlaneR:
         number: S34
+        ballsearch: reset
     topCenterRollover:
         number: S35
+        ballsearch: reset
     leftScorePost:
         number: S36
+        ballsearch: reset
     subwayEnter1:
         number: S37
+        ballsearch: reset
     subwayEnter2:
         number: S38
+        ballsearch: reset
     shooterR:
         number: S41
         tags: shooter
+        ballsearch: reset,stop
     outlaneR:
         number: S42
         tags: early_save
+        ballsearch: reset
     inlaneFarR:
         number: S43
+        ballsearch: reset
     superGame:
         number: S44
     s45:
@@ -138,66 +157,88 @@ PRSwitches:
         number: S48
     slingL: 
         number: S51
+        ballsearch: reset
     slingR: 
         number: S52
+        ballsearch: reset
     captiveBall2:
         number: S53
+        ballsearch: reset
     dropTargetJ:
         number: S54
         type: 'NC'
+        ballsearch: reset
     dropTargetU:
         number: S55
         type: 'NC'
+        ballsearch: reset
     dropTargetD:
         number: S56
         type: 'NC'
+        ballsearch: reset
     dropTargetG:
         number: S57
         type: 'NC'
+        ballsearch: reset
     dropTargetE:
         number: S58
         type: 'NC'
+        ballsearch: reset
     globePosition1: 
         number: S61
         type: 'NO' # Manual says NC
     craneRelease: 
         number: S62
         type: 'NC'
+        ballsearch: reset
     leftRampToLock:
         number: S63
         type: 'NC'
+        ballsearch: reset
     leftRampExit:
         number: S64
         type: 'NC'
+        ballsearch: reset
     rightRampEnter:
         number: S65
         type: 'NC'
+        ballsearch: reset
     centerRampExit:
         number: S66
         type: 'NC'
+        ballsearch: reset
     leftRampEnterAlt:
         number: S67
         type: 'NC'
+        ballsearch: reset
     captiveBall3:
         number: S68
+        ballsearch: reset
     magnetOverRing:
         number: S71
         type: 'NO' # Manual says NC
     topRightOpto:
         number: S72
         type: 'NC'
+        ballsearch: reset
     popperL:
         number: S73
         type: 'NC'
+        # special code is needed in ball search to handle the ball cup blocking the opto
+        # ballsearch: reset,stop
     popperR:
         number: S74
         type: 'NC'
+        # special code is needed in ball search to handle the ball cup blocking the opto
+        # ballsearch: reset,stop
     topRampExit:
         number: S75
         type: 'NC'
+        ballsearch: reset
     rightRampExit:
         number: S76
         type: 'NC'
+        ballsearch: reset
     globePosition2:
         number: S77
         type: 'NO' # Manual says NC
@@ -207,6 +248,7 @@ PRSwitches:
         number: S81
         type: 'NC'
         tags: trough
+        ballsearch: reset
     trough2:
         number: S82
         type: 'NC'
@@ -255,8 +297,10 @@ PRCoils:
         number: C01
     popperL:
         number: C02
+        ballsearch: True
     popperR:
         number: C03
+        ballsearch: True
     crane:
         number: C04
     resetDropTarget:
@@ -267,11 +311,10 @@ PRCoils:
         number: C07
     shooterR:
         number: C08
-        # the label here corresponds to putting the entry in the config/game_default_settings.yaml
-        # together, this coil's strength will be able to be set by the user in the Service Mode->Coils Settings screen
-        label: Auto Plunger
+        ballsearch: True
     shooterL:
         number: C09
+        ballsearch: True
     tripDropTarget:
         number: C10
     diverter:
@@ -280,8 +323,10 @@ PRCoils:
         number: C13
     slingL: 
         number: C15
+        ballsearch: True
     slingR: 
         number: C16
+        ballsearch: True
     flasherFire:
         number: C17
     flasherFear:
@@ -446,54 +491,3 @@ PRLamps:
         number: G04
     gi05:
         number: G05
-
-PRBallSave:
-    # Special code handles resetDropTarget in ball search round 3
-    pulseCoils: [popperL, popperR, shooterR, shooterL, slingL, slingR]
-
-    # popperL and popperR have special handlers in code to debounce the switch
-    resetSwitches:
-        shooterL: open
-        outlaneL: open
-        inlaneL: open
-        threeBankTargets: open
-        rightTopPost: open
-        captiveBall1: open
-        mystery: open
-        leftRampEnter: closed
-        leftRollover: open
-        inlaneR: open
-        topCenterRollover: open
-        leftScorePost: open
-        subwayEnter1: open
-        subwayEnter2: open
-        shooterR: open
-        outlaneR: open
-        inlaneFarR: open
-        slingL: open
-        slingR: open
-        captiveBall2: open
-        dropTargetJ: open
-        dropTargetU: open
-        dropTargetD: open
-        dropTargetG: open
-        dropTargetE: open
-        trough1: closed
-        leftRampEnter: closed
-        leftRampToLock: closed
-        leftRampExit: closed
-        rightRampEnter: closed
-        centerRampExit: closed
-        captiveBall3: open
-        topRightOpto: closed 
-        topRampExit: closed
-        rightRampExit: closed
-
-    stopSwitches:
-        shooterR: closed
-        shooterL: closed
-        popperL: active
-        popperR: active
-        # don't ball search if a flipper button is pressed
-        flipperLwL: closed
-        flipperLwR: closed

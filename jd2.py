@@ -4,45 +4,62 @@ import os
 import pygame.locals
 import pinproc
 from procgame.config import value_for_key_path
-from procgame.dmd import FrameLayer, MarkupFrameGenerator, ScriptedLayer, font_named
-from procgame.game import BasicGame, Mode, SkeletonGame
-from procgame.highscore import HighScoreCategory
-from procgame.service import ServiceMode
+from procgame.dmd import font_named
+from procgame.game import BasicGame, SkeletonGame
+from procgame.game.skeletongame import run_proc_game
+from procgame.highscore import HighScoreCategory, get_highscore_data
+from procgame.modes.service import ServiceMode
 from layers import DontMoveTransition, FixedSizeTextLayer, GroupedTransition, SlideTransition
 from my_modes.attract import Attract
 from my_modes.ballsearch import JDBallSearch
-from my_modes.base import BasePlay
+from my_modes.base import Base
+from my_modes.baseplay import BasePlay
 from my_modes.deadworld import Deadworld, DeadworldTest
-from my_modes.drain import DrainMode
+#TODO from my_modes.drain import DrainMode
 from my_modes.initials import JDEntrySequenceManager
 from my_modes.switchmonitor import JDSwitchMonitor
-from my_modes.tilt import SlamTilted, Tilted
+#TODO from my_modes.tilt import SlamTilted, Tilted
 
 logging.basicConfig(level=logging.ERROR, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 
 curr_file_path = os.path.dirname(os.path.abspath(__file__))
 
-class JDServiceMode(ServiceMode):
-
-    def mode_stopped(self):
-        super(JDServiceMode, self).mode_stopped()
-        self.game.service_mode_ended()
-
 
 class JD2Game(SkeletonGame):
     """Judge Dredd pinball game"""
 
+    # rename the settings sections used by the framework back to simpler section names
+    settings_sections = {
+        'Machine': 'Machine',
+        'Coils': 'Coils',
+        'Sound': 'Sound',
+        'Gameplay': 'Gameplay',
+        'Replay': 'Replay'
+    }
+
     def __init__(self):
         super(JD2Game, self).__init__('config/JD.yaml', curr_file_path)
+
+        self.ticked = False
+        self.logging_enabled = False
+        self.lamp_schedules = {'slow':0x00ff00ff, 'medium':0x0f0f0f0f, 'fast':0x55555555, 'on':0xffffffff, 'off':0x00000000}
+        self.flashers = [x for x in self.coils if x.name.startswith('flasher')]
+
+        # shorten Blackout animation by removing last few frames
+        self.animations['blackout'].frames = self.animations['blackout'].frames[:-2]
 
         # a text layer for status messages, same size and location as the status line at the bottom of the score display
         self.dmd.message_layer = self.create_message_layer()
 
-        self.logging_enabled = False
-
-        self.load_config('config/JD.yaml')
-        self.lamp_schedules = {'slow':0x00ff00ff, 'medium':0x0f0f0f0f, 'fast':0x55555555, 'on':0xffffffff, 'off':0x00000000}
-        self.create_high_score_categories()
+        # Create basic modes
+        self.base = Base(self, 1)
+        self.attract_mode = Attract(self, 2)
+        #TODO self.drain_mode = DrainMode(self, 2)
+        self.base_play = BasePlay(self, 3)
+        self.deadworld = Deadworld(self, 20)
+        #TODO self.tilted_mode = Tilted(self, 33000)
+        deadworld_test = DeadworldTest(self, 200, self.fonts['settings-font-small'])
+        self.service_mode = ServiceMode(self, 99, self.fonts['settings-font-small'], extra_tests=[deadworld_test])
 
         self.reset()
 
@@ -62,6 +79,7 @@ class JD2Game(SkeletonGame):
                     switch_number = pinproc.decode(self.machine_type, switch_name)
                 if type(k) == str:
                     if k.startswith('K_'): # key is a pygame key name
+                        #TODO, that does not work with SDL2
                         key = getattr(pygame.locals, k)
                     else: # key is character
                         key = ord(k)
@@ -75,46 +93,22 @@ class JD2Game(SkeletonGame):
                 self.desktop.add_key_map(key, switch_number)
 
     def reset(self):
-        # work-around for poor implementation of reset by the framework
-        # this is important when the game is aborted with a long press to the startButton
-        self.stop()
-
         # Reset the entire game framework
         super(JD2Game, self).reset()
 
-        # reload the settings since they might have changed in service mode
-        self.load_game_settings()
-        self.load_game_stats()
+        # read settings
+        num_blocks_setting = int(self.user_settings['Gameplay']['Blocks for Ultimate Challenge'])
+        self.blocks_required = min(16, 4 * ceil(num_blocks_setting / 4)) # a multiple of 4 less than or equal to 16
+        self.deadworld_mod_installed = self.user_settings['Machine']['Deadworld Mod Installed']
 
-        deadworld_test = DeadworldTest(self, 200, self.fonts['tiny'])
-        self.service_mode = JDServiceMode(self, 100, self.fonts['tiny'], [deadworld_test])
-
-        # Trough
-        #TODO
-        #trough_switchnames = ['trough1', 'trough2', 'trough3', 'trough4', 'trough5', 'trough6']
-        #early_save_switchnames = ['outlaneL', 'outlaneR']
-        #self.ball_save = BallSave(self, self.lamps.drainShield, 'shooterR')
-        #self.ball_save.disable()
-        #self.trough = Trough(self, trough_switchnames, 'trough6', 'trough', early_save_switchnames, 'shooterR', self.no_op_callback)
-        #self.trough.ball_save_callback = self.ball_save.launch_callback
-        #self.trough.num_balls_to_save = self.ball_save.get_num_balls_to_save
-        #elf.ball_save.trough_enable_ball_save = self.trough.enable_ball_save
-
-        self.shooting_again = False
-
-        # Basic game features
-        self.attract_mode = Attract(self, 1)
-        self.drain_mode = DrainMode(self, 2)
-        self.base_play = BasePlay(self, 3)
-        self.deadworld = Deadworld(self, 20)
-        self.tilted_mode = Tilted(self, 33000)
-
-        #TODO self.add_modes([self.switch_monitor, self.ball_search, self.deadworld, self.ball_save, self.trough, self.attract_mode])
-        self.modes.add(self.deadworld)
-
-        # Make sure flippers are off, especially for user initiated resets.
-        self.enable_flippers(enable=False)
+        self.base_play.reset()
         self.start_attract_mode()
+
+    def load_settings_and_stats(self):
+        super(JD2Game, self).load_settings_and_stats()
+        self.create_high_score_categories()
+        for category in self.all_highscore_categories:
+            category.load_from_game(self)
 
     def create_switch_monitor(self):
         return JDSwitchMonitor(self)
@@ -133,7 +127,7 @@ class JD2Game(SkeletonGame):
                          stop_switches=self.ballsearch_stopSwitches, \
                          special_handler_modes=[])
 
-    def stop(self):
+    def TODO_stop(self):
         self.disable_game()
         self.remove_all_modes()
 
@@ -147,7 +141,7 @@ class JD2Game(SkeletonGame):
     
     def create_message_layer(self):
         """return a text layer at the bottom of the screen where the last line of the score display normally goes"""
-        layer = FixedSizeTextLayer(128/2, 32-6, font_named('Font07x5.dmd'), 'center', opaque=False, width=128, height=6)
+        layer = FixedSizeTextLayer(128/2, 32-6, font_named('Font07x5.dmd'), 'center', width=128, height=6, fill_color=(0,0,0,255))
 
         # slide in for 0.5s, stay still for 2s, slide out for 0.5s
         slide_in_transition = SlideTransition(direction='west')
@@ -175,44 +169,12 @@ class JD2Game(SkeletonGame):
     def message_transition_completed(self):
         self.dmd.message_layer.set_text(None)
 
-    def reset_script_layer(self, script):
-        for script_item in script:
-            script_item['layer'].reset()
-            if script_item['layer'].transition:
-                script_item['layer'].transition.start()
-
-    #
-    # Players
-    #
-
-    def request_additional_player(self):
-        """ attempt to add an additional player, but honor the max number of players """
-        if len(self.players) < 4:
-            player = self.add_player()
-            self.set_status(player.name.upper() + ' ADDED')
-        else:
-            self.logger.info('Cannot add more than 4 players.')
-
     #
     # Game
     #
-
-    def start_game(self, supergame=False):
-        self.supergame = supergame
-        super(JD2Game, self).start_game()
-        self.game_data['Audits']['Games Started'] += 1
-        self.remove_modes([self.attract_mode])
-        self.update_lamps()
-
-        # Add the first player
-        self.add_player()
-        # Start the game modes, base_play will eject a ball from the trough
-        self.start_ball()
-
-    def ball_starting(self):
-        super(JD2Game, self).ball_starting()
-        self.add_modes([self.drain_mode, self.base_play])
-        self.update_lamps()
+    def game_started(self):
+        self.supergame = self.switchmonitor.superGame_button_pressed
+        super(JD2Game, self).game_started()
 
     def ball_save_start(self, time, now, allow_multiple_saves):
         # We assume the number of balls to save is the number of balls requested by the game,
@@ -248,31 +210,9 @@ class JD2Game(SkeletonGame):
             # warning: must pass a real callback since passing None preserves the previous callback
             self.trough.launch_balls(balls_to_launch, self.no_op_callback)
 
-    # Override to create a flag signaling extra ball.
-    def shoot_again(self):
-        self.shooting_again = True
-        super(JD2Game, self).shoot_again()
-
-    def end_ball(self):
-        self.shooting_again = False
-        super(JD2Game, self).end_ball()
-
-        self.game_data['Audits']['Avg Ball Time'] = self.calc_time_average_string(self.game_data['Audits']['Balls Played'], self.game_data['Audits']['Avg Ball Time'], self.ball_time)
-        self.game_data['Audits']['Balls Played'] += 1
-
-    def ball_ended(self):
-        self.remove_modes([self.drain_mode, self.base_play, self.tilted_mode])
-
-    def game_ended(self):
-        super(JD2Game, self).game_ended()
-        self.deadworld.stop_spinning()
-
-        # High Score Stuff
-        categories = self.supergame_highscore_categories if self.supergame else self.highscore_categories
-        seq_manager = JDEntrySequenceManager(game=self, priority=2, categories=categories)
-        seq_manager.finished_handler = self.highscore_entry_finished
-        seq_manager.ready_handler = self.highscore_entry_ready_to_prompt
-        self.modes.add(seq_manager)
+    #TODO
+    #def ball_ended(self):
+    #    self.remove_modes([self.tilted_mode])
 
     def disable_ball_search(self):
         # workaround for a bug in pyprocgame's BallSearch.disable
@@ -285,11 +225,7 @@ class JD2Game(SkeletonGame):
 
     def add_modes(self, mode_list):
         for mode in mode_list:
-            # TODO REMOVE THIS AND FIX ADDING MODES
-            if mode.is_started():
-                print 'Mode ' + str(mode) + ' is already active'
-            else:
-                self.modes.add(mode)
+            self.modes.add(mode)
 
     def remove_modes(self, mode_list):
         for mode in mode_list:
@@ -297,7 +233,7 @@ class JD2Game(SkeletonGame):
             # cancel all delayed handlers
             mode._Mode__delayed = []
 
-    def remove_all_modes(self):
+    def TODO_remove_all_modes(self):
         self.remove_modes(self.modes[:])
 
     def send_event(self, event):
@@ -313,87 +249,37 @@ class JD2Game(SkeletonGame):
     # Tilt
     #
 
-    def tilt_warning(self, times_warned):
+    def evt_tilt_warning(self):
         self.sound.play('tilt warning')
         self.set_status('WARNING')
 
-    def slam_tilted(self):
+    def TODO_slam_tilted(self):
         self.stop()
-        self.modes.add(SlamTilted(self, 33000))
+        #TODO self.modes.add(SlamTilted(self, 33000))
 
-    def tilted(self):
-        self.disable_game()
+    def TODO_tilted(self):
+        #TODO self.disable_game()
         # remove all game play, drain_mode will continue to monitor ball drains
-        self.remove_modes([self.base_play])
-        self.modes.add(self.tilted_mode)
+        #self.remove_modes([self.base_play])
+        #self.modes.add(self.tilted_mode)
+        #self.game.update_lamps()
+        pass # TODO
 
-    def disable_game(self):
+    def TODO_disable_game(self):
         # Make sure balls will drain and won't be saved
         self.enable_flippers(enable=False)
         if hasattr(self, 'ball_save'):
             self.ball_save.disable()
         self.disable_all_lights()
-        self.stop_all_sounds()
+        self.sound.stop()
         self.sound.stop_music()
         self.set_status(None)
-
-    #
-    # Settings
-    #
-
-    def load_game_settings(self):
-        self.load_settings('game_default_settings.yaml', 'game_user_settings.yaml')
-
-        # Work-around because the framework cannot handle settings with a floating point increment.
-        # By the time we get here, GameController.load_settings() already discarded the options and the increments.
-        # Let's keep the work-around simple and hardcode the value we expect in the yaml file
-        self.volume_scale = 20.0
-        self.volume_increments = 1
-
-        self.sound.music_volume_offset = self.user_settings['Machine']['Music volume offset'] / self.volume_scale
-        # TODO
-        #self.sound.set_volume(self.user_settings['Machine']['Initial volume'] / self.volume_scale)
-
-        # read other game settings
-        self.balls_per_game = self.user_settings['Gameplay']['Balls per game']
-        self.score_display.set_left_players_justify(self.user_settings['Display']['Left side score justify'])
-
-        num_blocks_setting = int(self.user_settings['Gameplay']['Blocks for Ultimate Challenge'])
-        self.blocks_required = min(16, 4 * ceil(num_blocks_setting / 4)) # a multiple of 4 less than or equal to 16
-
-    #
-    # Stats
-    #
-
-    def load_game_stats(self):
-        self.load_game_data('game_default_data.yaml', 'game_user_data.yaml')
-        for category in self.all_highscore_categories:
-            category.load_from_game(self)
-
-    def calc_time_average_string(self, prev_total, prev_x, new_value):
-        prev_time_list = prev_x.split(':')
-        prev_time = (int(prev_time_list[0]) * 60) + int(prev_time_list[1])
-        avg_game_time = int((int(prev_total) * int(prev_time)) + int(new_value)) / (int(prev_total) + 1)
-        avg_game_time_min = avg_game_time/60
-        avg_game_time_sec = str(avg_game_time%60)
-        if len(avg_game_time_sec) == 1:
-            avg_game_time_sec = '0' + avg_game_time_sec
-
-        return_str = str(avg_game_time_min) + ':' + avg_game_time_sec
-        return return_str
-
-    def calc_number_average(self, prev_total, prev_x, new_value):
-        avg_game_time = int((prev_total * prev_x) + new_value) / (prev_total + 1)
-        return int(avg_game_time)
 
     #
     # High Scores
     #
 
     def create_high_score_categories(self):
-        classic_category = HighScoreCategory()
-        classic_category.game_data_key = 'ClassicHighScoreData'
-
         blocks_category = self.create_high_score_category('BlocksHighScoreData', 'Block Champ', 'num_blocks', ' block')
         inner_loops_category = self.create_high_score_category('InnerLoopsHighScoreData', 'Inner Loop Champ', 'best_inner_loops', ' loop')
         outer_loops_category = self.create_high_score_category('OuterLoopsHighScoreData', 'Outer Loop Champ', 'best_outer_loops', ' loop')
@@ -402,7 +288,8 @@ class JD2Game(SkeletonGame):
         supergame_category.game_data_key = 'SuperGameHighScoreData'
         supergame_category.titles = ['SuperGame Champion', 'SuperGame High Score #1', 'SuperGame High Score #2', 'SuperGame High Score #3', 'SuperGame High Score #4']
 
-        self.highscore_categories = [classic_category, blocks_category, inner_loops_category, outer_loops_category]
+        classic_category = self.highscore_categories[0]
+        self.highscore_categories += [classic_category, blocks_category, inner_loops_category, outer_loops_category]
         self.supergame_highscore_categories = [supergame_category, blocks_category, inner_loops_category, outer_loops_category]
         self.all_highscore_categories = [classic_category, supergame_category, blocks_category, inner_loops_category, outer_loops_category]
 
@@ -415,85 +302,25 @@ class JD2Game(SkeletonGame):
         category.score_suffix_plural = suffix + 's'
         return category
 
-    def highscore_entry_ready_to_prompt(self, mode, prompt):
-        self.sound.play_voice('high score')
-        banner_mode = Mode(game=self, priority=8)
-        markup = MarkupFrameGenerator()
-        text = '\n#GREAT JOB#\n[%s]' % (prompt.left.upper()) # we know that the left is the player name
-        frame = markup.frame_for_markup(markup=text, y_offset=0)
-        banner_mode.layer = ScriptedLayer(width=128, height=32, script=[{'seconds':3.0, 'layer':FrameLayer(frame=frame)}])
-        banner_mode.layer.on_complete = lambda: self.highscore_banner_complete(banner_mode=banner_mode, highscore_entry_mode=mode)
-        self.modes.add(banner_mode)
-
-    def highscore_banner_complete(self, banner_mode, highscore_entry_mode):
-        self.remove_modes([banner_mode])
-        self.update_lamps()
-        highscore_entry_mode.prompt()
-
-    def highscore_entry_finished(self, mode):
-        self.remove_modes([mode])
-        self.modes.add(self.attract_mode)
-        self.attract_mode.game_over_display()
-        self.update_lamps()
-
-        # Handle game stats.
-        for i in range(0, len(self.players)):
-            game_time = self.get_game_time(i)
-            self.game_data['Audits']['Avg Game Time'] = self.calc_time_average_string(self.game_data['Audits']['Games Played'], self.game_data['Audits']['Avg Game Time'], game_time)
-            self.game_data['Audits']['Avg Score'] = self.calc_number_average(self.game_data['Audits']['Games Played'], self.game_data['Audits']['Avg Score'], self.players[i].score)
-            self.game_data['Audits']['Games Played'] += 1
-
-        self.save_game_data('game_data.yaml')
+    def create_entry_sequence_manager(self):
+        categories = self.supergame_highscore_categories if self.supergame else self.highscore_categories
+        return JDEntrySequenceManager(game=self, priority=2, categories=categories)
 
     def format_points(self, points):
         # disregard the locale, always insert commas between groups of 3 digits
         return '00' if points == 0 else '{:,}'.format(points)
 
-    #
-    # Service Mode
-    #
-
-    def start_service_mode(self):
-        """ remove all existing modes that are running
-            stop music, stop lamp shows, disable flippers
-            then add the service mode.
-        """
-
-        self.stop()
-
-        self.lampctrl.stop_show()
-        for lamp in self.lamps:
-            lamp.disable()
-
-        self.enable_flippers(False)
-        self.modes.add(self.service_mode)
-
-    def service_mode_ended(self):
-        self.reset()
-        self.update_lamps()
+    def get_highscore_data(self):
+        # return data for both regulation play and supergame
+        return get_highscore_data(self.all_highscore_categories)
 
     #
     # Sound
     #
 
     def stop_all_sounds(self):
-        # workaround for pyprocgame's SoundController lack of functionality
-        #for key in self.sound.sounds:
-        #    self.sound.sounds[key][0].stop()
-        self.sound.voice_end_time = 0
-
-    def volume_down(self):
-        # implementing volume_down()/volume_up() ourselves allows more than 10 steps
-        volume = round(self.sound.volume * self.volume_scale)
-        volume = max(0, volume - self.volume_increments)
-        self.sound.set_volume(volume / self.volume_scale)
-        self.set_status('VOLUME DOWN: ' + str(int(volume)), scroll=False)
-
-    def volume_up(self):
-        volume = round(self.sound.volume * self.volume_scale)
-        volume = min(self.volume_scale, volume + self.volume_increments)
-        self.sound.set_volume(volume / self.volume_scale)
-        self.set_status('VOLUME UP: ' + str(int(volume)), scroll=False)
+        for key in self.sound.sounds:
+            self.sound.stop(key)
 
     #
     # lamps
@@ -517,22 +344,12 @@ class JD2Game(SkeletonGame):
             self.lamps[lamp].disable()
 
     def disable_all_lights(self):
-        for lamp in self.lamps:
-            lamp.disable()
+        self.disableAllLamps()
 
         # Disable all flashers
-        for coil in self.coils:
-            if coil.name.startswith('flasher'):
-                coil.disable()
-
-
-def main():
-    game = None
-    try:
-        game = JD2Game()
-        game.run_loop()
-    finally:
-        del game
+        for flasher in self.flashers:
+            flasher.disable()
 
 if __name__ == '__main__':
-    main()
+    # change T2Game to be the class defined in this file!
+    run_proc_game(JD2Game)

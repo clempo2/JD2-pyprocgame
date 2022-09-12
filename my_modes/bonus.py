@@ -1,11 +1,13 @@
 from procgame.game import AdvancedMode
+from procgame.sound import PLAY_FORCE
 
 class Bonus(AdvancedMode):
     """Display end of ball bonus"""
 
     def mode_started(self):
         self.game.stop_all_sounds()
-        self.game.sound.play_voice('drain')
+        self.game.sound.fadeout_music()
+        self.game.sound.play_voice('drain', PLAY_FORCE)
         self.game.base_play.display('Bonus')
         self.game.set_status(None)
         self.index = -1
