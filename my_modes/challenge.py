@@ -68,7 +68,7 @@ class UltimateChallenge(AdvancedMode):
             self.continue_after_drain = False
             self.next_level()
             # cancel the event, including its completion function
-            self.event_complete_fn = None
+            self.game.event_complete_fn = None
             return (0, True)
 
     def next_level(self):

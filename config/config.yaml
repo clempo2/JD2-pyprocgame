@@ -15,7 +15,7 @@ default_modes:  # these are the default provided modes by SkeletonGame; turn the
     bonus_tally: False
     osc_input: False
     service_mode: False
-    tilt_mode: False
+    tilt_mode: True
     ball_search: True
     ball_search_delay: 15
 

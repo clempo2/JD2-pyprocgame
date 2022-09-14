@@ -15,10 +15,8 @@ from my_modes.ballsearch import JDBallSearch
 from my_modes.base import Base
 from my_modes.baseplay import BasePlay
 from my_modes.deadworld import Deadworld, DeadworldTest
-#TODO from my_modes.drain import DrainMode
 from my_modes.initials import JDEntrySequenceManager
 from my_modes.switchmonitor import JDSwitchMonitor
-#TODO from my_modes.tilt import SlamTilted, Tilted
 
 logging.basicConfig(level=logging.ERROR, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 
@@ -54,15 +52,14 @@ class JD2Game(SkeletonGame):
         # Create basic modes
         self.base = Base(self, 1)
         self.attract_mode = Attract(self, 2)
-        #TODO self.drain_mode = DrainMode(self, 2)
         self.base_play = BasePlay(self, 3)
         self.deadworld = Deadworld(self, 20)
-        #TODO self.tilted_mode = Tilted(self, 33000)
         deadworld_test = DeadworldTest(self, 200, self.fonts['settings-font-small'])
         self.service_mode = ServiceMode(self, 99, self.fonts['settings-font-small'], extra_tests=[deadworld_test])
 
         self.reset()
 
+    # TODO
     # override load_config to allow pygame key names and pygame numeric keys in the key_map
     def load_config(self, path):
         # Ignore pylint warning on next line, we by-pass immediate superclass intentionally
@@ -126,10 +123,6 @@ class JD2Game(SkeletonGame):
                          reset_switches=self.ballsearch_resetSwitches, \
                          stop_switches=self.ballsearch_stopSwitches, \
                          special_handler_modes=[])
-
-    def TODO_stop(self):
-        self.disable_game()
-        self.remove_all_modes()
 
     # Empty callback
     def no_op_callback(self):
@@ -210,11 +203,8 @@ class JD2Game(SkeletonGame):
             # warning: must pass a real callback since passing None preserves the previous callback
             self.trough.launch_balls(balls_to_launch, self.no_op_callback)
 
-    #TODO
-    #def ball_ended(self):
-    #    self.remove_modes([self.tilted_mode])
-
     def disable_ball_search(self):
+        #TODO
         # workaround for a bug in pyprocgame's BallSearch.disable
         self.ball_search.disable()
         self.ball_search.cancel_delayed(['ball_search_countdown', 'ball_search_coil1'])
@@ -233,9 +223,6 @@ class JD2Game(SkeletonGame):
             # cancel all delayed handlers
             mode._Mode__delayed = []
 
-    def TODO_remove_all_modes(self):
-        self.remove_modes(self.modes[:])
-
     def send_event(self, event):
         for mode in self.modes[:]:
             handler = getattr(mode, event, None)
@@ -244,36 +231,6 @@ class JD2Game(SkeletonGame):
                 if ret:
                     # skip lower priority modes
                     return ret
-
-    #
-    # Tilt
-    #
-
-    def evt_tilt_warning(self):
-        self.sound.play('tilt warning')
-        self.set_status('WARNING')
-
-    def TODO_slam_tilted(self):
-        self.stop()
-        #TODO self.modes.add(SlamTilted(self, 33000))
-
-    def TODO_tilted(self):
-        #TODO self.disable_game()
-        # remove all game play, drain_mode will continue to monitor ball drains
-        #self.remove_modes([self.base_play])
-        #self.modes.add(self.tilted_mode)
-        #self.game.update_lamps()
-        pass # TODO
-
-    def TODO_disable_game(self):
-        # Make sure balls will drain and won't be saved
-        self.enable_flippers(enable=False)
-        if hasattr(self, 'ball_save'):
-            self.ball_save.disable()
-        self.disable_all_lights()
-        self.sound.stop()
-        self.sound.stop_music()
-        self.set_status(None)
 
     #
     # High Scores

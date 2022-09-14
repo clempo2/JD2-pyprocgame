@@ -7,6 +7,30 @@ class Base(AdvancedMode):
     def __init__(self, game, priority):
         super(Base, self).__init__(game, priority, AdvancedMode.System)
 
+    def evt_volume_down(self, volume):
+        self.set_status('VOLUME DOWN: ' + str(int(volume)), scroll=False)
+
+    def evt_volume_up(self, volume):
+        self.set_status('VOLUME UP: ' + str(int(volume)), scroll=False)
+
+    def evt_tilt_warning(self, unused_times):
+        self.game.sound.play('tilt warning')
+        self.game.set_status('WARNING')
+
+    def evt_tilt(self, slam_tilt):
+        self.game.sound.fadeout_music()
+        self.game.stop_all_sounds()
+        # remove all scoring modes and shut up boring mode
+        self.game.remove_modes([self.game.base_play])
+
+        # slam tilt stays quiet
+        if not slam_tilt:
+            self.game.sound.play('tilt')
+
+        tilt_msg = 'SLAM TILT' if slam_tilt else 'TILT'
+        text_layer = TextLayer(128/2, 7, self.game.fonts['large'], 'center', opaque=True)
+        self.game.tilted_mode.layer = text_layer.set_text(tilt_msg)
+
     def evt_balls_missing(self):
         self.game.set_status('BALL MISSING')
         self.game.deadworld.perform_ball_search()
