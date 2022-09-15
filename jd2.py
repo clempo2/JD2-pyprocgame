@@ -1,10 +1,11 @@
+from copy import copy
 from math import ceil
 import logging
 import os
 import pygame.locals
 import pinproc
 from procgame.config import value_for_key_path
-from procgame.dmd import font_named
+from procgame.dmd import font_named, GroupedLayer
 from procgame.game import BasicGame, SkeletonGame
 from procgame.game.skeletongame import run_proc_game
 from procgame.highscore import HighScoreCategory, get_highscore_data
@@ -270,6 +271,11 @@ class JD2Game(SkeletonGame):
     def get_highscore_data(self):
         # return data for both regulation play and supergame
         return get_highscore_data(self.all_highscore_categories)
+
+    def generate_score_layer(self):
+        self.score_display.update_layer()
+        layers = [copy(x) for x in self.score_display.layer.layers]
+        return GroupedLayer(self.dmd.width, self.dmd.height, layers, opaque=True)
 
     #
     # Sound

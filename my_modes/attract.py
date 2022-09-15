@@ -1,4 +1,3 @@
-from copy import copy
 from random import shuffle
 from procgame.dmd import FrameLayer, GroupedLayer, MarkupFrameGenerator, PanningLayer, PushTransition, ScriptedLayer, TextLayer
 from procgame.highscore import generate_highscore_frames
@@ -13,10 +12,8 @@ class Attract(CoilEjectMode):
         self.lampshow_keys = ['attract0', 'attract1']
 
         font_large = self.game.fonts['large']
-
         self.gun_layer = self.game.animations['gun_powerup']
-
-        self.update_score_layer()        
+        self.score_layer = self.game.generate_score_layer()
 
         jd_text = TextLayer(128/2, 7, font_large, 'center').set_text('Judge Dredd')
         self.jd_layer = GroupedLayer(width=128, height=32, layers=[jd_text], fill_color=(0,0,0,255), opaque=True)
@@ -126,11 +123,6 @@ Collect a multiball jackpot
         self.game.lamps.startButton.enable()
         self.game.lamps.superGame.enable()
         self.game.lampctrl.stop_show()
-
-    def update_score_layer(self):
-        self.game.score_display.update_layer()
-        layers = [copy(x) for x in self.game.score_display.layer.layers]
-        self.score_layer = GroupedLayer(self.game.dmd.width, self.game.dmd.height, layers, opaque=True)
 
     def display(self):
         hs_frames = generate_highscore_frames(self.game.all_highscore_categories, self.game, self.font_plain, self.font_bold, self.game.dmd_width, self.game.dmd_height)

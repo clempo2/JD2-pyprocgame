@@ -7,6 +7,9 @@ class Base(AdvancedMode):
     def __init__(self, game, priority):
         super(Base, self).__init__(game, priority, AdvancedMode.System)
 
+    def mode_started(self):
+        self.layer = None
+
     def evt_volume_down(self, volume):
         self.set_status('VOLUME DOWN: ' + str(int(volume)), scroll=False)
 
@@ -36,7 +39,12 @@ class Base(AdvancedMode):
         self.game.deadworld.perform_ball_search()
 
     def evt_game_ending(self):
-        self.game.attract_mode.update_score_layer()
+        self.layer = self.game.generate_score_layer()
+        self.game.attract_mode.score_layer = self.layer
+        return 2
+
+    def evt_game_ended(self):
+        score_layer = self.layer
         font_large = self.game.fonts['large']
         longwalk_layer = self.game.animations['longwalk']
         game_over_layer = TextLayer(128/2, 7, font_large, 'center', opaque=True).set_text('Game Over')
@@ -44,10 +52,8 @@ class Base(AdvancedMode):
         script = [
             {'seconds':3.4, 'layer':longwalk_layer}, # stop this anim early, Game Over font does not fit rest of the game
             {'seconds':2.5, 'layer':game_over_layer},
+            {'seconds':2, 'layer':score_layer}
         ]
 
         self.layer = ScriptedLayer(width=128, height=32, script=script, hold=True, opaque=True)
         return self.layer.duration()
-
-    def evt_game_ended(self):
-        self.layer = None
