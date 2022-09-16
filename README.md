@@ -2,6 +2,10 @@
 
 JD2-pyprocgame is new software for the [Judge Dredd](https://www.ipdb.org/machine.cgi?id=1322) pinball machine written against [pyprocgame](http://pyprocgame.pindev.org/) running on a [P-ROC](https://www.multimorphic.com/store/circuit-boards/p-roc/) controller. It is a more polished version of [JD-pyprocgame](https://github.com/preble/JD-pyprocgame) by Gerry Stellenberg et al. The goal is to achieve near commercial quality while minimizing the amount of code. The rules are nearly identical to JD-pyprocgame with minimal changes dictated by bug fixing.
 
+## Status
+
+JD2-pyprocgame is mostly mature. Visit [JD2-SkeletonGame](https://github.com/clempo2/JD2-pyprocgame/tree/skel) for the continuation of this project.
+
 ## Installation
 
 - See the P-ROC Connection Diagram document in the doc directory for visual instructions how to install the P-ROC board in the Judge Dredd machine.  
