@@ -179,7 +179,6 @@ class BasePlay(AdvancedMode):
                 self.game.sound.stop_music()
                 self.play_background_music()
 
-
     #
     # Shooter Lanes
     #
@@ -226,8 +225,8 @@ class BasePlay(AdvancedMode):
         self.game.send_event('event_shooterL_active_500ms')
 
     def event_shooterL_active_500ms(self):
-        pulse_min = self.game.user_settings['Coil Strength']['ShooterL Min']
-        pulse_max = self.game.user_settings['Coil Strength']['ShooterL Max']
+        pulse_min = self.game.user_settings['Coil Strength']['shooterL Min']
+        pulse_max = self.game.user_settings['Coil Strength']['shooterL Max']
         self.game.coils.shooterL.pulse(randint(pulse_min, pulse_max))
 
     def sw_shooterL_inactive_for_200ms(self, sw):

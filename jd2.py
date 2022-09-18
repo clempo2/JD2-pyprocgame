@@ -40,8 +40,7 @@ class JD2Game(SkeletonGame):
     def __init__(self):
         super(JD2Game, self).__init__('config/JD.yaml', curr_file_path)
 
-        self.ticked = False
-        self.logging_enabled = False
+        self.reset_pending = False
         self.lamp_schedules = {'slow':0x00ff00ff, 'medium':0x0f0f0f0f, 'fast':0x55555555, 'on':0xffffffff, 'off':0x00000000}
         self.flashers = [x for x in self.coils if x.name.startswith('flasher')]
 
@@ -102,6 +101,15 @@ class JD2Game(SkeletonGame):
 
         self.base_play.reset()
         self.start_attract_mode()
+
+    def tick(self):
+        super(JD2Game, self).tick()
+        # it is safer to call reset here than within a mode called by the run loop 
+        if self.reset_pending:
+            self.reset_pending = False
+            self.sound.fadeout_music()
+            self.sound.stop_all()
+            self.reset()
 
     def load_settings_and_stats(self):
         super(JD2Game, self).load_settings_and_stats()
@@ -280,15 +288,7 @@ class JD2Game(SkeletonGame):
 
     def generate_score_layer(self):
         frame = self.score_display.layer.next_frame()
-        return FrameLayer(frame=frame, opaque=True)
-
-    #
-    # Sound
-    #
-
-    def stop_all_sounds(self):
-        for key in self.sound.sounds:
-            self.sound.stop(key)
+        return FrameLayer(frame=frame.copy(), opaque=True)
 
     #
     # lamps
