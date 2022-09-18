@@ -1,5 +1,5 @@
 Machine: {Balls Per Game: 3, Max extra balls per game: 99, Max extra balls lit: 99,
-  Number of tilt warnings: 3, Allow restarts: true, Deadworld Mod Installed: false}
+  Number of tilt warnings: 2, Allow restarts: true, Deadworld Mod Installed: false}
 Coil Strength: {flipperLwRMain: 45, flipperLwLMain: 45, flipperUpRMain: 30, flipperUpLMain: 30,
   popperL: 25, popperR: 30, resetDropTarget: 30, knocker: 50, shooterR: 50, shooterL Min: 15,
   shooterL Max: 30, tripDropTarget: 40, trough: 30, slingL: 30, slingR: 30}
