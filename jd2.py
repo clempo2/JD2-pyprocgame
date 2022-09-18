@@ -1,8 +1,10 @@
-from math import ceil
+from collections import OrderedDict
 import logging
+from math import ceil
 import os
 import pygame.locals
 import pinproc
+import yaml
 from procgame.config import value_for_key_path
 from procgame.dmd import font_named, FrameLayer
 from procgame.game import BasicGame, SkeletonGame
@@ -317,5 +319,11 @@ class JD2Game(SkeletonGame):
             flasher.disable()
 
 if __name__ == '__main__':
+    # preserve order when reading YAML files
+    yaml.add_constructor(yaml.resolver.BaseResolver.DEFAULT_MAPPING_TAG,
+        lambda loader, node: OrderedDict(loader.construct_pairs(node)))
+    yaml.add_representer(OrderedDict,
+        lambda dumper, data: dumper.represent_dict(data.iteritems())) 
+
     # change T2Game to be the class defined in this file!
     run_proc_game(JD2Game)
