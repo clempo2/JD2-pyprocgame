@@ -71,6 +71,7 @@ class TimedMode(Timer):
         intro_page_layer = GroupedLayer(128, 32, [intro_name_layer, intro_instruct_layer])
         script = [{'seconds':1, 'layer':intro_name_layer}, {'seconds':3, 'layer':intro_page_layer}]
         self.intro_layer = ScriptedLayer(width=128, height=32, script=script, hold=True, opaque=True)
+        self.intro_duration = self.intro_layer.duration() - 1.0/30.0
 
         self.countdown_layer = TextLayer(127, 1, font_small, 'right')
         self.name_layer = TextLayer(1, 1, font_small, 'left').set_text(name)
@@ -81,23 +82,16 @@ class TimedMode(Timer):
         self.mode_layer = GroupedLayer(128, 32, layers, opaque=True)
 
     def mode_started(self):
-        intro = self.game.base_play.intro 
-        intro.priority = self.priority + 1
-        intro.setup(self.intro_layer)
-        intro.exit_callback = self.intro_ended
-
-        if intro.is_started():
-            print "intro already in mode queue"
-        self.game.modes.add(intro)
+        self.intro_layer.reset()
+        self.layer = self.intro_layer
+        self.delay(name='intro_ended', event_type=None, delay=self.intro_duration, handler=self.intro_ended)
         self.num_shots = 0
         self.play_music()
 
     def mode_stopped(self):
-        self.game.remove_modes([self.game.base_play.intro])
         self.stop_timer()
 
     def intro_ended(self):
-        self.game.remove_modes([self.game.base_play.intro])
         self.layer = self.mode_layer
         if self.mode_time > 0:
             self.start_timer(self.mode_time)

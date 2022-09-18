@@ -1,12 +1,11 @@
 from random import randint
-from procgame.dmd import AnimatedLayer, GroupedLayer, ScriptedLayer, TextLayer
+from procgame.dmd import AnimatedLayer, GroupedLayer, TextLayer
 from procgame.game import AdvancedMode
 from procgame.modes import Replay
 from boring import Boring
 from bonus import Bonus
 from challenge import UltimateChallenge
 from combos import Combos
-from intro import Introduction
 from regular import RegularPlay
 from status import StatusReport
 
@@ -20,7 +19,6 @@ class BasePlay(AdvancedMode):
         self.boring = Boring(self.game, priority + 6)
         self.combos = Combos(self.game, priority + 25)
         self.status_report = StatusReport(self.game, priority + 26)
-        self.intro = Introduction(self.game, priority + 1)
         self.regular_play = RegularPlay(self.game, priority + 6)
 
         self.ultimate_challenge = UltimateChallenge(game, priority + 6)

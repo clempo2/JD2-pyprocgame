@@ -1,11 +1,10 @@
-from copy import copy
 from math import ceil
 import logging
 import os
 import pygame.locals
 import pinproc
 from procgame.config import value_for_key_path
-from procgame.dmd import font_named, GroupedLayer
+from procgame.dmd import font_named, FrameLayer
 from procgame.game import BasicGame, SkeletonGame
 from procgame.game.skeletongame import run_proc_game
 from procgame.highscore import HighScoreCategory, get_highscore_data
@@ -210,6 +209,11 @@ class JD2Game(SkeletonGame):
         self.ball_search.disable()
         self.ball_search.cancel_delayed(['ball_search_countdown', 'ball_search_coil1'])
 
+    def slam_tilt_complete(self):
+        self.b_slam_tilted = False
+        self.game_tilted = False
+        self.reset()
+
     #
     # Modes
     #
@@ -273,9 +277,8 @@ class JD2Game(SkeletonGame):
         return get_highscore_data(self.all_highscore_categories)
 
     def generate_score_layer(self):
-        self.score_display.update_layer()
-        layers = [copy(x) for x in self.score_display.layer.layers]
-        return GroupedLayer(self.dmd.width, self.dmd.height, layers, opaque=True)
+        frame = self.score_display.layer.next_frame()
+        return FrameLayer(frame=frame, opaque=True)
 
     #
     # Sound

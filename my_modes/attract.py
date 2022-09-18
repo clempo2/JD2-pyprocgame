@@ -1,10 +1,10 @@
 from random import shuffle
 from procgame.dmd import FrameLayer, GroupedLayer, MarkupFrameGenerator, PanningLayer, PushTransition, ScriptedLayer, TextLayer
+from procgame.game import AdvancedMode
 from procgame.highscore import generate_highscore_frames
 from procgame.sound import PLAY_NOTBUSY
-from tilt import CoilEjectMode
 
-class Attract(CoilEjectMode):
+class Attract(AdvancedMode):
     """Attract mode and start buttons"""
 
     def __init__(self, game, priority):
@@ -125,8 +125,11 @@ Collect a multiball jackpot
         self.game.lampctrl.stop_show()
 
     def display(self):
+        self.showing_instructions = False
         hs_frames = generate_highscore_frames(self.game.all_highscore_categories, self.game, self.font_plain, self.font_bold, self.game.dmd_width, self.game.dmd_height)
         hs_script = [{'seconds':1.25, 'layer':FrameLayer(frame=f)} for f in hs_frames]
+
+        self.score_layer_index = 2  # index of self.score_layer in script
 
         script = \
             [{'seconds':3.0, 'layer':self.jd_layer},
@@ -145,12 +148,13 @@ Collect a multiball jackpot
             {'seconds':3.0, 'layer':self.judges_layer}]
 
         self.layer = ScriptedLayer(width=128, height=32, script=script, opaque=True)
-        #TODO self.layer.reset()
+        self.layer.reset()
 
-    def instruction_display(self):
+    def display_instructions(self):
+        self.showing_instructions = True
         script = [{'seconds':22.5, 'layer':self.instruct_layer}]
         self.layer = ScriptedLayer(width=128, height=32, script=script, hold=True, opaque=True)
-        #TODO self.layer.reset()
+        self.layer.reset()
         self.layer.on_complete = self.display
 
     def button_layer(self, button_text, play_text, blink_frame=None, direction=None):
@@ -176,7 +180,22 @@ Collect a multiball jackpot
         self.layer.force_next(forward=True)
 
     def sw_flipperLwL_active(self, sw):
-        self.instruction_display()
+        if not self.showing_instructions:
+            self.display_instructions()
 
     def sw_flipperLwR_active(self, sw):
-        self.instruction_display()
+        # display the final scores
+        self.display() # remove instructions if applicable and reset ScriptedLayer
+        self.layer.script_index = self.score_layer_index
+
+    def sw_popperL_active_for_300ms(self, sw):
+        self.game.coils.popperL.pulse()
+
+    def sw_popperR_active_for_300ms(self, sw):
+        self.game.coils.popperR.pulse()
+
+    def sw_shooterL_active_for_300ms(self, sw):
+        self.game.coils.shooterL.pulse()
+
+    def sw_shooterR_active_for_300ms(self, sw):
+        self.game.coils.shooterR.pulse()
