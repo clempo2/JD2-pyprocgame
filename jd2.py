@@ -183,13 +183,15 @@ class JD2Game(SkeletonGame):
         # We assume the number of balls to save is the number of balls requested by the game,
         # so launch the balls and/or eject from the planet if applicable before calling this method.
         #
-        # Normally, the 2sec grace period is included in the ball save time
+        # The framework consider the 2sec grace period is included in the ball save time
         # as evidenced by the Drain Shield lamp turning off 2sec before the timer expires.
         # This is apparent when looking at the countdown timer of a timed mode and looks like a bug.
         # By adding 2sec, we move the grace period after the ball save time,
         # and the Drain Shield light will now turn off at the time given.
         # That's the real definition of a grace period in my book.
-        self.ball_save.start(self.num_balls_requested(), 2 + time, now, allow_multiple_saves)
+
+        if time > 0:
+            self.ball_save.start(self.num_balls_requested(), 2 + time, now, allow_multiple_saves)
 
     def num_balls_requested(self):
         # Return what the game considers is the number of balls in play.

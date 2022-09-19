@@ -23,8 +23,11 @@ class Base(AdvancedMode):
     def evt_tilt(self, slam_tilt):
         self.game.fadeout_music()
         self.game.sound.stop_all()
+
         # remove all scoring modes and shut up boring mode
         self.game.remove_modes([self.game.base_play])
+
+        self.game.setPlayerState('hold_bonus_x', False)
 
         # slam tilt stays quiet
         if not slam_tilt:
