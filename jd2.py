@@ -44,6 +44,9 @@ class JD2Game(SkeletonGame):
         self.lamp_schedules = {'slow':0x00ff00ff, 'medium':0x0f0f0f0f, 'fast':0x55555555, 'on':0xffffffff, 'off':0x00000000}
         self.flashers = [x for x in self.coils if x.name.startswith('flasher')]
 
+        # shorten time to launch balls in multiball
+        self.trough.inactive_shooter_time = 0.95
+
         # shorten Blackout animation by removing last few frames
         self.animations['blackout'].frames = self.animations['blackout'].frames[:-2]
 
@@ -215,13 +218,8 @@ class JD2Game(SkeletonGame):
             # warning: must pass a real callback since passing None preserves the previous callback
             self.trough.launch_balls(balls_to_launch, self.no_op_callback)
 
-    def disable_ball_search(self):
-        #TODO
-        # workaround for a bug in pyprocgame's BallSearch.disable
-        self.ball_search.disable()
-        self.ball_search.cancel_delayed(['ball_search_countdown', 'ball_search_coil1'])
-
     def slam_tilt_complete(self):
+        # work-around to avoid calling end_ball() and end_game() when the game is tilted
         self.b_slam_tilted = False
         self.game_tilted = False
         self.reset()

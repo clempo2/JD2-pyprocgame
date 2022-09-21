@@ -424,9 +424,8 @@ class Impersonator(ChainFeature):
         super(Impersonator, self).mode_started()
         self.sound_active = False
         self.start_using_drops()
-        time = self.game.sound.play('bad impersonator')
-        #TODO
-        time = 2
+        self.game.sound.play('bad impersonator')
+        time = 2 # this is an estimate of how long the 'bad impersonator' sound will play
         self.delay(name='song_restart', event_type=None, delay=time+0.5, handler=self.song_restart)
         self.delay(name='boo_restart', event_type=None, delay=time+4, handler=self.boo_restart)
         self.delay(name='shutup_restart', event_type=None, delay=time+3, handler=self.shutup_restart)

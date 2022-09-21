@@ -136,6 +136,4 @@ class MissileAwardMode(Timer):
         self.game.drive_lamp('airRaid', style)
 
     def eject_ball(self):
-        pulse_min = self.game.user_settings['Coil Strength']['shooterL Min']
-        pulse_max = self.game.user_settings['Coil Strength']['shooterL Max']
-        self.game.coils.shooterL.pulse(randint(pulse_min, pulse_max))
+        self.game.base_play.shooterL_variable_pulse()

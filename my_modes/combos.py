@@ -88,8 +88,6 @@ class Combos(AdvancedMode):
             self.game.drive_perp_lamp('perp4', 'slow')
         elif self.outer_loop_active:
             self.game.drive_perp_lamp('perp4', 'medium')
-        if self.inner_loop_active:
-            self.game.drive_perp_lamp('perp2', 'medium')
 
         if self.inner_loop_active:
             self.game.drive_perp_lamp('perp2', 'medium')

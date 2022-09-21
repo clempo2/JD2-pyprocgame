@@ -81,7 +81,7 @@ class SlideTransition(LayerTransitionBase):
 
 
 class DontMoveTransition(LayerTransitionBase):
-    """A transition that does not move, this is a poor man's delay handler for use in non-mode classes"""
+    """A transition that does not move, this can be useful within a GroupedTransition"""
     def transition_frame(self, from_frame, to_frame):
         return to_frame
 

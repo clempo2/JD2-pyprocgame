@@ -188,7 +188,6 @@ class BasePlay(AdvancedMode):
         self.auto_plunge = True
 
         if self.ball_starting:
-            # TODO, duplicate of a standard event??
             self.game.send_event('event_ball_started')
             # send the event only once per ball
             self.ball_starting = False
@@ -225,9 +224,7 @@ class BasePlay(AdvancedMode):
         self.game.send_event('event_shooterL_active_500ms')
 
     def event_shooterL_active_500ms(self):
-        pulse_min = self.game.user_settings['Coil Strength']['shooterL Min']
-        pulse_max = self.game.user_settings['Coil Strength']['shooterL Max']
-        self.game.coils.shooterL.pulse(randint(pulse_min, pulse_max))
+        self.shooterL_variable_pulse()
 
     def sw_shooterL_inactive_for_200ms(self, sw):
         self.game.sound.play('shooterL_launch')
@@ -261,10 +258,10 @@ class BasePlay(AdvancedMode):
         extra_balls_lit = self.game.getPlayerState('extra_balls_lit')
         if extra_balls_lit:
             self.game.setPlayerState('extra_balls_lit', extra_balls_lit - 1)
-            self.display('Extra Ball')
             self.extra_ball()
 
-    def extra_ball(self):
+    def extra_ball(self, msg='Extra Ball'):
+        self.display(msg)
         player = self.game.current_player()
         player.extra_balls += 1
         self.total_extra_balls += 1
@@ -282,12 +279,11 @@ class BasePlay(AdvancedMode):
         if replay_award == 'Extra Ball':
             max_extra_balls_per_game = self.game.user_settings['Machine']['Max extra balls per game']
             if self.total_extra_balls < max_extra_balls_per_game:
-                self.display('Replay')
                 extra_balls_lit = self.game.getPlayerState('extra_balls_lit')
                 if extra_balls_lit + self.total_extra_balls == max_extra_balls_per_game:
                     # already maximum allocated, convert a lit extra ball to an extra ball instead
                     self.game.setPlayerState('extra_balls_lit', extra_balls_lit - 1)
-                self.extra_ball()
+                self.extra_ball('Replay')
             else:
                 self.display('Replay Award', 100000)
                 self.game.score(100000)
@@ -412,6 +408,11 @@ class BasePlay(AdvancedMode):
     def delayed_pop(self, coil):
         self.game.coils[coil].pulse()
 
+    def shooterL_variable_pulse(self):
+        pulse_min = self.game.user_settings['Coil Strength']['shooterL Min']
+        pulse_max = self.game.user_settings['Coil Strength']['shooterL Max']
+        self.game.coils.shooterL.pulse(randint(pulse_min, pulse_max))
+
     #
     # Ball Save
     #
@@ -446,7 +447,7 @@ class BasePlay(AdvancedMode):
 
     def bonus_ended(self):
         self.game.remove_modes([self.bonus, self.replay])
-        # resume execution of evt_ball_draining, this will call self.game.end_ball()
+        # resume execution of evt_ball_ending, this will call self.game.end_ball()
         self.force_event_next()
 
 class ModesDisplay(AdvancedMode):
