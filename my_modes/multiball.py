@@ -54,7 +54,7 @@ class Multiball(AdvancedMode):
         player.setState('num_balls_locked', self.num_balls_locked)
         player.setState('num_locks_lit', self.num_locks_lit)
 
-        self.game.remove_modes([self.drops])
+        self.game.modes.remove([self.drops])
 
     def start_multiball(self):
         # start a 3-ball multiball or up to 4 balls when stacked with BlockWar

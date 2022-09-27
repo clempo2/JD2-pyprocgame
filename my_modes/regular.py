@@ -36,11 +36,11 @@ class RegularPlay(AdvancedMode):
     def mode_started(self):
         self.mystery_lit = self.game.getPlayerState('mystery_lit')
         self.state = 'init'
-        self.game.add_modes([self.chain, self.city_blocks, self.multiball, self.missile_award_mode])
+        self.game.modes.add([self.chain, self.city_blocks, self.multiball, self.missile_award_mode])
         self.setup_next_mode()
 
     def mode_stopped(self):
-        self.game.remove_modes([self.chain, self.city_blocks, self.multiball, self.missile_award_mode])
+        self.game.modes.remove([self.chain, self.city_blocks, self.multiball, self.missile_award_mode])
         self.game.setPlayerState('mystery_lit', self.mystery_lit)
 
     #### Debugging tool:
@@ -52,14 +52,14 @@ class RegularPlay(AdvancedMode):
             if self.game.getPlayerState('challenge_mode') < 4:
                 self.game.adjPlayerState('challenge_mode', 1)
         else:
-            self.game.remove_modes([self.chain, self.city_blocks])
+            self.game.modes.remove([self.chain, self.city_blocks])
             self.game.setPlayerState('multiball_jackpot_collected', True)
             self.game.setPlayerState('current_block', self.game.blocks_required)
             self.game.setPlayerState('blocks_complete', True)
             self.game.setPlayerState('chain_complete', True)
             self.game.setPlayerState('modes_remaining', [])
             self.chain.mode = None
-            self.game.add_modes([self.chain, self.city_blocks])
+            self.game.modes.add([self.chain, self.city_blocks])
             self.game.update_lamps()
             self.setup_next_mode()
 
@@ -88,7 +88,7 @@ class RegularPlay(AdvancedMode):
             if self.is_ultimate_challenge_ready():
                 # player needs to shoot the right popper to start the finale
                 self.state = 'challenge_ready'
-                self.game.remove_modes([self.multiball])
+                self.game.modes.remove([self.multiball])
                 self.mystery_lit = False
             elif self.game.getPlayerState('chain_complete'):
                 self.state = 'chain_complete'
@@ -131,7 +131,7 @@ class RegularPlay(AdvancedMode):
             self.state = 'busy'
             self.game.sound.fadeout_music()
             self.game.sound.play_music('multiball', loops=-1)
-            self.game.remove_modes([self.missile_award_mode])
+            self.game.modes.remove([self.missile_award_mode])
             # Light mystery once for free.
             self.mystery_lit = True
             self.game.update_lamps()
@@ -153,7 +153,7 @@ class RegularPlay(AdvancedMode):
                 self.game.getPlayerState('chain_complete'))
 
     def start_ultimate_challenge(self):
-        self.game.remove_modes([self.chain, self.city_blocks, self.multiball, self])
+        self.game.modes.remove([self.chain, self.city_blocks, self.multiball, self])
         self.reset_progress()
         self.game.base_play.start_ultimate_challenge()
         # ultimate challenge updated the lamps

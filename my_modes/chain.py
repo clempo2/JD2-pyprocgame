@@ -56,9 +56,9 @@ class Chain(AdvancedMode):
         player.setState('modes_remaining_ptr', self.modes_remaining_ptr)
 
         if self.mode != None:
-            self.game.remove_modes([self.mode])
+            self.game.modes.remove(self.mode)
             self.game.setPlayerState('chain_active', 0)
-        self.game.remove_modes([self.hurry_up])
+        self.game.modes.remove(self.hurry_up)
 
     def sw_slingL_active(self, sw):
         self.rotate_modes(-1)
@@ -114,7 +114,7 @@ class Chain(AdvancedMode):
 
     # called when the mode has completed or expired but before the hurry up
     def chain_mode_ended(self, success):
-        self.game.remove_modes([self.mode])
+        self.game.modes.remove(self.mode)
 
         if success:
             # mode was completed successfully, start hurry up award
@@ -140,7 +140,7 @@ class Chain(AdvancedMode):
         self.mode = None
         self.game.setPlayerState('chain_active', 0)
 
-        self.game.remove_modes([self.hurry_up])
+        self.game.modes.remove(self.hurry_up)
         self.game.base_play.regular_play.chain_mode_completed()
         self.game.update_lamps()
 

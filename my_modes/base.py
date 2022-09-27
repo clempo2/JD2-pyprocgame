@@ -25,7 +25,7 @@ class Base(AdvancedMode):
         self.game.sound.stop_all()
 
         # remove all scoring modes and shut up boring mode
-        self.game.remove_modes([self.game.base_play])
+        self.game.modes.remove(self.game.base_play)
 
         self.game.setPlayerState('hold_bonus_x', False)
 

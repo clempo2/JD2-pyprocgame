@@ -66,7 +66,7 @@ class BasePlay(AdvancedMode):
         self.auto_plunge = False
 
         # Start modes
-        self.game.add_modes([self.replay])
+        self.game.modes.add(self.replay)
 
         if player.getState('supergame'):
             self.start_ultimate_challenge()
@@ -74,7 +74,7 @@ class BasePlay(AdvancedMode):
             self.game.modes.add(self.regular_play)
 
     def mode_stopped(self):
-        self.game.remove_modes([self.replay, self.boring, self.regular_play, self.ultimate_challenge])
+        self.game.modes.remove([self.replay, self.boring, self.regular_play, self.ultimate_challenge])
         self.game.setPlayerState('total_extra_balls', self.total_extra_balls)
 
     def update_lamps(self):
@@ -296,12 +296,12 @@ class BasePlay(AdvancedMode):
     #
 
     def start_ultimate_challenge(self):
-        self.game.remove_modes([self.regular_play])
+        self.game.modes.remove(self.regular_play)
         self.game.modes.add(self.ultimate_challenge)
         self.game.update_lamps()
 
     def ultimate_challenge_ended(self):
-        self.game.remove_modes([self.ultimate_challenge])
+        self.game.modes.remove(self.ultimate_challenge)
         self.game.modes.add(self.regular_play)
         self.game.update_lamps()
 
@@ -438,15 +438,15 @@ class BasePlay(AdvancedMode):
         self.game.set_status('HOLD BONUS X')
 
     def evt_ball_ending(self, unused):
-        self.game.remove_modes([self.boring, self.combos, self.regular_play, self.ultimate_challenge])
-        self.game.add_modes([self.bonus])
+        self.game.modes.remove([self.boring, self.combos, self.regular_play, self.ultimate_challenge])
+        self.game.modes.add(self.bonus)
         self.game.update_lamps()
         self.game.deadworld.stop_spinning()
         # delay the event indefinitely while the bonus mode is playing
         return (-1, True)
 
     def bonus_ended(self):
-        self.game.remove_modes([self.bonus, self.replay])
+        self.game.modes.remove([self.bonus, self.replay])
         # resume execution of evt_ball_ending, this will call self.game.end_ball()
         self.force_event_next()
 

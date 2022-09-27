@@ -35,7 +35,7 @@ class UltimateChallenge(AdvancedMode):
     def mode_stopped(self):
         # when Celebration was awarded, the next challenge starts with the first dark judge
         self.game.setPlayerState('challenge_mode', self.active_mode if self.active_mode < 4 else 0)
-        self.game.remove_modes([self.mode_list[self.active_mode]])
+        self.game.modes.remove(self.mode_list[self.active_mode])
 
     def event_ball_started(self):
         # supergame starting ball with an ultimate challenge mode
@@ -73,7 +73,7 @@ class UltimateChallenge(AdvancedMode):
 
     def next_level(self):
         # all balls have intentionally drained, move to the next mode
-        self.game.remove_modes([self.mode_list[self.active_mode]])
+        self.game.modes.remove(self.mode_list[self.active_mode])
         self.active_mode += 1
         # keep count of challenge modes current for status mode
         self.game.setPlayerState('challenge_mode', self.active_mode)
@@ -81,7 +81,7 @@ class UltimateChallenge(AdvancedMode):
 
     def end_challenge(self):
         # go back to regular play after Celebration
-        self.game.remove_modes([self])
+        self.game.modes.remove(self)
         self.game.update_lamps()
         self.exit_callback()
 

@@ -27,7 +27,7 @@ class JDEntrySequenceManager(EntrySequenceManager):
 
     def banner_complete(self):
         self.game.sound.play_music('ball_launch', loops=-1)
-        self.game.remove_modes([self.banner_mode])
+        self.game.modes.remove([self.banner_mode])
         self.force_event_next()
 
 

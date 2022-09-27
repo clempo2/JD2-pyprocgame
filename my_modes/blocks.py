@@ -57,7 +57,7 @@ class CityBlocks(AdvancedMode):
         self.start_city_block()
 
     def mode_stopped(self):
-        self.game.remove_modes([self.city_block, self.block_war])
+        self.game.modes.remove([self.city_block, self.block_war])
 
     def start_city_block(self):
         if self.game.getPlayerState('current_block') < self.game.blocks_required:
@@ -65,13 +65,13 @@ class CityBlocks(AdvancedMode):
             self.game.update_lamps()
 
     def city_blocks_completed(self):
-        self.game.remove_modes([self.city_block])
+        self.game.modes.remove(self.city_block)
         self.game.setPlayerState('blocks_complete', True)
         self.game.base_play.regular_play.city_blocks_completed()
         # lamps were updated by city_blocks_completed()
 
     def start_block_war(self):
-        self.game.remove_modes([self.city_block])
+        self.game.modes.remove(self.city_block)
         self.start_multiball_callback()
         # launch another ball for a 2 ball multiball, or up to 4 balls when stacked with Deadworld multiball
         self.game.launch_balls(1)
@@ -82,7 +82,7 @@ class CityBlocks(AdvancedMode):
         self.game.update_lamps()
 
     def end_block_war(self):
-        self.game.remove_modes([self.block_war])
+        self.game.modes.remove(self.block_war)
         self.end_multiball_callback()
         self.city_block.next_block()
         self.start_city_block()

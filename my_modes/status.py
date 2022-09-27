@@ -61,5 +61,5 @@ class StatusReport(AdvancedMode):
             self.exit()
 
     def exit(self):
-        self.game.remove_modes([self])
+        self.game.modes.remove([self])
         # this mode owns no lamps so no need to update lamps

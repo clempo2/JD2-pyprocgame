@@ -225,18 +225,8 @@ class JD2Game(SkeletonGame):
         self.reset()
 
     #
-    # Modes
+    # Events
     #
-
-    def add_modes(self, mode_list):
-        for mode in mode_list:
-            self.modes.add(mode)
-
-    def remove_modes(self, mode_list):
-        for mode in mode_list:
-            self.modes.remove(mode)
-            # cancel all delayed handlers
-            mode._Mode__delayed = []
 
     def send_event(self, event):
         for mode in self.modes[:]:

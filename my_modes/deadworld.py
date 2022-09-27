@@ -193,7 +193,7 @@ class DeadworldTest(ServiceModeSkeleton):
             self.game.coils[coil_name].disable()
 
     def sw_exit_active(self, sw):
-        self.game.remove_modes([self])
+        self.game.modes.remove([self])
         self.game.update_lamps()
         return SwitchStop
 
