@@ -99,10 +99,10 @@ class RegularPlay(AdvancedMode):
         self.game.update_lamps()
 
     # starts a mode if a mode is available
-    # the 300ms delay must be the same or longer than the popperR handler in CityBlock (handler inherited from CrimeSceneShots)
+    # the 310ms delay must be the same or longer than the popperR handler in CityBlock (handler inherited from CrimeSceneShots)
     # If that shot starts BlockWar multiball, we want the CityBlock to go first and change the state to busy
     # so we don't start something else here
-    def sw_popperR_active_for_300ms(self, sw):
+    def sw_popperR_active_for_310ms(self, sw):
         if self.state == 'chain_ready':
             self.state = 'busy'
             self.chain.start_chain_mode()

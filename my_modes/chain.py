@@ -37,7 +37,7 @@ class Chain(AdvancedMode):
     def evt_player_added(self, player):
         player.setState('modes_remaining', self.all_chain_modes[:])
         player.setState('modes_remaining_ptr', 0)
-        player.setState('chain_active', 0)
+        player.setState('chain_active', False)
         player.setState('chain_complete', False)
         player.setState('num_chain_features', 0)
 
@@ -57,7 +57,7 @@ class Chain(AdvancedMode):
 
         if self.mode != None:
             self.game.modes.remove(self.mode)
-            self.game.setPlayerState('chain_active', 0)
+            self.game.setPlayerState('chain_active', False)
         self.game.modes.remove(self.hurry_up)
 
     def sw_slingL_active(self, sw):
@@ -93,12 +93,11 @@ class Chain(AdvancedMode):
         now = time()
         if block_busy_until > now:
             # wait for block mode to finish talking and/or displaying on the screen
-            # this is a work-around for the pyprocgame SoundController that does not queue voice callouts
             self.delay('start_chain_mode', None, block_busy_until - now, self.start_chain_mode)
             return
 
         self.mode = self.modes_remaining[self.modes_remaining_ptr]
-        self.game.setPlayerState('chain_active', 1)
+        self.game.setPlayerState('chain_active', True)
         self.modes_remaining.remove(self.mode)
         if len(self.modes_remaining) == 0:
             self.game.setPlayerState('chain_complete', True)
@@ -134,11 +133,16 @@ class Chain(AdvancedMode):
             else:
                 self.game.base_play.regular_play.city_blocks.city_block.block_complete()
 
-            if self.game.getPlayerState('multiball_active'):
+            multiball_active = self.game.getPlayerState('multiball_active')
+            if multiball_active:
                 self.game.score(100000)
 
+            if not (multiball_active & 0x2):
+                # do not show message if Block War has started
+                self.game.base_play.display('Well Done')
+
         self.mode = None
-        self.game.setPlayerState('chain_active', 0)
+        self.game.setPlayerState('chain_active', False)
 
         self.game.modes.remove(self.hurry_up)
         self.game.base_play.regular_play.chain_mode_completed()
@@ -206,7 +210,6 @@ class ChainHurryUp(TimedMode):
         self.game.sound.play_voice('good shot')
         self.cancel_delayed('trip_check')
         self.already_collected = True
-        self.game.base_play.display('Well Done')
         self.exit_callback(True)
 
 

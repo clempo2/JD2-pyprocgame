@@ -209,7 +209,6 @@ class CityBlock(CrimeSceneShots):
 
     def block_busy(self, duration):
         # warn other modes the sound and/or display are busy until that time
-        # SkeletonGame's SoundController queues voice callouts which is a better solution than this
         self.game.setPlayerState('block_busy_until', time() + duration)
     #
     # Lamps

@@ -147,7 +147,7 @@ class JD2Game(SkeletonGame):
     
     def create_message_layer(self):
         """return a text layer at the bottom of the screen where the last line of the score display normally goes"""
-        layer = FixedSizeTextLayer(128/2, 32-6, font_named('Font07x5.dmd'), 'center', width=128, height=6, fill_color=(0,0,0,255))
+        layer = FixedSizeTextLayer(128/2, 32-7, font_named('Font07x5.dmd'), 'center', width=128, height=7, fill_color=(0,0,0,255))
 
         # slide in for 0.5s, stay still for 2s, slide out for 0.5s
         slide_in_transition = SlideTransition(direction='west')
@@ -230,12 +230,13 @@ class JD2Game(SkeletonGame):
 
     def send_event(self, event):
         for mode in self.modes[:]:
-            handler = getattr(mode, event, None)
-            if handler:
-                ret = handler()
-                if ret:
-                    # skip lower priority modes
-                    return ret
+            if mode.is_started():
+                handler = getattr(mode, event, None)
+                if handler:
+                    ret = handler()
+                    if ret:
+                        # skip lower priority modes
+                        return ret
 
     #
     # High Scores

@@ -144,7 +144,7 @@ Collect a multiball jackpot
             {'seconds':2.0, 'layer':self.press_green_layer2},
             {'seconds':2.5, 'layer':self.score_layer},
             {'seconds':3.0, 'layer':self.proc_splash_layer},
-            {'seconds':8.0, 'layer':self.credits_layer},
+            {'seconds':6.0, 'layer':self.credits_layer},
             {'seconds':3.0, 'layer':self.judges_layer}]
 
         self.layer = ScriptedLayer(width=128, height=32, script=script, opaque=True)
