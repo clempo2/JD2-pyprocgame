@@ -324,7 +324,7 @@ class AssetLoader(object):
         for asset in music_files:
             self.game.sound.register_music(asset['key'], music_prefix + asset['file'])
 
-        effects_prefix = assets_path + '/sound/effects/'
+        effects_prefix = assets_path + '/sound/sfx/'
         for asset in effects_files:
             self.game.sound.register_sound(asset['key'], effects_prefix + asset['file'])
 
