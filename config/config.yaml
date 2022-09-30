@@ -38,18 +38,18 @@ PYSDL2_DLL_PATH: c:\P-ROC\DLLs\ # where to find the sdl2.dll
 
 vp_game_map_file: /P-ROC/shared/vp_game_map.yaml  # relevant for Visual Pinball (only)
 
-keyboard_switch_map:                                # this is the mapping of keyboard keys to switch matrix keys, for K_* constants, see https://www.pygame.org/docs/ref/key.html#module-pygame.key
+keyboard_switch_map:    # this is the mapping of keyboard keys to switch matrix keys, for constants, see python module sdl2.keycode
     1: S81 # trough1
     2: S82 # trough2
     3: S83 # trough3
     4: S84 # trough4
     5: S85 # trough5
     6: S86 # trough6
-    K_UP: SD5 # exit
-    K_LEFT: SD6 # down
-    K_RIGHT: SD7 # up
-    K_DOWN: SD8 # enter
-    a: S44 # superGame
+    UP: SD5 # exit
+    LEFT: SD6 # down
+    RIGHT: SD7 # up
+    DOWN: SD8 # enter
+    LSHIFT+s: S44 # superGame
     s: S13 # startButton
     j: S54 # J
     u: S55 # U
@@ -59,15 +59,15 @@ keyboard_switch_map:                                # this is the mapping of key
     p: S74 # popperR
     9: S14 # tilt
     0: S21 # slam tilt
-    K_LSHIFT: SF4 # flipperLwL
-    K_RSHIFT: SF2 # flipperLwR
-    K_CAPSLOCK: S11 # fireL
-    K_RETURN: S12 # fireR
-    K_TAB: S73 # popperL
-    K_BACKSPACE: S74 # popperR
+    LSHIFT: SF4 # flipperLwL
+    RSHIFT: SF2 # flipperLwR
+    CAPSLOCK: S11 # fireL
+    RETURN: S12 # fireR
+    TAB: S73 # popperL
+    BACKSPACE: S74 # popperR
     '[': S64 # leftRampExit
     ']': S66 # centerRampExit
-    K_BACKSLASH: S76 # rightRampExit
+    BACKSLASH: S76 # rightRampExit
     'l': S33 # leftRollover
     ';': S35 # topCenterRollover
     "'": S72 # topRightOpto
@@ -78,4 +78,3 @@ keyboard_switch_map:                                # this is the mapping of key
     x: S27 # mystery
     q: S36 # leftScorePost
     w: S37 # subwayEnter1
-    

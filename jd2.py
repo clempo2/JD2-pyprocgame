@@ -2,12 +2,9 @@ from collections import OrderedDict
 import logging
 from math import ceil
 import os
-import pygame.locals
-import pinproc
 import yaml
-from procgame.config import value_for_key_path
 from procgame.dmd import font_named, FrameLayer
-from procgame.game import BasicGame, SkeletonGame
+from procgame.game import SkeletonGame
 from procgame.game.skeletongame import run_proc_game
 from procgame.highscore import HighScoreCategory, get_highscore_data
 from procgame.modes.service import ServiceMode
@@ -62,36 +59,6 @@ class JD2Game(SkeletonGame):
         self.service_mode = ServiceMode(self, 99, self.fonts['settings-font-small'], extra_tests=[deadworld_test])
 
         self.reset()
-
-    # TODO
-    # override load_config to allow pygame key names and pygame numeric keys in the key_map
-    def load_config(self, path):
-        # Ignore pylint warning on next line, we by-pass immediate superclass intentionally
-        super(BasicGame, self).load_config(path)
-
-        # Setup the key mappings from config.yaml.
-        key_map_config = value_for_key_path(keypath='keyboard_switch_map', default={})
-        if self.desktop:
-            for k, v in key_map_config.items():
-                switch_name = str(v)
-                if self.switches.has_key(switch_name):
-                    switch_number = self.switches[switch_name].number
-                else:
-                    switch_number = pinproc.decode(self.machine_type, switch_name)
-                if type(k) == str:
-                    if k.startswith('K_'): # key is a pygame key name
-                        #TODO, that does not work with SDL2
-                        key = getattr(pygame.locals, k)
-                    else: # key is character
-                        key = ord(k)
-                elif type(k) == int:
-                    if k < 10:
-                        key = ord(str(k)) # digit character
-                    else:
-                        key = k # numbers used as bindings for specials -- for example K_LSHIFT is 304
-                else:
-                    raise ValueError('invalid key name in config file: ' + str(k))
-                self.desktop.add_key_map(key, switch_number)
 
     def reset(self):
         # Reset the entire game framework

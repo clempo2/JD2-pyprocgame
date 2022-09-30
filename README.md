@@ -4,7 +4,7 @@
 
 ## Status
 
-The port is on-going. The game is now playable with some issues.
+The port is nearly complete. The game is now playable with some minor issues.
 
 ## Installation
 
