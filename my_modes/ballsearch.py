@@ -40,11 +40,11 @@ class JDBallSearch(BallSearch):
                 self.game.deadworld.eject_balls(1, self.game.base_play.regular_play.multiball.configure_lock)
             else:
                 # give a pitty ball
-                self.game.launch_balls(1)
+                self.game.launch_balls(1, stealth=True)
         elif self.round == 20:
             # not supposed to get here, the game is confused
             # give another pitty ball as a last resort
-            self.game.launch_balls(1)
+            self.game.launch_balls(1, stealth=True)
 
         # for JD2, we never want to be silent
         super(JDBallSearch, self).perform_search(completion_wait_time, completion_handler=completion_handler, silent=False)

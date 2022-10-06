@@ -109,7 +109,7 @@ class ChallengeBase(TimedMode):
         # launch remaining balls for the mode (if applicable)
         balls_to_launch = self.num_balls - self.game.num_balls_requested()
         if balls_to_launch > 0:
-            self.game.launch_balls(balls_to_launch)
+            self.game.launch_balls(balls_to_launch, autoplunge=True)
 
         ball_save_time_settings = self.name + ' ballsave time'
         ball_save_time = self.game.user_settings['Gameplay'].get(ball_save_time_settings, None)
@@ -443,7 +443,7 @@ class Fire(DarkJudge, CrimeSceneShots):
         if self.mystery_lit:
             self.mystery_lit = False
             self.game.set_status('ADD 2 BALLS')
-            self.game.launch_balls(2)
+            self.game.launch_balls(2, autoplunge=True)
             self.game.update_lamps()
 
     def switch_hit(self, index):

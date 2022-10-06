@@ -79,7 +79,7 @@ class Multiball(AdvancedMode):
         else:
             # 1 ball from the planet and 2 from the trough
             self.game.deadworld.eject_balls(1)
-            self.game.launch_balls(2)
+            self.game.launch_balls(2, autoplunge=True)
 
         ball_save_time = self.game.user_settings['Gameplay']['Multiball ballsave time']
         self.game.ball_save_start(time=ball_save_time, now=True, allow_multiple_saves=True)
@@ -172,7 +172,7 @@ class Multiball(AdvancedMode):
                 if self.game.deadworld_mod_installed:
                     # launch a new ball each time a ball is physically locked.
                     # Use stealth launch so another ball isn't counted in play.
-                    self.game.trough.launch_balls(1, self.game.no_op_callback, stealth=True)
+                    self.game.launch_balls(1, stealth=True)
                 else:
                     # eject the ball immediately since an un-moded planet can't physically hold balls
                     self.game.deadworld.eject_balls(1, self.configure_lock)

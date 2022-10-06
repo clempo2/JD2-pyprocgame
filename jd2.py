@@ -161,7 +161,7 @@ class JD2Game(SkeletonGame):
         # That's the real definition of a grace period in my book.
 
         if time > 0:
-            self.ball_save.start(self.num_balls_requested(), 2 + time, now, allow_multiple_saves)
+            self.enable_ball_saver(self.num_balls_requested(), 2 + time, now, allow_multiple_saves)
 
     def num_balls_requested(self):
         # Return what the game considers is the number of balls in play.
@@ -170,9 +170,9 @@ class JD2Game(SkeletonGame):
         # It does not count locked balls but it does count balls pending to be ejected from the planet.
         # That's because the planet immediately adds the balls to be ejected to the count of balls in play
         # without waiting for the crane to release them.
-        return self.trough.num_balls_in_play + self.trough.num_balls_to_launch - self.trough.num_balls_to_stealth_launch
+        return self.trough.num_balls_requested()
 
-    def launch_balls(self, balls_to_launch):
+    def launch_balls(self, balls_to_launch, stealth=False, autoplunge=False):
         # launch balls from the trough if it has sufficient balls, else eject additional balls from Deadworld
         # NOTE: self.trough.num_balls() is not reliable when balls are moving in the trough, don't use it here.
         new_num_requested = self.num_balls_requested() + balls_to_launch
@@ -183,7 +183,7 @@ class JD2Game(SkeletonGame):
             balls_to_launch -= num_to_eject
         if balls_to_launch:
             # warning: must pass a real callback since passing None preserves the previous callback
-            self.trough.launch_balls(balls_to_launch, self.no_op_callback)
+            self.trough.launch_balls(balls_to_launch, self.no_op_callback, stealth, autoplunge)
 
     def slam_tilt_complete(self):
         # work-around to avoid calling end_ball() and end_game() when the game is tilted

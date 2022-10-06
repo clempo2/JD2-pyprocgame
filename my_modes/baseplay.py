@@ -173,11 +173,22 @@ class BasePlay(AdvancedMode):
     #
 
     def sw_fireR_active(self, sw):
-        if self.game.switches.shooterR.is_active():
+        # we can wait up to 1s for the ball to settle before we plunge
+        self.safe_plunge(1.0)
+
+    def safe_plunge(self, countdown):
+        # wait for the ball to settle long enough in the shooter lane
+        # to make sure the trough detected the ball was served successfully
+        # otherwise the ball eject error watch would trigger and serve duplicate balls
+        if self.game.switches.shooterR.is_active(0.35):
+            # go ahead and plunge the ball
             self.game.coils.shooterR.pulse()
             if self.ball_starting:
                 self.game.sound.stop_music()
                 self.play_background_music()
+        elif countdown > 0:
+            self.cancel_delayed('safe_plunge')
+            self.delay('safe_plunge', event_type=None, delay=0.1, handler=self.safe_plunge, param=countdown - 0.1)
 
     #
     # Shooter Lanes
@@ -210,6 +221,8 @@ class BasePlay(AdvancedMode):
  
     def sw_shooterR_active_for_700ms(self, sw):
         if self.auto_plunge:
+            # this would only happen if an air ball jumped into the shooter lane
+            # because the trough auto-plunger is faster than this
             self.game.coils.shooterR.pulse()
  
     def sw_shooterR_active_for_10s(self, sw):

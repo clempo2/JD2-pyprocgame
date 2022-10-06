@@ -74,7 +74,7 @@ class CityBlocks(AdvancedMode):
         self.game.modes.remove(self.city_block)
         self.start_multiball_callback()
         # launch another ball for a 2 ball multiball, or up to 4 balls when stacked with Deadworld multiball
-        self.game.launch_balls(1)
+        self.game.launch_balls(1, autoplunge=True)
         
         ball_save_time = self.game.user_settings['Gameplay']['Block War ballsave time']
         self.game.ball_save_start(time=ball_save_time, now=True, allow_multiple_saves=True)
