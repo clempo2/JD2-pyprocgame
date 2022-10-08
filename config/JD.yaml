@@ -81,6 +81,7 @@ PRSwitches:
     shooterL:
         number: S15
         ballsearch: reset,stop
+        tags: tilt_visible
     outlaneL:
         number: S16
         tags: early_save
@@ -93,6 +94,7 @@ PRSwitches:
         ballsearch: reset
     slamTilt:
         number: S21
+        tags: tilt_visible
     coinDoor:
         number: S22
     ticketDispenser:
@@ -110,6 +112,7 @@ PRSwitches:
         ballsearch: reset
     ballOnMagnet:
         number: S28
+        tags: tilt_visible
     buyIn:
         number: S31
     leftRampEnter:
@@ -136,7 +139,7 @@ PRSwitches:
         ballsearch: reset
     shooterR:
         number: S41
-        tags: shooter
+        tags: shooter,tilt_visible
         ballsearch: reset,stop
     outlaneR:
         number: S42
@@ -187,10 +190,12 @@ PRSwitches:
     globePosition1: 
         number: S61
         type: 'NO' # Manual says NC
+        tags: tilt_visible
     craneRelease: 
         number: S62
         type: 'NC'
         ballsearch: reset
+        tags: tilt_visible
     leftRampToLock:
         number: S63
         type: 'NC'
@@ -217,6 +222,7 @@ PRSwitches:
     magnetOverRing:
         number: S71
         type: 'NO' # Manual says NC
+        tags: tilt_visible
     topRightOpto:
         number: S72
         type: 'NC'
@@ -224,11 +230,13 @@ PRSwitches:
     popperL:
         number: S73
         type: 'NC'
+        tags: tilt_visible
         # special code is needed in ball search to handle the ball cup blocking the opto
         # ballsearch: reset,stop
     popperR:
         number: S74
         type: 'NC'
+        tags: tilt_visible
         # special code is needed in ball search to handle the ball cup blocking the opto
         # ballsearch: reset,stop
     topRampExit:
@@ -242,6 +250,7 @@ PRSwitches:
     globePosition2:
         number: S77
         type: 'NO' # Manual says NC
+        tags: tilt_visible
     s78:
         number: S78
     trough1:
