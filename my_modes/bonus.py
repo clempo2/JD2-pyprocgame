@@ -5,6 +5,7 @@ class Bonus(AdvancedMode):
     """Display end of ball bonus"""
 
     def mode_started(self):
+        self.game.enable_flippers(enable=False)
         self.game.sound.fadeout_music()
         self.game.sound.stop_all()
         self.game.sound.play_voice('drain', PLAY_FORCE)

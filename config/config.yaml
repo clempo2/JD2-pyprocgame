@@ -49,7 +49,7 @@ keyboard_switch_map:    # this is the mapping of keyboard keys to switch matrix 
     LEFT: SD6 # down
     RIGHT: SD7 # up
     DOWN: SD8 # enter
-    LSHIFT+s: S44 # superGame
+    SHIFT+s: S44 # superGame
     s: S13 # startButton
     j: S54 # J
     u: S55 # U

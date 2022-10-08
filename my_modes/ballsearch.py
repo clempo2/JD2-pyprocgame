@@ -34,14 +34,14 @@ class JDBallSearch(BallSearch):
             # searching an empty planet should not impact the state of the game
             if self.game.deadworld.num_balls_locked == 0:
                 self.game.deadworld.perform_ball_search()
-        elif self.round == 10:
+        elif self.round == 10 and self.game.base_play.is_started():
             if self.game.deadworld.num_balls_locked > 0:
                 # release a locked ball
                 self.game.deadworld.eject_balls(1, self.game.base_play.regular_play.multiball.configure_lock)
             else:
                 # give a pitty ball
                 self.game.launch_balls(1, stealth=True)
-        elif self.round == 20:
+        elif self.round == 20 and self.game.base_play.is_started():
             # not supposed to get here, the game is confused
             # give another pitty ball as a last resort
             self.game.launch_balls(1, stealth=True)

@@ -116,8 +116,6 @@ Collect a multiball jackpot
     def mode_stopped(self):
         # Stop deadworld ball search (if active) before we eject the first ball
         # otherwise deadworld might not see the trough was momentarily full
-        # I wish there was a trough full event for this.
-        # TODO I think there is an event like this in SkeletonGame
         self.game.deadworld.stop_ball_search()
 
         self.game.lamps.startButton.enable()
