@@ -76,6 +76,10 @@ class JD2Game(SkeletonGame):
         self.base_play.reset()
         self.start_attract_mode()
 
+    def safe_reset(self):
+        """Schedule a reset on the next tick"""
+        self.reset_pending = True
+
     def tick(self):
         super(JD2Game, self).tick()
         # it is safer to call reset here than within a mode called by the run loop 

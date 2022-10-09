@@ -9,6 +9,7 @@ class Base(AdvancedMode):
 
     def mode_started(self):
         self.layer = None
+        self.game_over = False
 
     def evt_volume_down(self, volume):
         self.set_status('VOLUME DOWN: ' + str(int(volume)), scroll=False)
@@ -48,11 +49,14 @@ class Base(AdvancedMode):
         self.game.deadworld.perform_ball_search()
 
     def evt_game_ending(self):
+        # show the final score before the game over display
+        self.game_over = True
         self.layer = self.game.generate_score_layer()
         self.game.attract_mode.score_layer = self.layer
         return 2
 
     def evt_game_ended(self):
+        # show the game over display
         score_layer = self.layer
         font_large = self.game.fonts['large']
         longwalk_layer = self.game.animations['longwalk']
@@ -66,3 +70,15 @@ class Base(AdvancedMode):
 
         self.layer = ScriptedLayer(width=128, height=32, script=script, hold=True, opaque=True)
         return self.layer.duration()
+
+    def sw_startButton_active(self, sw):
+        self.start_button_active()
+
+    def sw_superGame_active(self, sw):
+        self.start_button_active()
+
+    def start_button_active(self):
+        if self.game_over:
+            # skip game over display and initial entry (if applicable)
+            # go straight to attract mode
+            self.game.safe_reset()

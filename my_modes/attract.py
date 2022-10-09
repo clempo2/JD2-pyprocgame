@@ -5,7 +5,7 @@ from procgame.sound import PLAY_NOTBUSY
 from eject import CoilEjectMode
 
 class Attract(CoilEjectMode):
-    """Attract mode and start buttons"""
+    """A mode that runs whenever the attract show is in progress."""
 
     def __init__(self, game, priority):
         super(Attract, self).__init__(game, priority)

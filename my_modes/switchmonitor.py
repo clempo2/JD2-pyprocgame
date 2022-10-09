@@ -35,6 +35,6 @@ class JDSwitchMonitor(SwitchMonitor):
     def check_reset(self, min_ball):
         allow_restart = self.game.user_settings['Machine']['Allow restarts']
         if self.game.ball >= min_ball and allow_restart:
-            self.game.reset_pending = True
+            self.game.safe_reset()
             return SwitchStop
         return SwitchContinue
