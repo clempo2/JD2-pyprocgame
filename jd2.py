@@ -124,7 +124,7 @@ class JD2Game(SkeletonGame):
         """return a text layer at the bottom of the screen where the last line of the score display normally goes"""
         layer = FixedSizeTextLayer(128/2, 32-7, font_named('Font07x5.dmd'), 'center', width=128, height=7, fill_color=(0,0,0,255))
 
-        # slide in for 0.5s, stay still for 2s, slide out for 0.5s
+        # slide in for 0.33s, stay still for 2s, slide out for 0.33s
         slide_in_transition = SlideTransition(direction='west')
         dont_move_transition = DontMoveTransition()
         dont_move_transition.progress_per_frame = 1.0 / 120.0

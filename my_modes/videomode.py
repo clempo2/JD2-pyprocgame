@@ -53,7 +53,7 @@ class ShootingGallery(AdvancedMode):
 
         self.status_layer = TextLayer(128/2, 7, font_large, 'center').set_text('Video Mode')
 
-        self.intro_layer_0 = GroupedLayer(128, 32, [self.status_layer])
+        self.intro_layer_0 = GroupedLayer(128, 32, [self.status_layer], opaque=True)
 
         self.intro_layer_11 = TextLayer(128/2, 7, font_medium, 'center').set_text(self.enemy_text)
         self.intro_layer_12 = TextLayer(128/2, 17, font_medium, 'center').set_text(self.friend_text)
@@ -78,7 +78,7 @@ class ShootingGallery(AdvancedMode):
         self.target_layers = [self.new_frame_layer(True) for unused in range(0, 4)]
         self.scope_layer = self.new_frame_layer()
         self.bullet_layers = [self.new_frame_layer() for unused in range(0, 4)]
-        self.result_layer = TextLayer(128/2, 20, self.game.fonts['medium'], 'center')
+        self.result_layer = TextLayer(128/2, 20, self.game.fonts['medium'], 'center', opaque=True)
 
         all_layers = self.target_layers + [self.scope_layer] + self.bullet_layers + [self.status_layer, self.result_layer]
         self.layer = GroupedLayer(128, 32, all_layers, opaque=True)

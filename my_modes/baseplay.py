@@ -60,6 +60,7 @@ class BasePlay(AdvancedMode):
         self.game.coils.flasherPursuitR.schedule(0x00000101, cycle_seconds=1, now=False)
 
         self.ball_starting = True
+        self.plunging = False
         self.shoot_again = False
 
         # Force player to hit the right Fire button for the start of ball
@@ -132,6 +133,7 @@ class BasePlay(AdvancedMode):
 
     def play_animation(self, anim_name, frame_time=1):
         anim = self.game.animations[anim_name]
+        anim.reset()
         self.animation_mode.play(anim, frame_time=frame_time)
 
     #
@@ -180,28 +182,30 @@ class BasePlay(AdvancedMode):
         # wait for the ball to settle long enough in the shooter lane
         # to make sure the trough detected the ball was served successfully
         # otherwise the ball eject error watch would trigger and serve duplicate balls
-        if self.game.switches.shooterR.is_active(0.35):
-            # go ahead and plunge the ball
-            self.game.coils.shooterR.pulse()
-            if self.ball_starting:
+        if self.ball_starting:
+            if self.game.switches.shooterR.is_active(0.35):
+                # go ahead and plunge the ball
+                self.game.coils.shooterR.pulse()
+                self.plunging = True
                 self.game.sound.stop_music()
                 self.play_background_music()
-        elif countdown > 0:
-            self.cancel_delayed('safe_plunge')
-            self.delay('safe_plunge', event_type=None, delay=0.1, handler=self.safe_plunge, param=countdown - 0.1)
+            elif countdown > 0:
+                self.cancel_delayed('safe_plunge')
+                self.delay('safe_plunge', event_type=None, delay=0.1, handler=self.safe_plunge, param=countdown - 0.1)
 
     #
     # Shooter Lanes
     #
 
     def sw_shooterR_inactive_for_900ms(self, sw):
-        # Enable auto-plunge soon after the new ball is launched (by the player).
-        self.auto_plunge = True
-
-        if self.ball_starting:
+        if self.plunging:
             self.game.send_event('event_ball_started')
             # send the event only once per ball
+            self.plunging = False
             self.ball_starting = False
+
+            # Enable auto-plunge soon after the new ball is launched (by the player).
+            self.auto_plunge = True
 
     # event called when the ball is initially plunged by the player
     def event_ball_started(self):

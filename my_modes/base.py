@@ -68,6 +68,7 @@ class Base(AdvancedMode):
             {'seconds':2, 'layer':score_layer}
         ]
 
+        longwalk_layer.reset()
         self.layer = ScriptedLayer(width=128, height=32, script=script, hold=True, opaque=True)
         return self.layer.duration()
 

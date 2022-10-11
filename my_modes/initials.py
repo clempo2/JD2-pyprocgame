@@ -31,7 +31,7 @@ class JDEntrySequenceManager(EntrySequenceManager):
         self.force_event_next()
 
 
-class JDInitialEntryMode(AdvancedMode):
+class JDInitialEntryMode(Mode):
     """Mode that prompts the player for their initials.
 
     *left_text* and *right_text* are strings or arrays to be displayed at the
