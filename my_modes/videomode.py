@@ -13,6 +13,7 @@ class ShootingGallery(AdvancedMode):
         self.scope_pos = 0
         self.num_enemies = 0
         self.num_enemies_shot = 0
+        self.num_enemies_required = 15
         self.speed_factor = 1
         self.targets = ['empty'] * 4
 
@@ -51,37 +52,34 @@ class ShootingGallery(AdvancedMode):
         font_large = self.game.fonts['large']
         font_medium = self.game.fonts['medium']
 
-        self.status_layer = TextLayer(128/2, 7, font_large, 'center').set_text('Video Mode')
+        self.title_text_layer = TextLayer(128/2, 7, font_large, 'center').set_text('Video Mode')
+        self.title_screen_layer = GroupedLayer(128, 32, [self.title_text_layer], opaque=True)
 
-        self.intro_layer_0 = GroupedLayer(128, 32, [self.status_layer], opaque=True)
+        self.info_text_layer_11 = TextLayer(128/2, 7, font_medium, 'center').set_text(self.enemy_text)
+        self.info_text_layer_12 = TextLayer(128/2, 17, font_medium, 'center').set_text(self.friend_text)
+        self.info_screen_layer_1 = GroupedLayer(128, 32, [self.info_text_layer_11, self.info_text_layer_12], opaque=True)
 
-        self.intro_layer_11 = TextLayer(128/2, 7, font_medium, 'center').set_text(self.enemy_text)
-        self.intro_layer_12 = TextLayer(128/2, 17, font_medium, 'center').set_text(self.friend_text)
-        self.intro_layer_1 = GroupedLayer(128, 32, [self.intro_layer_11, self.intro_layer_12])
-
-        self.intro_layer_21 = TextLayer(128/2, 7, font_medium, 'center').set_text('Flipper buttons aim')
-        self.intro_layer_22 = TextLayer(128/2, 17, font_medium, 'center').set_text('Fire buttons shoot')
-        self.intro_layer_2 = GroupedLayer(128, 32, [self.intro_layer_21, self.intro_layer_22])
+        self.info_text_layer_21 = TextLayer(128/2, 7, font_medium, 'center').set_text('Flipper buttons aim')
+        self.info_text_layer_22 = TextLayer(128/2, 17, font_medium, 'center').set_text('Fire buttons shoot')
+        self.info_screen_layer_2 = GroupedLayer(128, 32, [self.info_text_layer_21, self.info_text_layer_22], opaque=True)
 
         self.layer = ScriptedLayer(128, 32, [
-            {'seconds':3.0, 'layer':self.intro_layer_0},
-            {'seconds':3.0, 'layer':self.intro_layer_1},
-            {'seconds':3.0, 'layer':self.intro_layer_2}],
+            {'seconds':3.0, 'layer':self.title_screen_layer},
+            {'seconds':3.0, 'layer':self.info_screen_layer_1},
+            {'seconds':3.0, 'layer':self.info_screen_layer_2}],
             opaque=True)
 
         self.layer.on_complete = self.start
 
     def start(self):
         self.state = 'active'
-        self.status_layer.set_text('')
 
         self.target_layers = [self.new_frame_layer(True) for unused in range(0, 4)]
         self.scope_layer = self.new_frame_layer()
         self.bullet_layers = [self.new_frame_layer() for unused in range(0, 4)]
-        self.result_layer = TextLayer(128/2, 20, self.game.fonts['medium'], 'center', opaque=True)
 
-        all_layers = self.target_layers + [self.scope_layer] + self.bullet_layers + [self.status_layer, self.result_layer]
-        self.layer = GroupedLayer(128, 32, all_layers, opaque=True)
+        graphic_layers = self.target_layers + [self.scope_layer] + self.bullet_layers
+        self.layer = GroupedLayer(128, 32, graphic_layers, opaque=True)
 
         # Add the first target after 1 second.
         self.delay(name='add_target', event_type=None, delay=1, handler=self.add_target)
@@ -95,7 +93,7 @@ class ShootingGallery(AdvancedMode):
         return frame_layer
 
     def add_target(self):
-        if self.num_enemies == 15:
+        if self.num_enemies == self.num_enemies_required:
             self.delay(name='finish', event_type=None, delay=2.0, handler=self.finish)
         else:
             # speed up after the first 3 enemies shown, afterwards speed up after every 4 enemies shown
@@ -187,24 +185,39 @@ class ShootingGallery(AdvancedMode):
 
     def shoot(self):
         self.bullet_layers[self.scope_pos].frame = self.shot_frames[self.scope_pos]
-        if self.targets[self.scope_pos] == 'enemy':
-            self.shoot_enemy(self.scope_pos)
-        elif self.targets[self.scope_pos] == 'empty':
+        if self.targets[self.scope_pos] == 'empty':
             self.delay(name='remove_empty_shot', event_type=None, delay=0.5, handler=self.remove_empty_shot, param=self.scope_pos)
         elif self.targets[self.scope_pos] == 'friend':
             self.shoot_friend()
+        elif self.targets[self.scope_pos] == 'enemy':
+            self.shoot_enemy(self.scope_pos)
+
+    def remove_empty_shot(self, position):
+        # Make sure it's still empty
+        if self.targets[position] == 'empty':
+            self.bullet_layers[position].frame = None
+
+    def shoot_friend(self):
+        self.game.sound.play('good guy shot')
+        self.state = 'complete'
+        self.title_text_layer.set_text('Failed')
+        self.layer = self.title_screen_layer
+        self.cancel_delayed(['add_target', 'remove_target', 'remove_empty_shot', 'blink_enemy_shot', 'remove_enemy_shot', 'finish'])
+        self.delay(name='wrap_up', event_type=None, delay=2.0, handler=self.wrap_up)
+        self.success = False
 
     def shoot_enemy(self, position):
         self.num_enemies_shot += 1
         self.game.sound.play(self.bad_guy_shot)
         self.targets[position] = 'shot'
-        self.result_layer.set_text('Good Shot', 1)
         self.delay(name='blink_enemy_shot', event_type=None, delay=1.5, handler=self.blink_enemy_shot, param=position)
 
     def blink_enemy_shot(self, position):
         self.target_layers[position].blink_frames = 2
         self.bullet_layers[position].blink_frames = 2
-        self.delay(name='remove_enemy_shot', event_type=None, delay=1, handler=self.remove_enemy_shot, param=position)
+        # make sure remove_target triggers before remove_enemy_shot for this shot
+        delay = 1.15 if self.speed_factor == 1 else 1
+        self.delay(name='remove_enemy_shot', event_type=None, delay=delay, handler=self.remove_enemy_shot, param=position)
 
     def remove_enemy_shot(self, position):
         self.make_available(position)
@@ -213,26 +226,13 @@ class ShootingGallery(AdvancedMode):
         self.target_layers[position].blink_frames = 0
         self.bullet_layers[position].blink_frames = 0
 
-    def shoot_friend(self):
-        self.game.sound.play('good guy shot')
-        self.state = 'complete'
-        self.status_layer.set_text('Failed')
-        self.cancel_delayed(['add_target', 'remove_target', 'remove_empty_shot', 'blink_enemy_shot', 'remove_enemy_shot', 'finish'])
-        self.delay(name='wrap_up', event_type=None, delay=2.0, handler=self.wrap_up)
-        self.success = False
-
-    def remove_empty_shot(self, position):
-        # Make sure it's still empty
-        if self.targets[position] == 'empty':
-            self.bullet_layers[position].frame = None
-
     def finish(self):
         # the player reached the end of the round
         self.state = 'complete'
         self.cancel_delayed(['remove_target', 'remove_empty_shot', 'blink_enemy_shot', 'remove_enemy_shot'])
-        self.intro_layer_21.set_text('Enemies Shot')
-        self.intro_layer_22.set_text(str(self.num_enemies_shot) + ' of ' + str(self.num_enemies))
-        self.layer = self.intro_layer_2
+        self.info_text_layer_21.set_text('Enemies Shot')
+        self.info_text_layer_22.set_text(str(self.num_enemies_shot) + ' of ' + str(self.num_enemies))
+        self.layer = self.info_screen_layer_2
         self.delay(name='completion_bonus', event_type=None, delay=2.0, handler=self.completion_bonus)
 
     def completion_bonus(self):
@@ -242,8 +242,8 @@ class ShootingGallery(AdvancedMode):
 
         points = 100000 if self.success else 5000 * self.num_enemies_shot
         self.game.score(points)
-        self.intro_layer_21.set_text('Perfect' if self.success else 'Completion Bonus')
-        self.intro_layer_22.set_text(self.game.format_points(points))
+        self.info_text_layer_21.set_text('Perfect' if self.success else 'Completion Bonus')
+        self.info_text_layer_22.set_text(self.game.format_points(points))
         self.delay(name='wrap_up', event_type=None, delay=3.0, handler=self.wrap_up)
 
     def wrap_up(self):
