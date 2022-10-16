@@ -62,6 +62,7 @@ Animations:
 - key: 'scopeandshot'
   file: 'scopeandshot.dmd'
   frame_time: 1
+  composite_op: blacksrc
 - key: 'gun_powerup'
   file: 'gun_powerup.dmd'
   holdLastFrame: True
@@ -646,6 +647,8 @@ Audio:
       file: 'curse/jd - curse 10.wav'
     - key: 'curse'
       file: 'curse/jd - curse 11.wav'
+    - key: 'video mode'
+      file: 'stakeout/jd - thats it take em down.wav'
     - key: 'welcome'
       file: 'welcome/welcome.wav'
     - key: 'welcome'

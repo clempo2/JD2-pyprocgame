@@ -58,6 +58,12 @@ class MissileAwardMode(Timer):
             return False
 
     def sw_fireL_active(self, sw):
+        self.fire_active()
+
+    def sw_fireR_active(self, sw):
+        self.fire_active()
+
+    def fire_active(self):
         if self.timer > 15:
             self.reset_timer(15, self.timer_delay)
         elif self.timer == 0 and self.game.switches.shooterL.is_active():

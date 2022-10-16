@@ -48,6 +48,9 @@ class Base(AdvancedMode):
         self.game.set_status('BALL MISSING')
         self.game.deadworld.perform_ball_search()
 
+    def evt_balls_found(self):
+        self.game.deadworld.stop_ball_search()
+
     def evt_game_ending(self):
         # show the final score before the game over display
         self.game_over = True

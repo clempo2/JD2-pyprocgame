@@ -13,13 +13,15 @@ class ShootingGallery(AdvancedMode):
         self.scope_pos = 0
         self.num_enemies = 0
         self.num_enemies_shot = 0
-        self.num_enemies_required = 15
+        self.num_enemies_required = self.game.user_settings['Gameplay']['Video mode completion']
         self.speed_factor = 1
         self.targets = ['empty'] * 4
 
         video_mode_setting = self.game.user_settings['Gameplay']['Video mode']
         if video_mode_setting == 'cow':
             # family friendly option
+            self.enemy = 'Mean Cow'
+            self.enemies = 'Mean Cows'
             self.enemy_text = 'Shoot mean cows'
             self.friend_text = 'Do NOT shoot nice cows'
             self.bad_guy_shot = 'moo'
@@ -29,6 +31,8 @@ class ShootingGallery(AdvancedMode):
             self.all_enemies = [image_frames[1]] * 4
         else:
             # default option
+            self.enemy = 'Enemy'
+            self.enemies = 'Enemies'
             self.enemy_text = 'Shoot enemies'
             self.friend_text = 'Do NOT shoot friends'
             self.bad_guy_shot = 'bad guy shot'
@@ -55,11 +59,11 @@ class ShootingGallery(AdvancedMode):
         self.title_text_layer = TextLayer(128/2, 7, font_large, 'center').set_text('Video Mode')
         self.title_screen_layer = GroupedLayer(128, 32, [self.title_text_layer], opaque=True)
 
-        self.info_text_layer_11 = TextLayer(128/2, 7, font_medium, 'center').set_text(self.enemy_text)
+        self.info_text_layer_11 = TextLayer(128/2, 8, font_medium, 'center').set_text(self.enemy_text)
         self.info_text_layer_12 = TextLayer(128/2, 17, font_medium, 'center').set_text(self.friend_text)
         self.info_screen_layer_1 = GroupedLayer(128, 32, [self.info_text_layer_11, self.info_text_layer_12], opaque=True)
 
-        self.info_text_layer_21 = TextLayer(128/2, 7, font_medium, 'center').set_text('Flipper buttons aim')
+        self.info_text_layer_21 = TextLayer(128/2, 8, font_medium, 'center').set_text('Flipper buttons aim')
         self.info_text_layer_22 = TextLayer(128/2, 17, font_medium, 'center').set_text('Fire buttons shoot')
         self.info_screen_layer_2 = GroupedLayer(128, 32, [self.info_text_layer_21, self.info_text_layer_22], opaque=True)
 
@@ -73,6 +77,7 @@ class ShootingGallery(AdvancedMode):
 
     def start(self):
         self.state = 'active'
+        self.game.sound.play_voice('video mode')
 
         self.target_layers = [self.new_frame_layer(True) for unused in range(0, 4)]
         self.scope_layer = self.new_frame_layer()
@@ -97,7 +102,7 @@ class ShootingGallery(AdvancedMode):
             self.delay(name='finish', event_type=None, delay=2.0, handler=self.finish)
         else:
             # speed up after the first 3 enemies shown, afterwards speed up after every 4 enemies shown
-            if self.speed_factor < 5 and self.num_enemies == 4 * self.speed_factor - 1:
+            if self.speed_factor < 6 and self.num_enemies == 4 * self.speed_factor - 1:
                 self.speed_factor += 1
 
             # Find the first empty position starting with the random start_index.
@@ -230,23 +235,21 @@ class ShootingGallery(AdvancedMode):
         # the player reached the end of the round
         self.state = 'complete'
         self.cancel_delayed(['remove_target', 'remove_empty_shot', 'blink_enemy_shot', 'remove_enemy_shot'])
-        self.info_text_layer_21.set_text('Enemies Shot')
-        self.info_text_layer_22.set_text(str(self.num_enemies_shot) + ' of ' + str(self.num_enemies))
-        self.layer = self.info_screen_layer_2
-        self.delay(name='completion_bonus', event_type=None, delay=2.0, handler=self.completion_bonus)
 
-    def completion_bonus(self):
-        self.success = self.num_enemies_shot == self.num_enemies
+        self.success = self.num_enemies_shot == self.num_enemies_required
         if self.success:
             self.game.sound.play('perfect')
 
+        text = str(self.num_enemies_shot) + ' ' + (self.enemy if self.num_enemies_shot == 1 else self.enemies)
         points = 100000 if self.success else 5000 * self.num_enemies_shot
         self.game.score(points)
-        self.info_text_layer_21.set_text('Perfect' if self.success else 'Completion Bonus')
-        self.info_text_layer_22.set_text(self.game.format_points(points))
-        self.delay(name='wrap_up', event_type=None, delay=3.0, handler=self.wrap_up)
+        self.game.base_play.display(text, points)
+
+        self.delay(name='wrap_up', event_type=None, delay=2.5, handler=self.wrap_up)
 
     def wrap_up(self):
+        if self.success:
+            self.game.base_play.display() # remove display early
         self.game.enable_flippers(True)
         if self.on_complete != None:
             self.on_complete(self.success)
