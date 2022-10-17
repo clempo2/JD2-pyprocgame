@@ -1,13 +1,18 @@
 from random import randint, shuffle
-from procgame.dmd import ExpandTransition, Frame, FrameLayer, GroupedLayer, ScriptedLayer, TextLayer
-from procgame.game import AdvancedMode, SwitchStop
+from procgame.dmd import ExpandTransition, Frame, FrameLayer, GroupedLayer
+from procgame.game import SwitchStop
+from timer import TimedMode
 
-class ShootingGallery(AdvancedMode):
+class ShootingGallery(TimedMode):
     def __init__(self, game, priority):
-        super(ShootingGallery, self).__init__(game, priority)
+        self.cow_mode = game.user_settings['Gameplay']['Video mode'] == 'cow'
+        instructions = 'Shoot mean cows' if self.cow_mode else 'Shoot all enemies'
+        super(ShootingGallery, self).__init__(game, priority, mode_time=0, name='Video Mode', instructions=instructions)
         self.on_complete = None
 
     def mode_started(self):
+        super(ShootingGallery, self).mode_started()
+        self.game.enable_flippers(False)
         self.success = False
         self.state = 'intro'
         self.scope_pos = 0
@@ -17,13 +22,10 @@ class ShootingGallery(AdvancedMode):
         self.speed_factor = 1
         self.targets = ['empty'] * 4
 
-        video_mode_setting = self.game.user_settings['Gameplay']['Video mode']
-        if video_mode_setting == 'cow':
+        if self.cow_mode:
             # family friendly option
             self.enemy = 'Mean Cow'
             self.enemies = 'Mean Cows'
-            self.enemy_text = 'Shoot mean cows'
-            self.friend_text = 'Do NOT shoot nice cows'
             self.bad_guy_shot = 'moo'
             cows_anim = self.game.animations['cows']
             image_frames = cows_anim.frames[0].create_frames_from_grid(2, 1)
@@ -33,8 +35,6 @@ class ShootingGallery(AdvancedMode):
             # default option
             self.enemy = 'Enemy'
             self.enemies = 'Enemies'
-            self.enemy_text = 'Shoot enemies'
-            self.friend_text = 'Do NOT shoot friends'
             self.bad_guy_shot = 'bad guy shot'
             gallery_anim = self.game.animations['jdpeople']
             image_frames = gallery_anim.frames[0].create_frames_from_grid(6, 2)
@@ -49,35 +49,17 @@ class ShootingGallery(AdvancedMode):
         self.scope_frames = self.game.animations['scopeandshot'].frames[0:4]
         self.shot_frames = self.game.animations['scopeandshot'].frames[4:8]
 
-        self.intro()
+        self.delay(name='callout', event_type=None, delay=1, handler=self.callout)
 
-    def intro(self):
-        self.game.enable_flippers(False)
-        font_large = self.game.fonts['large']
-        font_medium = self.game.fonts['medium']
-
-        self.title_text_layer = TextLayer(128/2, 7, font_large, 'center').set_text('Video Mode')
-        self.title_screen_layer = GroupedLayer(128, 32, [self.title_text_layer], opaque=True)
-
-        self.info_text_layer_11 = TextLayer(128/2, 8, font_medium, 'center').set_text(self.enemy_text)
-        self.info_text_layer_12 = TextLayer(128/2, 17, font_medium, 'center').set_text(self.friend_text)
-        self.info_screen_layer_1 = GroupedLayer(128, 32, [self.info_text_layer_11, self.info_text_layer_12], opaque=True)
-
-        self.info_text_layer_21 = TextLayer(128/2, 8, font_medium, 'center').set_text('Flipper buttons aim')
-        self.info_text_layer_22 = TextLayer(128/2, 17, font_medium, 'center').set_text('Fire buttons shoot')
-        self.info_screen_layer_2 = GroupedLayer(128, 32, [self.info_text_layer_21, self.info_text_layer_22], opaque=True)
-
-        self.layer = ScriptedLayer(128, 32, [
-            {'seconds':3.0, 'layer':self.title_screen_layer},
-            {'seconds':3.0, 'layer':self.info_screen_layer_1},
-            {'seconds':3.0, 'layer':self.info_screen_layer_2}],
-            opaque=True)
-
-        self.layer.on_complete = self.start
-
-    def start(self):
-        self.state = 'active'
+    def callout(self):
         self.game.sound.play_voice('video mode')
+
+    def play_music(self):
+        # no music in video mode
+        pass
+
+    def intro_ended(self):
+        self.state = 'active'
 
         self.target_layers = [self.new_frame_layer(True) for unused in range(0, 4)]
         self.scope_layer = self.new_frame_layer()
@@ -161,10 +143,7 @@ class ShootingGallery(AdvancedMode):
         self.flipper_active(1)
 
     def flipper_active(self, pos_delta):
-        if self.state == 'intro':
-            # skip the intro
-            self.start()
-        elif self.state == 'active':
+        if self.state == 'active':
             new_pos = self.scope_pos + pos_delta
             if 0 <= new_pos <= 3:
                 self.scope_pos = new_pos
@@ -182,10 +161,7 @@ class ShootingGallery(AdvancedMode):
         return SwitchStop
 
     def fire_active(self):
-        if self.state == 'intro':
-            # skip the intro
-            self.start()
-        elif self.state == 'active':
+        if self.state == 'active':
             self.shoot()
 
     def shoot(self):
@@ -237,8 +213,7 @@ class ShootingGallery(AdvancedMode):
         self.cancel_delayed(['remove_target', 'remove_empty_shot', 'blink_enemy_shot', 'remove_enemy_shot'])
 
         self.success = self.num_enemies_shot == self.num_enemies_required
-        if self.success:
-            self.game.sound.play('perfect')
+        self.game.sound.play('perfect' if self.success else 'bonus')
 
         text = str(self.num_enemies_shot) + ' ' + (self.enemy if self.num_enemies_shot == 1 else self.enemies)
         points = 100000 if self.success else 5000 * self.num_enemies_shot
