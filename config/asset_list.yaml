@@ -379,8 +379,6 @@ Audio:
       file: 'stakeout/jd - we have you surrounded.wav'
     - key: 'stakeout move in'
       file: 'stakeout/jd - move in now.wav'
-    - key: 'stakeout move in'
-      file: 'stakeout/jd - thats it take em down.wav'
     - key: 'stakeout boring'
       file: 'stakeout/jd - are we sure we have the right place.wav'
     - key: 'stakeout boring'

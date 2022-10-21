@@ -12,26 +12,26 @@ class Attract(CoilEjectMode):
         self.lampshow_keys = ['attract0', 'attract1']
 
         font_large = self.game.fonts['large']
-        self.gun_layer = self.game.animations['gun_powerup']
-        self.score_layer = self.game.generate_score_layer()
-
         jd_text = TextLayer(128/2, 7, font_large, 'center').set_text('Judge Dredd')
         self.jd_layer = GroupedLayer(width=128, height=32, layers=[jd_text], fill_color=(0,0,0,255), opaque=True)
         self.jd_layer.transition = PushTransition(direction='south')
 
-        self.cityscape_layer = self.game.animations['cityscape']
+        self.gun_layer = self.game.animations['gun_powerup']
+        self.score_layer = self.game.generate_score_layer()
 
-        self.proc_splash_layer = self.game.animations['Splash']
-        self.proc_splash_layer.transition = PushTransition(direction='south')
+        high_score_text = TextLayer(128/2, 7, font_large, 'center').set_text('High Scores')
+        self.high_scores_title_layer = GroupedLayer(width=128, height=32, layers=[high_score_text], fill_color=(0,0,0,255), opaque=True)
+        self.high_scores_title_layer.transition = PushTransition(direction='north')
+
+        self.cityscape_layer = self.game.animations['cityscape']
 
         self.press_yellow_layer = self.button_layer('Press Yellow Button', 'for Regulation Play', direction='west')
         self.press_yellow_layer2 = self.button_layer('Press Yellow Button', 'for Regulation Play', blink_frame=5)
         self.press_green_layer = self.button_layer('Press Green Button', 'for SuperGame', direction='west')
         self.press_green_layer2 = self.button_layer('Press Green Button', 'for SuperGame', blink_frame=5)
 
-        high_score_text = TextLayer(128/2, 7, font_large, 'center').set_text('High Scores')
-        self.high_scores_title_layer = GroupedLayer(width=128, height=32, layers=[high_score_text], fill_color=(0,0,0,255), opaque=True)
-        self.high_scores_title_layer.transition = PushTransition(direction='north')
+        self.proc_splash_layer = self.game.animations['Splash']
+        self.proc_splash_layer.transition = PushTransition(direction='south')
 
         self.font_plain = game.fonts['medium']
         self.font_bold = game.fonts['bold']
