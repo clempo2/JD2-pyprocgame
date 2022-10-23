@@ -8,7 +8,7 @@ Gameplay: {New ball ballsave time: 10, New ball repeating ballsave: false, Multi
   Block War ballsave time: 15, Time per chain feature: 30, Chain feature difficulty: medium,
   Time for Hurry Up: 10, Block difficulty: medium, Blocks for Ultimate Challenge: 16,
   Mystery ballsave time: 10, Mystery feature add time: 10, Video mode: enemies, Video mode completion: 15,
-  Time for Fear shot: 25, Fear ballsave time: 10, Mortis ballsave time: 10, Time for Death: 180,
+  Time for Fear shot: 35, Fear ballsave time: 10, Mortis ballsave time: 10, Time for Death: 180,
   Death ballsave time: 20, Time for Death shot: 10, Celebration ballsave time: 20}
 Replay: {Replay Type: auto, Replay Percentage: 10, Replay Award: Credit, Replay Levels: 1,
   Replay Level 1: 500000, Replay Level 2: 1000000, Replay Level 3: 1500000, Replay Level 4: 2000000,

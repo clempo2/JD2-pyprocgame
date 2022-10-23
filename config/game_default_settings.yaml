@@ -134,9 +134,9 @@ Gameplay:
     increments: 1
     default: 15
   'Time for Fear shot':
-    options: [10,45]
+    options: [10,60]
     increments: 5
-    default: 25
+    default: 35
   'Fear ballsave time':
     options: [0,30]
     increments: 1
