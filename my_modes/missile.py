@@ -79,6 +79,7 @@ class MissileAwardMode(Timer):
         # and the player won't forget what he was doing
         if self.game.getPlayerState('video_mode_lit') and not self.game.getPlayerState('chain_active'):
             self.game.setPlayerState('video_mode_lit', False)
+            self.game.deadworld.stop_spinning()
             self.game.modes.add(self.video_mode)
         else:
             self.start_selection()
@@ -89,6 +90,8 @@ class MissileAwardMode(Timer):
 
     def video_mode_complete(self, success):
         self.game.modes.remove([self.video_mode])
+        # restart the planet spinning if locks are lit
+        self.game.base_play.regular_play.multiball.configure_lock()
         self.eject_ball()
         if success:
             self.game.base_play.light_extra_ball()

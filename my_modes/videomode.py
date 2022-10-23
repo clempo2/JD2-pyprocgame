@@ -181,10 +181,9 @@ class ShootingGallery(TimedMode):
     def shoot_friend(self):
         self.game.sound.play('good guy shot')
         self.state = 'complete'
-        self.title_text_layer.set_text('Failed')
-        self.layer = self.title_screen_layer
+        self.game.base_play.display('Failed')
         self.cancel_delayed(['add_target', 'remove_target', 'remove_empty_shot', 'blink_enemy_shot', 'remove_enemy_shot', 'finish'])
-        self.delay(name='wrap_up', event_type=None, delay=2.0, handler=self.wrap_up)
+        self.delay(name='wrap_up', event_type=None, delay=2.5, handler=self.wrap_up)
         self.success = False
 
     def shoot_enemy(self, position):
