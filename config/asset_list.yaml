@@ -9,7 +9,8 @@ UserInterface:
       background: [64,64,64] # as [R,G,B] out of 255 each
       fill: [255,255,255]
   single_line: False
-  line_format: '%s  %03d OF %03d'
+  line_format: 'ASSET  %(num)03d OF %(total)03d'
+  line_format2: '%(type)s'
   text:
     y_center: 0.4
 
