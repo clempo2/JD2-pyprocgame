@@ -71,7 +71,7 @@ class RegularPlay(AdvancedMode):
 
     def sw_shooterR_inactive_for_300ms(self, sw):
         self.game.sound.play('ball_launch')
-        self.game.base_play.play_animation('bikeacrosscity', frame_time=5)
+        self.game.base_play.play_animation('bikeacrosscity')
 
     #
     # submodes

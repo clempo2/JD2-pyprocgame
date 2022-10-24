@@ -39,7 +39,7 @@ class Combos(AdvancedMode):
                 sound = 'outer_loop'
                 skill_points = 0
                 text = 'outer loop: '
-                self.game.base_play.play_animation('bike_across_screen', frame_time=3)
+                self.game.base_play.play_animation('bike_across_screen')
 
             self.game.sound.stop(sound)
             self.game.sound.play(sound)
@@ -61,7 +61,7 @@ class Combos(AdvancedMode):
             points = 5000 * self.inner_loop_combos
             self.game.score(points)
             self.game.base_play.display('inner loop: ' + str(self.inner_loop_combos), points)
-            self.game.base_play.play_animation('bike_across_screen', frame_time=3)
+            self.game.base_play.play_animation('bike_across_screen')
             self.game.update_lamps()
             self.cancel_delayed('inner_loop')
             self.delay(name='inner_loop', event_type=None, delay=3.0, handler=self.inner_loop_combo_expired)

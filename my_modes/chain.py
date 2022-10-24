@@ -274,7 +274,7 @@ class Pursuit(ChainFeature):
     # Award shot if ball diverted for multiball.
     # Ensure it was a fast shot rather than one that just trickles in.
     def sw_leftRampToLock_active(self, sw):
-        if self.game.switches.leftRampEnter.time_since_change() < 0.5:
+        if self.game.switches.leftRampEnterAlt.time_since_change() < 0.7:
             self.switch_hit()
 
     def sw_leftRampExit_active(self, sw):
@@ -311,7 +311,7 @@ class Blackout(ChainFeature):
 
     def mode_started(self):
         super(Blackout, self).mode_started()
-        self.game.base_play.play_animation('blackout', frame_time=7)
+        self.game.base_play.play_animation('blackout')
 
     def update_lamps(self):
         self.game.enable_gi(False) # disable all gi except gi05 (Underworld)
@@ -358,7 +358,7 @@ class Sniper(ChainFeature):
     def sw_popperR_active_for_300ms(self, sw):
         self.num_shots += 1
         self.game.score(10000)
-        self.game.base_play.play_animation('dredd_shoot_at_sniper', frame_time=5)
+        self.game.base_play.play_animation('dredd_shoot_at_sniper')
         self.check_for_completion()
 
     def check_for_completion(self):
@@ -630,7 +630,7 @@ class Manhunt(ChainFeature):
     # Award shot if ball diverted for multiball.  Ensure it was a fast
     # shot rather than one that just trickles in.
     def sw_leftRampToLock_active(self, sw):
-        if self.game.switches.leftRampEnter.time_since_change() < 0.5:
+        if self.game.switches.leftRampEnterAlt.time_since_change() < 0.7:
             self.switch_hit()
 
     def sw_leftRampExit_active(self, sw):

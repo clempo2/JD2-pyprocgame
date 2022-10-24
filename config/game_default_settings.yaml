@@ -129,10 +129,14 @@ Gameplay:
   'Video mode':
     options: ['enemies', 'cows', 'off']
     default: 'enemies'
-  'Video mode completion':
+  'Video mode enemies':
     options: [5,20]
     increments: 1
     default: 15
+  'Video mode completion':
+    options: [25000,100000]
+    increments: 5000
+    default: 100000
   'Time for Fear shot':
     options: [10,60]
     increments: 5

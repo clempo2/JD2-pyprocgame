@@ -131,10 +131,10 @@ class BasePlay(AdvancedMode):
     def display(self, text=None, points=None):
         self.display_mode.display(text, points)
 
-    def play_animation(self, anim_name, frame_time=1):
+    def play_animation(self, anim_name):
         anim = self.game.animations[anim_name]
         anim.reset()
-        self.animation_mode.play(anim, frame_time=frame_time)
+        self.animation_mode.play(anim)
 
     #
     # Sound
@@ -352,7 +352,7 @@ class BasePlay(AdvancedMode):
     # Ramps
     #
 
-    def sw_leftRampEnter_active(self, sw):
+    def sw_leftRampEnterAlt_active(self, sw):
         self.game.coils.flasherGlobe.schedule(0x33333, cycle_seconds=1, now=False)
         self.game.coils.flasherCursedEarth.schedule(0x33333, cycle_seconds=1, now=False)
 
@@ -508,8 +508,8 @@ class ModesAnimation(AdvancedMode):
     def mode_stopped(self):
         self.remove_animation()
 
-    def play(self, anim, frame_time=1):
-        self.layer = AnimatedLayer(frames=anim.frames, repeat=False, hold=False, frame_time=frame_time)
+    def play(self, anim):
+        self.layer = AnimatedLayer(frames=anim.frames, repeat=False, hold=False, frame_time=anim.frame_time)
         self.layer.add_frame_listener(frame_index=-1, listener=self.remove_animation, arg=None)
 
     def remove_animation(self):

@@ -18,7 +18,7 @@ class ShootingGallery(TimedMode):
         self.scope_pos = 0
         self.num_enemies = 0
         self.num_enemies_shot = 0
-        self.num_enemies_required = self.game.user_settings['Gameplay']['Video mode completion']
+        self.num_enemies_required = self.game.user_settings['Gameplay']['Video mode enemies']
         self.speed_factor = 1
         self.targets = ['empty'] * 4
 
@@ -215,7 +215,9 @@ class ShootingGallery(TimedMode):
         self.game.sound.play('perfect' if self.success else 'bonus')
 
         text = str(self.num_enemies_shot) + ' ' + (self.enemy if self.num_enemies_shot == 1 else self.enemies)
-        points = 100000 if self.success else 5000 * self.num_enemies_shot
+        points = 5000 * self.num_enemies_shot
+        if self.success:
+            points = max(points, self.game.user_settings['Gameplay']['Video mode completion'])
         self.game.score(points)
         self.game.base_play.display(text, points)
 
