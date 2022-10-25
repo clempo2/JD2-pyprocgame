@@ -4,7 +4,7 @@ JD2-pyprocgame is new software for the [Judge Dredd](https://www.ipdb.org/machin
 
 ## Status
 
-JD2-pyprocgame is mostly mature. Visit [JD2-SkeletonGame](https://github.com/clempo2/JD2-pyprocgame/tree/skel) for the continuation of this project.
+JD2-pyprocgame is mature. Visit [JD2-SkeletonGame](https://github.com/clempo2/JD2-SkeletonGame) for the continuation of this project.
 
 ## Installation
 
